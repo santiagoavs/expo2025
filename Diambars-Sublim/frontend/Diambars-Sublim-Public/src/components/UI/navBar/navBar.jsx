@@ -15,7 +15,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <img src="/logo.png" alt="Logo" className="navbar-logo-img" />
+        <img src="/images/navbar/logo.png" alt="Logo" className="navbar-logo-img" />
       </div>
       <ul className="navbar-links">
         {navItems.map((item) => (
