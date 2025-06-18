@@ -7,6 +7,7 @@
   
     --active-bg-start: #593D3B;
     --active-bg-end: #281917;
+ 
   }
   
   @font-face {
@@ -14,6 +15,11 @@
   src: url('/fonts/AestheticMoment.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  }
+
+  .contenedor-nav{
+    display: flex;
+    justify-content: center;
   }
 
   .navbar {
@@ -24,7 +30,7 @@
     width: 650px;
     border-radius: 500px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    position: sticky;
+    position: fixed;
     top: 0;
     z-index: 100;
     height: 80px;
@@ -82,7 +88,7 @@
 }
   
   .nav-text {
-    font-weight: 600;
+    font-weight: 400;
     font-size: 1.25rem;
     font-family: 'DiambarsFont', sans-serif;
     margin-left: 5px;

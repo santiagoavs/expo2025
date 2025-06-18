@@ -1,3 +1,4 @@
+
 .home-section {
   width: 100%;
   min-height: 100vh;
@@ -6,10 +7,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  
 }
 
 .home-section.bottom {
   background: #F5E7C6;
+  
 }
 
 .home-container {
@@ -19,14 +23,15 @@
   justify-content: space-between;
   max-width: 1200px;
   width: 100%;
-  gap: 2rem;
   flex-wrap: wrap;
+  
 }
 
 .title-img {
   width: 100%;
   max-width: 500px;
   margin-bottom: 1rem;
+  
 }
 
 .description {
@@ -53,9 +58,12 @@
   bottom: 20px;
   left: 20px;
   z-index: 1000;
+  
 }
 
 .btn-contact-floating img {
   width: 160px;
   height: auto;
+
 }
+

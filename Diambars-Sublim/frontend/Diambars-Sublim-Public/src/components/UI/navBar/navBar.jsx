@@ -13,7 +13,8 @@ const navItems = [
 
 export default function Navbar() {
   return (
-    <nav className="navbar">
+    <div className="contenedor-nav">
+        <nav className="navbar">
       <div className="navbar-logo">
         <img src="/images/navbar/logo.png" alt="Logo" className="navbar-logo-img" />
       </div>
@@ -56,6 +57,8 @@ export default function Navbar() {
         ))}
       </ul>
     </nav>
+    </div>
+  
   );
 }
 

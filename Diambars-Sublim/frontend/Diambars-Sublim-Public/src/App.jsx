@@ -6,7 +6,6 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <main style={{ padding: '2rem' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/info" element={<h1>Información</h1>} />
@@ -15,7 +14,6 @@ function App() {
           <Route path="/forum" element={<h1>Galería</h1>} />
           <Route path="/perfil" element={<h1>Perfil</h1>} />
         </Routes>
-      </main>
     </Router>
   );
 }
