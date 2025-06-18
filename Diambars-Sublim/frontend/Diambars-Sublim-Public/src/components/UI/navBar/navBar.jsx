@@ -1,14 +1,14 @@
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaHome, FaInfoCircle, FaRegImages, FaBookOpen, FaUser } from 'react-icons/fa';
 import './navBar.css';
 
 const navItems = [
-  { path: '/', name: 'Inicio', icon: <FaHome /> },
-  { path: '/catalogo', name: 'Catálogo', icon: <FaBookOpen /> },
-  { path: '/info', name: 'Acerca de', icon: <FaInfoCircle /> },
-  { path: '/galeria', name: 'Galería', icon: <FaRegImages /> },
-  { path: '/perfil', name: 'Perfil', icon: <FaUser /> },
+  { path: '/', name: 'Inicio', icon: '/icons/home.png', iconActive: '/icons/homeW.png' },
+  { path: '/catalogo', name: 'Catálogo', icon: '/icons/catalogue.png', iconActive: '/icons/catalogueW.png' },
+  { path: '/info', name: 'Acerca de', icon: '/icons/info.png', iconActive: '/icons/infoW.png' },
+  { path: '/contact', name: 'Contáctanos', icon: '/icons/contact.png', iconActive: '/icons/contactW.png' },
+  { path: '/forum', name: 'Reseñas', icon: '/icons/forum.png', iconActive: '/icons/forumW.png' },
+  { path: '/perfil', name: 'Perfil', icon: '/icons/user.png', iconActive: '/icons/userW.png' },
 ];
 
 export default function Navbar() {
@@ -16,7 +16,6 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-logo">
         <img src="/logo.png" alt="Logo" className="navbar-logo-img" />
-        <span></span>
       </div>
       <ul className="navbar-links">
         {navItems.map((item) => (
@@ -45,7 +44,11 @@ export default function Navbar() {
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  <span className="nav-icon">{item.icon}</span>
+                  <img
+                    src={isActive ? item.iconActive : item.icon}
+                    alt={item.name}
+                    className="nav-icon-img"
+                  />
                 </motion.div>
               )}
             </NavLink>
@@ -55,3 +58,4 @@ export default function Navbar() {
     </nav>
   );
 }
+
