@@ -1,0 +1,31 @@
+html{
+      background: #FFF6E2;
+}
+
+.home-section {
+    width: 100%;
+    min-height: 100vh;
+    padding: 4rem 1rem;
+    background: #FFF6E2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    
+  }
+  
+  .home-section.bottom {
+    background: #F5E7C6;
+    
+  }
+  
+  .home-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    width: 100%;
+    flex-wrap: wrap;
+    
+  }

@@ -1,0 +1,70 @@
+.footer {
+    width: 100%;
+    background-color: #3F2724;
+    color: #fff;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center; /* Centra el contenedor interno */
+    position: absolute;
+  }
+  
+  .footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end; /* 🔥 Esto baja el contenido */
+    max-width: 2000px;
+    width: 150%; /* Asegura que use todo el ancho disponible */
+    gap: 30px; /* Espacio entre columnas (para móviles también) */
+  }
+
+  .navbar-logo-img {
+    width: 150px;
+    height: 150px;
+  }
+
+  .social-icons a {
+    font-size: 20px;
+    margin-right: 15px;
+    color: #ccc;
+    transition: color 0.3s ease;
+  }
+  
+  .social-icons a:hover {
+    color: #1da1f2;
+  }
+  
+  /* Responsivo */
+  @media (max-width: 768px) {
+    .footer-container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .footer-section {
+      margin-bottom: 25px;
+    }
+  
+    .social-icons a {
+      margin: 0 10px;
+    }
+
+    .social-icons a:hover {
+        color: #1da1f2;
+        transform: scale(1.4); /* Aumenta el efecto al pasar el mouse */
+    }
+
+   .footer-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end; /* 🔥 Esto baja el contenido */
+        flex-wrap: wrap;
+        max-width: 1200px;
+        width: 100%;
+        gap: 30px;
+      }
+      
+  }
+  
+  
