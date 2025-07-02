@@ -1,0 +1,72 @@
+/* Contenedor principal */
+.diambars-welcome-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor del logo y texto */
+.diambars-logo-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Contenedor para la imagen del logo */
+.diambars-logo-image-container {
+  width: 120px; /* Ajusta según el tamaño de tu logo */
+  height: 120px;
+  margin-bottom: 1.5rem;
+  background-color: transparent;
+  /* border: 1px dashed #ccc;  */
+  /* Puedes descomentar lo anterior para visualizar el espacio durante desarrollo */
+}
+
+/* Logo principal */
+.diambars-main-logo {
+  font-size: 4rem;
+  font-weight: 700;
+  letter-spacing: 0.5rem;
+  text-transform: uppercase;
+  margin: 0;
+  padding: 0;
+  color: #000000;
+  line-height: 1;
+}
+
+/* Subtexto */
+.diambars-sublogo {
+  font-size: 1.5rem;
+  letter-spacing: 0.3rem;
+  margin: 0;
+  padding: 0;
+  color: #000000;
+  font-weight: 300;
+  text-transform: lowercase;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .diambars-logo-image-container {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+  }
+  
+  .diambars-main-logo {
+    font-size: 2.5rem;
+    letter-spacing: 0.3rem;
+  }
+  
+  .diambars-sublogo {
+    font-size: 1.2rem;
+    letter-spacing: 0.2rem;
+  }
+}
