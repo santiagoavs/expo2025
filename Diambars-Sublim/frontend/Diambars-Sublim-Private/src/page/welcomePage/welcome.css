@@ -1,72 +1,113 @@
-/* Contenedor principal */
+/* ============= CONTENEDOR PRINCIPAL ============= */
 .diambars-welcome-screen {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: #ffffff;
   margin: 0;
   padding: 0;
 }
 
-/* Contenedor del logo y texto */
+:root {
+  --gradient-start: #F0D8AB;  /* Color FODTAB */
+  --gradient-end: #FFF6E2;    /* Color FFFGE2 */
+  --gradient-angle: 14deg;
+  --gradient-position-x: 14%;
+  --gradient-position-y: 67%;
+}
+
+.diambars-welcome-screen {
+  background: conic-gradient(
+    from var(--gradient-angle) at var(--gradient-position-x) var(--gradient-position-y),
+    var(--gradient-start) 0%,
+    var(--gradient-end) 100%
+  );
+ 
+}
+
+
+/* ============= CONTENEDOR DEL LOGO Y TEXTO ============= */
 .diambars-logo-container {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  text-align: center;         /* Alinea el texto al centro */
+  display: flex;             /* Activa flexbox para los hijos */
+  flex-direction: column;   /* Organiza elementos en columna */
+  align-items: center;     /* Centra elementos horizontalmente */
+  gap: 1rem;             /* Espacio de 1rem (16px) entre elementos */
 }
 
-/* Contenedor para la imagen del logo */
+/* ============= CONTENEDOR DE LA IMAGEN DEL LOGO ============= */
 .diambars-logo-image-container {
-  width: 120px; /* Ajusta según el tamaño de tu logo */
-  height: 120px;
-  margin-bottom: 1.5rem;
-  background-color: transparent;
-  /* border: 1px dashed #ccc;  */
-  /* Puedes descomentar lo anterior para visualizar el espacio durante desarrollo */
+  width: 120px;           /* Ancho fijo para el contenedor */
+  height: 120px;         /* Altura fija para el contenedor */
+  margin-bottom: 0rem; /* Espacio inferior de 1.5rem (24px) */
+  background-color: transparent; /* Fondo transparente */
+  
 }
 
-/* Logo principal */
+/* ============= LOGO PRINCIPAL (TEXTO) ============= */
 .diambars-main-logo {
-  font-size: 4rem;
-  font-weight: 700;
-  letter-spacing: 0.5rem;
-  text-transform: uppercase;
-  margin: 0;
-  padding: 0;
-  color: #000000;
-  line-height: 1;
+  font-size: 4rem;           /* Tamaño grande de fuente */
+  font-weight: 500;         /* Grosor de fuente (negrita) */
+  letter-spacing: 0.rem;  /* Espaciado entre letras */
+  text-transform: uppercase; /* Convierte texto a mayúsculas */
+  margin: 0;              /* Elimina márgenes externos */
+  padding: 0;            /* Elimina relleno interno */
+  color: #000000;       /* Color de texto negro */
+  line-height: 0.5;      /* Altura de línea normal */
 }
 
-/* Subtexto */
+/* ============= SUBTEXTO ============= */
 .diambars-sublogo {
-  font-size: 1.5rem;
-  letter-spacing: 0.3rem;
-  margin: 0;
-  padding: 0;
-  color: #000000;
-  font-weight: 300;
-  text-transform: lowercase;
+  font-size: 2.5rem;        /* Tamaño de fuente mediano */
+  letter-spacing: 0.8rem;  /* Espaciado entre letras */
+  margin: 0;              /* Elimina márgenes externos */
+  padding: 0;            /* Elimina relleno interno */
+  color: #000000;       /* Color de texto negro */
+  font-weight: 400;    /* Grosor de fuente (ligera) */
+  text-transform: lowercase; /* Convierte texto a minúsculas */
 }
 
-/* Responsive */
+/* ============= MEDIA QUERIES (RESPONSIVE) ============= */
 @media (max-width: 768px) {
+  /* Ajustes para contenedor de imagen en móviles */
   .diambars-logo-image-container {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 1rem;
+    width: 80px;          /* Reduce ancho */
+    height: 80px;        /* Reduce altura */
+    margin-bottom: 1rem; /* Reduce espacio inferior */
   }
   
+  /* Ajustes para texto principal en móviles */
   .diambars-main-logo {
-    font-size: 2.5rem;
-    letter-spacing: 0.3rem;
+    font-size: 2.5rem;      /* Reduce tamaño de fuente */
+    letter-spacing: 0.3rem; /* Reduce espaciado entre letras */
   }
   
+  /* Ajustes para subtexto en móviles */
   .diambars-sublogo {
-    font-size: 1.2rem;
-    letter-spacing: 0.2rem;
+    font-size: 1.2rem;      /* Reduce tamaño de fuente */
+    letter-spacing: 0.2rem; /* Reduce espaciado entre letras */
+  
   }
+
+/* Animación de fade out */
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
+
+.diambars-welcome-screen {
+  /* ... (tus estilos existentes) ... */
+  animation: fadeOut 1s ease-in-out 3s forwards; /* Comienza a 3s, dura 1s */
+}
+
+/* Asegúrate que estos estilos estén presentes */
+.diambars-logo-img {
+  width: 120px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+
+}
+
