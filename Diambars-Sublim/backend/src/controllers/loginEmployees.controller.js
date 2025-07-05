@@ -1,4 +1,3 @@
-// src/controllers/loginEmployees.controller.js
 import employeesModel from "../models/employees.js";
 import bcryptjs from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
@@ -8,53 +7,33 @@ const loginEmployeesController = {
   login: async (req, res) => {
     const { email, password } = req.body || {};
 
-    // Validaciones básicas
     if (!email || !password) {
       return res.status(400).json({ message: "Email y contraseña son requeridos." });
     }
 
     try {
-      let userFound = null;
-      let userRole = null;
-      let userId = null;
-
-      // Superadmin desde .env
-      if (
-        email === config.emailAdmin.email &&
-        password === config.emailAdmin.password
-      ) {
-        userRole = "Admin";
-        userId = "superadmin";
-        userFound = { _id: "superadmin" };
-      } else {
-        // Buscar empleado
-        userFound = await employeesModel.findOne({ email }).select("+password");
-
-        if (!userFound) {
-          return res.status(401).json({ message: "Credenciales incorrectas." });
-        }
-
-        // Comparar contraseña hasheada
-        const isMatch = await bcryptjs.compare(password, userFound.password);
-        if (!isMatch) {
-          return res.status(401).json({ message: "Credenciales incorrectas." });
-        }
-
-        if (!userFound.active) {
-          return res.status(403).json({ message: "Cuenta desactivada." });
-        }
-
-        userRole = userFound.Role;
-        userId = userFound._id;
+      const userFound = await employeesModel.findOne({ email }).select("+password");
+      if (!userFound) {
+        return res.status(401).json({ message: "Credenciales incorrectas." });
       }
 
-      // Validar rol permitido
+      const isMatch = await bcryptjs.compare(password, userFound.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Credenciales incorrectas." });
+      }
+
+      if (!userFound.active) {
+        return res.status(403).json({ message: "Cuenta desactivada." });
+      }
+
+      const userRole = userFound.role; // ojo: es .role, no .Role
+      const userId = userFound._id;
+
       const allowedRoles = ["Admin", "Gerente", "Employee", "Bodeguero"];
       if (!allowedRoles.includes(userRole)) {
         return res.status(403).json({ message: "Rol no autorizado." });
       }
 
-      // Crear token JWT
       const token = jsonwebtoken.sign(
         { id: userId, role: userRole, email },
         config.JWT.secret,

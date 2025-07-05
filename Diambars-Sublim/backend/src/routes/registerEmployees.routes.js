@@ -5,6 +5,6 @@ import registerEmployeesController from "../controllers/registerEmployees.contro
 const router = express.Router();
 
 // Ruta para registrar un nuevo empleado
-router.post("/register", registerEmployeesController.registerEmployee);
+router.post("/", registerEmployeesController.registerEmployee);
 
 export default router;

@@ -6,7 +6,7 @@ import logoutEmployeesController from "../controllers/logoutEmployees.controller
 const router = express.Router();
 
 // Login de empleados (y superadmin)
-router.post("/login", loginEmployeesController.login);
+router.post("/", loginEmployeesController.login);
 
 // Logout de empleados
 router.post("/logout", logoutEmployeesController.logout);
