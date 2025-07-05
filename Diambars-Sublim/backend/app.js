@@ -29,8 +29,8 @@ app.use(morgan("dev"));
 
 // Rutas principales
 app.use("/api/employees", employeesRoutes);            // GET, PUT, DELETE, PATCH
-app.use("/api/employees", registerEmployeesRoutes);    // POST de registro
-app.use("/api/auth", loginEmployeesRoutes);            // login + logout
+app.use("/api/employees/register", registerEmployeesRoutes); // Ruta de registro
+app.use("/api/employees/login", loginEmployeesRoutes);     // Ruta de login
 
 // Ruta de prueba
 app.get("/ping", (req, res) => res.send("pong"));

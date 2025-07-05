@@ -58,7 +58,7 @@ employeesController.updateEmployee = async (req, res) => {
 };
 
 //PATCH: Cambiar contraseña
-employeesController.changePassword = async (req, res) => {
+employeesController.changeEmployeePassword = async (req, res) => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;

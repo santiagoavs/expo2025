@@ -68,6 +68,5 @@ const employeeSchema = new Schema({
   timestamps: true,
   strict: true
 });
-
-// Evita OverwriteModelError 
+// evitando errores de overwriting
 export default mongoose.models.Employee || mongoose.model("Employee", employeeSchema);

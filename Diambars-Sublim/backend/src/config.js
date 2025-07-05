@@ -8,9 +8,9 @@ export const config = {
   server: {
     PORT: process.env.PORT,
   },
-  emailAdmin: {
-    email: process.env.SUPERADMIN_EMAIL,
-    password: process.env.SUPERADMIN_PASSWORD,
+  superadmin: {
+    EMAIL: process.env.SUPERADMIN_EMAIL,
+    PASSWORD: process.env.SUPERADMIN_PASSWORD,
   },
   email: {
     email_user: process.env.EMAIL_USER,
