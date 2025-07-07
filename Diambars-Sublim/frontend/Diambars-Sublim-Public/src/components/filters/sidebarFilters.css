@@ -1,47 +1,45 @@
-.sidebar-filters {
-  width: 220px;
-  background-color: #fdf1d6;
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+.filter-sidebar {
+  width: 250px;
+  min-height: 100%;
+  height: auto;
+  background: linear-gradient(125deg, #FFF6E2, #F5E7C6);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  font-family: 'DiambarsFont', sans-serif;
 }
 
-.filters-title {
-  font-family: 'DiambarsFont', sans-serif;
-  font-size: 1.25rem;
+.filter-title {
+  font-size: 1.5rem;
+  font-style: italic;
+  font-weight: bold;
+  color: #3F2724;
   margin-bottom: 1rem;
 }
 
-.accordion-toggle {
-  background: none;
-  border: none;
-  font-weight: bold;
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-heading {
   font-size: 1rem;
-  padding: 0.5rem 0;
-  cursor: pointer;
-  text-align: left;
-  color: #3f2724;
-  width: 100%;
+  color: #3F2724;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
 }
 
-.accordion-options {
+.filter-list {
   list-style: none;
-  padding-left: 0;
-  margin-top: 0.25rem;
+  padding-left: 1rem;
 }
 
-.accordion-option {
-  padding: 0.3rem 0.5rem;
+.filter-list li {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
   cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.2s ease;
+  transition: color 0.2s ease;
 }
 
-.accordion-option:hover {
-  background-color: #f5e7c6;
-}
-
-.accordion-option.selected {
-  background-color: #3f2724;
-  color: #fff1d0;
+.filter-list li:hover {
+  color: #593D3B;
 }

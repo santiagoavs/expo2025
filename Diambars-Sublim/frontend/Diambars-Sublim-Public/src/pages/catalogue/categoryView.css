@@ -1,12 +1,17 @@
+.category-container {
+}
+
 .category-page {
   display: flex;
   gap: 2rem;
   padding: 2rem;
+  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
 }
 
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
   flex: 1;
+  margin-top: 90px;
 }
