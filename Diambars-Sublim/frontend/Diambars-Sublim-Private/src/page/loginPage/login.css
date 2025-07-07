@@ -1,0 +1,206 @@
+/* CONTENEDOR PRINCIPAL (FULL SCREEN) */
+:root {
+  --gradient-start: #FFFAED;  /* Color FIFAED */
+  --gradient-end: #F5E7C6;    /* Color FSE/06 */
+  --gradient-angle: 10deg;
+  --gradient-position-x: 10%;
+  --gradient-position-y: 60%;
+  
+}
+
+.diambars-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: conic-gradient(
+    from var(--gradient-angle) at var(--gradient-position-x) var(--gradient-position-y),
+    var(--gradient-start) 0%,
+    var(--gradient-end) 100%
+  );
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: 'Aesthetic Moment';
+}
+
+/* CARD CONTENEDORA PRINCIPAL */
+.diambars-login-card {
+  display: flex;               /* Layout flexible para las dos columnas */
+  width: 100%;               /* Ancho completo del contenedor padre */
+  max-width: 900px;         /* Ancho máximo de la card */
+  min-height: 500px;       /* Altura mínima */
+  background: white;       /* Fondo blanco */
+  border-radius: 15px;    /* Bordes redondeados */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Sombra suave */
+  overflow: hidden;       /* Oculta contenido que sobresale */
+ 
+}
+
+/* COLUMNA IZQUIERDA (BRANDING) */
+.diambars-brand-column {
+  flex: 1;                   /* Ocupa 1 parte del espacio disponible */
+  display: flex;             /* Flexbox para alinear contenido */
+  flex-direction: column;   /* Organiza elementos verticalmente */
+  align-items: center;     /* Centra horizontalmente */
+  padding: 40px;         /* Espaciado interno */
+  background-color: #ffffff; /* Color de fondo gris claro */
+
+   position: relative;
+  top: 80px; /* Ajusta este valor para mover hacia abajo */
+  margin-bottom: 50px; /* Compensa el espacio desplazado */
+  font-family: 'Poppins';
+}
+
+
+/* CONTENEDOR DEL LOGO */
+.diambars-logo-container {
+  width: 150px;           /* Ancho fijo */
+  height: 150px;         /* Altura fija */
+  margin-bottom: 30px;  /* Espacio inferior */
+  background-color: #ffffff; /* Color de fondo temporal */
+  
+  display: flex;       /* Flexbox para centrar logo */
+  align-items: center; /* Centra verticalmente */
+  justify-content: center; /* Centra horizontalmente */
+  overflow: hidden;   /* Oculta partes de la imagen que sobresalgan */
+  
+}
+
+
+/* ESTILOS DE LA IMAGEN DEL LOGO */
+.diambars-logo {
+  width: 100%;        /* Ocupa todo el ancho del contenedor */
+  height: 100%;      /* Ocupa toda la altura del contenedor */
+  object-fit: contain; /* Mantiene proporciones de la imagen */
+}
+
+/* CONTENEDOR DEL TEXTO DE MARCA */
+.diambars-brand-text {
+  text-align: center; /* Alinea texto al centro */
+  font-family: 'Inter', !important; /* Fuerza la fuente */
+}
+
+/* ESTILOS DEL TÍTULO PRINCIPAL */
+.diambars-brand-text h1 {
+  font-size: 2.5rem;       /* Tamaño grande */
+  font-weight: 500;       /* Negrita */
+  color: #000;           /* Color negro */
+  margin: 0;            /* Elimina márgenes */
+  text-transform: uppercase; /* Texto en mayúsculas */
+  letter-spacing: 2px;  /* Espaciado entre letras */
+   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ESTILOS DEL SUBTÍTULO */
+.diambars-brand-text p {
+  font-size: 1.6rem;       /* Tamaño mediano */
+  font-weight: 300;       /* Peso fino */
+  color: #000;           /* Color negro */
+  margin: -15px 0 0 0;    /* Margen superior */
+  text-transform: lowercase; /* Texto en minúsculas */
+  letter-spacing: 1px;  /* Espaciado entre letras */
+  letter-spacing: 10px;  /* Espaciado entre letras */
+   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* COLUMNA DERECHA (FORMULARIO) */
+.diambars-form-column {
+  flex: 1;                   /* Ocupa 1 parte del espacio */
+  display: flex;             /* Flexbox para layout */
+  flex-direction: column;   /* Elementos en columna */
+  justify-content: center; /* Centra verticalmente */
+  padding: 60px;         /* Espaciado interno */
+  
+}
+
+/* TÍTULO DEL FORMULARIO */
+.diambars-form-column h2 {
+  font-size: 1.3rem;       /* Tamaño mediano */
+  font-weight: 600;       /* Semi-negrita */
+  color: #333;           /* Color gris oscuro */
+  margin-bottom: 30px;  /* Espacio inferior */
+  text-align: center;  /* Texto centrado */
+  
+}
+
+/* GRUPO DE INPUTS */
+.diambars-input-group {
+  margin-bottom: 20px; /* Espacio entre inputs */
+}
+
+/* ESTILOS DE LOS INPUTS */
+.diambars-input {
+  width: 100%;        /* Ancho completo */
+  padding: 14px 16px; /* Espaciado interno */
+  border: 1px solid #DDD; /* Borde gris claro */
+  border-radius: 8px; /* Bordes redondeados */
+  font-size: 0.9rem;   /* Tamaño de fuente estándar */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 0;
+}
+
+.diambars-input:focus {
+  outline: none;     /* Elimina outline por defecto */
+  border-color: #000; /* Borde negro al enfocar */
+}
+
+/* CHECKBOX "OLVIDÉ CONTRASEÑA" */
+.diambars-forgot-password {
+  display: flex;           /* Layout flexible */
+  align-items: center;    /* Centra verticalmente */
+  margin: 20px 0 30px;  /* Espaciado vertical */
+}
+
+.diambars-forgot-password input {
+  margin-right: 10px; /* Espacio entre checkbox y texto */
+}
+
+/* DIVISOR VISUAL */
+.diambars-divider {
+  height: 1px;          /* Grosor de línea */
+  background: #EEE;    /* Color gris muy claro */
+  margin: 20px 0;     /* Espaciado vertical */
+}
+
+/* BOTÓN DE INICIO DE SESIÓN */
+.diambars-login-button {
+  padding: 16px;     /* Espaciado interno */
+  background: #086788; /* Fondo negro */
+  color: white;    /* Texto blanco */
+  border: none;   /* Sin bordes */
+  border-radius: 8px; /* Bordes redondeados */
+  font-size: 1.3rem; /* Tamaño de fuente */
+  font-weight: 600; /* Negrita */
+  cursor: pointer; /* Cursor tipo pointer */
+  transition: background 0.3s; /* Transición suave */
+   width: 200px; /* Ancho fijo en píxeles */
+    margin: 0 auto; /* Centrado horizontal */
+  width: 50%; /* O el ancho deseado (300px, 80%, etc.) */
+}
+
+.diambars-login-button:hover {
+  background: #333; /* Color más claro al hover */
+}
+
+/* MEDIA QUERIES PARA RESPONSIVE */
+@media (max-width: 768px) {
+  .diambars-login-card {
+    flex-direction: column; /* Apila columnas en móviles */
+    min-height: auto;     /* Altura automática */
+  }
+  
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 40px 30px; /* Reduce padding en móviles */
+  }
+  
+  .diambars-brand-column {
+    padding-bottom: 20px; /* Espacio inferior adicional */
+  }
+  
+  .diambars-logo-container {
+    width: 120px;      /* Reduce tamaño del logo */
+    height: 120px;    /* Reduce tamaño del logo */
+  }
+}
