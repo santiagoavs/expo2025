@@ -1,8 +1,7 @@
-.category-container {
-}
 
 .category-page {
   display: flex;
+  min-height: 80vh;
   gap: 2rem;
   padding: 2rem;
   background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
