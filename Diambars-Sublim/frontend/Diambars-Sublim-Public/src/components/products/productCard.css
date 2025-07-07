@@ -1,0 +1,32 @@
+.product-card {
+  background-color: #fffef9;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  text-align: center;
+  font-family: 'DiambarsFont', sans-serif;
+}
+
+.product-image {
+  max-width: 100%;
+  height: 140px;
+  object-fit: contain;
+}
+
+.product-name {
+  font-style: italic;
+  margin-top: 0.75rem;
+  color: #3f2724;
+}
+
+.customize-button {
+  margin-top: 0.5rem;
+  background: linear-gradient(to right, #2e5c4b, #1c3c33);
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}

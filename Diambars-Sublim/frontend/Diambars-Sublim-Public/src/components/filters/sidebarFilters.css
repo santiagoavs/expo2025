@@ -1,0 +1,47 @@
+.sidebar-filters {
+  width: 220px;
+  background-color: #fdf1d6;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+}
+
+.filters-title {
+  font-family: 'DiambarsFont', sans-serif;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.accordion-toggle {
+  background: none;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  text-align: left;
+  color: #3f2724;
+  width: 100%;
+}
+
+.accordion-options {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.25rem;
+}
+
+.accordion-option {
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.accordion-option:hover {
+  background-color: #f5e7c6;
+}
+
+.accordion-option.selected {
+  background-color: #3f2724;
+  color: #fff1d0;
+}
