@@ -26,12 +26,20 @@ const Footer = () => {
 
   return (
     
+<<<<<<< HEAD
     <footer className="footer" data-aos="fade-up">
+=======
+    <footer className="footer">
+>>>>>>> main
       <div className="footer-container">
 
       <div className="footer-left">
       <div className="logo">
+<<<<<<< HEAD
           <img src="/images/navbar/logoblanco.png" alt="Logo" className="navbar-logo-img" />
+=======
+          <img src="/images/footer/logoblanco.png" alt="Logo" className="navbar-logo-img" />
+>>>>>>> main
             {/* O reemplaza con texto: <h2>TuEmpresa</h2> */}
           </div>
       </div>
@@ -88,4 +96,8 @@ const Footer = () => {
   );
 };
 
+<<<<<<< HEAD
 export default Footer;
+=======
+export default Footer;
+>>>>>>> main
