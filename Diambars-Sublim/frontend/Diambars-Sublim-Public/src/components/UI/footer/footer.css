@@ -1,13 +1,4 @@
 .footer {
-<<<<<<< HEAD
-    width: 100%;
-    background-color: #3F2724;
-    color: #fff;
-    padding: 40px 20px;
-    display: flex;
-    justify-content: center; /* Centra el contenedor interno */
-    position: absolute;
-=======
 
     background-color: #3F2724;
     color: #fff;
@@ -15,29 +6,16 @@
     display: flex;
     justify-content: center; 
 
->>>>>>> main
   }
   
   .footer-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-<<<<<<< HEAD
-    align-items: flex-end; /* 🔥 Esto baja el contenido */
-    max-width: 2000px;
-    width: 150%; /* Asegura que use todo el ancho disponible */
-    gap: 30px; /* Espacio entre columnas (para móviles también) */
-  }
-
-  .navbar-logo-img {
-    width: 150px;
-    height: 150px;
-=======
     align-items: center; 
     max-width: 2000px;
     width: 150%; 
     gap: 30px; 
->>>>>>> main
   }
 
   .social-icons a {
@@ -51,10 +29,6 @@
     color: #1da1f2;
   }
   
-<<<<<<< HEAD
-  /* Responsivo */
-=======
->>>>>>> main
   @media (max-width: 768px) {
     .footer-container {
       flex-direction: column;
