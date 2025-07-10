@@ -1,67 +1,307 @@
-/* Estilos del navbar */
+/* Reset básico para todos los elementos */
+* {
+  margin: 0;      /* Elimina márgenes predeterminados */
+  padding: 0;     /* Elimina padding predeterminados */
+  box-sizing: border-box;  /* Incluye padding y border en el ancho total */
+}
+
+
+/* Reset de z-index para todo */
+* {
+  z-index: auto;
+}
+
+/* Navbar con máxima prioridad */
 .navbar {
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999999 !important; /* Z-index extremadamente alto */
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  isolation: isolate; /* Crea un nuevo contexto de apilamiento */
 }
 
-.navbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a202c;
-}
-
-.nav-links {
-  display: flex;
-  gap: 24px;
-}
-
-.nav-link {
-  color: #4a5568;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #3182ce;
-}
-
-.search-container {
+/* Contenedor principal con z-index bajo */
+.main-container {
+  isolation: isolate; /* Crea un nuevo contexto de apilamiento */
   position: relative;
+  z-index: 1;
 }
 
-.search-input {
-  padding: 6px 12px;
-  padding-right: 32px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  width: 180px;
-  outline: none;
-  transition: all 0.2s ease;
+/* Todo lo demás con z-index explícitamente bajo */
+.catalog-container,
+.content-wrapper,
+.products-grid,
+.products-grid-recent,
+.products-grid-all,
+.product-card,
+.catalog-header,
+.stats-container,
+.section-header,
+.card,
+[class*="product-"],
+[class*="card-"] {
+  position: relative !important;
+  z-index: 1 !important;
 }
 
-.search-input:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.5);
+/* Asegurar que las cards están en su propio contexto de apilamiento */
+.products-grid {
+  isolation: isolate;
+}
+/* Configuración base del HTML */
+html {
+  height: 100%;   /* Asegura que el HTML ocupe toda la altura disponible */
+  background-color: #fff9f0;  /* Color de fondo beige claro */
 }
 
-.search-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: #a0aec0;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+/* Configuración base del body */
+body {
+  margin: 0;      /* Elimina márgenes del body */
+  padding: 0;     /* Elimina padding del body */
+  min-height: 100%;  /* Asegura altura mínima del 100% */
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  overflow-x: hidden;  /* Evita scroll horizontal */
+}
+
+/* Contenedor principal de la aplicación */
+.main-container {
+  width: 100%;    /* Ocupa todo el ancho disponible */
+  min-height: 100vh;  /* Altura mínima de toda la ventana */
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  display: flex;   /* Usa flexbox para layout */
+  flex-direction: column;  /* Apila elementos verticalmente */
+  align-items: center;  /* Centra elementos horizontalmente */
+}
+
+/* Contenedor del catálogo */
+.catalog-container {
+  flex: 1;        /* Ocupa el espacio disponible */
+  width: 100%;    /* Ocupa todo el ancho */
+  padding-top: 90px;  /* Espacio para el navbar */
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  display: flex;   /* Usa flexbox */
+  justify-content: center;  /* Centra contenido horizontalmente */
+}
+
+/* Wrapper del contenido principal */
+.content-wrapper {
+  width: 100%;    /* Ocupa todo el ancho disponible */
+  margin: 0 auto;  /* Centra el contenedor */
+  padding: 20px 210px;  /* Padding vertical y horizontal */
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+}
+
+/* Cabecera del catálogo */
+.catalog-header {
+  width: 100%;    /* Ocupa todo el ancho */
+  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);  padding: 24px;   /* Padding uniforme */
+  border-radius: 16px;  /* Bordes redondeados */
+  margin-bottom: 32px;  /* Espacio inferior */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);  /* Sombra suave */
+}
+
+/* Título principal */
+.catalog-header h1 {
+  font-size: 28px;  /* Tamaño de fuente */
+  font-weight: 600;  /* Peso de fuente semi-bold */
+  color: #1A202C;   /* Color gris oscuro */
+  margin-bottom: 4px;  /* Espacio inferior */
+}
+
+/* Subtítulo descriptivo */
+.catalog-header p {
+  font-size: 16x;  /* Tamaño de fuente */
+  color: #4A5568;   /* Color gris medio */
+}
+
+/* Contenedor de estadísticas */
+.stats-container {
+  width: 100%;    /* Ocupa todo el ancho */
+  display: flex;   /* Usa flexbox */
+  justify-content: space-between;  /* Distribuye espacio entre elementos */
+  gap: 24px;      /* Espacio entre elementos */
+  margin-bottom: 48px;  /* Espacio inferior */
+}
+
+/* Encabezado de sección */
+.section-header {
+  display: flex;   /* Usa flexbox */
+  justify-content: space-between;  /* Distribuye espacio */
+  align-items: center;  /* Alinea elementos verticalmente */
+  margin-bottom: 24px;  /* Espacio inferior */
+  padding: 0;     /* Sin padding */
+}
+
+/* Título de sección */
+.section-header h2 {
+  font-size: 24px;  /* Tamaño de fuente */
+  font-weight: 600;  /* Peso de fuente semi-bold */
+  color: #1A202C;   /* Color gris oscuro */
+}
+
+/* Contenedor de acciones del encabezado */
+.header-actions {
+  display: flex;   /* Usa flexbox */
+  gap: 16px;      /* Espacio entre elementos */
+  align-items: center;  /* Alinea elementos verticalmente */
+}
+
+/* Select de ordenamiento */
+.sort-select {
+  padding: 8px 16px;  /* Padding vertical y horizontal */
+  border: 1px solid #E2E8F0;  /* Borde gris claro */
+  border-radius: 8px;  /* Bordes redondeados */
+  background-color: white;  /* Fondo blanco */
+  color: #4A5568;   /* Color gris medio */
+  font-size: 14px;  /* Tamaño de fuente */
+  min-width: 140px;  /* Ancho mínimo */
+  outline: none;    /* Elimina outline */
+}
+
+/* Estado focus del select */
+.sort-select:focus {
+  border-color: #2563EB;  /* Borde azul al enfocar */
+}
+
+/* Botón de gestión del catálogo */
+.manage-catalog-btn {
+  background: #1a4b8c;  /* Color de fondo azul */
+  color: white;    /* Texto blanco */
+  border: none;    /* Sin borde */
+  padding: 8px 16px;  /* Padding vertical y horizontal */
+  border-radius: 8px;  /* Bordes redondeados */
+  font-size: 14px;  /* Tamaño de fuente */
+  font-weight: 500;  /* Peso de fuente medium */
+  cursor: pointer;  /* Cursor tipo puntero */
+  transition: all 0.3s ease;  /* Transición suave */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Sombra suave */
+}
+
+/* Estado hover del botón */
+.manage-catalog-btn:hover {
+  background: #153e73;  /* Azul más oscuro al hover */
+}
+
+/* Grid de productos */
+.products-grid {
+  display: flex;   /* Usa flexbox */
+  gap: 16px;      /* Espacio entre productos */
+  padding: 0;     /* Sin padding */
+  overflow-x: auto;  /* Permite scroll horizontal */
+  scroll-behavior: smooth;  /* Scroll suave */
+  -ms-overflow-style: none;  /* Oculta scrollbar en IE */
+  scrollbar-width: none;  /* Oculta scrollbar en Firefox */
+  justify-content: center;  /* Centra productos */
+  flex-wrap: wrap;  /* Permite múltiples filas */
+}
+
+/* Oculta scrollbar en Chrome */
+.products-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Media Queries para responsive design */
+@media (max-width: 1440px) {
+  .content-wrapper {
+    padding: 20px 140px;  /* Reduce padding en pantallas más pequeñas */
+  }
+}
+
+@media (max-width: 1200px) {
+  .content-wrapper {
+    padding: 20px 100px;  /* Reduce más el padding */
+  }
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 16px 60px;  /* Padding para tablets */
+  }
+
+  .stats-container {
+    flex-direction: column;  /* Apila estadísticas verticalmente */
+  }
+
+  .section-header {
+    flex-direction: column;  /* Apila elementos del header */
+    gap: 16px;
+  }
+
+  .header-actions {
+    width: 100%;    /* Ocupa todo el ancho */
+    flex-direction: column;  /* Apila acciones */
+  }
+
+  .sort-select,
+  .manage-catalog-btn {
+    width: 100%;    /* Botones a ancho completo */
+  }
+}
+
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 16px 30px;  /* Padding para móviles */
+  }
+
+  .catalog-header {
+    padding: 24px;   /* Reduce padding del header */
+  }
+
+  .catalog-header h1 {
+    font-size: 24px;  /* Reduce tamaño del título */
+  }
+
+  /* Estilos específicos para los grids */
+.products-grid-recent {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.products-grid-all {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+
+
+
+/* Ajustes responsive para los grids específicos */
+@media (max-width: 1440px) {
+  .products-grid-all {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .products-grid-all {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .products-grid-recent {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid-all,
+  .products-grid-recent {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .products-grid-all,
+  .products-grid-recent {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 }

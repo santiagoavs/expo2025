@@ -1,31 +1,55 @@
-/* Estilos generales del navbar */
+:root {
+  --navbar-width: 80%;
+  --navbar-position: 50%; /* Controla la posición horizontal (50% = centro) */
+  --navbar-top-spacing: 16px; /* Controla el espacio desde arriba */
+}
+
 .navbar {
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: var(--navbar-width);
+  box-sizing: border-box;
+  margin: 0;
+  position: fixed;
+  top: var(--navbar-top-spacing);
+  left: 50%; /* Punto de referencia para la transformación */
+  transform: translateX(-50%); /* Centra el navbar horizontalmente */
+  border-radius: 8px;
 }
 
-/* Título/logo izquierdo */
-.navbar-title {
-  font-size: 20px;
-  font-weight: 600;
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 18px;
   color: #1a202c;
 }
 
-/* Enlaces de navegación centrales */
 .nav-links {
   display: flex;
-  gap: 24px;
+  gap: 32px;
+  margin-left: 40px;
 }
 
 .nav-link {
   color: #4a5568;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   transition: color 0.2s ease;
 }
@@ -34,32 +58,31 @@
   color: #3182ce;
 }
 
-/* Barra de búsqueda */
 .search-container {
-  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 4px 8px;
 }
 
 .search-input {
-  padding: 6px 12px;
-  padding-right: 32px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
   font-size: 14px;
   width: 180px;
   outline: none;
-  transition: all 0.2s ease;
 }
 
-.search-input:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.5);
+.search-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
 }
 
 .search-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   fill: none;
@@ -67,4 +90,10 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Para asegurar que el contenido debajo del navbar no se oculte */
+body {
+  margin: 0;
+  padding-top: 64px; /* Ajusta este valor según la altura de tu navbar */
 }

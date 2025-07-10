@@ -1,11 +1,90 @@
+/* Reset completo de scroll */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Bloqueo total de scroll */
+html {
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+body {
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ajustes del contenedor principal */
+.diambars-login-container {
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed !important;
+  inset: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+/* Ajustes de la card */
+.diambars-login-card {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  max-height: 90vh !important;
+  overflow: visible !important;
+}
+
+/* Eliminar scroll en contenedores internos */
+.diambars-brand-column,
+.diambars-form-column {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* Deshabilitar scroll en dispositivos móviles */
+@media (max-width: 768px) {
+  body, 
+  html,
+  .diambars-login-container {
+    position: fixed !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: none !important;
+  }
+}
+
+/* Aquí comienza tu CSS existente */
+:root {
+  --gradient-start: #FFFAED;
+  --gradient-end: #F5E7C6;
+  /* ... resto de tu CSS existente ... */
+}
+
+
 /* CONTENEDOR PRINCIPAL (FULL SCREEN) */
 :root {
-  --gradient-start: #FFFAED;  /* Color FIFAED */
-  --gradient-end: #F5E7C6;    /* Color FSE/06 */
+  --gradient-start: #FFFAED;
+  --gradient-end: #F5E7C6;
   --gradient-angle: 10deg;
   --gradient-position-x: 10%;
   --gradient-position-y: 60%;
-  
 }
 
 .diambars-login-container {
@@ -26,181 +105,267 @@
 
 /* CARD CONTENEDORA PRINCIPAL */
 .diambars-login-card {
-  display: flex;               /* Layout flexible para las dos columnas */
-  width: 100%;               /* Ancho completo del contenedor padre */
-  max-width: 900px;         /* Ancho máximo de la card */
-  min-height: 500px;       /* Altura mínima */
-  background: white;       /* Fondo blanco */
-  border-radius: 15px;    /* Bordes redondeados */
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Sombra suave */
-  overflow: hidden;       /* Oculta contenido que sobresale */
- 
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  min-height: 500px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 /* COLUMNA IZQUIERDA (BRANDING) */
 .diambars-brand-column {
-  flex: 1;                   /* Ocupa 1 parte del espacio disponible */
-  display: flex;             /* Flexbox para alinear contenido */
-  flex-direction: column;   /* Organiza elementos verticalmente */
-  align-items: center;     /* Centra horizontalmente */
-  padding: 40px;         /* Espaciado interno */
-  background-color: #ffffff; /* Color de fondo gris claro */
-
-   position: relative;
-  top: 80px; /* Ajusta este valor para mover hacia abajo */
-  margin-bottom: 50px; /* Compensa el espacio desplazado */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  background-color: #ffffff;
+  position: relative;
+  top: 80px;
+  margin-bottom: 50px;
   font-family: 'Poppins';
 }
 
-
 /* CONTENEDOR DEL LOGO */
 .diambars-logo-container {
-  width: 150px;           /* Ancho fijo */
-  height: 150px;         /* Altura fija */
-  margin-bottom: 30px;  /* Espacio inferior */
-  background-color: #ffffff; /* Color de fondo temporal */
-  
-  display: flex;       /* Flexbox para centrar logo */
-  align-items: center; /* Centra verticalmente */
-  justify-content: center; /* Centra horizontalmente */
-  overflow: hidden;   /* Oculta partes de la imagen que sobresalgan */
-  
+  width: 150px;
+  height: 150px;
+  margin-bottom: 30px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
-
 
 /* ESTILOS DE LA IMAGEN DEL LOGO */
 .diambars-logo {
-  width: 100%;        /* Ocupa todo el ancho del contenedor */
-  height: 100%;      /* Ocupa toda la altura del contenedor */
-  object-fit: contain; /* Mantiene proporciones de la imagen */
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* CONTENEDOR DEL TEXTO DE MARCA */
 .diambars-brand-text {
-  text-align: center; /* Alinea texto al centro */
-  font-family: 'Inter', !important; /* Fuerza la fuente */
+  text-align: center;
+  font-family: 'Inter', !important;
 }
 
 /* ESTILOS DEL TÍTULO PRINCIPAL */
 .diambars-brand-text h1 {
-  font-size: 2.5rem;       /* Tamaño grande */
-  font-weight: 500;       /* Negrita */
-  color: #000;           /* Color negro */
-  margin: 0;            /* Elimina márgenes */
-  text-transform: uppercase; /* Texto en mayúsculas */
-  letter-spacing: 2px;  /* Espaciado entre letras */
-   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: #000;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ESTILOS DEL SUBTÍTULO */
 .diambars-brand-text p {
-  font-size: 1.6rem;       /* Tamaño mediano */
-  font-weight: 300;       /* Peso fino */
-  color: #000;           /* Color negro */
-  margin: -15px 0 0 0;    /* Margen superior */
-  text-transform: lowercase; /* Texto en minúsculas */
-  letter-spacing: 1px;  /* Espaciado entre letras */
-  letter-spacing: 10px;  /* Espaciado entre letras */
-   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: #000;
+  margin: -15px 0 0 0;
+  text-transform: lowercase;
+  letter-spacing: 10px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* COLUMNA DERECHA (FORMULARIO) */
 .diambars-form-column {
-  flex: 1;                   /* Ocupa 1 parte del espacio */
-  display: flex;             /* Flexbox para layout */
-  flex-direction: column;   /* Elementos en columna */
-  justify-content: center; /* Centra verticalmente */
-  padding: 60px;         /* Espaciado interno */
-  
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
 }
 
 /* TÍTULO DEL FORMULARIO */
 .diambars-form-column h2 {
-  font-size: 1.3rem;       /* Tamaño mediano */
-  font-weight: 600;       /* Semi-negrita */
-  color: #333;           /* Color gris oscuro */
-  margin-bottom: 30px;  /* Espacio inferior */
-  text-align: center;  /* Texto centrado */
-  
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 /* GRUPO DE INPUTS */
 .diambars-input-group {
-  margin-bottom: 20px; /* Espacio entre inputs */
+  margin-bottom: 1.5rem;
+  position: relative;
 }
 
 /* ESTILOS DE LOS INPUTS */
 .diambars-input {
-  width: 100%;        /* Ancho completo */
-  padding: 14px 16px; /* Espaciado interno */
-  border: 1px solid #DDD; /* Borde gris claro */
-  border-radius: 8px; /* Bordes redondeados */
-  font-size: 0.9rem;   /* Tamaño de fuente estándar */
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 0;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .diambars-input:focus {
-  outline: none;     /* Elimina outline por defecto */
-  border-color: #000; /* Borde negro al enfocar */
+  outline: none;
+  border-color: #000;
 }
 
-/* CHECKBOX "OLVIDÉ CONTRASEÑA" */
+/* INPUT CON ERROR */
+.diambars-input.input-error {
+  border-color: #ff4444;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ff4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+}
+
+/* ALERTA DE ERROR */
+.alert-error {
+  position: absolute;
+  bottom: -1.25rem;
+  left: 0;
+  width: calc(100% - 2px);
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  background-color: #fff6f6;
+  border: 1px solid #ffdddd;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  color: #ff4444;
+  font-size: 0.75rem;
+  animation: fadeIn 0.2s ease-out;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.alert-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 0.4rem;
+  fill: #ff4444;
+  flex-shrink: 0;
+}
+
+/* TEXTO "OLVIDÉ CONTRASEÑA" - SIN CHECKBOX */
 .diambars-forgot-password {
-  display: flex;           /* Layout flexible */
-  align-items: center;    /* Centra verticalmente */
-  margin: 20px 0 30px;  /* Espaciado vertical */
+  display: block;
+  margin: 20px 0 30px;
+  font-size: 0.85rem;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-align: center;
 }
 
-.diambars-forgot-password input {
-  margin-right: 10px; /* Espacio entre checkbox y texto */
+.diambars-forgot-password:hover {
+  color: #ff4444;
 }
 
 /* DIVISOR VISUAL */
 .diambars-divider {
-  height: 1px;          /* Grosor de línea */
-  background: #EEE;    /* Color gris muy claro */
-  margin: 20px 0;     /* Espaciado vertical */
+  height: 1px;
+  background: #EEE;
+  margin: 20px 0;
 }
 
 /* BOTÓN DE INICIO DE SESIÓN */
 .diambars-login-button {
-  padding: 16px;     /* Espaciado interno */
-  background: #086788; /* Fondo negro */
-  color: white;    /* Texto blanco */
-  border: none;   /* Sin bordes */
-  border-radius: 8px; /* Bordes redondeados */
-  font-size: 1.3rem; /* Tamaño de fuente */
-  font-weight: 600; /* Negrita */
-  cursor: pointer; /* Cursor tipo pointer */
-  transition: background 0.3s; /* Transición suave */
-   width: 200px; /* Ancho fijo en píxeles */
-    margin: 0 auto; /* Centrado horizontal */
-  width: 50%; /* O el ancho deseado (300px, 80%, etc.) */
+  padding: 16px;
+  background: #086788;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .diambars-login-button:hover {
-  background: #333; /* Color más claro al hover */
+  background: #075672;
+}
+
+/* SPINNER PARA CARGA */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* BOTÓN DESHABILITADO */
+.diambars-login-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* MEDIA QUERIES PARA RESPONSIVE */
 @media (max-width: 768px) {
   .diambars-login-card {
-    flex-direction: column; /* Apila columnas en móviles */
-    min-height: auto;     /* Altura automática */
+    flex-direction: column;
+    min-height: auto;
   }
   
   .diambars-brand-column,
   .diambars-form-column {
-    padding: 40px 30px; /* Reduce padding en móviles */
+    padding: 40px 30px;
   }
   
   .diambars-brand-column {
-    padding-bottom: 20px; /* Espacio inferior adicional */
+    padding-bottom: 20px;
+    top: 0;
+    margin-bottom: 0;
   }
   
   .diambars-logo-container {
-    width: 120px;      /* Reduce tamaño del logo */
-    height: 120px;    /* Reduce tamaño del logo */
+    width: 120px;
+    height: 120px;
   }
+
+  .diambars-login-button {
+    width: 80%;
+  }
+
+  .diambars-input-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .alert-error {
+    bottom: -1.1rem;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .diambars-forgot-password {
+    font-size: 0.8rem;
+  }
+
+  
 }
