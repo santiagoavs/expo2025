@@ -26,7 +26,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, var(--navbar-bg-start), var(--navbar-bg-end));
+    background: linear-gradient(1deg, var(--navbar-bg-start), var(--navbar-bg-end));
     width: 650px;
     border-radius: 500px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);

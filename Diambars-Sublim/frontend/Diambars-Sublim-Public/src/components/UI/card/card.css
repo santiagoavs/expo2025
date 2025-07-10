@@ -1,0 +1,89 @@
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  height: 100vh;
+  margin: 0;
+}
+
+.main-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: row; /* 👈 Asegura disposición horizontal */
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+
+.card {
+  position: relative;
+  width: 350px;
+  height: 450px;
+  background-color: #ffffff00;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 101%;
+  padding: 20px;
+  position: relative;
+}
+
+.card-content img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.card {
+  border: 0.5px solid #593D3B; /* Borde muy fino */
+}
+
+.titulo h3{
+  color: #FFF1D0;
+  margin-top: 27px;
+}
+
+.titulo{
+  background: linear-gradient(to right, #2D788E, #283C3E);
+  display: grid;
+  bottom: 40px;
+  height: 70px;
+  border-radius: 0px 0px 10px 10px;
+  position: absolute; /*Aqui me quede quiero vr si le puedo poner el padding a la card o quitarselo ya qu etiene un mini margin o paddin al final*/
+  left: 0;
+  width: 100%;
+  align-content: center;
+  justify-content: center;
+  font-size: 22px; /* Aumentado */
+  font-weight: 500;
+  color: #333;
+  font-family: 'Poppins', sans-serif; /* Nueva fuente */
+  opacity: 0.9;
+  transition: 0.3s ease, transform 0.3s ease;
+  
+}
+
+.card:hover .card-content h3 {
+  opacity: 1;
+  transform: translateY(0);
+}

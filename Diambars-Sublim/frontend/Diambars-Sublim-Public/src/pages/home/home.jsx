@@ -1,6 +1,7 @@
 import './home.css';
 import ImageButton from '../../components/UI/ImageButton/ImageButton';
 import ContactButton from '../../components/UI/contactButton/contactButton';
+import Footer from '../../components/UI/footer/footer';
 
 export default function Home() {
   return (
@@ -34,6 +35,7 @@ export default function Home() {
         </div>
       </section>
       <ContactButton />
+      <Footer />
       </>
   );
 }
