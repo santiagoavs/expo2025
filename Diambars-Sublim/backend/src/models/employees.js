@@ -37,14 +37,15 @@ const employeeSchema = new Schema({
   password: {
     type: String,
     required: true,
-    minlength: [6, "La contraseña debe tener al menos 6 caracteres"]
+    minlength: [6, "La contraseña debe tener al menos 6 caracteres"],
+    select: false
   },
   phoneNumber: {
     type: String,
     required: true,
     match: [
-      /^[0-9]{8}$/,
-      "El teléfono debe contener exactamente 8 dígitos numéricos"
+      /^[0-9]{8,15}$/,
+      "El teléfono debe contener entre 8 y 15 dígitos numéricos"
     ]
   },
   dui: {
@@ -57,7 +58,7 @@ const employeeSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["Employee", "Admin", "Gerente", "Bodeguero"],
+    enum: ["Admin", "Employee", "Manager", "Warehouse"],
     default: "Employee"
   },
   active: {
@@ -68,5 +69,5 @@ const employeeSchema = new Schema({
   timestamps: true,
   strict: true
 });
-// evitando errores de overwriting
+
 export default mongoose.models.Employee || mongoose.model("Employee", employeeSchema);

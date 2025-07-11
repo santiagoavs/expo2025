@@ -1,7 +1,6 @@
 import employeesModel from "../models/employees.js";
 import bcryptjs from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { config } from "../config.js";
+import { validateEmail, isDisposableEmail } from "../utils/emailValidator.js"; // Añadir esta importación
 
 const registerEmployeesController = {};
 
@@ -15,7 +14,7 @@ registerEmployeesController.registerEmployee = async (req, res) => {
     password,
     phoneNumber,
     dui,
-    Role, 
+    role,
     active 
   } = req.body;
 
@@ -25,6 +24,21 @@ registerEmployeesController.registerEmployee = async (req, res) => {
   }
 
   try {
+    // Validar formato y dominio del correo electrónico
+    const isValidEmail = await validateEmail(email);
+    if (!isValidEmail) {
+      return res.status(400).json({ 
+        message: "El correo electrónico no es válido o su dominio no existe." 
+      });
+    }
+
+    // Opcional: Bloquear correos temporales/desechables
+    if (isDisposableEmail(email)) {
+      return res.status(400).json({ 
+        message: "No se permiten correos temporales o desechables. Por favor, utiliza un correo permanente." 
+      });
+    }
+
     // Validar si ya existe un empleado con el mismo correo o DUI
     const existingByEmail = await employeesModel.findOne({ email });
     const existingByDui = await employeesModel.findOne({ dui });
@@ -37,7 +51,19 @@ registerEmployeesController.registerEmployee = async (req, res) => {
       return res.status(400).json({ message: "El DUI ya está registrado." });
     }
 
-    // Validación de formato ya la maneja el schema, pero podés meter lógica extra aquí si querés
+    // Verificar si está intentando registrar un Admin cuando ya existe uno
+    // Nota: Convertir a minúscula para comparación
+    if (role && role.toLowerCase() === "admin") {
+      const existingAdmin = await employeesModel.findOne({ 
+        role: { $regex: new RegExp('^admin$', 'i') }
+      });
+      
+      if (existingAdmin) {
+        return res.status(403).json({ 
+          message: "Ya existe un administrador. No se pueden crear más." 
+        });
+      }
+    }
 
     // Hashear la contraseña
     const passwordHash = await bcryptjs.hash(password, 10);
@@ -52,41 +78,19 @@ registerEmployeesController.registerEmployee = async (req, res) => {
       password: passwordHash,
       phoneNumber: phoneNumber.trim(),
       dui: dui.trim(),
-      Role: Role || "Employee", // por defecto si no se manda
+      role: role || "Employee",
       active: active !== undefined ? active : true
     });
 
     await newEmployee.save();
 
-    // Crear token de autenticación
-    jwt.sign(
-      {
-        id: newEmployee._id,
-        role: newEmployee.Role,
-        email: newEmployee.email
-      },
-      config.JWT.secret,
-      { expiresIn: config.JWT.expiresIn },
-      (error, token) => {
-        if (error) {
-          console.error("Error generando token:", error);
-          return res.status(500).json({ message: "Error al generar el token" });
-        }
-
-        res.cookie("authToken", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          maxAge: 30 * 24 * 60 * 60 * 1000 // 30 días
-        });
-
-        return res.status(201).json({
-          message: "Empleado registrado correctamente",
-          token,
-          employeeId: newEmployee._id
-        });
-      }
-    );
+    return res.status(201).json({
+      message: "Empleado registrado correctamente",
+      employeeId: newEmployee._id,
+      employeeName: newEmployee.name,
+      employeeRole: newEmployee.role
+    });
+    
   } catch (error) {
     console.error("Error en el registro:", error);
     return res.status(500).json({ message: "Error interno del servidor", error: error.message });

@@ -7,14 +7,20 @@ export const config = {
   },
   server: {
     PORT: process.env.PORT,
+    FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
+    BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4000}`
   },
   superadmin: {
     EMAIL: process.env.SUPERADMIN_EMAIL,
     PASSWORD: process.env.SUPERADMIN_PASSWORD,
   },
   email: {
-    email_user: process.env.EMAIL_USER,
-    email_pass: process.env.EMAIL_PASS,
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.EMAIL_PORT || "587"),
+    secure: process.env.EMAIL_SECURE === "true",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+    from: process.env.EMAIL_FROM || `Diambars <${process.env.EMAIL_USER}>`
   },
   JWT: {
     secret: process.env.JWT_SECRET,
