@@ -1,39 +1,94 @@
-import React from "react";
+import React, { useState } from "react";
+import { IoLogOutOutline } from 'react-icons/io5';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import "./Navbar.css";
 
 const Navbar = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <nav className="navbar">
-      <div className="navbar-left">
-        <img 
-          src="/path-to-your-logo.png" // Aquí deberás poner la ruta correcta de tu logo
-          alt="DIAMBARS Logo" 
-          className="logo-image"
-        />
-        <span className="brand-name">DIAMBARS</span>
-      </div>
-      
-      <div className="nav-links">
-        <a href="#" className="nav-link">Administracion de catalogo</a>
-        <a href="#" className="nav-link">Reseñas</a>
-        <a href="#" className="nav-link">Stats</a>
-        <a href="#" className="nav-link">Ajustes</a>
-        <a href="#" className="nav-link">Pedido manual</a>
-      </div>
-      
-      <div className="search-container">
-        <input 
-          type="text" 
-          placeholder="Search product" 
-          className="search-input" 
-        />
-        <button className="search-button">
-          <svg className="search-icon" viewBox="0 0 24 24">
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+    <>
+      <nav className="navbar">
+        <div className="navbar-left">
+          <img 
+            src="/src/img/logo.png"
+            alt="DIAMBARS Logo" 
+            className="logo-image"
+          />
+          <span className="brand-name">DIAMBARS</span>
+        </div>
+        
+        {/* Botón hamburguesa para móvil */}
+        <button className="mobile-menu-btn" onClick={toggleSidebar}>
+          <FaBars />
         </button>
+
+        <div className="nav-links desktop-menu">
+          <a href="#" className="nav-link">Administracion de catalogo</a>
+          <a href="#" className="nav-link">Reseñas</a>
+          <a href="#" className="nav-link">Stats</a>
+          <a href="#" className="nav-link">Ajustes</a>
+          <a href="#" className="nav-link">Pedido manual</a>
+        </div>
+        
+        <div className="navbar-right desktop-menu">
+          <div className="search-container">
+            <input 
+              type="text" 
+              placeholder="Search product" 
+              className="search-input" 
+            />
+            <button className="search-button">
+              <svg className="search-icon" viewBox="0 0 24 24">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+          <button className="logout-btn">
+            <IoLogOutOutline />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Sidebar para móvil */}
+      <div className={`sidebar-overlay ${isSidebarOpen ? 'active' : ''}`} onClick={toggleSidebar}></div>
+      <div className={`sidebar ${isSidebarOpen ? 'active' : ''}`}>
+        <div className="sidebar-header">
+          <img src="/src/img/logo.png" alt="Logo" className="sidebar-logo" />
+          <button className="close-sidebar-btn" onClick={toggleSidebar}>
+            <FaTimes />
+          </button>
+        </div>
+        <div className="sidebar-menu">
+          <div className="sidebar-search">
+            <input 
+              type="text" 
+              placeholder="Search product" 
+              className="search-input" 
+            />
+            <button className="search-button">
+              <svg className="search-icon" viewBox="0 0 24 24">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+          <a href="#" className="sidebar-link">Administracion de catalogo</a>
+          <a href="#" className="sidebar-link">Reseñas</a>
+          <a href="#" className="sidebar-link">Stats</a>
+          <a href="#" className="sidebar-link">Ajustes</a>
+          <a href="#" className="sidebar-link">Pedido manual</a>
+          <button className="sidebar-logout-btn">
+            <IoLogOutOutline />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       </div>
-    </nav>
+    </>
   );
 };
 

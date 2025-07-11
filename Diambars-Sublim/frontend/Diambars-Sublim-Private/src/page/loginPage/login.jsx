@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import './login.css';
 
 const Login = () => {
@@ -32,7 +33,6 @@ const Login = () => {
       [name]: value
     }));
     
-    // Validación en tiempo real después de escribir
     if (errors[name]) {
       const error = validateField(name, value);
       setErrors(prev => ({
@@ -51,11 +51,10 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Validar todos los campos
     const newErrors = {};
     Object.keys(formData).forEach(key => {
       newErrors[key] = validateField(key, formData[key]);
@@ -63,17 +62,40 @@ const Login = () => {
     
     setErrors(newErrors);
     
-    // Verificar si no hay errores (corrección aquí)
     const hasErrors = Object.values(newErrors).some(error => error !== '');
     
     if (!hasErrors) {
-      // Simular envío a API
-      setTimeout(() => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Bienvenido!',
+          text: 'Inicio de sesión exitoso',
+          confirmButtonColor: '#086788',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
         navigate('/catalog-management');
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un problema al iniciar sesión',
+          confirmButtonColor: '#086788'
+        });
+      } finally {
         setIsSubmitting(false);
-      }, 1000);
+      }
     } else {
       setIsSubmitting(false);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, complete todos los campos correctamente',
+        confirmButtonColor: '#086788'
+      });
     }
   };
 
@@ -140,9 +162,9 @@ const Login = () => {
               )}
             </div>
             
-            <div className="diambars-forgot-password">
+            <Link to="/recovery-password" className="diambars-forgot-password">
               ¿Olvidaste tu contraseña?
-            </div>
+            </Link>
             
             <div className="diambars-divider"></div>
             

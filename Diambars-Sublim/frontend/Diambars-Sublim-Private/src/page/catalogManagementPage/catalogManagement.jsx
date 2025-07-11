@@ -6,8 +6,11 @@ import Navbar from '../../components/navbar/Navbar';
 import { TbShirt } from "react-icons/tb";
 import { MdPendingActions } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
+import { useNavigate } from 'react-router-dom';
 
 const CatalogManagement = () => {
+  const navigate = useNavigate();
+
   // Datos de ejemplo para las estadísticas
   const stats = [
     {
@@ -186,8 +189,11 @@ const CatalogManagement = () => {
                 <option value="name">Nombre</option>
                 <option value="price">Precio</option>
               </select>
-              <button className="manage-catalog-btn">
-                Manejar catálogo
+              <button 
+                className="manage-catalog-btn"
+                onClick={() => navigate('/product-creation')}
+              >
+                Crear catálogo
               </button>
             </div>
           </div>
