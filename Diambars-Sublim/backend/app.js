@@ -3,6 +3,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet'; 
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Importar todas las rutas disponibles
 import authRoutes from "./src/routes/auth.routes.js";
@@ -12,7 +15,13 @@ import userRoutes from "./src/routes/users.routes.js";
 import registerUsersRoutes from "./src/routes/registerUsers.routes.js";
 import verifyEmailRoutes from "./src/routes/verifyEmail.routes.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.routes.js";
+import categoryRoutes from "./src/routes/category.routes.js"; // Importar rutas de categorías
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
+import productRoutes from "./src/routes/product.routes.js";
+
+// Configuración para acceder a __dirname en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -32,6 +41,15 @@ app.use(cookieParser());
 app.use(helmet());
 app.use(morgan("dev"));
 
+// Configuración para archivos estáticos y uploads
+app.use("/public", express.static(path.join(__dirname, "public")));
+
+// Verificar de que el directorio de uploads existe
+const uploadsDir = path.join(__dirname, "public/uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Rutas de autenticación unificada (reemplaza las rutas separadas de login)
 app.use("/api/auth", authRoutes);            // Maneja login y logout unificados
 
@@ -48,6 +66,12 @@ app.use("/api/verify-email", verifyEmailRoutes); // Verificación de correo elec
 
 // Ruta para recuperación de contraseña
 app.use("/api/password-recovery", passwordRecoveryRoutes); // Recuperación de contraseña
+
+// Ruta para gestión de categorías
+app.use("/api/categories", categoryRoutes); // CRUD completo para categorías
+
+// Ruta para gestión de productos
+app.use("/api/products", productRoutes); // CRUD completo para productos
 
 // Ruta de prueba
 app.get("/ping", (req, res) => res.send("pong"));

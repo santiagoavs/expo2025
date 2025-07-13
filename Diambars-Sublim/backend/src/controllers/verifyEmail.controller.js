@@ -1,5 +1,5 @@
 import userModel from "../models/users.js";
-import { sendWelcomeEmail } from "../utils/emailService.js";
+import { sendWelcomeEmail } from "../utils/email.service.js";
 
 const verifyEmailController = {};
 
