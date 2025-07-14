@@ -6,8 +6,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
-// Importar todas las rutas disponibles
+// Importación de rutas
 import authRoutes from "./src/routes/auth.routes.js";
 import employeesRoutes from "./src/routes/employees.routes.js";
 import registerEmployeesRoutes from "./src/routes/registerEmployees.routes.js";
@@ -15,68 +14,51 @@ import userRoutes from "./src/routes/users.routes.js";
 import registerUsersRoutes from "./src/routes/registerUsers.routes.js";
 import verifyEmailRoutes from "./src/routes/verifyEmail.routes.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.routes.js";
-import categoryRoutes from "./src/routes/category.routes.js"; // Importar rutas de categorías
+import categoryRoutes from "./src/routes/category.routes.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 import productRoutes from "./src/routes/product.routes.js";
 
-// Configuración para acceder a __dirname en ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
 // Configuración de CORS
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"], // Incluir frontend público y privado
+  origin: ["http://localhost:5173", "http://localhost:5174"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-access-token"],
   credentials: true,
+  exposedHeaders: ["set-cookie"]
 };
-
+// Configuración de CORS
 app.use(cors(corsOptions));
-
-// Middlewares base
+app.options('*', cors(corsOptions));
+// Middleware de seguridad
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 app.use(morgan("dev"));
 
-// Configuración para archivos estáticos y uploads
 app.use("/public", express.static(path.join(__dirname, "public")));
-
-// Verificar de que el directorio de uploads existe
+// Middleware para manejar archivos estáticos
 const uploadsDir = path.join(__dirname, "public/uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Rutas de autenticación unificada (reemplaza las rutas separadas de login)
-app.use("/api/auth", authRoutes);            // Maneja login y logout unificados
+//ruta de la API
+app.use("/api/auth", authRoutes);
+app.use("/api/employees", employeesRoutes);
+app.use("/api/employees/register", debugEmailValidation, registerEmployeesRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/users/register", debugEmailValidation, registerUsersRoutes);
+app.use("/api/verify-email", verifyEmailRoutes);
+app.use("/api/password-recovery", passwordRecoveryRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
 
-// Rutas de empleados
-app.use("/api/employees", employeesRoutes);            // GET, PUT, DELETE, PATCH
-app.use("/api/employees/register", debugEmailValidation, registerEmployeesRoutes); // Ruta de registro protegida
-
-// Rutas de usuarios (clientes)
-app.use("/api/users", userRoutes);            // GET, PUT, DELETE, PATCH
-app.use("/api/users/register", debugEmailValidation, registerUsersRoutes);   // Registro público de usuarios
-
-// Ruta para verificación de correo electrónico
-app.use("/api/verify-email", verifyEmailRoutes); // Verificación de correo electrónico
-
-// Ruta para recuperación de contraseña
-app.use("/api/password-recovery", passwordRecoveryRoutes); // Recuperación de contraseña
-
-// Ruta para gestión de categorías
-app.use("/api/categories", categoryRoutes); // CRUD completo para categorías
-
-// Ruta para gestión de productos
-app.use("/api/products", productRoutes); // CRUD completo para productos
-
-// Ruta de prueba
 app.get("/ping", (req, res) => res.send("pong"));
-
-// Middleware para manejo de errores
+// Middleware para manejar errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -84,8 +66,7 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
-
-// Middleware para rutas no encontradas
+// Middleware para manejar rutas no encontradas
 app.use((req, res) => {
   res.status(404).json({ message: "Ruta no encontrada" });
 });

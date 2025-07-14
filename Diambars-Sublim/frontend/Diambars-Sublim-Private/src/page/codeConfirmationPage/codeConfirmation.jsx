@@ -1,112 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DiambarsCard from '../../components/DiambarsCard/DiambarsCard';
 import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
 import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
 import DiambarsButton from '../../components/DiambarsButton/DiambarsButton';
-import { showSuccess, showError } from '../../utils/sweetAlert';
+import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
 import './codeConfirmation.css';
 
-const CodeConfirmation = () => {
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRefs = useRef([]);
+const CodeConfirmationPage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  
+  // Obtener el email del estado de navegación
+  const stateEmail = location.state?.email;
+
+  const {
+    email,
+    setEmail,
+    code,
+    isSubmitting,
+    error,
+    timer,
+    canResend,
+    handleVerifyCode,
+    handleResendCode,
+    handleInputChange, // Extraer la función
+    handleKeyDown     // Extraer la función
+  } = usePasswordRecovery();
 
   useEffect(() => {
-    // Auto focus en el primer input al cargar
-    inputRefs.current[0]?.focus();
-
-    // Iniciar el temporizador
-    startTimer();
-  }, []);
-
-  const startTimer = () => {
-    setCanResend(false);
-    setTimer(30);
-    const interval = setInterval(() => {
-      setTimer((prevTimer) => {
-        if (prevTimer <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
-          return 0;
-        }
-        return prevTimer - 1;
-      });
-    }, 1000);
-  };
-
-  const handleInput = (index, value) => {
-    // Solo permitir números
-    if (!/^\d*$/.test(value)) return;
-
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    // Auto avance al siguiente input
-    if (value !== '' && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+    if (stateEmail) {
+      setEmail(stateEmail);
     }
-  };
+  }, [stateEmail, setEmail]);
 
-  const handleKeyDown = (index, e) => {
-    // Retroceder al input anterior con backspace
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
-    
-    const completeCode = code.join('');
-    if (completeCode.length !== 6) {
-      await showError(
-        'Código incompleto',
-        'Por favor, ingresa el código completo'
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await showSuccess(
-        '¡Código verificado!',
-        'Tu código ha sido verificado correctamente'
-      );
-      navigate('/new-password'); // Ruta actualizada
-    } catch (error) {
-      await showError(
-        'Error',
-        'Código inválido. Por favor, intenta nuevamente'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (!canResend) return;
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      startTimer();
-      await showSuccess(
-        '¡Código reenviado!',
-        'Se ha enviado un nuevo código a tu correo'
-      );
-    } catch (error) {
-      await showError(
-        'Error',
-        'No se pudo reenviar el código'
-      );
-    }
+    handleVerifyCode();
   };
 
   return (
@@ -116,16 +46,7 @@ const CodeConfirmation = () => {
         onClick={() => navigate('/recovery-password')}
         aria-label="Volver"
       >
-        <svg 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
       </button>
@@ -136,44 +57,49 @@ const CodeConfirmation = () => {
         <DiambarsTitle text="Verifica tu código" />
         
         <p className="code-description">
-          Ingresa el código de 6 dígitos que enviamos a tu correo electrónico
+          Ingresa el código de 6 dígitos enviado a tu correo
         </p>
+        
+        {email && (
+          <p className="email-display">
+            {email}
+          </p>
+        )}
 
-        <form onSubmit={handleSubmit} noValidate>
+        {error && <div className="error-message">{error}</div>}
+
+        <form onSubmit={onSubmit} noValidate>
           <div className="code-input-group">
-            {code.map((digit, index) => (
+            {[...Array(6)].map((_, index) => (
               <input
                 key={index}
-                ref={el => inputRefs.current[index] = el}
+                id={`code-input-${index}`}
                 type="text"
+                inputMode='numeric'
                 maxLength={1}
-                value={digit}
-                onChange={(e) => handleInput(index, e.target.value)}
+                value={code[index] || ''}
+                onChange={(e) => handleInputChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 className="code-input"
-                required
               />
             ))}
           </div>
           
           <div className="code-actions">
             <DiambarsButton 
-              text="Verificar código"
+              text={isSubmitting ? "Verificando..." : "Verificar código"}
               isLoading={isSubmitting}
               disabled={isSubmitting}
+              type="submit"
             />
             
             <button
               type="button"
               className={`resend-code ${!canResend ? 'disabled' : ''}`}
               onClick={handleResendCode}
-              disabled={!canResend}
+              disabled={!canResend || isSubmitting}
             >
-              {canResend ? (
-                'Reenviar código'
-              ) : (
-                `Reenviar código en ${timer}s`
-              )}
+              {canResend ? 'Reenviar código' : `Reenviar en ${timer}s`}
             </button>
           </div>
         </form>
@@ -182,4 +108,4 @@ const CodeConfirmation = () => {
   );
 };
 
-export default CodeConfirmation;
+export default CodeConfirmationPage;

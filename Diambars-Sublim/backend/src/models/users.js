@@ -66,6 +66,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
 },
+recoveryData: {
+  type: mongoose.Schema.Types.Mixed,
+  default: null
+},
 }, { 
   timestamps: true,
   toJSON: { virtuals: true }

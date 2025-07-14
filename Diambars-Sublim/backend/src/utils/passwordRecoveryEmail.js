@@ -1,7 +1,6 @@
 import nodemailer from "nodemailer";
 import { config } from "../config.js";
 
-// Crear transportador de correo
 const transporter = nodemailer.createTransport({
   host: config.email.host || "smtp.gmail.com",
   port: config.email.port || 587,
@@ -12,28 +11,22 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Función para enviar el correo con código de recuperación
 export async function sendRecoveryCode(email, code, userName) {
-  const resetUrl = `${config.server.FRONTEND_URL}/reset-password`;
-  const logoUrl = "https://i.imgur.com/ZAatbcL.png"; // Actualiza con el logo real de Diambars
-  
+  const logoUrl = "https://i.imgur.com/ZAatbcL.png";
   const currentYear = new Date().getFullYear();
   
   const html = `
   <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-      <!-- Header -->
       <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
         <img src="${logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
         <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Recuperación de Contraseña</h1>
       </div>
       
-      <!-- Content -->
       <div style="padding: 40px 30px;">
         <p style="font-size: 16px; color: #444; margin-top: 0;">Hola ${userName || ''},</p>
         <p style="font-size: 16px; color: #444;">Hemos recibido una solicitud para restablecer tu contraseña en Diambars. Utiliza el siguiente código para continuar con el proceso:</p>
         
-        <!-- Code Box -->
         <div style="text-align: center; margin: 30px 0;">
           <div style="display: inline-block; background-color: #f0f0f0; padding: 15px 25px; border-radius: 8px; border: 1px solid #ddd; font-family: monospace;">
             <span style="font-size: 26px; letter-spacing: 5px; font-weight: bold; color: #333;">${code}</span>
@@ -42,19 +35,12 @@ export async function sendRecoveryCode(email, code, userName) {
         
         <p style="font-size: 16px; color: #444;">Este código es válido por 20 minutos. Después de este tiempo, tendrás que solicitar uno nuevo.</p>
         
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
-            Ir a restablecer contraseña
-          </a>
-        </div>
-        
         <p style="font-size: 16px; color: #444; margin-top: 30px;">Si no solicitaste este cambio, puedes ignorar este mensaje. Tu contraseña permanecerá igual.</p>
         
         <p style="font-size: 16px; color: #444; margin-bottom: 0;">Saludos,</p>
         <p style="font-size: 16px; color: #444; margin-top: 5px;">El equipo de Diambars</p>
       </div>
       
-      <!-- Footer -->
       <div style="background: #f0f0f0; padding: 20px; text-align: center;">
         <p style="font-size: 14px; color: #888; margin: 0;">
           &copy; ${currentYear} Diambars. Todos los derechos reservados.
@@ -85,28 +71,24 @@ export async function sendRecoveryCode(email, code, userName) {
   }
 }
 
-// Función para enviar confirmación de restablecimiento exitoso
+// Función para enviar confirmación 
 export async function sendPasswordResetConfirmation(email, userName) {
   const loginUrl = `${config.server.FRONTEND_URL}/login`;
-  const logoUrl = "https://i.imgur.com/ZAatbcL.png"; // Actualiza con el logo real de Diambars
-  
+  const logoUrl = "https://i.imgur.com/ZAatbcL.png";
   const currentYear = new Date().getFullYear();
   
   const html = `
   <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-      <!-- Header -->
       <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
         <img src="${logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
         <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Contraseña Restablecida</h1>
       </div>
       
-      <!-- Content -->
       <div style="padding: 40px 30px;">
         <p style="font-size: 16px; color: #444; margin-top: 0;">Hola ${userName || ''},</p>
         <p style="font-size: 16px; color: #444;">Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión en tu cuenta de Diambars con tu nueva contraseña.</p>
         
-        <!-- Button -->
         <div style="text-align: center; margin: 30px 0;">
           <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
             Iniciar sesión
@@ -119,7 +101,6 @@ export async function sendPasswordResetConfirmation(email, userName) {
         <p style="font-size: 16px; color: #444; margin-top: 5px;">El equipo de Diambars</p>
       </div>
       
-      <!-- Footer -->
       <div style="background: #f0f0f0; padding: 20px; text-align: center;">
         <p style="font-size: 14px; color: #888; margin: 0;">
           &copy; ${currentYear} Diambars. Todos los derechos reservados.

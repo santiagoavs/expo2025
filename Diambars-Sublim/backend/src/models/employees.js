@@ -58,9 +58,13 @@ const employeeSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["Admin", "Employee", "Manager", "Warehouse"],
+    enum: ["admin", "employee", "manager", "warehouse"], // Todo en minúsculas
     default: "Employee"
   },
+  recoveryData: {
+  type: Schema.Types.Mixed,
+  default: null
+},
   active: {
     type: Boolean,
     default: true

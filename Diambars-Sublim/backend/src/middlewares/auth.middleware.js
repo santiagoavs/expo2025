@@ -1,32 +1,43 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config.js";
 
-// Verifica el token JWT
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.authToken;
+  const token = req.cookies.authToken 
+    || req.headers['x-access-token']
+    || req.headers.authorization?.split(' ')[1];
 
-  if (!token) return res.status(401).json({ message: "No autorizado. Token faltante." });
+  if (!token) {
+    console.log("Token no encontrado. Continuando sin autenticación.");
+    return next();
+  }
 
   try {
     const decoded = jwt.verify(token, config.JWT.secret);
-    req.user = decoded; // Incluye id, role, type, etc.
+    
+    if (!decoded.id || !decoded.type) {
+      console.error("Token decodificado inválido:", decoded);
+      return next();
+    }
+    
+    req.user = {
+      id: decoded.id,
+      type: decoded.type,
+      role: decoded.role,
+      email: decoded.email
+    };
+    
+    console.log("Usuario autenticado:", req.user);
     next();
   } catch (error) {
-    return res.status(403).json({ message: "Token inválido o expirado." });
+    console.error("Error de verificación de token:", error.message);
+    next();
   }
 };
 
-// Verifica el rol del usuario (insensible a mayúsculas/minúsculas)
 export const checkRole = (...allowedRoles) => {
   return (req, res, next) => {
     const userRole = req.user?.role;
     
-    // Debug para ayudar a diagnosticar problemas
-    console.log('Usuario actual:', req.user);
-    console.log('Rol requerido:', allowedRoles);
-    console.log('Rol del usuario:', userRole);
-
-    // Verificación insensible a mayúsculas/minúsculas
     if (!userRole || !allowedRoles.some(role => 
         role.toLowerCase() === userRole.toLowerCase())) {
       return res.status(403).json({ 
@@ -40,12 +51,10 @@ export const checkRole = (...allowedRoles) => {
   };
 };
 
-// Verifica el tipo de usuario (employee o user)
 export const checkUserType = (...allowedTypes) => {
   return (req, res, next) => {
     const userType = req.user?.type;
 
-    // Verificación insensible a mayúsculas/minúsculas
     if (!userType || !allowedTypes.some(type => 
         type.toLowerCase() === userType.toLowerCase())) {
       return res.status(403).json({ 
@@ -59,11 +68,9 @@ export const checkUserType = (...allowedTypes) => {
   };
 };
 
-// Verifica unicidad de admin (para uso en rutas de creación/edición)
 export const checkAdminUniqueness = async (req, res, next) => {
   const { role } = req.body;
   
-  // Verificar tanto "admin" como "Admin" (insensible a mayúsculas/minúsculas)
   const isAdminRole = role && role.toLowerCase() === 'admin';
 
   if (isAdminRole) {
@@ -71,7 +78,6 @@ export const checkAdminUniqueness = async (req, res, next) => {
       const employeeModel = (await import("../models/employees.js")).default;
       const userModel = (await import("../models/users.js")).default;
       
-      // Buscar administradores existentes (insensible a mayúsculas)
       const existingEmployeeAdmin = await employeeModel.findOne({ 
         role: { $regex: new RegExp('^admin$', 'i') }
       });
@@ -80,7 +86,6 @@ export const checkAdminUniqueness = async (req, res, next) => {
         role: { $regex: new RegExp('^admin$', 'i') }
       });
       
-      // Excluir al usuario actual en caso de actualización
       const excludeCurrentUser = req.params?.id ? 
         { _id: { $ne: req.params.id } } : {};
       
