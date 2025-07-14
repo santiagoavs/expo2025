@@ -1,0 +1,34 @@
+.profile-page {
+  padding: 2rem;
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+}
+
+.profile-title {
+  text-align: center;
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  margin-top: 100px;
+  font-family: 'DiambarsFont';
+  src: url('/fonts/AestheticMoment.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.profile-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap; /* por si la pantalla es muy pequeña */
+}
+
+/* Alineación principal */
+.left-column {
+  flex-shrink: 0;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

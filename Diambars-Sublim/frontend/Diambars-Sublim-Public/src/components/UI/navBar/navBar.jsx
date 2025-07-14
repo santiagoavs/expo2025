@@ -7,7 +7,7 @@ const navItems = [
   { path: '/catalogue', name: 'Catálogo', icon: '/icons/catalogue.png', iconActive: '/icons/catalogueW.png' },
   { path: '/info', name: 'Acerca de', icon: '/icons/info.png', iconActive: '/icons/infoW.png' },
   { path: '/contact', name: 'Contáctanos', icon: '/icons/contact.png', iconActive: '/icons/contactW.png' },
-  { path: '/forum', name: 'Reseñas', icon: '/icons/forum.png', iconActive: '/icons/forumW.png' },
+  { path: '/reviews', name: 'Reseñas', icon: '/icons/forum.png', iconActive: '/icons/forumW.png' },
   { path: '/profile', name: 'Perfil', icon: '/icons/user.png', iconActive: '/icons/userW.png' },
 ];
 

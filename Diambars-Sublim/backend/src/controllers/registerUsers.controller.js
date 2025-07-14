@@ -2,7 +2,7 @@ import userModel from "../models/users.js";
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { config } from "../config.js";
-import { sendVerificationEmail } from "../utils/emailService.js";
+import { sendVerificationEmail } from "../utils/email.service.js";
 import { validateEmail, isDisposableEmail } from "../utils/emailValidator.js";
 
 const registerUsersController = {};
