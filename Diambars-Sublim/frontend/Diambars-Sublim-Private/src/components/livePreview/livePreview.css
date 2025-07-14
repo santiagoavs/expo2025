@@ -1,8 +1,9 @@
 .live-preview-card {
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   width: 100%;
   max-width: 400px;
   margin: 0 auto;

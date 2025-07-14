@@ -1,13 +1,19 @@
 import React, { useState } from "react";
 import { IoLogOutOutline } from 'react-icons/io5';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import { useNavigate, Link } from 'react-router-dom'; // ✅ Importar Link
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleLogout = () => {
+    navigate('/login');
   };
 
   return (
@@ -22,17 +28,17 @@ const Navbar = () => {
           <span className="brand-name">DIAMBARS</span>
         </div>
         
-        {/* Botón hamburguesa para móvil */}
         <button className="mobile-menu-btn" onClick={toggleSidebar}>
           <FaBars />
         </button>
 
         <div className="nav-links desktop-menu">
-          <a href="#" className="nav-link">Administracion de catalogo</a>
+          <a href="#" className="nav-link">Administración de catálogo</a> 
           <a href="#" className="nav-link">Reseñas</a>
           <a href="#" className="nav-link">Stats</a>
           <a href="#" className="nav-link">Ajustes</a>
           <a href="#" className="nav-link">Pedido manual</a>
+          <Link to="/category" className="nav-link">Categorías</Link> {/* ✅ Enlace real */}
         </div>
         
         <div className="navbar-right desktop-menu">
@@ -48,7 +54,7 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          <button className="logout-btn">
+          <button className="logout-btn" onClick={handleLogout}>
             <IoLogOutOutline />
             <span>Cerrar sesión</span>
           </button>
@@ -77,12 +83,13 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          <a href="#" className="sidebar-link">Administracion de catalogo</a>
+          <a href="#" className="sidebar-link">Administración de catálogo</a>
           <a href="#" className="sidebar-link">Reseñas</a>
           <a href="#" className="sidebar-link">Stats</a>
           <a href="#" className="sidebar-link">Ajustes</a>
           <a href="#" className="sidebar-link">Pedido manual</a>
-          <button className="sidebar-logout-btn">
+          <Link to="/category" className="sidebar-link">Categorías</Link> {/* ✅ Sidebar también */}
+          <button className="sidebar-logout-btn" onClick={handleLogout}>
             <IoLogOutOutline />
             <span>Cerrar sesión</span>
           </button>

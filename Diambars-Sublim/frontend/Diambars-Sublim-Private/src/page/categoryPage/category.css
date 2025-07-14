@@ -1,0 +1,29 @@
+.category-page-wrapper {
+  min-height: 80vh;
+   min-width: 200vh;
+  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🎯 Layout horizontal, centrado con catálogo a la izquierda */
+.category-page-content {
+  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+  padding: 40px;
+  display: flex;
+  justify-content: center;     /* Centrado horizontal completo */
+  gap: 0rem;                   /* Separación entre las dos cards */
+  align-items: flex-start;
+}
+
+/* 📁 CategoryCatalog a la izquierda */
+.category-page-content > :nth-child(2) {
+  flex: 1;
+  max-width: 320px;
+}
+
+/* 📝 NewCategory a la derecha */
+.category-page-content > :nth-child(1) {
+  flex: 2;
+  max-width: 880px;
+}

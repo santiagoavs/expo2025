@@ -5,8 +5,9 @@
 }
 
 .navbar {
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   padding: 12px 24px;
   display: flex;
   justify-content: space-between;
@@ -103,7 +104,7 @@ body {
 }
 
 .navbar {
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 12px 24px;
   display: flex;

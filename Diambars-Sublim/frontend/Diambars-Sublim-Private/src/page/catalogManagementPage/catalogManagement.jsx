@@ -193,7 +193,7 @@ const CatalogManagement = () => {
                 className="manage-catalog-btn"
                 onClick={() => navigate('/product-creation')}
               >
-                Crear catálogo
+                Crear producto
               </button>
             </div>
           </div>

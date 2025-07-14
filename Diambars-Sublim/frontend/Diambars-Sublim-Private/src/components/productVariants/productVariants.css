@@ -1,8 +1,9 @@
 .product-variants-wrapper {
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+ box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   min-width: 740px;
   margin: 0 auto;
   font-family: 'Segoe UI', sans-serif;

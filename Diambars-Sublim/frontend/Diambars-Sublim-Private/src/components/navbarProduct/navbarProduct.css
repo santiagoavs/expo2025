@@ -10,6 +10,8 @@
   background-color: #FFFFFF;
   border-bottom: 1px solid #E2E8F0;
   z-index: 1000;
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
 }
 
 .back-button {

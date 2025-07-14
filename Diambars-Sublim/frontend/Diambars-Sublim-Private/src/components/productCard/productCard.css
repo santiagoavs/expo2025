@@ -1,9 +1,10 @@
 .product-card {
- background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   transition: all 0.3s ease;
   height: 100%;
   display: flex;

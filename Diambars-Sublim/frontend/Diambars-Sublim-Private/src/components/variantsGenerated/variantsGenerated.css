@@ -1,11 +1,13 @@
 .variants-generated-wrapper {
-   width: var(--generated-width, 738px); /* ✅ Control dinámico */
+  width: var(--generated-width, 738px);
   overflow-x: auto;
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
 }
+
 
 .variants-generated-table {
   width: 100%;
