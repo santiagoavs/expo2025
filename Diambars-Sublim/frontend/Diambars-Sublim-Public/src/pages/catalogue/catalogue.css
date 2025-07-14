@@ -1,0 +1,35 @@
+.catalogue-section {
+    position: relative;
+    background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+    padding: 2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .catalogue-container {
+    max-width: 1200px;
+    width: 100%;
+    margin-top: 150px;
+  }
+  
+  .catalogue-text-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .catalogue-section {
+      padding: 1rem;
+    }
+  
+    .catalogue-text-content {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  }
+  

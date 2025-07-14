@@ -15,20 +15,21 @@
   justify-items: center;
   align-items: start;
   width: 100%;
-  max-width: 1000px; /* Ajusta según el diseño general */
+  max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Tablet */
+
 @media (max-width: 900px) {
   .product-grid {
-    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
     max-width: 700px;
+    gap: 3rem
   }
 }
 
-/* Móvil */
+
 @media (max-width: 600px) {
   .product-grid {
     grid-template-columns: 1fr;

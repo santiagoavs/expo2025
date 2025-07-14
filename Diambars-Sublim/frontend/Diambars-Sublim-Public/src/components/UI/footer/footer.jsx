@@ -15,14 +15,6 @@ import { useEffect } from 'react';
   
 
 const Footer = () => {
-    
-    
-    useEffect(() => {
-    AOS.init({
-      duration: 1000, // duración de la animación (ms)
-      once: true      // solo se anima una vez
-    });
-  }, []);
 
   return (
     
@@ -30,33 +22,21 @@ const Footer = () => {
       <div className="footer-container">
 
       <div className="footer-left">
-      <div className="logo">
-          <img src="/images/footer/logoblanco.png" alt="Logo" className="navbar-logo-img" />
-            {/* O reemplaza con texto: <h2>TuEmpresa</h2> */}
-          </div>
+        
+        <div className="telefono">
+          <h4>Teléfono:</h4>
+          <p>+52 55 1234 5678</p>
+        </div>
+        <div className="telefono">
+          <h4>Ubicación:</h4>
+          <p>📍 Calle Ficticia 123, CDMX</p>
+        </div>
+        <div className="telefono">
+          <h4>Correo:</h4>
+          <p>✉️ DiambarSublim@tuempresa.com</p>
+        </div>
       </div>
 
-
-      <div className="footer-left">
-      <div className="telefono">
-      <h4>Telefono:</h4>
-      <p> +52 55 1234 5678</p>
-          </div>
-      </div>
-
-      <div className="footer-left">
-      <div className="telefono">
-      <h4>Ubicacion:</h4>
-      <p> 📍 Calle Ficticia 123, CDMX</p>
-          </div>
-      </div>
-
-      <div className="footer-left">
-      <div className="telefono">
-      <h4>Correo:</h4>
-      <p>✉️ DiambarSublim@tuempresa.com</p>
-          </div>
-      </div>
 
         {/* CENTRO: Derechos de autor */}
         <div className="footer-center">
