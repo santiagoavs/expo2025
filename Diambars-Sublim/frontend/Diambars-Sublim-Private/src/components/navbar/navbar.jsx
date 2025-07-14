@@ -33,12 +33,12 @@ const Navbar = () => {
         </button>
 
         <div className="nav-links desktop-menu">
-          <a href="#" className="nav-link">Administración de catálogo</a> 
+          <Link to="/catalog-management" className="nav-link">Administración de catálogo</Link> {/* ✅ Ahora es Link */}
           <a href="#" className="nav-link">Reseñas</a>
           <a href="#" className="nav-link">Stats</a>
           <a href="#" className="nav-link">Ajustes</a>
           <a href="#" className="nav-link">Pedido manual</a>
-          <Link to="/category" className="nav-link">Categorías</Link> {/* ✅ Enlace real */}
+          <Link to="/category" className="nav-link">Categorías</Link>
         </div>
         
         <div className="navbar-right desktop-menu">
@@ -83,12 +83,12 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          <a href="#" className="sidebar-link">Administración de catálogo</a>
+          <Link to="/catalog-management" className="sidebar-link">Administración de catálogo</Link> {/* ✅ También en móvil */}
           <a href="#" className="sidebar-link">Reseñas</a>
           <a href="#" className="sidebar-link">Stats</a>
           <a href="#" className="sidebar-link">Ajustes</a>
           <a href="#" className="sidebar-link">Pedido manual</a>
-          <Link to="/category" className="sidebar-link">Categorías</Link> {/* ✅ Sidebar también */}
+          <Link to="/category" className="sidebar-link">Categorías</Link>
           <button className="sidebar-logout-btn" onClick={handleLogout}>
             <IoLogOutOutline />
             <span>Cerrar sesión</span>

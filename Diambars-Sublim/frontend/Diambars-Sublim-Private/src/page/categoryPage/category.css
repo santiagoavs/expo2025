@@ -12,14 +12,15 @@
   padding: 40px;
   display: flex;
   justify-content: center;     /* Centrado horizontal completo */
-  gap: 0rem;                   /* Separación entre las dos cards */
+  gap: 3rem;                   /* Separación entre las dos cards */
   align-items: flex-start;
+  flex-direction: row-reverse;
 }
 
 /* 📁 CategoryCatalog a la izquierda */
 .category-page-content > :nth-child(2) {
   flex: 1;
-  max-width: 320px;
+  max-width: 340px;
 }
 
 /* 📝 NewCategory a la derecha */

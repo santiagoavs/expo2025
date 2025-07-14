@@ -6,7 +6,6 @@
   box-shadow:
     1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   min-width: 1100px;                          /* Limita el ancho máximo de la card */
-  margin: 40px auto;                          /* Centrado horizontal y espaciado vertical */
   font-family: 'Segoe UI', sans-serif;       /* Fuente legible y moderna */
   display: flex;                              /* Activa flexbox vertical */
   flex-direction: column;                    /* Distribuye los elementos verticalmente */
