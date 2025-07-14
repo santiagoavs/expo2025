@@ -1,0 +1,50 @@
+.review-form {
+  width: 100%;
+  max-width: 700px;
+  background: linear-gradient(75deg, var(--navbar-bg-start), var(--navbar-bg-end));
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 1px 4px 12px #00000052;
+  position: relative;
+}
+
+.review-form h2 {
+  font-size: 1.5rem;
+  text-align: left;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  color: #3F2724;
+}
+
+.review-textarea {
+  width: 100%;
+  font-size: 1rem;
+  border: none;
+  resize: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+}
+
+.review-textarea::placeholder {
+  color: #999;
+}
+
+.review-textarea:focus {
+  outline: none;
+  border-color: #FFB800;
+}
+
+.review-button {
+  position: absolute;
+  right: 2rem;
+  width: 110px;
+  cursor: pointer;
+  margin-top: 5px
+}
+
+.success-message {
+  margin-top: 1rem;
+  color: green;
+  text-align: center;
+}
