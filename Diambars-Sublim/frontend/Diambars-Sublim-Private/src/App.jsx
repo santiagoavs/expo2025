@@ -48,6 +48,7 @@ import CodeConfirmationPage from './page/codeConfirmationPage/codeConfirmation';
 import NewPasswordPage from './page/newPasswordPage/newPassword';
 import WelcomePage from './page/welcomePage/welcome';
 import CatalogManagementPage from './page/catalogManagementPage/catalogManagement';
+import { CategoryProvider } from './context/categoryContext/categoryContext'; // ✅ Importación añadida
 import ProductCreation from './page/productCreationPage/ProductCreation';
 
 function App() {
@@ -65,7 +66,7 @@ function App() {
           <Route path="/dashboard" element={<WelcomePage />} />
           <Route path="/catalog-management" element={<CatalogManagementPage />} />
           <Route path="/product-creation" element={<ProductCreation />} />
-          
+          <Route path="/category" element={<CategoryPage />} /> {/* ✅ Nueva ruta */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

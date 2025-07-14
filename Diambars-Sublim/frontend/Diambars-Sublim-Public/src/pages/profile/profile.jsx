@@ -3,6 +3,7 @@ import UserInfo from '../../components/profile/userInfo';
 import PaymentMethods from '../../components/profile/paymentMethods';
 import ShippingAddresses from '../../components/profile/shippingAddresses';
 import ContactButton from '../../components/UI/contactButton/contactButton';
+import Footer from '../../components/UI/footer/footer';
 import './profile.css';
 
 const Profile = () => {
@@ -19,6 +20,7 @@ const Profile = () => {
         </div>
       </section>
       <ContactButton />
+      <Footer />
     </main>
   );
 };

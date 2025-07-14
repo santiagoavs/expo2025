@@ -1,0 +1,96 @@
+.product-variants-wrapper {
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
+  padding: 32px;
+  border-radius: 16px;
+ box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
+  min-width: 740px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.variant-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1A202C;
+}
+
+.attribute-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.attribute-checkbox {
+  font-size: 14px;
+  color: #1A202C;
+}
+
+.options-section {
+  margin-bottom: 32px;
+}
+
+.color-option {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.color-option input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.color-option input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+}
+
+.material-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.add-button {
+  background-color: #EDF2F7;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.generate-button {
+  background: linear-gradient(135deg, #086788, #094C63);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+.variant-results {
+  margin-top: 32px;
+  font-size: 14px;
+  color: #1A202C;
+}
+
+.variant-results ul {
+  padding-left: 20px;
+  margin-top: 12px;
+}
+
+.variant-results li {
+  margin-bottom: 6px;
+}

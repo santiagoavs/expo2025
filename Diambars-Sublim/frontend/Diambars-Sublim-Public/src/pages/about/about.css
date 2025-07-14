@@ -1,0 +1,127 @@
+.about-page {
+    position: relative;
+    background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+  }
+  
+  .about-bg-logo {
+    position: absolute;
+    bottom: 380px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  .about-title {
+    font-family: 'DiambarsFont';
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    margin-top: 120px;
+    text-align: center;
+    z-index: 2;
+  }
+  
+  .about-main-text {
+    text-align: center;
+    font-size: 1.1rem;
+    max-width: 850px;
+    margin-bottom: 3rem;
+    z-index: 2;
+    color: #3F2724;
+    padding: 0 1rem;
+  }
+  
+  .about-section {
+    background: linear-gradient(220deg, #FFF6E2, #F5E7C6);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    max-width: 850px;
+    width: 100%;
+    z-index: 2;
+  }
+  
+  .about-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #3F2724;
+  }
+  
+  .about-section p,
+  .about-section ul {
+    color: #3F2724;
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .about-section ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .about-section ul li {
+    margin-bottom: 0.7rem;
+  }
+  
+  @media (max-width: 768px) {
+    .about-title {
+      font-size: 2.2rem;
+    }
+    .about-bg-logo {
+      bottom: 600px;
+    }
+  
+    .about-main-text {
+      font-size: 1rem;
+    }
+  
+    .about-section {
+      padding: 1.2rem;
+      max-width: 400px;
+    }
+  
+    .about-section h3 {
+      font-size: 1.1rem;
+    }
+  
+    .about-section ul li {
+      font-size: 0.95rem;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .about-title {
+      font-size: 2.2rem;
+    }
+
+    .about-bg-logo {
+      bottom: 800px;
+    }
+  
+    .about-main-text {
+      font-size: 1rem;
+    }
+  
+    .about-section {
+      padding: 1.2rem;
+      max-width: 300px;
+    }
+  
+    .about-section h3 {
+      font-size: 1.1rem;
+    }
+  
+    .about-section ul li {
+      font-size: 0.95rem;
+    }
+  }
+  

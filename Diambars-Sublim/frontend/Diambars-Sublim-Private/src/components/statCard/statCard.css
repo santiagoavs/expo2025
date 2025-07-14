@@ -1,13 +1,15 @@
 .stat-card {
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);
+  background: linear-gradient(135deg, #FFF6E2, #f5e7c6);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   width: 100%;
   min-width: 480px !important;    /* Forzamos el ancho mínimo */
   max-width: 300px !important;    /* Forzamos el ancho máximo */
   height: 140px;
   box-sizing: border-box;
+  
 }
 
 .stat-content {
