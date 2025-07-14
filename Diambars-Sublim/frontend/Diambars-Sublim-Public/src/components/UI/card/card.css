@@ -4,6 +4,7 @@ body {
   background-color: #f4f4f4;
   height: 100vh;
   margin: 0;
+  overflow-x: hidden;
 }
 
 .main-wrapper {
@@ -15,23 +16,26 @@ body {
 
 .cards-container {
   display: flex;
-  flex-direction: row; /* 👈 Asegura disposición horizontal */
+  flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
   gap: 30px;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .card {
   position: relative;
   width: 350px;
   height: 450px;
-  background-color: #ffffff00;
+  background-color: transparent;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  border: 0.5px solid #593D3B;
 }
+
 
 .card:hover {
   transform: translateY(-10px);

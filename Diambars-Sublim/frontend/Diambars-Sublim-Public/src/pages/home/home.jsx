@@ -1,9 +1,10 @@
 import './home.css';
-import ImageButton from '../../components/UI/ImageButton/ImageButton';
 import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
+import { useNavigate } from 'react-router-dom'
 
 export default function Home() {
+  const navigate = useNavigate();
   return (
 <>
     <section className="home-section top">
@@ -15,7 +16,7 @@ export default function Home() {
               desde camisas, tazas y gorros.<br />
               El catálogo no tiene límites.
             </p>
-            <ImageButton src="/images/home/buttonBackground.png" alt="Catálogo" />
+            <img src="/images/home/btnVerCatalogoHome.png" alt="Botón catálogo" className="view-catalogue-button" onClick={() => navigate('/catalogue')} style={{ cursor: 'pointer' }}/>
           </div>
           <img src="/images/home/decoracion-superior.png" alt="Productos parte superior" className="products-img" />
         </div>
@@ -28,7 +29,7 @@ export default function Home() {
               Siempre es bueno escuchar sugerencias, por lo que si cuentas con una idea que no se encuentra
               en el catálogo, no dudes en ponerte en contacto a través de nuestros medios oficiales.<br /><br />
               Puedes encontrar más información en <a href="/contact">Contáctanos</a>.<br />
-              ¿Te intriga escuchar nuestra historia? Te contamos todo en <a href="/info">Acerca de Nosotros</a>.
+              ¿Te intriga escuchar nuestra historia? Te contamos todo en <a href="/about">Acerca de Nosotros</a>.
             </p>
           </div>
           <img src="/images/home/decoracion-inferior.png" alt="Productos parte inferior" className="products-img" />

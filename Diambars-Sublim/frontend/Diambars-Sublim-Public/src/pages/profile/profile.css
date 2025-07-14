@@ -1,7 +1,8 @@
 .profile-page {
-  padding: 2rem;
+  padding: 2rem 0 0 0;
   font-family: 'Arial', sans-serif;
   background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+  min-height: 93.3vh;
 }
 
 .profile-title {
@@ -19,10 +20,10 @@
   display: flex;
   justify-content: center;
   gap: 20px;
-  flex-wrap: wrap; /* por si la pantalla es muy pequeña */
+  flex-wrap: wrap; 
+  margin-bottom: 100px;
 }
 
-/* Alineación principal */
 .left-column {
   flex-shrink: 0;
 }
