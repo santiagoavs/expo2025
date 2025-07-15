@@ -1,9 +1,13 @@
+// employees.controller.js
 import employeeModel from "../models/employees.js";
 import bcrypt from "bcryptjs";
 
 const employeesController = {};
 
-//GET: Obtener todos los empleados activos
+/**
+ * Obtiene todos los empleados activos.
+ * Ideal para listados administrativos donde se requieran usuarios habilitados.
+ */
 employeesController.getEmployees = async (req, res) => {
   try {
     const employees = await employeeModel.find({ active: true });
@@ -14,7 +18,10 @@ employeesController.getEmployees = async (req, res) => {
   }
 };
 
-//GET: Obtener un empleado por ID
+/**
+ * Obtiene un empleado por su ID.
+ * Devuelve error si el empleado no existe o está inactivo.
+ */
 employeesController.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -31,25 +38,26 @@ employeesController.getEmployeeById = async (req, res) => {
   }
 };
 
-//PUT: Actualizar empleado (no se permite cambiar contraseña aquí)
+/**
+ * Actualiza un empleado sin permitir cambiar la contraseña desde esta ruta.
+ * También previene que existan múltiples usuarios con rol "admin".
+ */
 employeesController.updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
     const updateFields = { ...req.body };
 
-    // No permitir cambiar contraseña mediante esta ruta
+    // Proteger campo de contraseña
     if (updateFields.password) {
       delete updateFields.password;
     }
-    
-    // Verificar si está intentando cambiar el rol a Admin
+
+    // Verificar que no haya más de un admin
     if (updateFields.role && updateFields.role.toLowerCase() === "admin") {
-      // Excluir el empleado actual de la búsqueda
       const existingAdmin = await employeeModel.findOne({ 
         role: { $regex: new RegExp('^admin$', 'i') }, 
         _id: { $ne: id } 
       });
-      
       if (existingAdmin) {
         return res.status(403).json({ 
           message: "Ya existe un administrador. No se pueden crear más." 
@@ -73,7 +81,10 @@ employeesController.updateEmployee = async (req, res) => {
   }
 };
 
-//PATCH: Cambiar contraseña
+/**
+ * Cambia la contraseña de un empleado.
+ * Verifica permisos: solo admin/manager pueden cambiar contraseñas ajenas sin autenticación previa.
+ */
 employeesController.changeEmployeePassword = async (req, res) => {
   try {
     const { id } = req.params;
@@ -83,8 +94,7 @@ employeesController.changeEmployeePassword = async (req, res) => {
       return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
     }
 
-    // Si el usuario no es Admin o Manager y está intentando cambiar la contraseña de otro
-    // debemos verificar que conozca la contraseña actual
+    // Validación de permiso: admins o managers pueden cambiar cualquier contraseña
     if (req.user.role.toLowerCase() !== "admin" && 
         req.user.role.toLowerCase() !== "manager" && 
         req.user.id !== id) {
@@ -96,7 +106,7 @@ employeesController.changeEmployeePassword = async (req, res) => {
       return res.status(404).json({ message: "Empleado no encontrado" });
     }
 
-    // Si no es admin/Manager y es su propia cuenta, verificar contraseña actual
+    // Si no es admin/manager y cambia su propia contraseña, verificar la actual
     if (req.user.role.toLowerCase() !== "admin" && 
         req.user.role.toLowerCase() !== "manager" && 
         currentPassword) {
@@ -108,7 +118,7 @@ employeesController.changeEmployeePassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    const updated = await employeeModel.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
+    await employeeModel.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
 
     return res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
@@ -117,26 +127,27 @@ employeesController.changeEmployeePassword = async (req, res) => {
   }
 };
 
-//DELETE (soft): Inactivar empleado
+/**
+ * Inactiva (soft delete) un empleado.
+ * No elimina el registro, solo lo desactiva. Protege al superadmin.
+ */
 employeesController.inactivateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Verificar si está intentando inactivar al superadmin
     const employee = await employeeModel.findById(id);
-    
+
     if (!employee) {
       return res.status(404).json({ message: "Empleado no encontrado" });
     }
 
-    // Protección especial para el superadmin (el definido en .env)
+    // Evitar desactivar al superadmin
     if (employee.email === process.env.SUPERADMIN_EMAIL) {
       return res.status(403).json({ 
         message: "El superadmin no puede ser inactivado" 
       });
     }
 
-    const updated = await employeeModel.findByIdAndUpdate(id, { active: false }, { new: true });
+    await employeeModel.findByIdAndUpdate(id, { active: false }, { new: true });
 
     return res.status(200).json({ message: "Empleado inactivado correctamente" });
   } catch (error) {

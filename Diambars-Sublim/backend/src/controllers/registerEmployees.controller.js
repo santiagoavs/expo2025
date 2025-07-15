@@ -1,9 +1,15 @@
 import employeesModel from "../models/employees.js";
 import bcryptjs from "bcryptjs";
-import { validateEmail, isDisposableEmail } from "../utils/emailValidator.js"; // Añadir esta importación
+import { validateEmail, isDisposableEmail } from "../utils/emailValidator.js"; // Validación avanzada de correos
 
 const registerEmployeesController = {};
 
+/**
+ * Registra un nuevo empleado en la base de datos.
+ * Realiza validaciones de campos obligatorios, correos válidos,
+ * evita correos desechables y administra unicidad de correo y DUI.
+ * También impide que se registren múltiples administradores.
+ */
 registerEmployeesController.registerEmployee = async (req, res) => {
   const {
     name,
@@ -19,12 +25,17 @@ registerEmployeesController.registerEmployee = async (req, res) => {
   } = req.body;
 
   // Validación de campos requeridos
-  if (!name || !birthday || !email || !address || !hireDate || !password || !phoneNumber || !dui) {
-    return res.status(400).json({ message: "Todos los campos son obligatorios." });
+  if (
+    !name || !birthday || !email || !address ||
+    !hireDate || !password || !phoneNumber || !dui
+  ) {
+    return res.status(400).json({ 
+      message: "Todos los campos son obligatorios." 
+    });
   }
 
   try {
-    // Validar formato y dominio del correo electrónico
+    // Validar formato y existencia del dominio del correo
     const isValidEmail = await validateEmail(email);
     if (!isValidEmail) {
       return res.status(400).json({ 
@@ -32,32 +43,35 @@ registerEmployeesController.registerEmployee = async (req, res) => {
       });
     }
 
-    // Opcional: Bloquear correos temporales/desechables
+    // Bloquear correos temporales/desechables
     if (isDisposableEmail(email)) {
       return res.status(400).json({ 
         message: "No se permiten correos temporales o desechables. Por favor, utiliza un correo permanente." 
       });
     }
 
-    // Validar si ya existe un empleado con el mismo correo o DUI
+    // Verificar si ya existe el correo
     const existingByEmail = await employeesModel.findOne({ email });
-    const existingByDui = await employeesModel.findOne({ dui });
-
     if (existingByEmail) {
-      return res.status(400).json({ message: "El correo ya está registrado." });
+      return res.status(400).json({ 
+        message: "El correo ya está registrado." 
+      });
     }
 
+    // Verificar si ya existe el DUI
+    const existingByDui = await employeesModel.findOne({ dui });
     if (existingByDui) {
-      return res.status(400).json({ message: "El DUI ya está registrado." });
+      return res.status(400).json({ 
+        message: "El DUI ya está registrado." 
+      });
     }
 
-    // Verificar si está intentando registrar un Admin cuando ya existe uno
-    // Nota: Convertir a minúscula para comparación
+    // Verificar si ya existe un administrador
     if (role && role.toLowerCase() === "admin") {
       const existingAdmin = await employeesModel.findOne({ 
-        role: { $regex: new RegExp('^admin$', 'i') }
+        role: { $regex: /^admin$/i } 
       });
-      
+
       if (existingAdmin) {
         return res.status(403).json({ 
           message: "Ya existe un administrador. No se pueden crear más." 
@@ -82,18 +96,24 @@ registerEmployeesController.registerEmployee = async (req, res) => {
       active: active !== undefined ? active : true
     });
 
+    // Guardar en la base de datos
     await newEmployee.save();
 
+    // Respuesta exitosa
     return res.status(201).json({
       message: "Empleado registrado correctamente",
       employeeId: newEmployee._id,
       employeeName: newEmployee.name,
       employeeRole: newEmployee.role
     });
-    
+
   } catch (error) {
+    // Manejo de errores inesperados
     console.error("Error en el registro:", error);
-    return res.status(500).json({ message: "Error interno del servidor", error: error.message });
+    return res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: error.message 
+    });
   }
 };
 

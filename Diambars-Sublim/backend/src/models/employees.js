@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-
+// Modelo de empleado 
+// Este modelo representa a los empleados en la base de datos
 const employeeSchema = new Schema({
   name: {
     type: String,

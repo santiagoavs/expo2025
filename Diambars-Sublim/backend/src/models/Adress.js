@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-
+// Modelo de dirección
+// Este modelo representa las direcciones de los usuarios en la base de datos
 const addressSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,

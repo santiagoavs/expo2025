@@ -7,6 +7,12 @@ import { validateEmail, isDisposableEmail } from "../utils/emailValidator.js";
 
 const registerUsersController = {};
 
+/**
+ * Controlador para registrar un nuevo usuario.
+ * Realiza validaciones de campos obligatorios, correo electrónico,
+ * rol y evita duplicaciones. También genera token de verificación
+ * y envía correo al usuario.
+ */
 registerUsersController.registerUser = async (req, res) => {
   const {
     name,
@@ -16,13 +22,15 @@ registerUsersController.registerUser = async (req, res) => {
     role
   } = req.body;
 
-  // Validación de campos requeridos
+  // Validación de campos obligatorios
   if (!name || !email || !password) {
-    return res.status(400).json({ message: "Nombre, email y contraseña son obligatorios." });
+    return res.status(400).json({ 
+      message: "Nombre, email y contraseña son obligatorios." 
+    });
   }
 
   try {
-    // Validar formato y dominio del correo electrónico
+    // Validar el formato y dominio del correo electrónico
     const isValidEmail = await validateEmail(email);
     if (!isValidEmail) {
       return res.status(400).json({ 
@@ -30,26 +38,27 @@ registerUsersController.registerUser = async (req, res) => {
       });
     }
 
-    // Opcional: Bloquear correos temporales/desechables
+    // Bloquear correos temporales o desechables
     if (isDisposableEmail(email)) {
       return res.status(400).json({ 
         message: "No se permiten correos temporales o desechables. Por favor, utiliza un correo permanente." 
       });
     }
 
-    // Validar si ya existe un usuario con el mismo correo
+    // Verificar si ya existe un usuario con el mismo correo
     const existingByEmail = await userModel.findOne({ email });
-
     if (existingByEmail) {
-      return res.status(400).json({ message: "El correo ya está registrado." });
+      return res.status(400).json({ 
+        message: "El correo ya está registrado." 
+      });
     }
 
-    // Verificar si está intentando registrar un admin cuando ya existe uno
+    // Verificar que solo se pueda registrar un administrador
     if (role === "admin") {
       const existingAdmin = await userModel.findOne({ 
         role: { $regex: new RegExp('^admin$', 'i') } 
       });
-      
+
       if (existingAdmin) {
         return res.status(403).json({ 
           message: "Ya existe un administrador. No se pueden crear más." 
@@ -57,26 +66,27 @@ registerUsersController.registerUser = async (req, res) => {
       }
     }
 
-    // Generar token de verificación
+    // Generar token de verificación con fecha de expiración (24h)
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Hashear la contraseña
+    // Hashear la contraseña antes de guardar
     const passwordHash = await bcryptjs.hash(password, 10);
 
-    // Crear nuevo usuario
+    // Crear instancia del nuevo usuario
     const newUser = new userModel({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: passwordHash,
       phoneNumber: phoneNumber ? phoneNumber.trim() : undefined,
-      role: role || "customer", // por defecto si no se manda
+      role: role || "customer",
       active: true,
-      verified: false, // Por defecto, requiere verificación
-      verificationToken, 
+      verified: false,
+      verificationToken,
       verificationExpires
     });
 
+    // Guardar usuario en la base de datos
     await newUser.save();
 
     // Enviar correo de verificación
@@ -84,12 +94,10 @@ registerUsersController.registerUser = async (req, res) => {
       await sendVerificationEmail(email, verificationToken, name);
     } catch (emailError) {
       console.error("Error al enviar correo de verificación:", emailError);
-      // No fallamos la petición por un error en el envío del correo
-      // Pero lo registramos para seguimiento
+      // El registro continúa, solo se reporta el error en consola
     }
 
-    // No generar token de sesión ni cookies
-    // Solo devolver una respuesta exitosa
+    // Respuesta exitosa sin generar sesión ni token aún
     return res.status(201).json({
       message: "Usuario registrado correctamente. Por favor, verifica tu correo electrónico para activar tu cuenta.",
       userId: newUser._id
@@ -97,7 +105,10 @@ registerUsersController.registerUser = async (req, res) => {
 
   } catch (error) {
     console.error("Error en el registro:", error);
-    return res.status(500).json({ message: "Error interno del servidor", error: error.message });
+    return res.status(500).json({ 
+      message: "Error interno del servidor", 
+      error: error.message 
+    });
   }
 };
 

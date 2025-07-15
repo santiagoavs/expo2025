@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-
+// Modelo de categoría
+// Este modelo representa las categorías de productos en la base de datos
 const categorySchema = new mongoose.Schema(
   {
     name: {

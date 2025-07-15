@@ -12,7 +12,13 @@ import {
 const categoryController = {};
 
 /**
- * Crea una nueva categoría con mejor manejo de la jerarquía
+ * Crea una nueva categoría
+ *
+ * - Requiere nombre e imagen.
+ * - Valida si ya existe una categoría con el mismo nombre.
+ * - Valida la categoría padre y previene ciclos en la jerarquía.
+ * - Sube imagen a Cloudinary.
+ * - Guarda la nueva categoría en la base de datos.
  */
 categoryController.createCategory = async (req, res) => {
   let tempFilePath = null;
@@ -151,14 +157,10 @@ categoryController.createCategory = async (req, res) => {
 };
 
 /**
- * Obtiene todas las categorías
- * 
- * Devuelve dos estructuras:
- * 1. Una lista plana de todas las categorías
- * 2. Un árbol jerárquico que muestra la relación padre-hijo
- */
-/**
- * Obtiene todas las categorías con estructura jerárquica mejorada
+ * Obtiene todas las categorías existentes
+ *
+ * - Devuelve lista plana + árbol jerárquico padre-hijo.
+ * - Incluye cantidad de productos por categoría (incluyendo subcategorías).
  */
 categoryController.getAllCategories = async (req, res) => {
   try {
@@ -207,7 +209,10 @@ categoryController.getAllCategories = async (req, res) => {
 };
 
 /**
- * Obtiene categoría por ID con información completa
+ * Obtiene una categoría por su ID
+ *
+ * - Incluye información completa: padre, hijos, subcategorías y ruta completa.
+ * - También devuelve cantidad de productos relacionados.
  */
 categoryController.getCategoryById = async (req, res) => {
   try {
@@ -251,10 +256,11 @@ categoryController.getCategoryById = async (req, res) => {
 };
 
 /**
- * Actualiza una categoría existente
- * 
- * Permite actualizar cualquier campo, incluyendo la imagen.
- * Incluye validaciones para evitar ciclos en la jerarquía.
+ * Actualiza los datos de una categoría existente
+ *
+ * - Valida nombre único y evita ciclos.
+ * - Permite subir nueva imagen (opcional).
+ * - Actualiza todos los campos personalizables.
  */
 categoryController.updateCategory = async (req, res) => {
   try {
@@ -337,8 +343,9 @@ categoryController.updateCategory = async (req, res) => {
 
 /**
  * Elimina una categoría
- * 
- * Solo permite eliminar si la categoría no tiene subcategorías ni productos asociados.
+ *
+ * - Solo elimina si no tiene subcategorías ni productos.
+ * - Elimina la imagen de Cloudinary si existe.
  */
 categoryController.deleteCategory = async (req, res) => {
   try {
@@ -398,9 +405,10 @@ categoryController.deleteCategory = async (req, res) => {
 };
 
 /**
- * Busca categorías por nombre
- * 
- * Útil para búsquedas en el frontend, devuelve hasta 10 resultados.
+ * Busca categorías por coincidencia de nombre
+ *
+ * - Devuelve un máximo de 10 resultados.
+ * - Útil para el buscador del frontend.
  */
 categoryController.searchCategories = async (req, res) => {
   try {
@@ -422,9 +430,7 @@ categoryController.searchCategories = async (req, res) => {
 };
 
 /**
- * Obtiene categorías para mostrar en la página principal
- * 
- * Devuelve solo categorías activas y marcadas para mostrar en homepage.
+ * Obtiene las categorías activas que se deben mostrar en el homepage
  */
 categoryController.getHomepageCategories = async (req, res) => {
   try {

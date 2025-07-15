@@ -41,7 +41,7 @@ productCreateController.createProduct = async (req, res) => {
         parsedAttributes = typeof attributes === 'string' 
           ? JSON.parse(attributes) 
           : attributes;
-        
+
         if (!Array.isArray(parsedAttributes)) {
           throw new Error("Los atributos deben ser un array");
         }
@@ -84,10 +84,8 @@ productCreateController.createProduct = async (req, res) => {
     // Generar variantes si hay atributos definidos
     const variants = [];
     if (parsedAttributes && parsedAttributes.length > 0) {
-      // Generar todas las combinaciones posibles de atributos
       const combinations = variantService.generateCombinations(parsedAttributes);
-      
-      // Crear variantes para cada combinación
+
       for (const combination of combinations) {
         const variant = new Variant({
           product: newProduct._id,
@@ -110,14 +108,14 @@ productCreateController.createProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al crear producto:", error);
-    
+
     if (error.code === 11000) {
       return res.status(400).json({
         message: "Ya existe un producto con este nombre",
         error: error.message,
       });
     }
-    
+
     res.status(500).json({
       message: "Error al crear el producto",
       error: error.message,
@@ -130,17 +128,14 @@ productCreateController.createProduct = async (req, res) => {
  */
 productCreateController.getAllProducts = async (req, res) => {
   try {
-    // Opciones de paginación
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
-    // Filtros básicos
+
     const filter = {};
     if (req.query.category) filter.category = req.query.category;
     if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === 'true';
-    
-    // Búsqueda por nombre
+
     if (req.query.search) {
       filter.$or = [
         { name: { $regex: req.query.search, $options: 'i' } },
@@ -148,17 +143,14 @@ productCreateController.getAllProducts = async (req, res) => {
       ];
     }
 
-    // Obtener productos con paginación
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate("category", "name");
-    
-    // Contar total de productos
+
     const total = await Product.countDocuments(filter);
-    
-    // Obtener variantes para cada producto
+
     const productsWithVariants = await Promise.all(
       products.map(async (product) => {
         const variants = await Variant.find({ 
@@ -199,27 +191,25 @@ productCreateController.getAllProducts = async (req, res) => {
 productCreateController.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Buscar por ID o slug
+
     const filter = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
       : { slug: id };
-    
+
     const product = await Product.findOne(filter)
       .populate("category", "name");
-    
+
     if (!product) {
       return res.status(404).json({
         message: "Producto no encontrado",
       });
     }
-    
-    // Obtener variantes del producto
+
     const variants = await Variant.find({ 
       product: product._id,
       isActive: true
     });
-    
+
     res.status(200).json({
       success: true,
       data: {

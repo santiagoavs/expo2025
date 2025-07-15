@@ -1,3 +1,4 @@
+// passwordRecovery.controller.js
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import userModel from "../models/users.js";
@@ -7,6 +8,14 @@ import { sendRecoveryCode, sendPasswordResetConfirmation } from "../utils/passwo
 
 const passwordRecoveryController = {};
 
+/**
+ * Solicita un código de recuperación de contraseña
+ *
+ * - Requiere un email válido.
+ * - Busca el usuario por email (en usuarios y empleados).
+ * - Genera un código de 6 dígitos y lo almacena temporalmente.
+ * - Envía el código al correo del usuario.
+ */
 passwordRecoveryController.requestRecoveryCode = async (req, res) => {
   if (!req.body.email) {
     return res.status(400).json({ 
@@ -14,9 +23,9 @@ passwordRecoveryController.requestRecoveryCode = async (req, res) => {
       receivedBody: req.body
     });
   }
-  
+
   const { email } = req.body;
-  
+
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ 
       message: "Se requiere un correo electrónico válido" 
@@ -24,12 +33,13 @@ passwordRecoveryController.requestRecoveryCode = async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase();
-  
+
   try {
     let user = null;
     let userType = null;
     let userName = null;
-    
+
+    // Buscar en usuarios y luego en empleados
     user = await userModel.findOne({ email: normalizedEmail });
     if (user) {
       userType = "user";
@@ -41,15 +51,15 @@ passwordRecoveryController.requestRecoveryCode = async (req, res) => {
         userName = user.name;
       }
     }
-    
+
     if (!user) {
       return res.status(404).json({ 
         message: "No se encontró ninguna cuenta asociada a este correo electrónico." 
       });
     }
-    
+
+    // Crear código aleatorio de 6 dígitos y su metadata
     const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
-    
     const recoveryData = {
       code: recoveryCode,
       expiresAt: new Date(Date.now() + 20 * 60 * 1000), // 20 minutos
@@ -57,29 +67,24 @@ passwordRecoveryController.requestRecoveryCode = async (req, res) => {
       userType,
       userId: user._id
     };
-    
-    // Actualizar usando save() en lugar de findByIdAndUpdate
-    if (userType === "user") {
-      user.recoveryData = recoveryData;
-      await user.save();
-    } else if (userType === "employee") {
-      user.recoveryData = recoveryData;
-      await user.save();
-    }
-    
+
+    // Guardar en el modelo correspondiente
+    user.recoveryData = recoveryData;
+    await user.save();
+
     const emailSent = await sendRecoveryCode(normalizedEmail, recoveryCode, userName);
-    
+
     if (!emailSent) {
       return res.status(500).json({ 
         message: "No se pudo enviar el correo. Por favor, intenta más tarde." 
       });
     }
-    
+
     return res.status(200).json({ 
       message: "Se ha enviado un código de recuperación a tu correo electrónico.",
       email: normalizedEmail
     });
-    
+
   } catch (error) {
     console.error("[PasswordRecovery] Error al solicitar código:", error);
     return res.status(500).json({ 
@@ -88,46 +93,53 @@ passwordRecoveryController.requestRecoveryCode = async (req, res) => {
   }
 };
 
+/**
+ * Verifica el código de recuperación ingresado por el usuario.
+ *
+ * - Comprueba si coincide y no ha expirado.
+ * - Si es válido, devuelve un token temporal para cambiar la contraseña.
+ */
 passwordRecoveryController.verifyRecoveryCode = async (req, res) => {
   const { code, email } = req.body;
-  
+
   if (!code || typeof code !== 'string' || !email) {
     return res.status(400).json({ 
       message: "Se requiere un código de verificación válido y un correo" 
     });
   }
-  
+
   try {
     const normalizedEmail = email.toLowerCase();
-    
+
     let user = await userModel.findOne({ email: normalizedEmail });
     let userType = "user";
-    
+
     if (!user) {
       user = await employeeModel.findOne({ email: normalizedEmail });
       userType = "employee";
     }
-    
+
     if (!user || !user.recoveryData) {
       return res.status(404).json({ 
         message: "Solicitud de recuperación no encontrada. Por favor, solicita un nuevo código." 
       });
     }
-    
+
     const recoveryData = user.recoveryData;
-    
+
     if (new Date() > new Date(recoveryData.expiresAt)) {
       return res.status(401).json({ 
         message: "El código ha expirado. Por favor, solicita un nuevo código." 
       });
     }
-    
+
     if (recoveryData.code !== code) {
       return res.status(400).json({ 
         message: "El código ingresado es incorrecto. Por favor, verifica e intenta nuevamente." 
       });
     }
-    
+
+    // Crear token para permitir cambio de contraseña
     const verificationToken = jwt.sign(
       {
         email: normalizedEmail,
@@ -138,12 +150,12 @@ passwordRecoveryController.verifyRecoveryCode = async (req, res) => {
       config.JWT.secret,
       { expiresIn: "20m" }
     );
-    
+
     return res.status(200).json({ 
       message: "Código verificado correctamente. Ahora puedes establecer una nueva contraseña.",
       token: verificationToken
     });
-    
+
   } catch (error) {
     console.error("[PasswordRecovery] Error al verificar código:", error);
     return res.status(500).json({ 
@@ -152,16 +164,18 @@ passwordRecoveryController.verifyRecoveryCode = async (req, res) => {
   }
 };
 
+/**
+ * Cambia la contraseña usando el token de verificación emitido previamente.
+ *
+ * - Verifica el token JWT.
+ * - Encripta la nueva contraseña.
+ * - Actualiza en la base de datos y limpia los datos de recuperación.
+ * - Envía un correo confirmando el cambio.
+ */
 passwordRecoveryController.resetPassword = async (req, res) => {
-  console.log('Datos recibidos:', {
-    body: req.body,
-    headers: req.headers
-  });
-
   const { newPassword, token } = req.body;
-  
+
   if (!newPassword || !token) {
-    console.error('Faltan campos requeridos');
     return res.status(400).json({ 
       success: false,
       message: "Se requieren ambos campos: newPassword y token",
@@ -170,10 +184,8 @@ passwordRecoveryController.resetPassword = async (req, res) => {
   }
 
   try {
-    console.log('Verificando token...');
     const decoded = jwt.verify(token, config.JWT.secret);
-    console.log('Token decodificado:', decoded);
-    
+
     if (!decoded.verified) {
       return res.status(401).json({
         success: false,
@@ -182,8 +194,7 @@ passwordRecoveryController.resetPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcryptjs.hash(newPassword, 10);
-    
-    // Actualizar la contraseña según el tipo de usuario
+
     const Model = decoded.userType === 'user' ? userModel : employeeModel;
     const updateResult = await Model.findByIdAndUpdate(
       decoded.userId,
@@ -201,9 +212,6 @@ passwordRecoveryController.resetPassword = async (req, res) => {
       });
     }
 
-    console.log('Contraseña actualizada para:', updateResult.email);
-
-    // Enviar confirmación por email
     await sendPasswordResetConfirmation(decoded.email, updateResult.name);
 
     return res.status(200).json({
@@ -219,7 +227,7 @@ passwordRecoveryController.resetPassword = async (req, res) => {
     });
     return res.status(500).json({
       success: false,
-      message: message,
+      message: "Error al cambiar la contraseña",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

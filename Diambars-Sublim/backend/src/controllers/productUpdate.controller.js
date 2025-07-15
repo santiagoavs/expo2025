@@ -7,7 +7,9 @@ import variantService from "../utils/variant.service.js";
 const productUpdateController = {};
 
 /**
- * Actualiza un producto existente
+ * Actualiza los datos de un producto existente.
+ * Incluye validación de categoría, procesamiento de imagen,
+ * actualización de atributos y variantes automáticas.
  */
 productUpdateController.updateProduct = async (req, res) => {
   try {
@@ -20,6 +22,7 @@ productUpdateController.updateProduct = async (req, res) => {
       isActive,
     } = req.body;
 
+    // Buscar el producto por ID
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
@@ -27,7 +30,7 @@ productUpdateController.updateProduct = async (req, res) => {
       });
     }
 
-    // Validar la categoría si se proporciona
+    // Validar categoría (si se especificó)
     if (category) {
       const categoryExists = await Category.findById(category);
       if (!categoryExists) {
@@ -37,17 +40,17 @@ productUpdateController.updateProduct = async (req, res) => {
       }
     }
 
-    // Procesar imagen si se proporciona
+    // Procesar nueva imagen (si viene en la petición)
     if (req.file) {
       try {
-        // Si hay imagen anterior, eliminarla
+        // Eliminar imagen anterior (si existe)
         if (product.mainImage) {
           await cloudinary.deleteImage(product.mainImage, "diambars/products");
         }
-        
+
         // Subir nueva imagen
         product.mainImage = await cloudinary.uploadImage(
-          req.file.path, 
+          req.file.path,
           "diambars/products"
         );
       } catch (uploadError) {
@@ -58,20 +61,22 @@ productUpdateController.updateProduct = async (req, res) => {
       }
     }
 
-    // Actualizar campos básicos
+    // Actualizar campos básicos del producto
     if (name) product.name = name;
     if (description !== undefined) product.description = description;
     if (category) product.category = category;
     if (isActive !== undefined) product.isActive = isActive;
 
-    // Si hay nuevos atributos, actualizar variantes
+    // Si se especifican nuevos atributos, generar variantes
     if (attributes) {
       let parsedAttributes;
+
+      // Validar formato de atributos
       try {
-        parsedAttributes = typeof attributes === 'string' 
-          ? JSON.parse(attributes) 
+        parsedAttributes = typeof attributes === 'string'
+          ? JSON.parse(attributes)
           : attributes;
-        
+
         if (!Array.isArray(parsedAttributes)) {
           throw new Error("Los atributos deben ser un array");
         }
@@ -81,53 +86,53 @@ productUpdateController.updateProduct = async (req, res) => {
           error: error.message,
         });
       }
-      
+
       product.attributes = parsedAttributes;
-      
-      // Generar nuevas combinaciones de atributos
+
+      // Generar todas las combinaciones posibles de atributos
       const combinations = variantService.generateCombinations(parsedAttributes);
-      
-      // Obtener variantes existentes
+
+      // Obtener variantes existentes del producto
       const existingVariants = await Variant.find({ product: product._id });
-      
-      // Crear un mapa para comparar variantes existentes con nuevas
+
+      // Crear mapa de variantes existentes para comparación
       const existingVariantMap = new Map();
       existingVariants.forEach(variant => {
         const key = JSON.stringify(Object.fromEntries(variant.attributes));
         existingVariantMap.set(key, variant);
       });
-      
-      // Procesar cada combinación
+
+      // Procesar cada combinación de atributos
       for (const combination of combinations) {
         const key = JSON.stringify(combination);
-        
+
         if (existingVariantMap.has(key)) {
-          // Si ya existe esta combinación, marcarla como procesada
+          // Si la combinación ya existe, marcar como procesada
           existingVariantMap.delete(key);
         } else {
-          // Si es una nueva combinación, crear nueva variante
+          // Si es nueva, crear variante
           const newVariant = new Variant({
             product: product._id,
             attributes: combination,
             isActive: true,
           });
-          
+
           await newVariant.save();
         }
       }
-      
-      // Las variantes que quedan en el mapa ya no son válidas (se eliminaron atributos)
-      // Marcarlas como inactivas en lugar de eliminarlas
+
+      // Las variantes que no se procesaron se desactivan
       for (const [, variant] of existingVariantMap) {
         variant.isActive = false;
         await variant.save();
       }
     }
 
+    // Guardar cambios en producto
     await product.save();
 
-    // Obtener variantes actualizadas
-    const updatedVariants = await Variant.find({ 
+    // Obtener variantes activas después de la actualización
+    const updatedVariants = await Variant.find({
       product: product._id,
       isActive: true
     });
@@ -142,14 +147,15 @@ productUpdateController.updateProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al actualizar producto:", error);
-    
+
+    // Manejar error de nombre duplicado
     if (error.code === 11000) {
       return res.status(400).json({
         message: "Ya existe un producto con este nombre",
         error: error.message,
       });
     }
-    
+
     res.status(500).json({
       message: "Error al actualizar el producto",
       error: error.message,
@@ -158,13 +164,15 @@ productUpdateController.updateProduct = async (req, res) => {
 };
 
 /**
- * Actualiza una variante específica
+ * Actualiza los datos de una variante específica.
+ * Puede incluir stock, estado y nueva imagen.
  */
 productUpdateController.updateVariant = async (req, res) => {
   try {
     const { id } = req.params;
     const { stock, isActive } = req.body;
 
+    // Buscar variante por ID
     const variant = await Variant.findById(id);
     if (!variant) {
       return res.status(404).json({
@@ -172,21 +180,21 @@ productUpdateController.updateVariant = async (req, res) => {
       });
     }
 
-    // Actualizar campos
+    // Actualizar datos básicos
     if (stock !== undefined) variant.stock = Number(stock);
     if (isActive !== undefined) variant.isActive = isActive;
 
-    // Procesar imagen si se proporciona
+    // Procesar nueva imagen (si se proporciona)
     if (req.file) {
       try {
-        // Eliminar imagen anterior si existe
+        // Eliminar imagen anterior (si existe)
         if (variant.image) {
           await cloudinary.deleteImage(variant.image, "diambars/variants");
         }
-        
+
         // Subir nueva imagen
         variant.image = await cloudinary.uploadImage(
-          req.file.path, 
+          req.file.path,
           "diambars/variants"
         );
       } catch (uploadError) {
@@ -197,6 +205,7 @@ productUpdateController.updateVariant = async (req, res) => {
       }
     }
 
+    // Guardar cambios en la variante
     await variant.save();
 
     res.status(200).json({

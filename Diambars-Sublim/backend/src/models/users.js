@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-
+//schema de usuario
+// Este modelo representa a los usuarios en la base de datos
 const userSchema = new mongoose.Schema({
   name: {
     type: String,

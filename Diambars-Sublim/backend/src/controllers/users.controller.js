@@ -3,7 +3,9 @@ import bcrypt from "bcryptjs";
 
 const usersController = {};
 
-//GET: Obtener todos los usuarios activos
+/**
+ * GET: Obtiene todos los usuarios activos.
+ */
 usersController.getUsers = async (req, res) => {
   try {
     const users = await userModel.find({ active: true });
@@ -14,7 +16,9 @@ usersController.getUsers = async (req, res) => {
   }
 };
 
-//GET: Obtener un usuario por ID
+/**
+ * GET: Obtiene un usuario por su ID si está activo.
+ */
 usersController.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -31,18 +35,21 @@ usersController.getUserById = async (req, res) => {
   }
 };
 
-//PUT: Actualizar usuario (no se permite cambiar contraseña aquí)
+/**
+ * PUT: Actualiza los datos del usuario, excluyendo la contraseña.
+ * También previene la creación de múltiples administradores.
+ */
 usersController.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const updateFields = { ...req.body };
 
-    // No permitir cambiar contraseña mediante esta ruta
+    // Evitar actualización de contraseña por esta ruta
     if (updateFields.password) {
       delete updateFields.password;
     }
 
-    // Evitar cambio de rol a admin si ya existe un admin
+    // Validación para rol de administrador único
     if (updateFields.role === 'admin') {
       const existingAdmin = await userModel.findOne({ role: 'admin', _id: { $ne: id } });
       if (existingAdmin) {
@@ -66,7 +73,10 @@ usersController.updateUser = async (req, res) => {
   }
 };
 
-//PATCH: Cambiar contraseña
+/**
+ * PATCH: Cambia la contraseña de un usuario.
+ * Requiere validación de la contraseña actual si se proporciona.
+ */
 usersController.changeUserPassword = async (req, res) => {
   try {
     const { id } = req.params;
@@ -76,14 +86,12 @@ usersController.changeUserPassword = async (req, res) => {
       return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
     }
 
-    // Obtener usuario con password para verificar
     const user = await userModel.findById(id).select('+password');
-    
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Si se proporciona contraseña actual, verificarla
+    // Verificación de la contraseña actual
     if (currentPassword) {
       const isMatch = await bcrypt.compare(currentPassword, user.password);
       if (!isMatch) {
@@ -92,8 +100,7 @@ usersController.changeUserPassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    const updated = await userModel.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
+    await userModel.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
 
     return res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (error) {
@@ -102,7 +109,9 @@ usersController.changeUserPassword = async (req, res) => {
   }
 };
 
-//GET: Obtener wishlist del usuario
+/**
+ * GET: Obtiene la lista de deseos (wishlist) del usuario.
+ */
 usersController.getUserWishlist = async (req, res) => {
   try {
     const { id } = req.params;
@@ -119,7 +128,9 @@ usersController.getUserWishlist = async (req, res) => {
   }
 };
 
-//PATCH: Agregar producto a wishlist
+/**
+ * PATCH: Añade un producto a la wishlist del usuario.
+ */
 usersController.addToWishlist = async (req, res) => {
   try {
     const { id } = req.params;
@@ -131,7 +142,7 @@ usersController.addToWishlist = async (req, res) => {
 
     const updated = await userModel.findByIdAndUpdate(
       id,
-      { $addToSet: { wishlist: productId } }, // $addToSet evita duplicados
+      { $addToSet: { wishlist: productId } },
       { new: true }
     );
 
@@ -146,7 +157,9 @@ usersController.addToWishlist = async (req, res) => {
   }
 };
 
-//PATCH: Eliminar producto de wishlist
+/**
+ * PATCH: Elimina un producto de la wishlist del usuario.
+ */
 usersController.removeFromWishlist = async (req, res) => {
   try {
     const { id } = req.params;
@@ -173,7 +186,9 @@ usersController.removeFromWishlist = async (req, res) => {
   }
 };
 
-//GET: Obtener direcciones del usuario
+/**
+ * GET: Obtiene las direcciones del usuario.
+ */
 usersController.getUserAddresses = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +205,9 @@ usersController.getUserAddresses = async (req, res) => {
   }
 };
 
-//PATCH: Establecer dirección predeterminada
+/**
+ * PATCH: Establece una dirección como predeterminada para el usuario.
+ */
 usersController.setDefaultAddress = async (req, res) => {
   try {
     const { id } = req.params;
@@ -217,12 +234,18 @@ usersController.setDefaultAddress = async (req, res) => {
   }
 };
 
-//DELETE (soft): Inactivar usuario
+/**
+ * DELETE (soft): Inactiva a un usuario en lugar de eliminarlo permanentemente.
+ */
 usersController.inactivateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updated = await userModel.findByIdAndUpdate(id, { active: false }, { new: true });
+    const updated = await userModel.findByIdAndUpdate(
+      id,
+      { active: false },
+      { new: true }
+    );
 
     if (!updated) {
       return res.status(404).json({ message: "Usuario no encontrado" });
