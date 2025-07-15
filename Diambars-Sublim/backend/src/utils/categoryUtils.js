@@ -58,34 +58,40 @@ export const getAllSubcategories = async (categoryId) => {
  * @returns {Boolean} - True si causaría un ciclo, false si no
  */
 export const wouldCreateCycle = async (categoryId, newParentId) => {
-  if (!newParentId || categoryId.toString() === newParentId.toString()) {
+  // Si no hay nuevo padre, no hay ciclo
+  if (!newParentId || newParentId === 'null' || newParentId === 'undefined') {
+    return false;
+  }
+
+  // No permitir asignarse a sí mismo como padre
+  if (categoryId && categoryId.toString() === newParentId.toString()) {
     return true;
   }
-  
-  let currentParent = newParentId;
+
+  let currentParentId = newParentId;
   const visited = new Set();
-  
+
   // Recorrer hacia arriba en la jerarquía
-  while (currentParent) {
+  while (currentParentId) {
     // Evitar bucles infinitos
-    if (visited.has(currentParent.toString())) {
+    if (visited.has(currentParentId.toString())) {
       return true;
     }
-    visited.add(currentParent.toString());
-    
-    // Si llegamos al ID original, hay un ciclo
-    if (currentParent.toString() === categoryId.toString()) {
+    visited.add(currentParentId.toString());
+
+    // Si encontramos el ID original, hay un ciclo
+    if (categoryId && currentParentId.toString() === categoryId.toString()) {
       return true;
     }
-    
-    const parentCategory = await Category.findById(currentParent);
+
+    const parentCategory = await Category.findById(currentParentId);
     if (!parentCategory || !parentCategory.parent) {
       break;
     }
-    
-    currentParent = parentCategory.parent;
+
+    currentParentId = parentCategory.parent;
   }
-  
+
   return false;
 };
 

@@ -1,11 +1,17 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CategoryContext } from '../../context/categoryContext';
-import './NewCategory.css';
+import '../../components/newCategory/newCategory.css'; // Reutilizamos los mismos estilos
 
-const NewCategory = () => {
-  const { addCategory, flatCategories } = useContext(CategoryContext);
+const EditCategory = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { 
+    currentCategory,
+    fetchCategoryById,
+    updateCategory,
+    flatCategories
+  } = useContext(CategoryContext);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -14,12 +20,42 @@ const NewCategory = () => {
     isActive: true,
     showOnHomepage: false,
     image: null,
-    imagePreview: ''
+    imagePreview: '',
+    currentImage: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Cargar datos de la categoría al montar
+  useEffect(() => {
+    const loadCategoryData = async () => {
+      try {
+        await fetchCategoryById(id);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    
+    loadCategoryData();
+  }, [id, fetchCategoryById]);
+
+  // Actualizar el formulario cuando currentCategory cambie
+  useEffect(() => {
+    if (currentCategory) {
+      setFormData({
+        name: currentCategory.name,
+        parent: currentCategory.parent?._id || '',
+        description: currentCategory.description || '',
+        isActive: currentCategory.isActive,
+        showOnHomepage: currentCategory.showOnHomepage,
+        image: null,
+        imagePreview: '',
+        currentImage: currentCategory.image
+      });
+    }
+  }, [currentCategory]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -66,10 +102,6 @@ const NewCategory = () => {
         throw new Error('El nombre de la categoría es obligatorio');
       }
 
-      if (!formData.image) {
-        throw new Error('Debes seleccionar una imagen');
-      }
-
       // Crear FormData
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name.trim());
@@ -77,42 +109,34 @@ const NewCategory = () => {
       
       if (formData.parent) {
         formDataToSend.append('parent', formData.parent);
+      } else {
+        formDataToSend.append('parent', '');
       }
       
       formDataToSend.append('isActive', formData.isActive);
       formDataToSend.append('showOnHomepage', formData.showOnHomepage);
-      formDataToSend.append('image', formData.image);
-      formDataToSend.append('order', '0');
+      
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
 
-      await addCategory(formDataToSend);
-
-      // Resetear formulario después de éxito
-      setFormData({
-        name: '',
-        parent: '',
-        description: '',
-        isActive: true,
-        showOnHomepage: false,
-        image: null,
-        imagePreview: ''
-      });
+      await updateCategory(id, formDataToSend);
       setSuccess(true);
       setTimeout(() => navigate('/category'), 2000);
-
     } catch (err) {
       setError(err.message);
-      console.error('Error en handleSubmit:', err);
+      console.error('Error updating category:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const parentCategories = flatCategories.filter(cat => !cat.parent);
+  const parentCategories = flatCategories.filter(cat => !cat.parent || cat._id === id);
 
   return (
     <div className="new-category-wrapper">
       <div className="new-category-header">
-        <h2>Crear Nueva Categoría</h2>
+        <h2>Editar Categoría</h2>
         <button 
           onClick={() => navigate('/category')}
           className="back-btn"
@@ -132,7 +156,6 @@ const NewCategory = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Ej: Camisetas"
               />
             </label>
           </div>
@@ -147,7 +170,11 @@ const NewCategory = () => {
               >
                 <option value="">Ninguna (categoría principal)</option>
                 {parentCategories.map(cat => (
-                  <option key={cat._id} value={cat._id}>
+                  <option 
+                    key={cat._id} 
+                    value={cat._id} 
+                    disabled={cat._id === id}
+                  >
                     {cat.name}
                   </option>
                 ))}
@@ -162,7 +189,6 @@ const NewCategory = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Describe la categoría..."
                 rows="3"
               />
             </label>
@@ -198,11 +224,11 @@ const NewCategory = () => {
             <div className="image-preview-box">
               {formData.imagePreview ? (
                 <img src={formData.imagePreview} alt="Vista previa" />
+              ) : formData.currentImage ? (
+                <img src={formData.currentImage} alt="Imagen actual" />
               ) : (
                 <div className="image-placeholder">
-                  <span>Sube una imagen para la categoría</span>
-                  <span className="formats">Formatos: JPG, PNG, GIF, WEBP</span>
-                  <span className="max-size">Máx. 5MB</span>
+                  <span>Sin imagen</span>
                 </div>
               )}
             </div>
@@ -212,9 +238,8 @@ const NewCategory = () => {
                 accept="image/*"
                 onChange={handleImageChange}
                 style={{ display: 'none' }}
-                required
               />
-              {formData.imagePreview ? 'Cambiar imagen' : 'Seleccionar imagen'}
+              Cambiar imagen
             </label>
           </div>
 
@@ -229,6 +254,8 @@ const NewCategory = () => {
               <div className="preview-image-box">
                 {formData.imagePreview ? (
                   <img src={formData.imagePreview} alt="Vista previa" />
+                ) : formData.currentImage ? (
+                  <img src={formData.currentImage} alt="Imagen actual" />
                 ) : (
                   <div className="image-placeholder">Imagen</div>
                 )}
@@ -246,7 +273,7 @@ const NewCategory = () => {
         
         {success && (
           <div className="success-message">
-            ¡Categoría creada exitosamente! Redirigiendo...
+            ¡Categoría actualizada exitosamente! Redirigiendo...
           </div>
         )}
 
@@ -261,25 +288,14 @@ const NewCategory = () => {
                 <span className="spinner"></span>
                 Guardando...
               </>
-            ) : 'Guardar Categoría'}
+            ) : 'Guardar Cambios'}
           </button>
           <button 
             type="button" 
             className="cancel-btn"
-            onClick={() => {
-              setFormData({
-                name: '',
-                parent: '',
-                description: '',
-                isActive: true,
-                showOnHomepage: false,
-                image: null,
-                imagePreview: ''
-              });
-              setError(null);
-            }}
+            onClick={() => navigate('/category')}
           >
-            Limpiar
+            Cancelar
           </button>
         </div>
       </form>
@@ -287,4 +303,4 @@ const NewCategory = () => {
   );
 };
 
-export default NewCategory;
+export default EditCategory;

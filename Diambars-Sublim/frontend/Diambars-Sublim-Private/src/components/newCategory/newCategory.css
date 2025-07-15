@@ -77,6 +77,42 @@
   gap: 32px;                                  /* Espaciado entre ellos */
   margin-top: 8px;                            /* Margen superior respecto al campo anterior */ 
 }
+.error-message {
+  color: #d32f2f;
+  background-color: #fde8e8;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 15px 0;
+  border-left: 4px solid #d32f2f;
+}
+
+.success-message {
+  color: #2e7d32;
+  background-color: #edf7ed;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 15px 0;
+  border-left: 4px solid #2e7d32;
+}
+
+.save-btn {
+  position: relative;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 .new-category-switches input[type="checkbox"] {
   appearance: none;                /* Remueve el estilo nativo */

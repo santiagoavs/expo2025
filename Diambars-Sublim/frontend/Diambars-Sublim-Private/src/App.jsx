@@ -48,9 +48,11 @@ import CodeConfirmationPage from './page/codeConfirmationPage/codeConfirmation';
 import NewPasswordPage from './page/newPasswordPage/newPassword';
 import WelcomePage from './page/welcomePage/welcome';
 import CatalogManagementPage from './page/catalogManagementPage/catalogManagement';
-import { CategoryProvider } from './context/categoryContext/categoryContext'; // ✅ Solo el contexto
+import { CategoryProvider } from './context/categoryContext'; // ✅ Solo el contexto
 import CategoryPage from './page/categoryPage/category'; // ✅ Página separada
 import ProductCreation from './page/productCreationPage/ProductCreation';
+import EditCategory from './page/categoryPage/editCategory';
+import NewCategory from './components/newCategory/newCategory'; // ✅ Componente reutilizable
 
 function App() {
   return (
@@ -68,7 +70,9 @@ function App() {
           <Route path="/dashboard" element={<WelcomePage />} />
           <Route path="/catalog-management" element={<CatalogManagementPage />} />
           <Route path="/product-creation" element={<ProductCreation />} />
-          <Route path="/category" element={<CategoryPage />} /> {/* ✅ Nueva ruta */}
+          <Route path="/category" element={<CategoryPage />} />
+          <Route path="/category/new" element={<NewCategory />} />
+          <Route path="/category/edit/:id" element={<EditCategory />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

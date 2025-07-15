@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-/**
- * Esquema de Categoría
- * 
- * Define la estructura y validación para categorías de productos en la tienda.
- * Soporta una estructura jerárquica donde las categorías pueden tener subcategorías.
- */
 const categorySchema = new mongoose.Schema(
   {
     name: {
@@ -13,6 +7,7 @@ const categorySchema = new mongoose.Schema(
       required: [true, "El nombre de la categoría es obligatorio"],
       trim: true,
       unique: true,
+      maxlength: [100, "El nombre no puede exceder los 100 caracteres"],
     },
     slug: {
       type: String,
@@ -24,12 +19,17 @@ const categorySchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+      maxlength: [500, "La descripción no puede exceder los 500 caracteres"],
     },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
     },
+    children: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    }],
     image: {
       type: String,
       required: [true, "La imagen de la categoría es obligatoria"],
@@ -45,23 +45,42 @@ const categorySchema = new mongoose.Schema(
     order: {
       type: Number,
       default: 0,
+      min: [0, "El orden no puede ser menor que 0"],
     },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true } 
+  }
 );
 
-/**
- * Middleware para generar automáticamente un slug a partir del nombre
- * Se ejecuta antes de guardar una categoría nueva o actualizar el nombre
- */
+// Middleware para slug
 categorySchema.pre("save", function (next) {
-  // Generar slug solo si el nombre ha cambiado o es nuevo
   if (this.isModified("name") || this.isNew) {
     this.slug = this.name
       .toLowerCase()
-      .replace(/[^\w\s]/gi, "") // Eliminar caracteres especiales
-      .replace(/\s+/g, "-");    // Reemplazar espacios con guiones
+      .replace(/[^\w\s]/gi, "")
+      .replace(/\s+/g, "-");
   }
+  next();
+});
+
+// Middleware para limpiar referencias al eliminar
+categorySchema.pre("remove", async function(next) {
+  // Eliminar de la lista de hijos del padre
+  if (this.parent) {
+    await Category.findByIdAndUpdate(this.parent, {
+      $pull: { children: this._id }
+    });
+  }
+  
+  // Reasignar hijos a null (convertirlos en raíz)
+  await Category.updateMany(
+    { parent: this._id },
+    { $set: { parent: null } }
+  );
+  
   next();
 });
 

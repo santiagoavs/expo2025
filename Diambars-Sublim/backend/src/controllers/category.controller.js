@@ -1,5 +1,5 @@
 import Category from "../models/category.js";
-import Product from "../models/product.js"; // Asumiendo que existe este modelo
+import Product from "../models/product.js"; 
 import cloudinary from "../utils/cloudinary.js";
 import fs from "fs";
 import { 
@@ -12,12 +12,11 @@ import {
 const categoryController = {};
 
 /**
- * Crea una nueva categoría
- * 
- * Recibe información de la categoría y una imagen opcional.
- * La imagen se sube a Cloudinary y se guarda la URL en la base de datos.
+ * Crea una nueva categoría con mejor manejo de la jerarquía
  */
 categoryController.createCategory = async (req, res) => {
+  let tempFilePath = null;
+  
   try {
     const { 
       name, 
@@ -27,15 +26,26 @@ categoryController.createCategory = async (req, res) => {
       showOnHomepage, 
       order 
     } = req.body;
-    
-    // Validaciones básicas
-    if (!name) {
-      return res.status(400).json({ message: "El nombre de la categoría es obligatorio" });
+
+    // Verificar que se haya subido un archivo
+    if (!req.file) {
+      return res.status(400).json({ 
+        message: "La imagen es obligatoria" 
+      });
     }
     
-    // Verificar si ya existe una categoría con este nombre
+    tempFilePath = req.file.path;
+
+    // Verificar que el nombre no esté vacío
+    if (!name || !name.trim()) {
+      return res.status(400).json({ 
+        message: "El nombre de la categoría es obligatorio" 
+      });
+    }
+    
+    // Verificar si ya existe una categoría con este nombre (case insensitive)
     const existingCategory = await Category.findOne({ 
-      name: { $regex: new RegExp(`^${name}$`, 'i') } 
+      name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } 
     });
     
     if (existingCategory) {
@@ -44,66 +54,99 @@ categoryController.createCategory = async (req, res) => {
       });
     }
     
-    // Verificar que la categoría padre existe si se proporciona
-    if (parent) {
-      const parentCategory = await Category.findById(parent);
+    // Validar categoría padre si se proporciona
+    let parentCategory = null;
+    if (parent && parent !== 'null' && parent !== 'undefined') {
+      parentCategory = await Category.findById(parent);
       if (!parentCategory) {
         return res.status(400).json({ 
           message: "La categoría padre especificada no existe" 
         });
       }
-    }
-    
-    // Procesar imagen si existe
-    if (!req.file) {
-      return res.status(400).json({ message: "La imagen es obligatoria" });
-    }
-    
-    // Subir imagen a Cloudinary
-    let imageUrl = "";
-    try {
-      const result = await cloudinary.uploader.upload(
-        req.file.path, 
-        {
-          folder: "diambars/categories",
-          allowed_formats: ["jpg", "png", "jpeg", "webp"],
-        }
-      );
-      imageUrl = result.secure_url;
       
-      // Eliminar archivo temporal
-      fs.unlinkSync(req.file.path);
+      // Verificar que no se cree un ciclo en la jerarquía
+      if (await wouldCreateCycle(null, parent)) {
+        return res.status(400).json({ 
+          message: "No se puede asignar esta categoría como padre porque crearía un ciclo en la jerarquía" 
+        });
+      }
+    }
+
+    // Subir imagen a Cloudinary
+    let imageUrl;
+    try {
+      const result = await cloudinary.uploader.upload(tempFilePath, {
+        folder: "diambars/categories",
+        allowed_formats: ["jpg", "png", "jpeg", "webp"],
+        resource_type: "image"
+      });
+      imageUrl = result.secure_url;
     } catch (uploadError) {
       console.error("Error al subir la imagen:", uploadError);
       return res.status(500).json({ 
-        message: "Error al procesar la imagen" 
+        message: "Error al procesar la imagen",
+        error: process.env.NODE_ENV === 'development' ? uploadError.message : undefined
+      });
+    }
+
+    // Crear la categoría
+    const newCategory = new Category({
+      name: name.trim(),
+      description: description ? description.trim() : "",
+      parent: parentCategory ? parentCategory._id : null,
+      image: imageUrl,
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      showOnHomepage: showOnHomepage !== undefined ? Boolean(showOnHomepage) : false,
+      order: order ? parseInt(order) : 0,
+    });
+
+    await newCategory.save();
+    
+    // Si tiene padre, actualizar el padre para incluir esta subcategoría
+    if (parentCategory) {
+      await Category.findByIdAndUpdate(parentCategory._id, {
+        $addToSet: { children: newCategory._id }
       });
     }
     
-    // Crear la categoría
-    const newCategory = new Category({
-      name,
-      description,
-      parent: parent || null, // Explícitamente null si no hay padre
-      image: imageUrl,
-      isActive: isActive !== undefined ? isActive : true,
-      showOnHomepage: showOnHomepage || false,
-      order: order || 0,
-    });
-    
-    await newCategory.save();
-    
+    // Eliminar archivo temporal después de éxito
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+    }
+
     res.status(201).json({
       message: "Categoría creada exitosamente",
       category: newCategory,
     });
   } catch (error) {
+    console.error("Error al crear categoría:", {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+      file: req.file
+    });
+
     // Limpiar archivo temporal en caso de error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
     }
-    console.error("Error al crear categoría:", error);
-    res.status(500).json({ message: "Error al crear la categoría", error: error.message });
+
+    // Limpiar imagen de Cloudinary si se subió pero falló el guardado
+    if (imageUrl) {
+      try {
+        const urlParts = imageUrl.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        const publicId = `diambars/categories/${filename.split('.')[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudinaryError) {
+        console.error("Error al limpiar imagen de Cloudinary:", cloudinaryError);
+      }
+    }
+
+    res.status(500).json({ 
+      message: "Error interno al crear la categoría",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -114,30 +157,30 @@ categoryController.createCategory = async (req, res) => {
  * 1. Una lista plana de todas las categorías
  * 2. Un árbol jerárquico que muestra la relación padre-hijo
  */
+/**
+ * Obtiene todas las categorías con estructura jerárquica mejorada
+ */
 categoryController.getAllCategories = async (req, res) => {
   try {
-    // Obtener todas las categorías
-    const categories = await Category.find().sort({ order: 1, name: 1 });
+    // Obtener todas las categorías con población de hijos
+    const categories = await Category.find()
+      .sort({ order: 1, name: 1 })
+      .populate('children', 'name _id image');
     
-    // Obtener conteo de productos por categoría (incluyendo subcategorías)
-    const categoriesWithProductCount = await Promise.all(
+    // Contar productos por categoría
+    const categoriesWithCounts = await Promise.all(
       categories.map(async (category) => {
         const categoryIds = [category._id];
-        
-        // Encontrar todas las subcategorías
         const subcategories = await getAllSubcategories(category._id);
         subcategories.forEach(subcat => categoryIds.push(subcat._id));
         
-        // Contar productos en esta categoría y sus subcategorías
-        // Si no existe el modelo Product, se establece en 0
         let productCount = 0;
         try {
           productCount = await Product.countDocuments({ 
             category: { $in: categoryIds } 
           });
         } catch (err) {
-          console.log("Modelo Product no disponible o error:", err.message);
-          // Continuar sin contar productos
+          console.log("Modelo Product no disponible:", err.message);
         }
         
         return {
@@ -147,63 +190,46 @@ categoryController.getAllCategories = async (req, res) => {
       })
     );
     
-    // Organizar categorías en estructura jerárquica
-    const categoryTree = buildCategoryTree(categoriesWithProductCount);
+    // Construir árbol jerárquico
+    const categoryTree = buildCategoryTree(categoriesWithCounts);
     
     res.status(200).json({
-      categories: categoriesWithProductCount,
+      categories: categoriesWithCounts,
       categoryTree
     });
   } catch (error) {
     console.error("Error al obtener categorías:", error);
-    res.status(500).json({ message: "Error al obtener categorías", error: error.message });
+    res.status(500).json({ 
+      message: "Error al obtener categorías", 
+      error: error.message 
+    });
   }
 };
 
 /**
- * Obtiene una categoría específica por su ID
- * 
- * Incluye información adicional como:
- * - Ruta completa (breadcrumb)
- * - Subcategorías directas
- * - Conteo de productos
- * - Información de la categoría padre
+ * Obtiene categoría por ID con información completa
  */
 categoryController.getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const category = await Category.findById(id);
+    const category = await Category.findById(id)
+      .populate('parent', 'name _id')
+      .populate('children', 'name _id image');
+      
     if (!category) {
       return res.status(404).json({ message: "Categoría no encontrada" });
     }
     
-    // Obtener la ruta completa de la categoría (breadcrumb)
     const path = await getCategoryPath(id);
-    
-    // Obtener subcategorías directas
-    const subcategories = await Category.find({ parent: id }).sort({ order: 1, name: 1 });
-    
-    // Contar productos en esta categoría y todas sus subcategorías
-    const categoryIds = [category._id];
     const allSubcategories = await getAllSubcategories(id);
-    allSubcategories.forEach(subcat => categoryIds.push(subcat._id));
+    const categoryIds = [category._id, ...allSubcategories.map(sc => sc._id)];
     
-    // Si no existe el modelo Product, se establece en 0
     let productCount = 0;
     try {
-      productCount = await Product.countDocuments({ 
-        category: { $in: categoryIds } 
-      });
+      productCount = await Product.countDocuments({ category: { $in: categoryIds } });
     } catch (err) {
-      console.log("Modelo Product no disponible o error:", err.message);
-      // Continuar sin contar productos
-    }
-    
-    // Si tiene padre, obtener información de la categoría padre
-    let parentCategory = null;
-    if (category.parent) {
-      parentCategory = await Category.findById(category.parent);
+      console.log("Error contando productos:", err.message);
     }
     
     res.status(200).json({
@@ -211,16 +237,16 @@ categoryController.getCategoryById = async (req, res) => {
         ...category.toObject(),
         path,
         productCount,
-        subcategories,
-        parentCategory: parentCategory ? {
-          _id: parentCategory._id,
-          name: parentCategory.name
-        } : null
+        subcategories: category.children,
+        parentCategory: category.parent
       }
     });
   } catch (error) {
     console.error("Error al obtener categoría:", error);
-    res.status(500).json({ message: "Error al obtener categoría", error: error.message });
+    res.status(500).json({ 
+      message: "Error al obtener categoría", 
+      error: error.message 
+    });
   }
 };
 

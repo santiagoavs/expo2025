@@ -9,7 +9,8 @@
 /* 🎯 Layout horizontal, centrado con catálogo a la izquierda */
 .category-page-content {
   background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
-  padding: 40px;
+  padding: 100px;
+  padding-left: 30px;
   display: flex;
   justify-content: center;     /* Centrado horizontal completo */
   gap: 3rem;                   /* Separación entre las dos cards */
