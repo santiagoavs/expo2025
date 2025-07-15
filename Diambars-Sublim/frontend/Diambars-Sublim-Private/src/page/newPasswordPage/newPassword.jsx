@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DiambarsCard from '../../components/DiambarsCard/DiambarsCard';
 import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
 import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
@@ -9,11 +9,13 @@ import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
 import './newPassword.css';
 
 const NewPasswordPage = () => {
-  const navigate = useNavigate(); 
+  const location = useLocation();
+  const navigate = useNavigate();
   const { 
     handleResetPassword,
     isSubmitting,
-    error
+    error,
+    verificationToken
   } = usePasswordRecovery();
   
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +39,18 @@ const NewPasswordPage = () => {
 
   const password = watch("password");
   
+  useEffect(() => {
+    if (!verificationToken && !location.state?.verificationToken) {
+      console.error('No se encontró token de verificación - Redirigiendo...');
+      navigate('/code-confirmation', {
+        state: { 
+          error: 'Debes verificar el código primero',
+          email: location.state?.email 
+        }
+      });
+    }
+  }, [verificationToken, location.state, navigate]);
+
   React.useEffect(() => {
     if (!password) {
       setPasswordStrength(0);
@@ -58,6 +72,10 @@ const NewPasswordPage = () => {
   };
 
   const onSubmit = (data) => {
+    if (!verificationToken) {
+      console.error('No hay token de verificación');
+      return;
+    }
     handleResetPassword(data.password);
   };
 

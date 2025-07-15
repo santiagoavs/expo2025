@@ -153,75 +153,74 @@ passwordRecoveryController.verifyRecoveryCode = async (req, res) => {
 };
 
 passwordRecoveryController.resetPassword = async (req, res) => {
+  console.log('Datos recibidos:', {
+    body: req.body,
+    headers: req.headers
+  });
+
   const { newPassword, token } = req.body;
   
-  if (!newPassword || typeof newPassword !== 'string' || !token) {
+  if (!newPassword || !token) {
+    console.error('Faltan campos requeridos');
     return res.status(400).json({ 
-      message: "Se requiere una nueva contraseña válida y token de verificación" 
+      success: false,
+      message: "Se requieren ambos campos: newPassword y token",
+      received: req.body
     });
   }
-  
-  if (newPassword.length < 6) {
-    return res.status(400).json({ 
-      message: "La contraseña debe tener al menos 6 caracteres" 
-    });
-  }
-  
+
   try {
-    let decodedToken;
-    try {
-      decodedToken = jwt.verify(token, config.JWT.secret);
-    } catch (err) {
-      return res.status(401).json({ 
-        message: "Token inválido o expirado. Por favor, inicia el proceso nuevamente." 
+    console.log('Verificando token...');
+    const decoded = jwt.verify(token, config.JWT.secret);
+    console.log('Token decodificado:', decoded);
+    
+    if (!decoded.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Token no verificado"
       });
     }
-    
-    if (!decodedToken.verified) {
-      return res.status(401).json({ 
-        message: "Token no verificado. Por favor, verifica el código primero." 
-      });
-    }
-    
-    const { email, userType, userId } = decodedToken;
+
     const hashedPassword = await bcryptjs.hash(newPassword, 10);
     
-    let user;
-    
-    if (userType === "user") {
-      user = await userModel.findById(userId);
-      if (!user) {
-        return res.status(404).json({ 
-          message: "Usuario no encontrado." 
-        });
-      }
-      user.password = hashedPassword;
-      user.recoveryData = undefined; // Eliminar recoveryData
-      await user.save();
-    } else if (userType === "employee") {
-      user = await employeeModel.findById(userId);
-      if (!user) {
-        return res.status(404).json({ 
-          message: "Empleado no encontrado." 
-        });
-      }
-      user.password = hashedPassword;
-      user.recoveryData = undefined; // Eliminar recoveryData
-      await user.save();
-    } else {
-      return res.status(400).json({ message: "Tipo de usuario no válido" });
+    // Actualizar la contraseña según el tipo de usuario
+    const Model = decoded.userType === 'user' ? userModel : employeeModel;
+    const updateResult = await Model.findByIdAndUpdate(
+      decoded.userId,
+      { 
+        password: hashedPassword,
+        $unset: { recoveryData: 1 } 
+      },
+      { new: true }
+    );
+
+    if (!updateResult) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado"
+      });
     }
-    
-    await sendPasswordResetConfirmation(email, user.name);
-    
-    return res.status(200).json({ 
-      message: "Contraseña actualizada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña." 
+
+    console.log('Contraseña actualizada para:', updateResult.email);
+
+    // Enviar confirmación por email
+    await sendPasswordResetConfirmation(decoded.email, updateResult.name);
+
+    return res.status(200).json({
+      success: true,
+      message: "Contraseña actualizada exitosamente"
     });
-    
+
   } catch (error) {
-    console.error("[PasswordRecovery] Error al restablecer contraseña:", error);
-    return res.status(500).json({ 
-      message: "Error al actualizar la contraseña. Por favor, intenta más tarde." 
+    console.error('Error en resetPassword:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    return res.status(500).json({
+      success: false,
+      message: message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

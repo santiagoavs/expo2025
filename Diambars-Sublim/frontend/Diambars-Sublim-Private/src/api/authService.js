@@ -1,5 +1,5 @@
-
-import apiClient from './apiClients';
+import axios from 'axios';
+import apiClient from './apiClient';
 
 export const login = async (credentials) => {
   const response = await apiClient.post('/auth/login', credentials);
@@ -35,10 +35,21 @@ export const verifyRecoveryCode = async (email, code) => {
   }
 };
 
-export const resetPassword = async (newPassword, token) => {
+export const resetPassword = async (data) => {
   try {
-    return await apiClient.post('/password-recovery/reset-password', { newPassword, token });
+    const response = await axios.post(
+      'http://localhost:4000/api/password-recovery/reset-password',
+      {
+        newPassword: data.newPassword,
+        token: data.token
+      },
+      {
+        withCredentials: true
+      }
+    );
+    return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Error al restablecer contraseña');
+    console.error('Error con axios directo:', error);
+    throw new Error(error.response?.data?.message || 'Error al actualizar la contraseña');
   }
 };
