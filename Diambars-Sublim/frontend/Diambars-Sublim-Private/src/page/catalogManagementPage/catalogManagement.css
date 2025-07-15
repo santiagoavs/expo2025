@@ -89,7 +89,7 @@ body {
 /* Wrapper del contenido principal */
 .content-wrapper {
   width: 100%;    /* Ocupa todo el ancho disponible */
-  margin: 0 auto;  /* Centra el contenedor */
+  margin-top: 420px;  /* Centra el contenedor */
   padding: 20px 210px;  /* Padding vertical y horizontal */
   background: linear-gradient(135deg, #FFFAED, #F8EBCC);
 }
