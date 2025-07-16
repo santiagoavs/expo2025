@@ -1,0 +1,123 @@
+.login-form-container {
+    background: linear-gradient(200deg, #FFF6E2, #F5E7C6);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    max-width: 450px;
+    margin: auto;
+    margin-bottom: 120px;
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+  }
+  
+  .tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tabs button {
+    flex: 1;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-style: italic;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    color: #3F2724;
+    transition: border-color 0.2s;
+  }
+  
+  .tabs button.active {
+    border-bottom: 3px solid #B02F2F;
+  }
+  
+  .form-content h2 {
+    font-family: 'DiambarsFont', cursive;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #3F2724;
+  }
+  
+  .form-content input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    border: none;
+    background-color: #FDF6E3;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 1rem;
+  }
+  
+  .phone-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 474px;
+  }
+  
+  .phone-wrapper span {
+    padding: 12px;
+    margin-bottom: 1rem;
+    color: #787878;
+  }
+  
+  .main-button {
+    width: 150px;
+    height: 45px;
+    background: linear-gradient(to right, #2D788E, #283C3E);
+    color: #FFF1D0;
+    border: none;
+    border-radius: 15px;
+    font-family: 'DiambarsFont', italic;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin: 1rem auto 0;
+    display: block;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+  }
+  
+  .main-button:hover {
+    transform: scale(1.05);
+  }
+  
+  .divider {
+    text-align: center;
+    margin: 1rem 0 1rem;
+    color: #3F2724;
+    font-size: 0.95rem;
+  }
+  
+  .google-button {
+    width: 160px;
+    background: linear-gradient(to right, #593D3B, #211514);
+    color: white;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 20px;
+    padding: 0.7rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    margin: auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+  }
+
+  .google-button:hover {
+    transform: scale(1.05);
+  }
+  
+  .google-button img {
+    width: 25px;
+    height: 25px;
+  }
+  

@@ -10,10 +10,9 @@
   font-size: 3rem;
   margin-bottom: 2rem;
   margin-top: 100px;
-  font-family: 'DiambarsFont';
-  src: url('/fonts/AestheticMoment.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+  font-family: '/fonts/HappyTime.otf';
+  font-weight: bold;
+  font-style: italic;
 }
 
 .profile-container {

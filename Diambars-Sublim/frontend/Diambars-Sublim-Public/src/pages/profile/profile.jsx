@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { AuthContext } from '../../context/authContext';
+import LoginForm from '../../components/profile/loginForm';
 import UserInfo from '../../components/profile/userInfo';
 import PaymentMethods from '../../components/profile/paymentMethods';
 import ShippingAddresses from '../../components/profile/shippingAddresses';
@@ -7,6 +9,20 @@ import Footer from '../../components/UI/footer/footer';
 import './profile.css';
 
 const Profile = () => {
+  const { user } = useContext(AuthContext); //Verificamos si hay usuario autenticado
+
+  if (!user) {
+    //Si no está autenticado, mostramos el login
+    return (
+      <main className="profile-page">
+        <h1 className="profile-title">Inicia sesión o regístrate</h1>
+        <LoginForm />
+        <Footer />
+      </main>
+    );
+  }
+
+  //Si ya está autenticado, mostramos el perfil
   return (
     <main className="profile-page">
       <h1 className="profile-title">Personaliza tu perfil</h1>

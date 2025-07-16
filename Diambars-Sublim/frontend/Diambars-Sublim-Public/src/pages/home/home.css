@@ -76,7 +76,6 @@
   height: auto;
 }
 
-/* 📱 RESPONSIVE ADAPTATIONS */
 @media (max-width: 1024px) {
   .home-container,
   .home-container-bottom {
