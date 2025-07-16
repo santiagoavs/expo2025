@@ -1,5 +1,5 @@
 import React from 'react';
-import Navbar from '../../components/navbar/navbar';
+import Navbar from '../../components/navbar/Navbar';
 import NewCategory from '../../components/newCategory/newCategory';
 import CategoryCatalog from '../../components/categoryCatalog/categoryCatalog';
 import './category.css';
