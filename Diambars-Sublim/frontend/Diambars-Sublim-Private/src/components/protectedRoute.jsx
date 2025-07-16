@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { showError } from '../utils/sweetAlert';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -45,7 +45,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
