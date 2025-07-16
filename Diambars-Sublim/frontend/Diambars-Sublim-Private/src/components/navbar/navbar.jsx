@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { IoLogOutOutline } from 'react-icons/io5';
 import { FaBars, FaTimes } from 'react-icons/fa';
-import { useNavigate, Link } from 'react-router-dom'; // ✅ Importar Link
+import { useNavigate, Link } from 'react-router-dom';
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -33,11 +33,11 @@ const Navbar = () => {
         </button>
 
         <div className="nav-links desktop-menu">
-          <Link to="/catalog-management" className="nav-link">Administración de catálogo</Link> {/* ✅ Ahora es Link */}
+          <Link to="/catalog-management" className="nav-link">Administración de catálogo</Link>
           <a href="#" className="nav-link">Reseñas</a>
           <a href="#" className="nav-link">Stats</a>
           <a href="#" className="nav-link">Ajustes</a>
-          <a href="#" className="nav-link">Pedido manual</a>
+          <Link to="/custom-product-designer" className="nav-link">Pedido manual</Link> {/* ✅ Link agregado */}
           <Link to="/category" className="nav-link">Categorías</Link>
         </div>
         
@@ -83,11 +83,11 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          <Link to="/catalog-management" className="sidebar-link">Administración de catálogo</Link> {/* ✅ También en móvil */}
+          <Link to="/catalog-management" className="sidebar-link">Administración de catálogo</Link>
           <a href="#" className="sidebar-link">Reseñas</a>
           <a href="#" className="sidebar-link">Stats</a>
           <a href="#" className="sidebar-link">Ajustes</a>
-          <a href="#" className="sidebar-link">Pedido manual</a>
+          <Link to="/custom-product-designer" className="sidebar-link">Pedido manual</Link> {/* ✅ Link agregado */}
           <Link to="/category" className="sidebar-link">Categorías</Link>
           <button className="sidebar-logout-btn" onClick={handleLogout}>
             <IoLogOutOutline />

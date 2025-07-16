@@ -1,0 +1,77 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+
+.navbar-product-designer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  height: 72px;
+}
+
+/* 🧩 Contenedor distribuido */
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 50px;
+  min-width: 1915px;
+  margin: 0 auto;
+  height: 100%;
+}
+
+/* 🔙 Volver al menú */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #2B6CB0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 🎨 Título */
+.designer-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.designer-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3748;
+}
+
+/* 🛠️ Acciones */
+.designer-actions {
+  display: flex;
+  gap: 24px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #4A5568;
+  font-size: 14px;
+  cursor: pointer;
+}
