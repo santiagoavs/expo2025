@@ -12,16 +12,10 @@ import CategoryPage from './page/categoryPage/category';
 import ProductCreation from './page/productCreationPage/ProductCreation';
 import EditCategory from './page/categoryPage/editCategory';
 import NewCategory from './components/newCategory/newCategory';
-
 import CustomProductDesigner from './page/customProductDesignerPage/customProductDesigner'; // 🧩 Paso 1
 import AddYourArtwork from './page/addYourArtworkPage/addYourArtwork'; // 🎨 Paso 2
 import DeliveryAddress from './page/deliveryAddressPage/deliveryAddress'; // 📦 Paso 3
 import ReviewAndSubmit from './page/reviewAndSubmitPage/reviewAndSubmit'; // ✅ Paso 4
-import { CategoryProvider } from './context/categoryContext'; 
-import CategoryPage from './page/categoryPage/category'; 
-import ProductCreation from './page/productCreationPage/ProductCreation';
-import EditCategory from './page/categoryPage/editCategory';
-import NewCategory from './components/newCategory/newCategory';
 import ProtectedRoute from "./components/protectedRoute"
 
 function App() {
