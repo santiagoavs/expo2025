@@ -1,7 +1,7 @@
 import React from 'react';
-import Navbar from '../../components/navbar/Navbar';
-import NewCategory from '../../components/newCategory/newCategory';
-import CategoryCatalog from '../../components/categoryCatalog/categoryCatalog';
+import Navbar from '../../components/Navbar/Navbar';
+import NewCategory from '../../components/NewCategory/NewCategory';
+import CategoryCatalog from '../../components/CategoryCatalog/CategoryCatalog';
 import './category.css';
 import { CategoryProvider } from '../../context/categoryContext';
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import NavbarProductDesigner from '../../components/navbarProductDesigner/navbarProductDesigner';
-import ProcessBar from '../../components/processBar/processBar';
-import './addYourArtwork.css'; // 🎨 Estilo personalizado
+import NavbarProductDesigner from '../../components/NavbarProductDesigner/NavbarProductDesigner';
+import ProcessBar from '../../components/ProcessBar/ProcessBar';
+import './AddYourArtwork.css'; // 🎨 Estilo personalizado
 
 const AddYourArtwork = () => {
   const currentStep = 2; // 🧭 Este sería el paso para "Design"

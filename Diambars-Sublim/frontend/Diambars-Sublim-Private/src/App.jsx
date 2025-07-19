@@ -1,22 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { CategoryProvider } from './context/categoryContext';
-import LoginPage from './page/loginPage/login';
-import RecoveryPasswordPage from './page/recoveryPasswordPage/recoveryPassword';
-import CodeConfirmationPage from './page/codeConfirmationPage/codeConfirmation';
-import NewPasswordPage from './page/newPasswordPage/newPassword';
-import WelcomePage from './page/welcomePage/welcome';
-import CatalogManagementPage from './page/catalogManagementPage/catalogManagement';
-import CategoryPage from './page/categoryPage/category';
-import ProductCreation from './page/productCreationPage/ProductCreation';
-import EditCategory from './page/categoryPage/editCategory';
-import NewCategory from './components/newCategory/newCategory';
-import CustomProductDesigner from './page/customProductDesignerPage/customProductDesigner'; // 🧩 Paso 1
-import AddYourArtwork from './page/addYourArtworkPage/addYourArtwork'; // 🎨 Paso 2
-import DeliveryAddress from './page/deliveryAddressPage/deliveryAddress'; // 📦 Paso 3
-import ReviewAndSubmit from './page/reviewAndSubmitPage/reviewAndSubmit'; // ✅ Paso 4
-import ProtectedRoute from "./components/protectedRoute"
+import { CategoryProvider } from './context/CategoryContext';
+import LoginPage from './page/LoginPage/Login';
+import RecoveryPasswordPage from './page/RecoveryPasswordPage/RecoveryPassword';
+import CodeConfirmationPage from './page/CodeConfirmationPage/CodeConfirmation';
+import NewPasswordPage from './page/NewPasswordPage/NewPassword';
+import WelcomePage from './page/WelcomePage/Welcome';
+import CatalogManagementPage from './page/CatalogManagementPage/CatalogManagement';
+import CategoryPage from './page/CategoryPage/Category';
+import ProductCreation from './page/ProductCreationPage/ProductCreation';
+import EditCategory from './page/CategoryPage/EditCategory';
+import NewCategory from './components/NewCategory/NewCategory';
+import CustomProductDesigner from './page/CustomProductDesignerPage/CustomProductDesigner'; // 🧩 Paso 1
+import AddYourArtwork from './page/AddYourArtworkPage/AddYourArtwork'; // 🎨 Paso 2
+import DeliveryAddress from './page/DeliveryAddressPage/DeliveryAddress'; // 📦 Paso 3
+import ReviewAndSubmit from './page/ReviewAndSubmitPage/ReviewAndSubmit'; // ✅ Paso 4
+import ProtectedRoute from "./components/ProtectedRoute"
 
 function App() {
   return (

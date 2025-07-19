@@ -1,6 +1,6 @@
 import React from 'react';
-import NavbarProductDesigner from '../../components/navbarProductDesigner/navbarProductDesigner';
-import ProcessBar from '../../components/processBar/processBar';
+import NavbarProductDesigner from '../../components/NavbarProductDesigner/NavbarProductDesigner';
+import ProcessBar from '../../components/ProcessBar/ProcessBar';
 import './deliveryAddress.css'; // 🎨 Estilo personalizado
 
 const DeliveryAddress = () => {
