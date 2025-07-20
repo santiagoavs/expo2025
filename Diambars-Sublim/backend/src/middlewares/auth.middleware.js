@@ -13,34 +13,26 @@ export const verifyToken = (req, res, next) => {
     || req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    console.log("Token no encontrado. Continuando sin autenticación.");
-    return next();
+    return res.status(401).json({ message: "Token no proporcionado" });
   }
 
   try {
     const decoded = jwt.verify(token, config.JWT.secret);
-
-    // Validación de campos esenciales en el token
     if (!decoded.id || !decoded.type) {
-      console.error("Token decodificado inválido:", decoded);
-      return next();
+      return res.status(401).json({ message: "Token inválido" });
     }
-
-    // Agregar datos del usuario autenticado al objeto req
     req.user = {
       id: decoded.id,
       type: decoded.type,
       role: decoded.role,
       email: decoded.email
     };
-
-    console.log("Usuario autenticado:", req.user);
     next();
   } catch (error) {
-    console.error("Error de verificación de token:", error.message);
-    next();
+    return res.status(401).json({ message: "Token inválido o expirado" });
   }
 };
+
 
 /**
  * Middleware para validar si el usuario tiene uno de los roles permitidos.

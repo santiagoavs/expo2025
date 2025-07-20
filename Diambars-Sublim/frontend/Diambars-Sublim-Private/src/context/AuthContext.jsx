@@ -9,20 +9,21 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
-    try {
-      const response = await authService.getCurrentUser();
-      if (response.authenticated && response.user) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
+  try {
+    const response = await authService.getCurrentUser();
+    console.log('checkAuth response:', response); // <--- agregar esto
+    if (response.authenticated && response.user) {
+      setUser(response.user);
+      setIsAuthenticated(true);
+    } else {
       setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    setIsAuthenticated(false);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     checkAuth();

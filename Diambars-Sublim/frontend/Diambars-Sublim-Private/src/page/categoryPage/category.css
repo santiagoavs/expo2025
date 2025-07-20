@@ -1,31 +1,80 @@
-.category-page-wrapper {
-  min-height: 80vh;
-   min-width: 200vh;
-  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+/* Estilos base */
+.category-page-container {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
+  min-height: 100vh;
+  padding-top: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+}
+
+.category-page-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
+  z-index: -1;
+}
+
+.category-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 30px;
+  width: 100%;
+  max-width: 1400px;
+  padding: 0 20px;
+  box-sizing: border-box;
+  margin: 20px 0;
+}
+
+/* Contenedor del formulario */
+.category-form-container {
+  min-width: 0;
+}
+
+/* Contenedor del catálogo */
+.category-catalog-container {
+  background: linear-gradient(135deg, rgba(255, 246, 226, 0.9) 0%, rgba(245, 231, 198, 0.95) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(12px);
+  height: 83.3vh; /* Altura fija en lugar de auto */
 }
 
-/* 🎯 Layout horizontal, centrado con catálogo a la izquierda */
-.category-page-content {
-  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
-  padding: 100px;
-  padding-left: 30px;
-  display: flex;
-  justify-content: center;     /* Centrado horizontal completo */
-  gap: 3rem;                   /* Separación entre las dos cards */
-  align-items: flex-start;
-  flex-direction: row-reverse;
+/* Estilos responsivos */
+@media (max-width: 1200px) {
+  .category-content-wrapper {
+    grid-template-columns: 1fr 300px;
+  }
 }
 
-/* 📁 CategoryCatalog a la izquierda */
-.category-page-content > :nth-child(2) {
-  flex: 1;
-  max-width: 340px;
+@media (max-width: 992px) {
+  .category-content-wrapper {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+  }
+  
+  .category-catalog-container {
+    margin-top: 30px;
+  }
 }
 
-/* 📝 NewCategory a la derecha */
-.category-page-content > :nth-child(1) {
-  flex: 2;
-  max-width: 880px;
+@media (max-width: 768px) {
+  .category-page-container {
+    padding-top: 70px;
+    padding: 70px 10px 20px;
+  }
+  
+  .category-content-wrapper {
+    padding: 0;
+  }
 }

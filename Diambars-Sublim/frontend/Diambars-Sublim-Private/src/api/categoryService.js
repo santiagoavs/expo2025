@@ -1,90 +1,61 @@
-import api from './apiClient';
+import apiClient from './apiClient';
 
-// Helper para manejar respuestas
-const handleResponse = (response) => {
-  return response.data || response;
-};
+const BASE_URL = '/categories';
 
-// Helper para manejar errores
-const handleError = (error, defaultMessage) => {
-  console.error('Error:', {
-    error: error,
-    response: error.response,
-    config: error.config
-  });
+const categoryService = {
+  getAll: async () => {
+    try {
+      const response = await apiClient.get(BASE_URL);
+      return response; // response ya es data, por el interceptor
+    } catch (error) {
+      throw error;
+    }
+  },
 
-  const errorData = error.response?.data || {};
-  const errorMessage = errorData.message || errorData.error || error.message || defaultMessage;
-  
-  throw new Error(errorMessage);
-};
+  getCategoryById: async (id) => {
+    try {
+      const response = await apiClient.get(`${BASE_URL}/${id}`);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
 
-export const getAllCategories = async () => {
-  try {
-    const response = await api.get('/categories');
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al cargar categorías');
-  }
-};
-
-export const getCategoryById = async (id) => {
-  try {
-    const response = await api.get(`/categories/${id}`);
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al obtener categoría');
-  }
-};
-
-export const createCategory = async (formData) => {
-  try {
-    const response = await api.post('/categories', formData, {
+  createCategory: async (categoryData) => {
+    const response = await apiClient.post(BASE_URL, categoryData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${localStorage.getItem('diambars_token')}`
+        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
       }
     });
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al crear categoría');
-  }
-};
+    return response;
+  },
 
-export const updateCategory = async (id, formData) => {
-  try {
-    const response = await api.put(`/categories/${id}`, formData, {
+  updateCategory: async (id, categoryData) => {
+    const response = await apiClient.put(`${BASE_URL}/${id}`, categoryData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${localStorage.getItem('diambars_token')}`
+        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
       }
     });
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al actualizar categoría');
-  }
-};
+    return response;
+  },
 
-export const deleteCategory = async (id) => {
-  try {
-    const response = await api.delete(`/categories/${id}`, {
+  deleteCategory: async (id) => {
+    const response = await apiClient.delete(`${BASE_URL}/${id}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('diambars_token')}`
+        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
       }
     });
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al eliminar categoría');
-  }
-};
+    return response;
+  },
 
-export const searchCategories = async (query) => {
-  try {
-    const response = await api.get('/categories/search', {
+  searchCategories: async (query) => {
+    const response = await apiClient.get(`${BASE_URL}/search`, {
       params: { q: query }
     });
-    return handleResponse(response);
-  } catch (error) {
-    handleError(error, 'Error al buscar categorías');
+    return response;
   }
 };
+
+export default categoryService;

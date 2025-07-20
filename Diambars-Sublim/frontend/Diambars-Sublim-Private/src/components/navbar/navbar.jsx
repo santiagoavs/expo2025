@@ -38,7 +38,7 @@ const Navbar = () => {
           <a href="#" className="nav-link">Stats</a>
           <a href="#" className="nav-link">Ajustes</a>
           <Link to="/custom-product-designer" className="nav-link">Pedido manual</Link> {/* ✅ Link agregado */}
-          <Link to="/category" className="nav-link">Categorías</Link>
+          <Link to="/category-page" className="nav-link">Categorías</Link>
         </div>
         
         <div className="navbar-right desktop-menu">

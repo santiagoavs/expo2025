@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { CategoryProvider } from './context/categoryContext';
 import LoginPage from './page/loginPage/login';
 import RecoveryPasswordPage from './page/recoveryPasswordPage/recoveryPassword';
 import CodeConfirmationPage from './page/codeConfirmationPage/codeConfirmation';
@@ -10,8 +9,6 @@ import WelcomePage from './page/welcomePage/welcome';
 import CatalogManagementPage from './page/catalogManagementPage/catalogManagement';
 import CategoryPage from './page/categoryPage/category';
 import ProductCreation from './page/productCreationPage/ProductCreation';
-import EditCategory from './page/categoryPage/editCategory';
-import NewCategory from './components/newCategory/newCategory';
 import CustomProductDesigner from './page/customProductDesignerPage/customProductDesigner'; // 🧩 Paso 1
 import AddYourArtwork from './page/addYourArtworkPage/addYourArtwork'; // 🎨 Paso 2
 import DeliveryAddress from './page/deliveryAddressPage/deliveryAddress'; // 📦 Paso 3
@@ -20,7 +17,6 @@ import ProtectedRoute from "./components/protectedRoute"
 
 function App() {
   return (
-    <CategoryProvider>
     <AuthProvider>
       <Router>
         <Routes>
@@ -34,9 +30,7 @@ function App() {
           <Route path="/dashboard" element={<WelcomePage />} />
           <Route path="/catalog-management" element={<CatalogManagementPage />} />
           <Route path="/product-creation" element={<ProductCreation />} />
-          <Route path="/category" element={<CategoryPage />} />
-          <Route path="/category/new" element={<NewCategory />} />
-          <Route path="/category/edit/:id" element={<EditCategory />} />
+          <Route path="/category-page" element={<CategoryPage />} />
           {/* 🔁 Flujo del diseñador personalizado */}
           <Route path="/custom-product-designer" element={<CustomProductDesigner />} />
             <Route path="/custom-product-designer/add-artwork" element={<AddYourArtwork />} />
@@ -47,7 +41,6 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
-    </CategoryProvider>
   );
 }
 

@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// 1. Crea la instancia con un nombre consistente
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
   withCredentials: true,
@@ -10,7 +9,6 @@ const api = axios.create({
   }
 });
 
-// 2. Interceptor de solicitud
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('diambars_token');
   if (token) {
@@ -22,7 +20,6 @@ api.interceptors.request.use(config => {
   return Promise.reject(error);
 });
 
-// 3. Interceptor de respuesta
 api.interceptors.response.use(
   response => response.data,
   error => {
@@ -34,5 +31,4 @@ api.interceptors.response.use(
   }
 );
 
-// 4. Exporta como DEFAULT
 export default api;
