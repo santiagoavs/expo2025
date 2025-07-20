@@ -47,7 +47,7 @@
   display: flex;
   flex-direction: column;
   backdrop-filter: blur(12px);
-  height: 83.3vh; /* Altura fija en lugar de auto */
+  height: 87.3vh; /* Altura fija en lugar de auto */
 }
 
 /* Estilos responsivos */
