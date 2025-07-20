@@ -1,0 +1,46 @@
+.product-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-width: 400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.product-image-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.product-image {
+  max-width: 240px;
+  object-fit: contain;
+}
+
+.product-info {
+  text-align: center;
+  color: #2D3748;
+}
+
+.product-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.product-description {
+  font-size: 14px;
+  color: #718096;
+  margin-bottom: 12px;
+}
+
+.product-selection {
+  font-size: 13px;
+  color: #4A5568;
+}
