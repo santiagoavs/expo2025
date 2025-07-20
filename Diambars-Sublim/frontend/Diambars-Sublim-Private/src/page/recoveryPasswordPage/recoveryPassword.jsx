@@ -1,10 +1,10 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import DiambarsCard from '../../components/DiambarsCard/DiambarsCard';
-import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
-import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
-import DiambarsButton from '../../components/DiambarsButton/DiambarsButton';
+import DiambarsCard from '../../components/passwordRecoveryProcess/DiambarsCard';
+import DiambarsBrand from '../../components/passwordRecoveryProcess/DiambarsBrand';
+import DiambarsTitle from '../../components/passwordRecoveryProcess/DiambarsTitle';
+import DiambarsButton from '../../components/passwordRecoveryProcess/DiambarsButton';
 import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
 import './RecoveryPassword.css';
 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import NavbarProduct from '../../components/NavbarProduct/NavbarProduct';
-import ProductInformation from '../../components/ProductInformation/ProductInformation';
-import LivePreview from '../../components/LivePreview/LivePreview';
-import ProductVariants from '../../components/ProductVariants/ProductVariants';
-import VariantsGenerated from '../../components/VariantsGenerated/VariantsGenerated';
+import NavbarProduct from '../../components/productCreation/navbarProduct';
+import ProductInformation from '../../components/productCreation/productInformation';
+import LivePreview from '../../components/productCreation/livePreview';
+import ProductVariants from '../../components/productCreation/productVariants';
+import VariantsGenerated from '../../components/productCreation/variantsGenerated';
 import './ProductCreation.css';
 
 const ProductCreation = () => {

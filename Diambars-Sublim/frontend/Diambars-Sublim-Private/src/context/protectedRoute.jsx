@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './AuthContext';
 import { showError } from '../utils/sweetAlert';
 
 const publicPaths = [

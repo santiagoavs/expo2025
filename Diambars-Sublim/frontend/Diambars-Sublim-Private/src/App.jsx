@@ -8,12 +8,12 @@ import NewPasswordPage from './page/newPasswordPage/newPassword';
 import WelcomePage from './page/welcomePage/welcome';
 import CatalogManagementPage from './page/catalogManagementPage/catalogManagement';
 import CategoryPage from './page/categoryPage/category';
-import ProductCreation from './page/productCreationPage/ProductCreation';
+import ProductCreation from './page/productCreationPage/productCreation';
 import CustomProductDesigner from './page/customProductDesignerPage/customProductDesigner'; // 🧩 Paso 1
 import AddYourArtwork from './page/addYourArtworkPage/addYourArtwork'; // 🎨 Paso 2
 import DeliveryAddress from './page/deliveryAddressPage/deliveryAddress'; // 📦 Paso 3
 import ReviewAndSubmit from './page/reviewAndSubmitPage/reviewAndSubmit'; // ✅ Paso 4
-import ProtectedRoute from "./components/protectedRoute"
+import ProtectedRoute from "./context/protectedRoute"
 
 function App() {
   return (

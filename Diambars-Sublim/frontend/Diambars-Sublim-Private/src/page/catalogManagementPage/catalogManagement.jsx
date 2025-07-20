@@ -1,7 +1,7 @@
 import React from 'react';
 import './CatalogManagement.css';
-import StatCard from '../../components/StatCard/StatCard';
-import ProductCard from '../../components/ProductCard/ProductCard';
+import StatCard from '../../components/catalogManagement/statCard';
+import ProductCard from '../../components/catalogManagement/productCard';
 import Navbar from '../../components/Navbar/Navbar';
 import { TbShirt } from "react-icons/tb";
 import { MdPendingActions } from "react-icons/md";
