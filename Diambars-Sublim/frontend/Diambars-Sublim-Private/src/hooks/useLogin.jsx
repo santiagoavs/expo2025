@@ -1,14 +1,12 @@
-
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { showError } from '../utils/sweetAlert';
 
 export const useLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const {
     register,
     handleSubmit,
@@ -19,11 +17,11 @@ export const useLogin = () => {
   const onSubmit = async (data) => {
     try {
       const user = await login(data);
-      
       const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
-      if (user && allowedTypes.includes(user.type.toLowerCase())) {
-        const redirectPath = location.state?.from?.pathname || '/catalog-management';
-        navigate(redirectPath, { replace: true });
+
+      if (allowedTypes.includes(user.type.toLowerCase())) {
+        const path = location.state?.from?.pathname || '/catalog-management';
+        navigate(path, { replace: true });
       } else {
         setError('root', {
           type: 'manual',
@@ -31,26 +29,21 @@ export const useLogin = () => {
         });
       }
     } catch (error) {
-      let errorMessage = error.message || 'Error al iniciar sesión';
+      let msg = error.message || 'Error al iniciar sesión';
 
-      if (errorMessage.includes('inválidos') || errorMessage.includes('incorrectas')) {
-        errorMessage = 'Credenciales incorrectas';
-      } else if (error.message === 'Acceso solo para empleados') {
-        errorMessage = 'Solo personal autorizado puede acceder';
+      if (msg.includes('inválidos') || msg.includes('incorrectas')) {
+        msg = 'Credenciales incorrectas';
       } else if (error.needsVerification) {
-        navigate('/verify-email', { 
-          state: { 
+        navigate('/verify-email', {
+          state: {
             email: data.email,
-            message: 'Verifica tu correo antes de iniciar sesión' 
-          } 
+            message: 'Verifica tu correo antes de iniciar sesión'
+          }
         });
         return;
       }
-      
-      setError('root', {
-        type: 'manual',
-        message: errorMessage
-      });
+
+      setError('root', { type: 'manual', message: msg });
     }
   };
 
