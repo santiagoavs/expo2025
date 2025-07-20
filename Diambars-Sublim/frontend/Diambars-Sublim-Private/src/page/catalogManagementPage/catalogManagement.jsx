@@ -1,8 +1,8 @@
 import React from 'react';
-import './catalogManagement.css';
-import StatCard from '../../components/statCard/StatCard';
-import ProductCard from '../../components/productCard/ProductCard';
-import Navbar from '../../components/navbar/Navbar';
+import './CatalogManagement.css';
+import StatCard from '../../components/StatCard/StatCard';
+import ProductCard from '../../components/ProductCard/ProductCard';
+import Navbar from '../../components/Navbar/Navbar';
 import { TbShirt } from "react-icons/tb";
 import { MdPendingActions } from "react-icons/md";
 import { BiTime } from "react-icons/bi";

@@ -5,7 +5,7 @@ import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
 import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
 import DiambarsButton from '../../components/DiambarsButton/DiambarsButton';
 import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
-import './codeConfirmation.css';
+import './CodeConfirmation.css';
 
 const CodeConfirmationPage = () => {
   const location = useLocation();

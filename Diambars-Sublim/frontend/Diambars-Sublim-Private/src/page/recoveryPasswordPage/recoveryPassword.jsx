@@ -6,7 +6,7 @@ import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
 import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
 import DiambarsButton from '../../components/DiambarsButton/DiambarsButton';
 import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
-import './recoveryPassword.css';
+import './RecoveryPassword.css';
 
 const RecoveryPasswordPage = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();

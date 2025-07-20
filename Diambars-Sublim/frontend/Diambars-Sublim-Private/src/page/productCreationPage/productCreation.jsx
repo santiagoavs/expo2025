@@ -3,7 +3,7 @@ import NavbarProduct from '../../components/NavbarProduct/NavbarProduct';
 import ProductInformation from '../../components/ProductInformation/ProductInformation';
 import LivePreview from '../../components/LivePreview/LivePreview';
 import ProductVariants from '../../components/ProductVariants/ProductVariants';
-import VariantsGenerated from '../../components/variantsGenerated/variantsGenerated';
+import VariantsGenerated from '../../components/VariantsGenerated/VariantsGenerated';
 import './ProductCreation.css';
 
 const ProductCreation = () => {

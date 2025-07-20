@@ -6,7 +6,7 @@ import DiambarsBrand from '../../components/DiambarsBrand/DiambarsBrand';
 import DiambarsTitle from '../../components/DiambarsTitle/DiambarsTitle';
 import DiambarsButton from '../../components/DiambarsButton/DiambarsButton';
 import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
-import './newPassword.css';
+import './NewPassword.css';
 
 const NewPasswordPage = () => {
   const location = useLocation();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../../hooks/useLogin';
-import './login.css';
+import './Login.css';
 
 const LoginPage = () => {
   const {
