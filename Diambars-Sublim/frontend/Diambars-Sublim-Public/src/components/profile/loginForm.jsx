@@ -1,145 +1,100 @@
-import { useState, useContext } from 'react';
-import { AuthContext } from '../../context/authContext';
+import { useState } from 'react';
 import './loginForm.css';
+import { useLogin } from '../../hooks/useLogin';
+import { useRegister } from '../../hooks/useRegister';
 
 export default function LoginForm() {
-  const { login } = useContext(AuthContext);
+  const [isLogin, setIsLogin] = useState(false); // true = login, false = registro
 
-  // Estado para alternar entre login y registro
-  const [isLogin, setIsLogin] = useState(false);
+  const {
+    register: loginRegister,
+    handleSubmit: handleLoginSubmit,
+    errors: loginErrors,
+    isSubmitting: isLoggingIn,
+    onSubmit: loginHandler
+  } = useLogin();
 
-  // Estado para manejar datos del formulario
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    phone: '',
-    password: ''
-  });
+  const {
+    register: regRegister,
+    handleSubmit: handleRegisterSubmit,
+    errors: registerErrors,
+    isSubmitting: isRegistering,
+    onSubmit: registerHandler
+  } = useRegister(() => setIsLogin(true)); // callback para cambiar de vista tras registro
 
-  // Maneja los cambios en los inputs
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  // Enviar formulario (login o registro)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const endpoint = isLogin
-      ? 'http://localhost:3000/api/login'
-      : 'http://localhost:3000/api/register';
-
-    const payload = isLogin
-      ? { email: formData.email, password: formData.password }
-      : {
-          username: formData.username,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-        };
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        alert('Credenciales inválidas o error en el formulario');
-        return;
-      }
-
-      const data = await res.json();
-      login(data); // Guarda token y usuario en contexto
-    } catch (err) {
-      console.error(err);
-      alert('Error al conectar con el servidor');
-    }
+  const handleTabSwitch = (mode) => {
+    setIsLogin(mode);
   };
 
   return (
     <div className="login-form-container">
-      {/* Tabs para cambiar entre registro e inicio de sesión */}
       <div className="tabs">
-        <button onClick={() => setIsLogin(false)} className={!isLogin ? 'active' : ''}>Registro</button>
-        <button onClick={() => setIsLogin(true)} className={isLogin ? 'active' : ''}>Acceso</button>
+        <button className={isLogin ? '' : 'active'} onClick={() => handleTabSwitch(false)}>
+          Registrarse
+        </button>
+        <button className={isLogin ? 'active' : ''} onClick={() => handleTabSwitch(true)}>
+          Iniciar Sesión
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="form-content">
-        <h2>{isLogin ? 'Inicia sesión' : 'Ingresa tus datos'}</h2>
+      <div className="form-content">
+        <h2>{isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}</h2>
 
-        {!isLogin && (
-          <>
-            <input
-              type="text"
-              name="username"
-              placeholder="Nombre de usuario"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Correo electrónico"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <div className="phone-wrapper">
-              <span>+503</span>
+        <form onSubmit={isLogin ? handleLoginSubmit(loginHandler) : handleRegisterSubmit(registerHandler)}>
+          {!isLogin && (
+            <>
               <input
-                type="tel"
-                name="phone"
-                placeholder="Teléfono"
-                value={formData.phone}
-                onChange={handleChange}
-                required
+                type="text"
+                placeholder="Nombre completo"
+                {...regRegister('name', { required: 'Nombre requerido' })}
               />
-            </div>
-            <input
-              type="password"
-              name="password"
-              placeholder="Contraseña"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </>
+              <div className="phone-wrapper">
+                <span>+503</span>
+                <input
+                  type="tel"
+                  placeholder="Número de teléfono"
+                  {...regRegister('phone', { required: 'Teléfono requerido' })}
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Dirección"
+                {...regRegister('address', { required: 'Dirección requerida' })}
+              />
+            </>
+          )}
+
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            {...(isLogin ? loginRegister('email') : regRegister('email'))}
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            {...(isLogin ? loginRegister('password') : regRegister('password'))}
+          />
+
+          <button type="submit" className="main-button" disabled={isLoggingIn || isRegistering}>
+            {isLogin ? 'Entrar' : 'Siguiente'}
+          </button>
+        </form>
+
+        <div className="divider">
+          {isLogin ? 'O inicia sesión con' : 'O regístrate con'}
+        </div>
+
+        {registerErrors.root && (
+        <p style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>
+           {registerErrors.root.message}
+        </p>
         )}
 
-        {isLogin && (
-          <>
-            <input
-              type="email"
-              name="email"
-              placeholder="Correo electrónico"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Contraseña"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </>
-        )}
-
-        <button type="submit" className="main-button">
-          {isLogin ? 'Iniciar sesión' : 'Siguiente'}
-        </button>
-
-        <div className="divider">{isLogin ? 'O inicia sesión con' : 'O regístrate con'}</div>
-
-        <button type="button" className="google-button">
+        <button className="google-button">
           <img src="/icons/google.png" alt="Google" />
+          Google
         </button>
-      </form>
+      </div>
     </div>
   );
 }

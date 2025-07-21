@@ -7,6 +7,7 @@ import Profile from './pages/profile/profile'
 import Reviews from './pages/reviews/reviews'
 import AboutUs from './pages/about/about'
 import Contact from './pages/contact/contact'
+import VerifyEmail from './pages/profile/verifyEmail';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/contact" element={<Contact/>} />
           <Route path="/reviews" element={<Reviews/>} />
           <Route path="/profile" element={<Profile/>} />
+          <Route path="/verifyEmail" element={<VerifyEmail/>} />
         </Routes>
     </>
   );

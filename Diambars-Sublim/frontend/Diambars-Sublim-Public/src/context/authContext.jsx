@@ -1,23 +1,31 @@
-import { createContext, useState, useEffect } from 'react';
+// src/context/authContext.jsx
+import { createContext, useContext, useState, useEffect } from 'react';
 
+// Crea el contexto
 export const AuthContext = createContext();
 
+// Hook personalizado para acceder al contexto
+export const useAuth = () => useContext(AuthContext);
+
+// Proveedor del contexto
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // null = no logueado
 
   useEffect(() => {
-    // Comprobar si hay sesión previa (ej: token en localStorage)
+    // Verifica si ya hay un usuario guardado en localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
+  // Método para iniciar sesión
   const login = (userData) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // persistencia básica
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  // Método para cerrar sesión
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
