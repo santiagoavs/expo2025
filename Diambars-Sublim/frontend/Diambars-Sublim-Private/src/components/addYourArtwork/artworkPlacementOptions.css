@@ -1,0 +1,82 @@
+.apo-wrapper {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 1px 4px 12px #00000052;
+  font-family: 'Segoe UI', sans-serif;
+  min-width: 650px;
+  margin-top: 32px;
+}
+
+.apo-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A202C;
+  margin-bottom: 16px;
+}
+
+.apo-mode-toggle {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.apo-mode-button {
+  background-color: #F7FAFC;
+  border: 1px solid #CBD5E0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4A5568;
+}
+
+.apo-mode-button.active {
+  background-color: #086788;
+  color: white;
+  border-color: #086788;
+}
+
+.apo-label {
+  font-size: 14px;
+  color: #1A202C;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.apo-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #CBD5E0;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.apo-note {
+  font-size: 12px;
+  color: #718096;
+  background-color: #F7FAFC;
+  border-left: 4px solid #CBD5E0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+.apo-image-selector {
+  display: flex;
+  gap: 16px;
+}
+
+.apo-image-box {
+  width: 80px;
+  height: 80px;
+  background-color: #E9D8FD;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: #4A5568;
+  cursor: pointer;
+}

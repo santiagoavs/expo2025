@@ -1,0 +1,116 @@
+.aaf-wrapper {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 1px 4px 12px #00000052;
+  font-family: 'Segoe UI', sans-serif;
+  min-width: 650px;
+  margin-top: 32px;
+}
+
+.aaf-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A202C;
+  margin-bottom: 8px;
+}
+
+.aaf-description {
+  font-size: 14px;
+  color: #4A5568;
+  margin-bottom: 24px;
+}
+
+.aaf-dropzone {
+  background: linear-gradient(135deg, #EEF2F6, #E4E9F2);
+  border: 2px dashed #CBD5E0;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.aaf-icon {
+  color: #718096;
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.aaf-drop-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2D3748;
+}
+
+.aaf-size-note {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 4px;
+}
+
+.aaf-gallery {
+  margin-top: 32px;
+}
+
+.aaf-gallery-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.aaf-gallery-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A202C;
+}
+
+.aaf-gallery-count {
+  font-size: 12px;
+  color: #718096;
+}
+
+.aaf-thumbnails {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.aaf-thumb {
+  position: relative;
+  background-color: #E9D8FD;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.aaf-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.aaf-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #fff;
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.aaf-thumb-add {
+  background-color: #F7FAFC;
+  border: 2px dashed #CBD5E0;
+  color: #4A5568;
+  font-size: 16px;
+}

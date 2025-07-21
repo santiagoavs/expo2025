@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
    background: linear-gradient(135deg, #FFFAED, #F8EBCC);
- margin-top: -390px;
+  margin-top: 490px;
   }
   
   /* Distribución de contenido principal */
@@ -13,4 +13,52 @@
   max-width: 1000px;
   margin: 0 auto;
   }
-  
+  .add-your-artwork-wrapper {
+  padding-bottom: 40px;
+}
+
+.add-your-artwork-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 0 40px;
+}
+
+.add-your-artwork-continue {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+/* 🔷 Estilo personalizado para ContinueButton desde la pantalla */
+.aya-custom-button {
+  background: linear-gradient(135deg, #086788, #094C63);
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  max-width: 280px;
+  transition: background 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.aya-custom-button:hover {
+  background: linear-gradient(135deg, #07506a, #07394c);
+}
+
+/* 🎯 Estilo interno del texto y flecha decorativa */
+.aya-custom-button .cb-text {
+  font-weight: 600;
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.aya-custom-button .cb-arrow {
+  font-size: 18px;
+}

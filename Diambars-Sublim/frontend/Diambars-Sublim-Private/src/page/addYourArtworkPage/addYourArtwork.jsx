@@ -1,20 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import NavbarProductDesigner from '../../components/customProductDesigner/navbarProductDesigner';
 import ProcessBar from '../../components/customProductDesigner/processBar';
-import './AddYourArtwork.css'; // 🎨 Estilo personalizado
+import ArtworkPreviewCard from '../../components/addYourArtwork/artworkPreviewCard';
+import UploadArtworkForm from '../../components/addYourArtwork/UploadArtworkForm';
+import ArtworkPlacementOptions from '../../components/addYourArtwork/ArtworkPlacementOptions';
+import ContinueButton from '../../components/customProductDesigner/continueButton'; // ✅ Importado
+import './AddYourArtwork.css';
 
 const AddYourArtwork = () => {
-  const currentStep = 2; // 🧭 Este sería el paso para "Design"
+  const currentStep = 2;
+  const [images, setImages] = useState([]);
+
+  const handleContinue = () => {
+    console.log('Avanzar al siguiente paso');
+    // También podés usar useNavigate para redirección si lo necesitás
+  };
 
   return (
     <div className="add-your-artwork-wrapper">
       <NavbarProductDesigner />
       <ProcessBar currentStep={currentStep} />
-      
-      {/* Aquí irán los componentes del paso actual */}
+
       <div className="add-your-artwork-content">
-        {/* Componente de diseño personalizado */}
-        <h2>Contenido del paso actual</h2>
+        <ArtworkPreviewCard />
+        <UploadArtworkForm images={images} setImages={setImages} />
+        <ArtworkPlacementOptions uploadedImages={images} />
+        <div className="add-your-artwork-continue">
+          <ContinueButton onClick={handleContinue} className="aya-custom-button">
+            Continuar a la confirmación
+          </ContinueButton>
+        </div>
       </div>
     </div>
   );
