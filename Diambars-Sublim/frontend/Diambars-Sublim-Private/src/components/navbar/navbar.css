@@ -121,6 +121,11 @@ body {
   border-radius: 8px;
 }
 
+.swal2-toast {
+  font-size: 14px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+}
+
 .navbar-left {
   display: flex;
   align-items: center;
