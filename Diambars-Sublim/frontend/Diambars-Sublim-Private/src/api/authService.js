@@ -1,20 +1,35 @@
+// src/api/authService.js
 import apiClient from './apiClient';
-import axios from 'axios';
 
 export const login = async (credentials) => {
-  const response = await apiClient.post('/auth/login', credentials);
-  return {
-    token: response.token,
-    user: response.user
-  };
+  try {
+    const response = await apiClient.post('/auth/login', credentials);
+    console.log("[authService] Login exitoso");
+    return response.user; // El backend ya devuelve el user en la respuesta
+  } catch (error) {
+    console.error("[authService] Error en login:", error);
+    throw error;
+  }
 };
 
 export const logout = async () => {
-  await apiClient.post('/auth/logout');
+  try {
+    await apiClient.post('/auth/logout');
+    console.log("[authService] Sesión cerrada exitosamente");
+  } catch (error) {
+    console.error("[authService] Error al cerrar sesión:", error);
+    throw error;
+  }
 };
 
 export const getCurrentUser = async () => {
-  return apiClient.get('/auth/check');
+  try {
+    const response = await apiClient.get('/auth/check');
+    return response;
+  } catch (error) {
+    console.error("[authService] Error obteniendo usuario:", error);
+    throw error;
+  }
 };
 
 export const requestRecoveryCode = async (email) => {
@@ -35,13 +50,8 @@ export const verifyRecoveryCode = async (email, code) => {
 
 export const resetPassword = async (data) => {
   try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/password-recovery/reset-password`,
-      { newPassword: data.newPassword, token: data.token },
-      { withCredentials: true }
-    );
-    return response.data;
+    return await apiClient.post('/password-recovery/reset-password', data);
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Error al actualizar la contraseña');
+    throw new Error(error.response?.data?.message || 'Error al actualizar contraseña');
   }
 };

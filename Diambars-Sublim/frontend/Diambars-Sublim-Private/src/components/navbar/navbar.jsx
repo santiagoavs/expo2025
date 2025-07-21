@@ -2,18 +2,46 @@ import React, { useState } from "react";
 import { IoLogOutOutline } from 'react-icons/io5';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; // Importa el hook useAuth
+import Swal from "sweetalert2";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleLogout = () => {
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      
+      // Mostrar notificación pequeña
+      Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: 'Sesión cerrada correctamente',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true,
+        background: '#f8f9fa',
+        width: '300px'
+      });
+      
+      navigate('/login');
+    } catch (error) {
+      Swal.fire({
+        position: 'top-end',
+        icon: 'error',
+        title: 'Error al cerrar sesión',
+        showConfirmButton: false,
+        timer: 1500,
+        toast: true
+      });
+    }
   };
 
   return (
@@ -37,7 +65,7 @@ const Navbar = () => {
           <a href="#" className="nav-link">Reseñas</a>
           <a href="#" className="nav-link">Stats</a>
           <a href="#" className="nav-link">Ajustes</a>
-          <Link to="/custom-product-designer" className="nav-link">Pedido manual</Link> {/* ✅ Link agregado */}
+          <Link to="/custom-product-designer" className="nav-link">Pedido manual</Link>
           <Link to="/category-page" className="nav-link">Categorías</Link>
         </div>
         
@@ -87,7 +115,7 @@ const Navbar = () => {
           <a href="#" className="sidebar-link">Reseñas</a>
           <a href="#" className="sidebar-link">Stats</a>
           <a href="#" className="sidebar-link">Ajustes</a>
-          <Link to="/custom-product-designer" className="sidebar-link">Pedido manual</Link> {/* ✅ Link agregado */}
+          <Link to="/custom-product-designer" className="sidebar-link">Pedido manual</Link>
           <Link to="/category" className="sidebar-link">Categorías</Link>
           <button className="sidebar-logout-btn" onClick={handleLogout}>
             <IoLogOutOutline />

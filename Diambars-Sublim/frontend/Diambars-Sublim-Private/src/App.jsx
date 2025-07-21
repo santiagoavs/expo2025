@@ -20,19 +20,16 @@ import ReviewAndSubmit from './page/reviewAndSubmitPage/reviewAndSubmit';
 import ProtectedRoute from './context/protectedRoute';
 
 function App() {
+  console.log("[App] Renderizando aplicación");
   return (
-    // 1. BrowserRouter envuelve todo para que useNavigate funcione
     <Router>
-      {/* 2. AuthProvider dentro del Router */}
       <AuthProvider>
         <Routes>
-          {/* Rutas públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/recovery-password" element={<RecoveryPasswordPage />} />
           <Route path="/code-confirmation" element={<CodeConfirmationPage />} />
           <Route path="/new-password" element={<NewPasswordPage />} />
 
-          {/* Rutas protegidas */}
           <Route
             element={
               <ProtectedRoute
@@ -41,19 +38,15 @@ function App() {
             }
           >
             <Route path="/" element={<WelcomePage />} />
-            <Route path="/dashboard" element={<WelcomePage />} />
             <Route path="/catalog-management" element={<CatalogManagementPage />} />
             <Route path="/product-creation" element={<ProductCreation />} />
             <Route path="/category-page" element={<CategoryPage />} />
 
-            {/* Flujo del diseñador personalizado */}
             <Route path="/custom-product-designer" element={<CustomProductDesigner />} />
             <Route path="/custom-product-designer/add-artwork" element={<AddYourArtwork />} />
             <Route path="/custom-product-designer/delivery-address" element={<DeliveryAddress />} />
             <Route path="/custom-product-designer/review-submit" element={<ReviewAndSubmit />} />
           </Route>
-
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

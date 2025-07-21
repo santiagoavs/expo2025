@@ -1,31 +1,23 @@
+// src/api/categoryService.js
 import apiClient from './apiClient';
 
 const BASE_URL = '/categories';
 
-const categoryService = {
+export default {
   getAll: async () => {
-    try {
-      const response = await apiClient.get(BASE_URL);
-      return response; // response ya es data, por el interceptor
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get(BASE_URL);
+    return response;
   },
 
   getCategoryById: async (id) => {
-    try {
-      const response = await apiClient.get(`${BASE_URL}/${id}`);
-      return response;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get(`${BASE_URL}/${id}`);
+    return response;
   },
 
   createCategory: async (categoryData) => {
     const response = await apiClient.post(BASE_URL, categoryData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
+        'Content-Type': 'multipart/form-data'
       }
     });
     return response;
@@ -34,19 +26,14 @@ const categoryService = {
   updateCategory: async (id, categoryData) => {
     const response = await apiClient.put(`${BASE_URL}/${id}`, categoryData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
+        'Content-Type': 'multipart/form-data'
       }
     });
     return response;
   },
 
   deleteCategory: async (id) => {
-    const response = await apiClient.delete(`${BASE_URL}/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('diambars_token')}`,
-      }
-    });
+    const response = await apiClient.delete(`${BASE_URL}/${id}`);
     return response;
   },
 
@@ -57,5 +44,3 @@ const categoryService = {
     return response;
   }
 };
-
-export default categoryService;

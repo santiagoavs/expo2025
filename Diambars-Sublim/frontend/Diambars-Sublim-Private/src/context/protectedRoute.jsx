@@ -1,3 +1,4 @@
+// src/context/protectedRoute.js
 import React, { useEffect } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -14,9 +15,10 @@ const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
 const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
-  const isPublic = publicPaths.includes(location.pathname);
+  const isPublic = publicPaths.some(path => location.pathname.startsWith(path)); // Mejor comparación
 
   useEffect(() => {
+    // Solo mostrar error si NO es una ruta pública
     if (!loading && !isAuthenticated && !isPublic) {
       showError(
         'Acceso no autorizado',
@@ -32,17 +34,17 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
   }
 
   if (isAuthenticated && user) {
-    const type = user.type?.toLowerCase();
-    const role = user.role?.toLowerCase();
+    const userType = user.type?.toLowerCase();
+    const userRole = user.role?.toLowerCase();
 
-    if (!allowedTypes.includes(type)) {
+    // Verificar tipo de usuario
+    if (!allowedTypes.includes(userType)) {
       return <Navigate to="/" replace />;
     }
-    if (allowedRoles.length) {
-      const roles = allowedRoles.map(r => r.toLowerCase());
-      if (!roles.includes(role)) {
-        return <Navigate to="/" replace />;
-      }
+
+    // Verificar roles permitidos
+    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+      return <Navigate to="/" replace />;
     }
   }
 
