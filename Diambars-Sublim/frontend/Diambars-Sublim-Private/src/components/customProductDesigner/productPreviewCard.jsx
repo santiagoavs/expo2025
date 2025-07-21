@@ -1,21 +1,29 @@
-const ProductPreviewCard = ({ productName, description, color, size, imageSrc }) => {
-  return (
-    <div className="product-preview-card">
-      <div className="product-image-container">
-        <img
-          src={imageSrc}
-          alt={productName}
-          className="product-image"
-        />
-      </div>
+import React from 'react';
+import './ProductPreviewCard.css';
 
-      <div className="product-info">
-        <h3 className="product-title">{productName}</h3>
-        <p className="product-description">{description}</p>
-        <p className="product-selection">
-          <strong>Selected:</strong> {color || 'No color selected'} • {size || 'No size selected'}
-        </p>
+const ProductPreviewCard = ({ productName, description, color, size }) => {
+  return (
+    <div className="ppc-wrapper">
+      <div className="ppc-card">
+        <div className="ppc-logo-container">
+          <img
+            src="/src/img/camisaBlanca.png"
+            alt="Logo DIAMBARS"
+            className="ppc-logo"
+          />
+        </div>
+
+        <div className="ppc-text-info">
+          <h3 className="ppc-title">{productName}</h3>
+          <p className="ppc-description">{description}</p>
+          <p className="ppc-status">
+            <strong>Selected:</strong>{' '}
+            {color || 'No color selected'} • {size || 'No size selected'}
+          </p>
+        </div>
       </div>
     </div>
   );
 };
+
+export default ProductPreviewCard;

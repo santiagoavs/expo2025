@@ -4,9 +4,10 @@
   align-items: center;
   gap: 0;
   padding: 32px 16px;
-  background-color: #fff;
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   max-width: 1000px;
   margin: 32px auto;
   overflow-x: auto;

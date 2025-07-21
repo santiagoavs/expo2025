@@ -1,15 +1,16 @@
 .add-your-artwork-wrapper {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #F7FAFC;
+   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+   background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+ margin-top: -390px;
   }
   
   /* Distribución de contenido principal */
   .add-your-artwork-content {
-    flex-grow: 1;
-    padding: 32px;
-    max-width: 1000px;
-    margin: 0 auto;
+  flex-grow: 1;
+  padding: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
   }
   

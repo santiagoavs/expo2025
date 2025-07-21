@@ -42,11 +42,12 @@ const ProductVariants = () => {
   };
 
   return (
-    <div className="product-variants-wrapper">
-      <h2 className="variant-title">Selecciona atributos</h2>
-      <div className="attribute-grid">
+    <div className="pv-wrapper">
+      <h2 className="pv-title">Selecciona atributos</h2>
+
+      <div className="pv-attribute-grid">
         {['Tamaño', 'Color', 'Material', 'Capacidad'].map(attr => (
-          <label key={attr} className="attribute-checkbox">
+          <label key={attr} className="pv-checkbox">
             <input
               type="checkbox"
               checked={selectedAttributes.includes(attr)}
@@ -64,10 +65,10 @@ const ProductVariants = () => {
       </div>
 
       {selectedAttributes.includes('Color') && (
-        <div className="options-section">
-          <h3>Opciones de color</h3>
+        <div className="pv-options-section">
+          <h3 className="pv-subtitle">Opciones de color</h3>
           {colorOptions.map((color, index) => (
-            <div key={index} className="color-option">
+            <div key={index} className="pv-color-option">
               <input
                 type="text"
                 value={color.name}
@@ -89,13 +90,13 @@ const ProductVariants = () => {
               />
             </div>
           ))}
-          <button onClick={handleAddColor} className="add-button">+ Agregar color</button>
+          <button onClick={handleAddColor} className="pv-add-button">+ Agregar color</button>
         </div>
       )}
 
       {selectedAttributes.includes('Material') && (
-        <div className="options-section">
-          <h3>Opciones de materiales</h3>
+        <div className="pv-options-section">
+          <h3 className="pv-subtitle">Opciones de materiales</h3>
           {materialOptions.map((material, index) => (
             <input
               key={index}
@@ -107,20 +108,20 @@ const ProductVariants = () => {
                 setMaterialOptions(updated);
               }}
               placeholder="Nombre del material"
-              className="material-input"
+              className="pv-material-input"
             />
           ))}
-          <button onClick={handleAddMaterial} className="add-button">+ Agregar material</button>
+          <button onClick={handleAddMaterial} className="pv-add-button">+ Agregar material</button>
         </div>
       )}
 
-      <button className="generate-button" onClick={generateVariants}>
+      <button className="pv-generate-button" onClick={generateVariants}>
         Generar variantes
       </button>
 
       {variants.length > 0 && (
-        <div className="variant-results">
-          <h3>Variantes generadas:</h3>
+        <div className="pv-results">
+          <h3 className="pv-subtitle">Variantes generadas:</h3>
           <ul>
             {variants.map((v, i) => (
               <li key={i}>{v.join(' | ')}</li>

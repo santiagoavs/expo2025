@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ⬅️ Importación agregada
 import NavbarProductDesigner from '../../components/customProductDesigner/navbarProductDesigner';
 import ProcessBar from '../../components/customProductDesigner/processBar';
 import ProductPreviewCard from '../../components/customProductDesigner/productPreviewCard';
+import ColorSelector from '../../components/customProductDesigner/colorSelector';
+import SizeSelector from '../../components/customProductDesigner/SizeSelector';
+import ContinueButton from '../../components/customProductDesigner/continueButton';
 import './customProductDesigner.css';
 
 const CustomProductDesigner = () => {
   const currentStep = 1;
-
-  // 🎨 Estado de color y talla seleccionados
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
+  const navigate = useNavigate(); // ⬅️ Hook para navegar
 
   return (
     <div className="custom-product-designer-wrapper">
@@ -22,8 +25,28 @@ const CustomProductDesigner = () => {
           description="100% Cotton • Unisex Fit"
           color={selectedColor}
           size={selectedSize}
-          imageSrc={`/src/img/${selectedColor || 'tshirt-white'}.png`}
+          onSelectColor={setSelectedColor}
         />
+
+        <div className="color-selector-position">
+          <ColorSelector
+            selectedColor={selectedColor}
+            onSelectColor={setSelectedColor}
+          />
+        </div>
+
+        <div className="size-selector-position">
+          <SizeSelector
+            selectedSize={selectedSize}
+            onSelectSize={setSelectedSize}
+          />
+        </div>
+
+        <div className="continue-button-position">
+          <div className="custom-continue-button-wrapper">
+            <ContinueButton onClick={() => navigate('/custom-product-designer/add-artwork')} />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@
     1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   width: 100%;
   max-width: 400px;
-  margin: 0 auto;
+  margin-top: -90px;
 }
 
 .live-preview-title {
