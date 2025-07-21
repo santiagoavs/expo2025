@@ -54,7 +54,7 @@
 /* Configuración base del HTML */
 html {
   height: 100%;   /* Asegura que el HTML ocupe toda la altura disponible */
-  background-color: #fff9f0;  /* Color de fondo beige claro */
+ background: linear-gradient(135deg, #ffffff, #f7eaea);
 }
 
 /* Configuración base del body */
@@ -70,7 +70,7 @@ body {
 .main-container {
   width: 100%;    /* Ocupa todo el ancho disponible */
   min-height: 100vh;  /* Altura mínima de toda la ventana */
-  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+    background: linear-gradient(135deg, #ffffff, #f7eaea);
   display: flex;   /* Usa flexbox para layout */
   flex-direction: column;  /* Apila elementos verticalmente */
   align-items: center;  /* Centra elementos horizontalmente */
@@ -81,7 +81,7 @@ body {
   flex: 1;        /* Ocupa el espacio disponible */
   width: 100%;    /* Ocupa todo el ancho */
   padding-top: 90px;  /* Espacio para el navbar */
-  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  background: linear-gradient(135deg, #ffffff, #f7eaea);
   display: flex;   /* Usa flexbox */
   justify-content: center;  /* Centra contenido horizontalmente */
 }
@@ -91,16 +91,17 @@ body {
   width: 100%;    /* Ocupa todo el ancho disponible */
   margin-top: 70px;  /* Centra el contenedor */
   padding: 20px 210px;  /* Padding vertical y horizontal */
-  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  background: linear-gradient(135deg, #ffffff, #ffffff);
 }
 
 /* Cabecera del catálogo */
 .catalog-header {
   width: 100%;    /* Ocupa todo el ancho */
-  background: linear-gradient(135deg, #FFF6E2, #F0DEB2);  padding: 24px;   /* Padding uniforme */
+    background: linear-gradient(135deg, #ffffff, #ffffff);  padding: 24px;   /* Padding uniforme */
   border-radius: 16px;  /* Bordes redondeados */
   margin-bottom: 32px;  /* Espacio inferior */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);  /* Sombra suave */
+   box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
 }
 
 /* Título principal */
