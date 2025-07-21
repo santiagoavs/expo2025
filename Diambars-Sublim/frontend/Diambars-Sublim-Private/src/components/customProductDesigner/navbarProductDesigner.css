@@ -1,6 +1,8 @@
 html, body {
   margin: 0;
   padding: 0;
+  padding-top: 195px; /* 👁️ Espacio para que el contenido no tape el navbar */
+
 }
 
 
@@ -10,11 +12,24 @@ html, body {
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 100;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   height: 72px;
+  z-index: 1000;
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
+    
 }
+
+
+.custom-product-designer-wrapper {
+  padding-top: 72px; /* 👁️ Espacio para que el contenido no tape el navbar */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #F7FAFC;
+  padding-top: 72px; /* 🧱 Esto evita que el contenido se meta bajo el navbar fijo */
+}
+
 
 /* 🧩 Contenedor distribuido */
 .navbar-content {
@@ -26,6 +41,7 @@ html, body {
   margin: 0 auto;
   height: 100%;
 }
+
 
 /* 🔙 Volver al menú */
 .back-btn {
@@ -75,3 +91,4 @@ html, body {
   font-size: 14px;
   cursor: pointer;
 }
+

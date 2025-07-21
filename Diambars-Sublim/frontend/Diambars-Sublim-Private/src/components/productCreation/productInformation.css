@@ -6,7 +6,7 @@
     1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   width: 100%;
   min-width: 750px; /* Aumentado mucho más para que sea más larga horizontalmente */
-  margin: 0 auto;
+  margin-top: -90px;
 }
 
 

@@ -1,0 +1,72 @@
+.ss-wrapper {
+  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
+  box-shadow:
+    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
+  padding: 24px;
+  border-radius: 12px;
+  
+  max-width: 600px;
+  margin: 32px auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.ss-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ss-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3748;
+}
+
+.ss-required {
+  font-size: 12px;
+  color: #E53E3E;
+  font-weight: 500;
+}
+
+.ss-options {
+  display: flex;
+  justify-content: center;
+  gap: 14px; /* 🧠 Menos espacio entre opciones */
+  flex-wrap: wrap;
+}
+
+.ss-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  height: auto;
+  background-color: #ffffff;
+  border: 2px solid #dbdfe2;
+  border-radius: 8px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ss-option:hover {
+  border-color: #fcfcfc;
+}
+
+.ss-selected {
+  border-color: #2B6CB0;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 2px #2B6CB0;
+}
+
+.ss-size {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3748;
+  margin-bottom: 4px;
+}
+
+.ss-label-text {
+  font-size: 12px;
+  color: #4A5568;
+}
