@@ -92,7 +92,6 @@ export default function LoginForm() {
 
         <button className="google-button">
           <img src="/icons/google.png" alt="Google" />
-          Google
         </button>
       </div>
     </div>
