@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './UserInfo.css';
+import { useAuth } from '../../context/authContext';
 
 function UserInfo() {
   const [name, setName] = useState('Santiago Ávila');
@@ -8,9 +9,14 @@ function UserInfo() {
   const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
 
+  const { logout } = useAuth();
+
   const handleSave = () => {
     console.log('Guardando datos:', { name, phone, email, password });
+  };
 
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -26,51 +32,55 @@ function UserInfo() {
           <a href="#">Restablecer contraseña</a>
         </div>
 
-    <div className="info-grid">
-    <div className="input-group">
-        <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="underline-input"
-        placeholder="Nombre"
-        />
-    </div>
+        <div className="info-grid">
+          <div className="input-group">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="underline-input"
+              placeholder="Nombre"
+            />
+          </div>
 
-    <div className="input-group">
-        <input
-        type="text"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        className="underline-input"
-        placeholder="Teléfono"
-        />
-    </div>
+          <div className="input-group">
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="underline-input"
+              placeholder="Teléfono"
+            />
+          </div>
 
-    <div className="input-group">
-        <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="underline-input"
-        placeholder="Correo electrónico"
-        />
-    </div>
+          <div className="input-group">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="underline-input"
+              placeholder="Correo electrónico"
+            />
+          </div>
 
-    <div className="input-group password-field">
-        <input
-        type={showPassword ? 'text' : 'password'}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="underline-input"
-        placeholder="Contraseña"
-        />
-        <span onClick={() => setShowPassword(!showPassword)} className="toggle-eye">👁️</span>
-    </div>
+          <div className="input-group password-field">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="underline-input"
+              placeholder="Contraseña"
+            />
+            <span onClick={() => setShowPassword(!showPassword)} className="toggle-eye">👁️</span>
+          </div>
+        </div>
+        <div className="email-status-row">
+            <p className="email-warning">
+              Confirmación de correo electrónico <span className="red-dot">●</span>
+            </p>
+            <button className="logout-link" onClick={handleLogout}>Cerrar sesión</button>
+          </div>
 
-    <p className="email-warning">Confirmación de correo electrónico <span className="red-dot">●</span></p>
-    
-    </div>
         <button type="submit" className="save-button" onClick={handleSave}>Guardar</button>
       </div>
     </div>

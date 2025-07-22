@@ -42,42 +42,47 @@ const ShippingAddresses = () => {
       </div>
       <div className="address-underline"></div>
 
-      <div className="address-list">
-        {addresses.map((item) => (
-          <div
-            key={item.id}
-            className={`address-item ${item.active ? 'active' : 'inactive'}`}
-          >
-            <p>
-              {item.active ? 'Dirección actual' : 'Dirección registrada'}<br />
-              {item.address}
-            </p>
-            <div className="address-buttons">
-              <img
-                src={item.active ? btnDeactivate : btnActivate}
-                alt={item.active ? 'Desactivar' : 'Activar'}
-                onClick={() => {
-                  setAddresses((prev) =>
-                    prev.map((addr) =>
-                      addr.id === item.id
-                        ? { ...addr, active: !addr.active }
-                        : { ...addr, active: false }
-                    )
-                  );
-                }}
-              />
-              <img
-                src={btnEdit}
-                alt="Editar"
-                onClick={() => {
-                  setEditingAddress(item);
-                  setEditedAddress(item.address);
-                }}
-              />
-            </div>
-          </div>
-        ))}
+    <div className="address-list">
+  {addresses.map((item) => (
+    <div
+      key={item.id}
+      className={`address-item ${item.active ? 'active' : 'inactive'}`}
+    >
+      <p>
+        {item.active ? 'Dirección actual' : 'Dirección registrada'}<br />
+        {item.address}
+      </p>
+      <div className="address-buttons">
+        <button
+          className={`address-button active-toggle ${item.active ? 'active' : ''}`}
+          onClick={() => {
+            setAddresses((prev) =>
+              prev.map((addr) =>
+                addr.id === item.id
+                  ? { ...addr, active: !addr.active }
+                  : { ...addr, active: false }
+              )
+            );
+          }}
+          aria-label={item.active ? 'Desactivar' : 'Activar'}
+        >
+          {item.active ? 'Desactivar' : 'Activar'}
+        </button>
+        
+        <button
+          className="address-button edit"
+          onClick={() => {
+            setEditingAddress(item);
+            setEditedAddress(item.address);
+          }}
+          aria-label="Editar"
+        >
+          Editar
+        </button>
       </div>
+    </div>
+  ))}
+</div>
 
       {/* Modal para añadir */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
