@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
 import './verifyEmail.css';
 
@@ -24,8 +23,6 @@ export default function VerifyEmailPage() {
           Reenviar correo
         </button>
       </div>
-
-      <ContactButton />
       <Footer />
     </main>
   );

@@ -31,11 +31,6 @@
   margin: 0;
 }
 
-.btn-add {
-  width: 90px;
-  cursor: pointer;
-}
-
 .address-list {
   display: flex;
   flex-direction: column;

@@ -32,8 +32,42 @@
 }
 
 .btn-add {
+  position: relative;
+  border: none;
+  border-radius: 15px;
+  padding: 10px 20px;
   width: 90px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 0.8rem;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  z-index: 1;
+  color: #FFF1D0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  
+  /* Cristal verde */
+  background: rgba(22, 120, 3, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 20px rgba(8, 50, 0, 0.2),
+    0 0 0 1px rgba(180, 255, 180, 0.3);
+}
+
+.btn-add::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(30, 180, 50, 0.6), rgba(0, 100, 15, 0.9));
+  transform: translateY(5px) scale(0.95);
+  filter: blur(6px);
+  opacity: 0.8;
 }
 
 .payment-list {
@@ -59,8 +93,170 @@
   font-style: italic;
 }
 
-.payment-buttons img {
-  width: 90px;
-  cursor: pointer;
+.payment-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
+.payment-button.active-toggle {
+  position: relative;
+  border: none;
+  border-radius: 15px;
+  padding: 8px 16px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  z-index: 1;
+  color: #FFF1D0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.payment-button.active-toggle:not(.active) {
+  background: rgba(160, 0, 25, 0.5);
+  box-shadow: 
+    0 4px 20px rgba(160, 0, 25, 0.2),
+    0 0 0 1px rgba(255, 180, 180, 0.3);
+}
+
+.payment-button.active-toggle:not(.active)::before {
+  background: linear-gradient(135deg, rgba(180, 30, 50, 0.6), rgba(100, 0, 15, 0.9));
+}
+
+.payment-button.active-toggle.active {
+  background: rgba(22, 120, 3, 0.5);
+  box-shadow: 
+    0 4px 20px rgba(8, 50, 0, 0.2),
+    0 0 0 1px rgba(180, 255, 180, 0.3);
+}
+
+.payment-button.active-toggle.active::before {
+  background: linear-gradient(135deg, rgba(30, 180, 50, 0.6), rgba(0, 100, 15, 0.9));
+}
+
+.payment-button.active-toggle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  transform: translateY(5px) scale(0.95);
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.payment-button.active-toggle::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.payment-button.active-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 25px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.payment-button.active-toggle:hover::after {
+  left: 100%;
+  top: 100%;
+}
+
+.payment-button.active-toggle:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(6px);
+}
+
+.payment-button.edit {
+  position: relative;
+  border: none;
+  border-radius: 15px;
+  padding: 8px 16px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  z-index: 1;
+  color: #FFF1D0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(45, 120, 142, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 20px rgba(40, 60, 62, 0.2),
+    0 0 0 1px rgba(180, 220, 255, 0.3);
+}
+
+.payment-button.edit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(45, 160, 190, 0.6), rgba(40, 60, 62, 0.9));
+  transform: translateY(5px) scale(0.95);
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.payment-button.active-toggle:hover,
+.payment-button.edit:hover,
+.btn-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 25px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.payment-button.active-toggle:active,
+.payment-button.edit:active,
+.btn-add:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(6px);
+}
+
+/* Efecto de luz dinámico para todos los botones */
+.payment-button.active-toggle::after,
+.payment-button.edit::after,
+.btn-add::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.payment-button.active-toggle:hover::after,
+.payment-button.edit:hover::after,
+.btn-add:hover::after {
+  left: 100%;
+  top: 100%;
+}

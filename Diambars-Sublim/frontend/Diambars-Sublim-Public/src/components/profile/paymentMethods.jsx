@@ -39,12 +39,7 @@ const PaymentMethods = () => {
     <div className="payment-container">
       <div className="payment-header">
         <h3 className="payment-title">Tus métodos de pago</h3>
-        <img
-          src={btnAdd}
-          alt="Añadir método de pago"
-          className="btn-add"
-          onClick={() => setIsModalOpen(true)}
-        />
+        <button className="btn-add" onClick={() => setIsModalOpen(true)}>Añadir</button>
       </div>
       <div className="payment-underline"></div>
 
@@ -56,9 +51,8 @@ const PaymentMethods = () => {
               Visa terminada en {method.lastDigits}
             </p>
             <div className="payment-buttons">
-              <img
-                src={method.active ? btnDeactivate : btnActivate}
-                alt={method.active ? 'Desactivar' : 'Activar'}
+              <button
+                className={`payment-button active-toggle ${method.active ? 'active' : ''}`}
                 onClick={() => {
                   setMethods((prevMethods) =>
                     prevMethods.map((m) =>
@@ -68,15 +62,21 @@ const PaymentMethods = () => {
                     )
                   );
                 }}
-              />
-              <img
-                src={btnEdit}
-                alt="Editar"
+                aria-label={method.active ? 'Desactivar' : 'Activar'}
+              >
+                {method.active ? 'Desactivar' : 'Activar'}
+              </button>
+              
+              <button
+                className="payment-button edit"
                 onClick={() => {
                   setEditingMethod(method);
                   setEditedLastDigits(method.lastDigits);
                 }}
-              />
+                aria-label="Editar"
+              >
+                Editar
+              </button>
             </div>
           </div>
         ))}

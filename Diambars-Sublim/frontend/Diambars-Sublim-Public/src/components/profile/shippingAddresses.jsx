@@ -38,12 +38,7 @@ const ShippingAddresses = () => {
     <div className="address-container">
       <div className="address-header">
         <h3 className="address-title">Tus direcciones</h3>
-        <img
-          src={btnAdd}
-          alt="Añadir dirección"
-          className="btn-add"
-          onClick={() => setIsModalOpen(true)}
-        />
+        <button className="btn-add" onClick={() => setIsModalOpen(true)}>Añadir</button>
       </div>
       <div className="address-underline"></div>
 

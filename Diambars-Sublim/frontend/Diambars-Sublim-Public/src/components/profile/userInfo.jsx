@@ -71,12 +71,7 @@ function UserInfo() {
     <p className="email-warning">Confirmación de correo electrónico <span className="red-dot">●</span></p>
     
     </div>
-        <img
-          src="/images/profile/btnGuardarProfile.png"
-          alt="Guardar"
-          className="save-button-img"
-          onClick={handleSave}
-        />
+        <button type="submit" className="save-button" onClick={handleSave}>Guardar</button>
       </div>
     </div>
   );
