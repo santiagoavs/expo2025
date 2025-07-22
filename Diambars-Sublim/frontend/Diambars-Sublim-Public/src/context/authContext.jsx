@@ -1,5 +1,6 @@
 // src/context/authContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import apiClient from '../api/apiClient.js';
 
 // Crea el contexto
 export const AuthContext = createContext();

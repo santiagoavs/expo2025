@@ -1,5 +1,6 @@
+import crypto from 'crypto';
 import userModel from "../models/users.js";
-import { sendWelcomeEmail } from "../utils/email.service.js";
+import { sendWelcomeEmail, sendVerificationEmail } from "../utils/email.service.js";
 
 const verifyEmailController = {};
 
@@ -56,24 +57,31 @@ verifyEmailController.verifyEmail = async (req, res) => {
  * Genera un nuevo token y actualiza la fecha de expiración.
  */
 verifyEmailController.resendVerification = async (req, res) => {
+  console.log('=== RESEND VERIFICATION ===');
+  
   const { email } = req.body;
+  console.log('Email recibido:', email);
 
   // Validar que se haya proporcionado un correo
   if (!email) {
+    console.log('ERROR: Email no proporcionado');
     return res.status(400).json({ message: "Correo electrónico no proporcionado." });
   }
 
   try {
     // Buscar el usuario por su correo
     const user = await userModel.findOne({ email });
+    console.log('Usuario encontrado:', user ? 'SÍ' : 'NO');
 
     // Validar que el usuario existe
     if (!user) {
+      console.log('ERROR: Usuario no encontrado');
       return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
     // Validar que la cuenta aún no esté verificada
     if (user.verified) {
+      console.log('ERROR: Usuario ya verificado');
       return res.status(400).json({ 
         message: "Esta cuenta ya ha sido verificada. Puedes iniciar sesión." 
       });
@@ -83,12 +91,22 @@ verifyEmailController.resendVerification = async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
+    console.log('Token generado:', verificationToken);
+
     user.verificationToken = verificationToken;
     user.verificationExpires = verificationExpires;
     await user.save();
+    console.log('Usuario actualizado en BD');
 
     // Enviar el nuevo correo con el token
-    await sendVerificationEmail(email, verificationToken, user.name);
+    try {
+      console.log('Intentando enviar email...');
+      await sendVerificationEmail(email, verificationToken, user.name);
+      console.log('Email enviado exitosamente');
+    } catch (emailError) {
+      console.error('Error específico del email:', emailError);
+      throw emailError;
+    }
 
     return res.status(200).json({ 
       message: "Se ha enviado un nuevo correo de verificación. Por favor, revisa tu bandeja de entrada." 
