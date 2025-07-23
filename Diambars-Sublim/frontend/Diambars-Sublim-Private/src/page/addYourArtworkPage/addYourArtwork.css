@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
    background: linear-gradient(135deg, #FFFAED, #F8EBCC);
-  margin-top: 490px;
+  margin-top: 460px;
   }
   
   /* Distribución de contenido principal */
@@ -40,8 +40,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
-  max-width: 280px;
+  width: 50%;
   transition: background 0.3s ease;
   display: flex;
   justify-content: center;
@@ -62,3 +61,45 @@
 .aya-custom-button .cb-arrow {
   font-size: 18px;
 }
+
+.artwork-placement-options-position {
+  position: relative;
+  top: -655px;  /* ↕ Ajustá verticalmente */
+  right: 410px;   /* ↔ Ajustá horizontalmente */
+  z-index: 5;  /* Opcional: eleva en capas si se superpone */
+}
+
+
+.artwork-preview-card-position {
+  position: relative;
+  top: 45px;   /* ↕ Mové hacia arriba o abajo */
+  left: 300px;    /* ↔ Mové hacia los costados */
+  z-index: 5;   /* Elevación opcional si se superpone */
+}
+
+.upload-artwork-form-position {
+  position: relative;
+  top: -618px;   /* ↕ Mové verticalmente */
+  right: 410px;    /* ↔ Mové lateralmente si lo necesitás */
+  z-index: 5;
+}
+
+.continue-button-position {
+  position: absolute;     /* Se posiciona dentro del contenedor relativo */
+  top: 890px;              /* Ajustá la altura para que no se solape */
+  left: 1080px;
+  width: 35%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+
+
+.process-bar-aya-custom-button {
+  position: fixed;         /* 🧷 Fijado al viewport */
+  top: 40px;               /* ↕ Desde la parte superior de la ventana */
+  left: 300px;             /* ↔ Desde el borde izquierdo */
+  z-index: 1000;           /* 🪄 Asegura que esté por encima de todo */
+}
+
+

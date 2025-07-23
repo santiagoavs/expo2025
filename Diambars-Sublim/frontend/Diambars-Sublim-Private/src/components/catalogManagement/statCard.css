@@ -1,17 +1,36 @@
 .stat-card {
-  background: linear-gradient(162deg, #f5f5f5, #ffffff);
-  border-radius: 16px;
+  backdrop-filter: blur(50px);          /* desenfoque fuerte */
+  -webkit-backdrop-filter: blur(50px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
   padding: 24px;
-  box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
   width: 100%;
-  min-width: 480px !important;    /* Forzamos el ancho mínimo */
-  max-width: 300px !important;    /* Forzamos el ancho máximo */
+  min-width: 480px !important;
+  max-width: 300px !important;
   height: 140px;
   box-sizing: border-box;
-  
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
 }
 
+
+/* 🧨 Hover effect */
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 
+  0 8px 32px rgba(0, 0, 0, 0.1),
+  0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* 📊 Contenido */
 .stat-content {
   display: flex;
   justify-content: space-between;
@@ -47,7 +66,7 @@
   margin-left: 16px;
 }
 
-/* Colores de fondo para los iconos */
+/* 🎨 Colores de fondo para los íconos */
 .icon-blue {
   background-color: #2D788E;
   color: white;
@@ -70,13 +89,13 @@
 
 @media (max-width: 768px) {
   .stat-card {
-    height: 120px; /* Altura reducida en móviles */
+    height: 120px;
   }
-  
+
   .stat-number {
     font-size: 1.75rem;
   }
-  
+
   .stat-title {
     font-size: 0.875rem;
   }

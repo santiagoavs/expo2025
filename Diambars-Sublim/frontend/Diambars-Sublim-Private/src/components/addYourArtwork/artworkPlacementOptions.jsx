@@ -1,3 +1,4 @@
+// ArtworkPlacementOptions.jsx
 import React, { useState } from 'react';
 import './ArtworkPlacementOptions.css';
 
@@ -54,19 +55,28 @@ const ArtworkPlacementOptions = ({ uploadedImages }) => {
         <p className="apo-note">{zoneDescriptions[selectedZone]}</p>
       )}
 
-      {uploadedImages.length > 0 && (
-        <div className="apo-image-selector">
-          {uploadedImages.map((src, i) => (
+      <div className="apo-image-selector">
+        {uploadedImages.length > 0 ? (
+          uploadedImages.map((src, i) => (
             <div key={i} className="apo-image-box">
               <img
                 src={src}
                 alt={`placement-${i}`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '8px'
+                }}
               />
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <div className="apo-image-box apo-empty-box">
+            <span className="apo-plus-icon">+</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

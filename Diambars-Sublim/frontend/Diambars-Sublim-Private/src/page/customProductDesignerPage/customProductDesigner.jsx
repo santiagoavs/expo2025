@@ -17,7 +17,9 @@ const CustomProductDesigner = () => {
   return (
     <div className="custom-product-designer-wrapper">
       <NavbarProductDesigner />
-      <ProcessBar currentStep={currentStep} />
+      <div className="process-bar-position">
+        <ProcessBar currentStep={currentStep} />
+      </div>
 
       <div className="custom-step-content">
         <ProductPreviewCard

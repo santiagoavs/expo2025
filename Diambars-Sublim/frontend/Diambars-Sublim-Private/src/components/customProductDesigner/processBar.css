@@ -3,15 +3,14 @@
   justify-content: center;
   align-items: center;
   gap: 0;
-  padding: 32px 16px;
-  background: linear-gradient(135deg, #FFFAED, #F8EBCC);
-  box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
-  border-radius: 12px;
+  overflow-x: auto;
   max-width: 1000px;
   margin: 32px auto;
-  overflow-x: auto;
+  border-radius: 0;
+  padding: 0;
+  
 }
+
 
 /* 📦 Paso individual */
 .step {

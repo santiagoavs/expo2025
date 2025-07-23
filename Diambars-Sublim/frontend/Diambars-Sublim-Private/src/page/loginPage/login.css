@@ -1,24 +1,32 @@
-
 .diambars-login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   width: 100vw;
-  background: conic-gradient(
-    from var(--gradient-angle) at var(--gradient-position-x) var(--gradient-position-y),
-    var(--gradient-start) 0%,
-    var(--gradient-end) 100%
-  );
+  background: 
+  radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+  radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+  radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+  radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+  radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+  radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+  linear-gradient(135deg, 
+    #FFF6E2 0%,
+    #F5E7C6 20%,
+    #F0DFB8 40%,
+    #EBD7AA 60%,
+    #E6CF9C 80%,
+    #F2E4C1 100%);
   padding: 20px;
   box-sizing: border-box;
-  font-family: 'Aesthetic Moment';
+  font-family: 'Inter', sans-serif;
+font-style: italic;
   position: fixed;
   inset: 0;
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
-      background: linear-gradient(135deg, #ffffff, #ffffff);
 }
 
 .diambars-login-card {
@@ -26,12 +34,53 @@
   width: 100%;
   max-width: 900px;
   min-height: 500px;
-    background: linear-gradient(162deg, #f5f5f5, #ffffff);
 
-  border-radius: 15px;
-  box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */  overflow: hidden;
-  margin-bottom: 20px;
+  /* 🌟 Glass exacto del ejemplo */
+  /* Efecto de cristal */
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.diambars-login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 246, 226, 0.5),
+    rgba(245, 231, 198, 0.3)
+  );
+  z-index: -1;
+  transform: translateY(8px) scale(0.98);
+  filter: blur(10px);
+  opacity: 0.8;
+}
+
+.diambars-login-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
 }
 
 .diambars-brand-column {
@@ -40,7 +89,6 @@
   flex-direction: column;
   align-items: center;
   padding: 40px;
-
   position: relative;
   top: 80px;
   margin-bottom: 50px;
@@ -51,7 +99,6 @@
   width: 150px;
   height: 150px;
   margin-bottom: 30px;
- 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,7 +180,7 @@
   border-color: #ff4444;
   padding-right: 2.5rem;
   background-color: #ffffff !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ff4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 1rem;
@@ -168,7 +215,7 @@
 
 .diambars-forgot-password {
   display: block;
-  margin: 20px 0 30px;
+  margin: 20px 0 20px;
   font-size: 0.85rem;
   color: #666;
   cursor: pointer;
@@ -186,31 +233,76 @@
   margin: 20px 0;
 }
 
+@font-face {
+  font-family: 'DiambarsFont';
+  src: url('/fonts/AestheticMoment.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .diambars-login-button {
-  padding: 16px;
-  background: #086788;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.3rem;
-  font-weight: 600;
+  position: relative;
+  color: #FFF1D0;
+  border-radius: 15px;
+  padding: 12px 32px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  width: 50%;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: none;
+  overflow: hidden;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(100, 0, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(160, 0, 25, 0.18),
+    0 0 0 1px rgba(255, 180, 180, 0.4);
+}
+
+.diambars-login-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(180, 30, 50, 0.5), rgba(100, 0, 15, 0.2));
+  transform: translateY(10px) scale(0.95);
+  filter: blur(10px);
+  opacity: 0.8;
+}
+
+.diambars-login-button:after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to right, rgba(255,50,50,0) 0%, rgba(255,150,150,0.3) 50%, rgba(255,50,50,0) 100%);
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
 }
 
 .diambars-login-button:hover {
-  background: #075672;
+  transform: translateY(-2px);
+  background: rgba(180, 10, 30, 0.5);
+  box-shadow: 
+    0 10px 35px rgba(160, 0, 25, 0.25),
+    0 0 0 1px rgba(255, 200, 200, 0.5);
 }
 
-.diambars-login-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.diambars-login-button:hover::after {
+  left: 100%;
 }
+
+.diambars-login-button:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(8px);
+}
+
 
 .spinner {
   width: 20px;
@@ -235,38 +327,297 @@
     flex-direction: column;
     min-height: auto;
   }
-  
+
   .diambars-brand-column,
   .diambars-form-column {
     padding: 40px 30px;
   }
-  
+
   .diambars-brand-column {
     padding-bottom: 20px;
     top: 0;
     margin-bottom: 0;
   }
-  
+
   .diambars-logo-container {
     width: 120px;
     height: 120px;
   }
 
   .diambars-login-button {
-    width: 80%;
+    width: 100%;
+    padding: 12px;
+   backdrop-filter: blur(5px);
+   -webkit-backdrop-filter: blur(5px);
   }
 
-  .diambars-input-group {
-    margin-bottom: 1.25rem;
+}
+
+/* Teléfono pequeño (xs: 320-480px) */
+@media (max-width: 480px) {
+  .diambars-login-container {
+    padding: 12px;
   }
 
-  .alert-error {
-    bottom: -1.1rem;
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
+  .diambars-login-card {
+    flex-direction: column;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 30px 16px;
+    text-align: center;
+  }
+
+  .diambars-logo-container {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1rem;
+    letter-spacing: 4px;
+    margin-top: 6px;
+  }
+
+  .diambars-form-column h2 {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .diambars-input {
+    font-size: 0.8rem;
+    padding: 12px;
+  }
+
+  .diambars-login-button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px 0;
+    left: 0;
+  }
+}
+
+/* Teléfono mediano (sm: 481-768px) */
+@media (max-width: 768px) {
+  .diambars-login-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 40px 30px;
+  }
+
+  .diambars-brand-column {
+    padding-bottom: 20px;
+    top: 0;
+    margin-bottom: 0;
+  }
+
+  .diambars-logo-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 2rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1.2rem;
+    letter-spacing: 6px;
+  }
+
+  .diambars-login-button {
+    width: 100%;
+    padding: 12px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    left: 0;
+  }
+}
+
+/* Tablet (md: 769-1024px) */
+@media (max-width: 1024px) {
+  .diambars-login-card {
+    flex-direction: row;
+    max-width: 90%;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 50px 30px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 2.2rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1.4rem;
+  }
+
+  .diambars-login-button {
+    font-size: 1rem;
+    padding: 14px 24px;
+  }
+}
+
+/* Laptop pequeño (lg: 1025-1280px) */
+@media (max-width: 1280px) {
+  .diambars-login-card {
+    max-width: 880px;
+  }
+
+  .diambars-login-button {
+    left: 40px;
+  }
+}
+
+/* Pantalla ancha (xxL: >1600px) */
+@media (min-width: 1601px) {
+  .diambars-login-container {
+    padding: 40px;
+  }
+
+  .diambars-login-card {
+    max-width: 1000px;
+  }
+
+  .diambars-login-button {
+    padding: 14px 40px;
+    font-size: 1.2rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1.8rem;
+    letter-spacing: 12px;
+  }
+
+  @media (min-width: 400px) and (max-width: 900px) {
+  .diambars-login-card {
+    flex-direction: column;
+    max-width: 100%;
+    min-height: auto;
+    border-radius: 16px;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 30px 24px;
+    text-align: center;
+  }
+
+  .diambars-logo-container {
+    width: 110px;
+    height: 110px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 2rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1.2rem;
+    letter-spacing: 6px;
+  }
+
+  .diambars-form-column h2 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+  }
+
+  .diambars-input {
+    font-size: 0.85rem;
+    padding: 12px;
+  }
+
+  .diambars-login-button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 14px 0;
+    left: 0;
   }
 
   .diambars-forgot-password {
     font-size: 0.8rem;
+    margin-bottom: 20px;
   }
 }
+
+
+}
+
+
+@media (max-width: 480px) {
+  .diambars-login-container {
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .diambars-login-card {
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    min-height: unset;
+    border-radius: 12px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding: 20px 16px;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    width: 100%;
+    padding: 20px 8px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .diambars-logo-container {
+    width: 90px;
+    height: 90px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 1.8rem;
+    line-height: 1.2;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1rem;
+    letter-spacing: 4px;
+    margin-top: 6px;
+  }
+
+  .diambars-input {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .diambars-login-button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px;
+    margin-top: 16px;
+    left: 0;
+  }
+
+  .diambars-forgot-password {
+    font-size: 0.75rem;
+    margin-top: 10px;
+  }
+}
+
