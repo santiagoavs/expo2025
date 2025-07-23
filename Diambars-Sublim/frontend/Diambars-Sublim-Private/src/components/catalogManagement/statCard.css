@@ -1,14 +1,15 @@
 .stat-card {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(50px);
+  backdrop-filter: blur(50px);          /* desenfoque fuerte */
   -webkit-backdrop-filter: blur(50px);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 28px 14px rgba(255, 255, 255, 1.4);
+    0 0 0 1px rgba(255, 255, 255, 0.2);
   padding: 24px;
   width: 100%;
   min-width: 480px !important;
@@ -20,48 +21,13 @@
   transition: all 0.4s ease;
 }
 
-/* ✨ Luces internas tipo reflejo */
-.stat-card::before,
-.stat-card::after {
-  content: '';
-  position: absolute;
-  z-index: 1;
-}
-
-.stat-card::before {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8),
-    transparent
-  );
-}
-
-.stat-card::after {
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.8),
-    transparent,
-    rgba(255, 255, 255, 0.3)
-  );
-}
 
 /* 🧨 Hover effect */
 .stat-card:hover {
   transform: translateY(-6px);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 0 36px 18px rgba(255, 255, 255, 1.2);
+  box-shadow: 
+  0 8px 32px rgba(0, 0, 0, 0.1),
+  0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 /* 📊 Contenido */
