@@ -4,7 +4,7 @@ import ProcessBar from '../../components/customProductDesigner/processBar';
 import ArtworkPreviewCard from '../../components/addYourArtwork/artworkPreviewCard';
 import UploadArtworkForm from '../../components/addYourArtwork/UploadArtworkForm';
 import ArtworkPlacementOptions from '../../components/addYourArtwork/ArtworkPlacementOptions';
-import ContinueButton from '../../components/customProductDesigner/continueButton'; // ✅ Importado
+import ContinueButton from '../../components/customProductDesigner/continueButton';
 import './AddYourArtwork.css';
 
 const AddYourArtwork = () => {
@@ -13,7 +13,6 @@ const AddYourArtwork = () => {
 
   const handleContinue = () => {
     console.log('Avanzar al siguiente paso');
-    // También podés usar useNavigate para redirección si lo necesitás
   };
 
   return (
@@ -22,10 +21,16 @@ const AddYourArtwork = () => {
       <ProcessBar currentStep={currentStep} />
 
       <div className="add-your-artwork-content">
-        <ArtworkPreviewCard />
-        <UploadArtworkForm images={images} setImages={setImages} />
-        <ArtworkPlacementOptions uploadedImages={images} />
-        <div className="add-your-artwork-continue">
+        <div className="artwork-preview-card-position">
+          <ArtworkPreviewCard />
+        </div>
+        <div className="upload-artwork-form-position">
+          <UploadArtworkForm images={images} setImages={setImages} />
+        </div>
+        <div className="artwork-placement-options-position">
+          <ArtworkPlacementOptions uploadedImages={images} />
+        </div>
+        <div className="continue-button-position">
           <ContinueButton onClick={handleContinue} className="aya-custom-button">
             Continuar a la confirmación
           </ContinueButton>

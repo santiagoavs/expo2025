@@ -65,10 +65,10 @@
 }
 
 /*BUTTON continueButton*/
-.continue-button-position {
+.custom-continue-button-wrapper {
   position: relative;
-  top: -580px;   /* ↕ Mover hacia arriba */
-  left: 200px;  /* ↔ Mover hacia la izquierda */
+  top: -250px;   /* ↕ Mover hacia arriba */
+  right: 260px;  /* ↔ Mover hacia la izquierda */
 }
 
 /* -----------------------------------------------------------------------------------------------------*/
