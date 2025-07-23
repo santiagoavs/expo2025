@@ -65,9 +65,9 @@
   font-size: 14px;
   color: #3F2724; 
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1); 
+  flex-direction: row;
 }
 
 .address-item.active p {

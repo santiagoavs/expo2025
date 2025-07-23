@@ -104,8 +104,9 @@
   font-size: 14px;
   color: #222;
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between  ;
   align-items: center;
+  flex-direction: row;
 }
 
 .payment-method.active p {
