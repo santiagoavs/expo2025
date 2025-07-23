@@ -1,14 +1,22 @@
 .navbar {
   position: fixed;
-  top: 0;
+  top: 0px;
   left: 1;
   right: 0;
   width: 100%;
   display: flex;
   align-items: center;
   padding: 16px 24px;
-  background-color: #FFFFFF;
-  border-bottom: 1px solid #E2E8F0;
+/* 🌟 Glass refinado */
+background: rgba(255, 255, 255, 0.4);
+backdrop-filter: blur(50px);
+-webkit-backdrop-filter: blur(50px);
+border: 1px solid rgba(255, 255, 255, 0.3);
+box-shadow:
+  0 8px 32px rgba(0, 0, 0, 0.1),
+  inset 0 1px 0 rgba(255, 255, 255, 0.5),
+  inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+  inset 0 0 28px 14px rgba(255, 255, 255, 1.4);  border-bottom: 1px solid #E2E8F0;
   z-index: 1000;
   box-shadow:
     1px 4px 12px #00000052; /* ✅ Sombra más profunda */

@@ -18,7 +18,13 @@
   left: 0;
   right: 0;
   z-index: 999999 !important; /* Z-index extremadamente alto */
-  background: #ffffff;
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   isolation: isolate; /* Crea un nuevo contexto de apilamiento */
 }
@@ -80,7 +86,7 @@ body {
 .catalog-container {
   flex: 1;        /* Ocupa el espacio disponible */
   width: 100%;    /* Ocupa todo el ancho */
-  padding-top: 90px;  /* Espacio para el navbar */
+    /* Espacio para el navbar */
   background: linear-gradient(135deg, #ffffff, #f7eaea);
   display: flex;   /* Usa flexbox */
   justify-content: center;  /* Centra contenido horizontalmente */
@@ -89,7 +95,7 @@ body {
 /* Wrapper del contenido principal */
 .content-wrapper {
   width: 100%;    /* Ocupa todo el ancho disponible */
-  margin-top: 70px;  /* Centra el contenedor */
+ /* Centra el contenedor */
   padding: 20px 210px;  /* Padding vertical y horizontal */
   background: 
   radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
@@ -109,6 +115,7 @@ body {
 
 .catalog-header {
   width: 100%;
+  margin-top: 160px;
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(50px);
   -webkit-backdrop-filter: blur(50px);
