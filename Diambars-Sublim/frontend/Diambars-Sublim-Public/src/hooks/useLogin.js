@@ -18,6 +18,8 @@ export const useLogin = () => {
   const onSubmit = async (data) => {
     try {
       const user = await loginUser(data);
+      console.log('Datos recibidos de loginUser:', user);
+      console.log('Keys de user:', Object.keys(user));
       login(user); // Guardar usuario en contexto
       
       // Si llega aquí, significa que el usuario sí está verificado
