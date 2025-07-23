@@ -94,28 +94,75 @@ body {
   background: linear-gradient(135deg, #ffffff, #ffffff);
 }
 
-/* Cabecera del catálogo */
 .catalog-header {
-  width: 100%;    /* Ocupa todo el ancho */
-    background: linear-gradient(135deg, #ffffff, #ffffff);  padding: 24px;   /* Padding uniforme */
-  border-radius: 16px;  /* Bordes redondeados */
-  margin-bottom: 32px;  /* Espacio inferior */
-   box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
+  width: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px rgba(255, 255, 255, 1.4);
+  padding: 24px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+/* ✨ Reflejo superior horizontal */
+.catalog-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  z-index: 1;
+}
+
+/* ✨ Reflejo vertical izquierdo */
+.catalog-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), transparent, rgba(255,255,255,0.3));
+  z-index: 1;
+}
+
+/* 💨 Hover dinámico */
+.catalog-header:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 36px 18px rgba(255, 255, 255, 1.2);
 }
 
 /* Título principal */
 .catalog-header h1 {
-  font-size: 28px;  /* Tamaño de fuente */
-  font-weight: 600;  /* Peso de fuente semi-bold */
-  color: #1A202C;   /* Color gris oscuro */
-  margin-bottom: 4px;  /* Espacio inferior */
+  font-size: 28px;
+  font-weight: 600;
+  color: #1A202C;
+  margin-bottom: 4px;
+  z-index: 2;
+  position: relative;
 }
 
 /* Subtítulo descriptivo */
 .catalog-header p {
-  font-size: 16x;  /* Tamaño de fuente */
-  color: #4A5568;   /* Color gris medio */
+  font-size: 16px;
+  color: #4A5568;
+  z-index: 2;
+  position: relative;
 }
 
 /* Contenedor de estadísticas */

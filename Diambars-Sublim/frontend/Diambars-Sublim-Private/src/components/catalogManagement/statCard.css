@@ -1,17 +1,70 @@
 .stat-card {
-  background: linear-gradient(162deg, #f5f5f5, #ffffff);
-  border-radius: 16px;
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px rgba(255, 255, 255, 1.4);
+  padding: 24px;
   width: 100%;
-  min-width: 480px !important;    /* Forzamos el ancho mínimo */
-  max-width: 300px !important;    /* Forzamos el ancho máximo */
+  min-width: 480px !important;
+  max-width: 300px !important;
   height: 140px;
   box-sizing: border-box;
-  
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
 }
 
+/* ✨ Luces internas tipo reflejo */
+.stat-card::before,
+.stat-card::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+}
+
+.stat-card::before {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.stat-card::after {
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+/* 🧨 Hover effect */
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 36px 18px rgba(255, 255, 255, 1.2);
+}
+
+/* 📊 Contenido */
 .stat-content {
   display: flex;
   justify-content: space-between;
@@ -47,7 +100,7 @@
   margin-left: 16px;
 }
 
-/* Colores de fondo para los iconos */
+/* 🎨 Colores de fondo para los íconos */
 .icon-blue {
   background-color: #2D788E;
   color: white;
@@ -70,13 +123,13 @@
 
 @media (max-width: 768px) {
   .stat-card {
-    height: 120px; /* Altura reducida en móviles */
+    height: 120px;
   }
-  
+
   .stat-number {
     font-size: 1.75rem;
   }
-  
+
   .stat-title {
     font-size: 0.875rem;
   }

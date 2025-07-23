@@ -2,8 +2,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-   background: linear-gradient(135deg, #FFFAED, #F8EBCC);
-  padding-top: 72px; /* 🧱 Espacio para navbar fijo */
+  background: linear-gradient(135deg, #ffffff, #ffffff);
+  padding-top: 7px; /* 🧱 Espacio para navbar fijo */
 }
 
 .custom-step-content {
@@ -27,7 +27,7 @@
 
 /*CARD productPreviewCard*/
 .ppc-card {
-  background-color: #ffffff;
+  background-color:  #ffffff;
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
   padding: 32px;
@@ -38,28 +38,36 @@
 
   /* 🔀 Posicionamiento con desplazamiento */
   position: relative;
-  top: -70px;    /* Mover hacia arriba */
+  top: -10px;    /* Mover hacia arriba */
   left: -300px;   /* Mover hacia la izquierda */
 }
+
+.process-bar-position {
+  position: relative;
+  top: 40px;    /* ↕ Ajustá hacia arriba/abajo */
+  left: 0px;     /* ↔ Ajustá hacia la izquierda/derecha */
+  z-index: 10;   /* Opcional: para elevarlo si lo superpone otro elemento */
+}
+
 
 /*CARD ColorSelector*/
 .color-selector-position {
   position: relative;
-  top: -640px;   /* ↕ Mover arriba */
+  top: -580px;   /* ↕ Mover arriba */
   left: 200px;  /* ↔ Mover a la izquierda */
 }
 
 /*CARD SizeSelector*/
 .size-selector-position {
   position: relative;
-  top: -640px;   /* ↕ Mover arriba */
+  top: -580px;   /* ↕ Mover arriba */
   left: 200px;  /* ↔ Mover a la izquierda */
 }
 
 /*BUTTON continueButton*/
 .continue-button-position {
   position: relative;
-  top: -640px;   /* ↕ Mover hacia arriba */
+  top: -580px;   /* ↕ Mover hacia arriba */
   left: 200px;  /* ↔ Mover hacia la izquierda */
 }
 

@@ -1,15 +1,10 @@
-
 .diambars-login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   width: 100vw;
-  background: conic-gradient(
-    from var(--gradient-angle) at var(--gradient-position-x) var(--gradient-position-y),
-    var(--gradient-start) 0%,
-    var(--gradient-end) 100%
-  );
+  background: linear-gradient(135deg, #ffffff, #ffffff);
   padding: 20px;
   box-sizing: border-box;
   font-family: 'Aesthetic Moment';
@@ -18,7 +13,6 @@
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
-      background: linear-gradient(135deg, #ffffff, #ffffff);
 }
 
 .diambars-login-card {
@@ -26,12 +20,51 @@
   width: 100%;
   max-width: 900px;
   min-height: 500px;
-    background: linear-gradient(162deg, #f5f5f5, #ffffff);
 
-  border-radius: 15px;
-  box-shadow:
-    1px 4px 12px #00000052; /* ✅ Sombra más profunda */  overflow: hidden;
+  /* 🌟 Glass exacto del ejemplo */
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px rgba(255, 255, 255, 1.4);
+  position: relative;
+  overflow: hidden;
   margin-bottom: 20px;
+}
+
+.diambars-login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.diambars-login-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .diambars-brand-column {
@@ -40,7 +73,6 @@
   flex-direction: column;
   align-items: center;
   padding: 40px;
-
   position: relative;
   top: 80px;
   margin-bottom: 50px;
@@ -51,7 +83,6 @@
   width: 150px;
   height: 150px;
   margin-bottom: 30px;
- 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,7 +164,7 @@
   border-color: #ff4444;
   padding-right: 2.5rem;
   background-color: #ffffff !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ff4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 1rem;
@@ -235,18 +266,18 @@
     flex-direction: column;
     min-height: auto;
   }
-  
+
   .diambars-brand-column,
   .diambars-form-column {
     padding: 40px 30px;
   }
-  
+
   .diambars-brand-column {
     padding-bottom: 20px;
     top: 0;
     margin-bottom: 0;
   }
-  
+
   .diambars-logo-container {
     width: 120px;
     height: 120px;
@@ -256,17 +287,4 @@
     width: 80%;
   }
 
-  .diambars-input-group {
-    margin-bottom: 1.25rem;
-  }
-
-  .alert-error {
-    bottom: -1.1rem;
-    font-size: 0.7rem;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .diambars-forgot-password {
-    font-size: 0.8rem;
-  }
 }
