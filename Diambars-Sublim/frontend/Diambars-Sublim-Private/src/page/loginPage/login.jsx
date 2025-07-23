@@ -37,7 +37,7 @@ const LoginPage = () => {
             </div>
           )}
           
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form className='login-container' onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="diambars-input-group">
               <input
                 type="email"
