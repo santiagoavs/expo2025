@@ -120,4 +120,13 @@
     width: 25px;
     height: 25px;
   }
+
+  .input-error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
   

@@ -1,15 +1,40 @@
 .payment-container {
-  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+  position: relative;
   border-radius: 10px;
   width: 365px;
   padding: 20px 25px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   font-family: 'Inter', sans-serif;
   font-style: italic;
   height: 250px;
+  
+  /* Efecto de cristal */
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Efecto de profundidad para el cristal */
+.payment-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 246, 226, 0.5),
+    rgba(245, 231, 198, 0.3)
+  );
+  z-index: -1;
+  transform: translateY(8px) scale(0.98);
+  filter: blur(10px);
+  opacity: 0.8;
 }
 
 .payment-header {
@@ -48,8 +73,7 @@
   z-index: 1;
   color: #FFF1D0;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  
-  /* Cristal verde */
+
   background: rgba(22, 120, 3, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -233,7 +257,6 @@
   backdrop-filter: blur(6px);
 }
 
-/* Efecto de luz dinámico para todos los botones */
 .payment-button.active-toggle::after,
 .payment-button.edit::after,
 .btn-add::after {

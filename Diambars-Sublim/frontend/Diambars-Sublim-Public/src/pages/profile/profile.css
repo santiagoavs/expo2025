@@ -2,37 +2,50 @@
   padding: 2rem 0 0 0;
   font-family: 'Arial', sans-serif;
   background: 
-    radial-gradient(ellipse at 30% 20%, rgba(255, 220, 200, 0.5) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 70%, rgba(240, 235, 220, 0.6) 0%, transparent 50%),
-    radial-gradient(ellipse at 20% 80%, rgba(202, 226, 248, 0.4) 0%, transparent 70%),
+    /* Gradientes radiales más intensos y centrados */
+    radial-gradient(ellipse at 50% 30%, rgba(255, 220, 200, 0.7) 0%, transparent 70%),
+    radial-gradient(ellipse at 50% 70%, rgba(240, 235, 220, 0.8) 0%, transparent 60%),
+    radial-gradient(ellipse at 30% 50%, rgba(202, 226, 248, 0.5) 0%, transparent 65%),
+    radial-gradient(ellipse at 70% 50%, rgba(220, 240, 230, 0.5) 0%, transparent 65%),
+    /* Base con gradiente más suave */
     linear-gradient(135deg, 
       #FFF6E2 0%,
-      #F5E7C6 30%,
-      #F2E4C1 70%,
+      #F5E7C6 50%,
       #EFE1BE 100%
     );
   background-size: 
-    200% 200%, 
+    150% 150%, 
+    160% 160%, 
     180% 180%, 
-    220% 220%, 
+    180% 180%, 
     100% 100%;
-  animation: subtleFlow 30s ease-in-out infinite alternate;
+  animation: subtleFlow 25s ease-in-out infinite alternate;
   min-height: 93.3vh;
 }
 
 @keyframes subtleFlow {
   0% {
     background-position: 
-      30% 20%,
-      80% 70%,
-      20% 80%,
+      50% 30%,
+      50% 70%,
+      30% 50%,
+      70% 50%,
+      0% 0%;
+  }
+  50% {
+    background-position: 
+      45% 35%,
+      55% 65%,
+      35% 55%,
+      65% 45%,
       0% 0%;
   }
   100% {
     background-position: 
-      35% 25%,
-      75% 65%,
-      25% 75%,
+      55% 25%,
+      45% 75%,
+      25% 45%,
+      75% 55%,
       0% 0%;
   }
 }

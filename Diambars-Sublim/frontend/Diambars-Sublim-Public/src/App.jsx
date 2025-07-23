@@ -8,6 +8,7 @@ import Reviews from './pages/reviews/reviews'
 import AboutUs from './pages/about/about'
 import Contact from './pages/contact/contact'
 import VerifyEmail from './pages/profile/verifyEmail';
+import VerificationResultPage from './pages/profile/verificationResultPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/reviews" element={<Reviews/>} />
           <Route path="/profile" element={<Profile/>} />
           <Route path="/verifyEmail" element={<VerifyEmail/>} />
+          <Route path="/verify-email/:token" element={<VerificationResultPage />} />
         </Routes>
     </>
   );
