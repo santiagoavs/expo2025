@@ -91,7 +91,20 @@ body {
   width: 100%;    /* Ocupa todo el ancho disponible */
   margin-top: 70px;  /* Centra el contenedor */
   padding: 20px 210px;  /* Padding vertical y horizontal */
-  background: linear-gradient(135deg, #ffffff, #ffffff);
+  background: 
+  radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+  radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+  radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+  radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+  radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+  radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+  linear-gradient(135deg, 
+    #FFF6E2 0%,
+    #F5E7C6 20%,
+    #F0DFB8 40%,
+    #EBD7AA 60%,
+    #E6CF9C 80%,
+    #F2E4C1 100%);
 }
 
 .catalog-header {

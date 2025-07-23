@@ -1,14 +1,15 @@
 .product-card {
-  background: rgba(255, 255, 255, 0.4); /* fondo translúcido */
   backdrop-filter: blur(50px);          /* desenfoque fuerte */
   -webkit-backdrop-filter: blur(50px);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 28px 14px rgba(255, 255, 255, 1.4);
+    0 0 0 1px rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   height: 100%;
   display: flex;

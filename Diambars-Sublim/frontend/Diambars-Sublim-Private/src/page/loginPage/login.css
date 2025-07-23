@@ -20,7 +20,8 @@
     #F2E4C1 100%);
   padding: 20px;
   box-sizing: border-box;
-  font-family: 'Aesthetic Moment';
+  font-family: 'Inter', sans-serif;
+font-style: italic;
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -78,6 +79,11 @@
     transparent,
     rgba(255, 255, 255, 0.3)
   );
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
 }
 
 .diambars-brand-column {
@@ -212,7 +218,7 @@
 
 .diambars-forgot-password {
   display: block;
-  margin: 20px 0 30px;
+  margin: 20px 0 20px;
   font-size: 0.85rem;
   color: #666;
   cursor: pointer;
@@ -230,8 +236,14 @@
   margin: 20px 0;
 }
 
+@font-face {
+  font-family: 'DiambarsFont';
+  src: url('/fonts/AestheticMoment.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .diambars-login-button {
-  margin-top: 1rem;
   position: relative;
   color: #FFF1D0;
   border-radius: 15px;
@@ -250,11 +262,10 @@
   box-shadow: 
     0 8px 32px rgba(160, 0, 25, 0.18),
     0 0 0 1px rgba(255, 180, 180, 0.4);
-     left: 100px
 }
 
 .diambars-login-button::before {
-    content: "";
+  content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -278,16 +289,15 @@
   z-index: -1;
 }
 
-
 .diambars-login-button:hover {
-transform: translateY(-2px);
+  transform: translateY(-2px);
   background: rgba(180, 10, 30, 0.5);
   box-shadow: 
     0 10px 35px rgba(160, 0, 25, 0.25),
     0 0 0 1px rgba(255, 200, 200, 0.5);
 }
 
-.diambars-login-button:after {
+.diambars-login-button:hover::after {
   left: 100%;
 }
 
