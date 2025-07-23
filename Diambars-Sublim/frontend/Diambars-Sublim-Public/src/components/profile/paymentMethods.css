@@ -7,7 +7,7 @@
   flex-direction: column;
   gap: 5px;
   font-family: 'Inter', sans-serif;
-  font-style: italic;
+
   height: 250px;
   
   /* Efecto de cristal */
@@ -114,8 +114,7 @@
 }
 
 .payment-method.inactive p {
-  color: #6a6a6a;
-  font-style: italic;
+  color: #6a6a6a;  
 }
 
 .payment-buttons {

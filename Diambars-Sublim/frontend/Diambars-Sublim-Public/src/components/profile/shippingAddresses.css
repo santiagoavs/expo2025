@@ -7,7 +7,6 @@
   flex-direction: column;
   gap: 5px;
   font-family: 'Inter', sans-serif;
-  font-style: italic;
   height: 250px;
   
   background: rgba(255, 246, 226, 0.3);
@@ -77,7 +76,6 @@
 
 .address-item.inactive p {
   color: rgba(63, 39, 36, 0.6); 
-  font-style: italic;
 }
 
 .address-buttons {

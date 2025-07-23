@@ -3,7 +3,6 @@
   min-height: 602px;
   border-radius: 10px;
   font-family: 'Inter', sans-serif;
-  font-style: italic;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -88,7 +87,6 @@
   border-bottom: 2px solid rgba(63, 39, 36, 0.7);
   background: transparent;
   margin: 10px 0;
-  font-style: italic;
   font-size: 14px;
   padding: 4px;
   color: #3F2724;
@@ -197,7 +195,6 @@
   border: none;
   color: #B02F2F;
   font-size: 0.95rem;
-  font-style: italic;
   font-weight: 500;
   cursor: pointer;
   text-decoration: underline;
