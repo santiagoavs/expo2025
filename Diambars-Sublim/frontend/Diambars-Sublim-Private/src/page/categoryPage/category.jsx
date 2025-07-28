@@ -31,7 +31,6 @@ const CategoryPage = () => {
   };
 
   return (
-   
     <div className="category-page-container">
       <Navbar />
       <div className="category-content-wrapper">
@@ -42,7 +41,9 @@ const CategoryPage = () => {
             onSuccess={handleSuccess}
           />
         </div>
-        <div className="category-catalog-container" data-aos="fade-left">
+
+        {/* Catálogo fijado al viewport */}
+        <div className="category-catalog-fixed" data-aos="fade-left">
           <CategoryCatalog 
             onEditCategory={handleEditCategory} 
             refreshTrigger={refreshTrigger}
@@ -50,7 +51,6 @@ const CategoryPage = () => {
         </div>
       </div>
     </div>
- 
   );
 };
 
