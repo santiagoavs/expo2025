@@ -34,7 +34,8 @@ const CategoryPage = () => {
     <div className="category-page-container">
       <Navbar />
       <div className="category-content-wrapper">
-        <div className="category-form-container" data-aos="fade-right">
+        {/* Formulario fijado al viewport */}
+        <div className="category-form-fixed" data-aos="fade-right">
           <CategoryForm 
             editingCategory={editingCategory} 
             clearEditing={handleClearEditing}

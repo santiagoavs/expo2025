@@ -21,26 +21,22 @@
 
 .category-catalog-fixed {
   position: fixed;          /* 🧷 Fijado al viewport */
-  top: 120px;                /* ↕ Distancia desde el top */
-  right: 40px;              /* ↔ Alineado hacia la derecha */
+  top: 100px;                /* ↕ Distancia desde el top */
+  right: 350px;              /* ↔ Alineado hacia la derecha */
   z-index: 1000;            /* 🪄 Por encima del resto */
-  width: 300px;             /* 📐 Ajustable según el layout */
+  width: 400px; 
   padding: 16px;
  
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+
 }
 
 
 .category-form-fixed {
   position: fixed;
-  top: 60px;
-  left: 40px;
+  top: 100px;
+  left: 360px;
   z-index: 1000;
-  width: 300px;
+  width: 800px;
   padding: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+
 }

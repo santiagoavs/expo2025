@@ -19,7 +19,6 @@
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 6.5rem;
 }
 
 .code-input {
@@ -46,7 +45,6 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-top: 60px;
 }
 
 
