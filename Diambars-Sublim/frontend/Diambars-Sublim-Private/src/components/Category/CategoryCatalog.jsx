@@ -20,7 +20,6 @@ const CategoryCatalog = ({ onEditCategory, refreshTrigger }) => {
   const [expanded, setExpanded] = useState({});
   const [filteredCategories, setFilteredCategories] = useState([]);
 
-  // Efecto para recargar categorías
   useEffect(() => {
     fetchCategories();
   }, [refreshTrigger, fetchCategories]);
@@ -197,10 +196,12 @@ const CategoryCatalog = ({ onEditCategory, refreshTrigger }) => {
 
   if (loading && (!categories || categories.length === 0)) {
     return (
-      <div className="category-catalog-container">
-        <div className="loading-overlay">
-          <div className="spinner"></div>
-          <p>Cargando categorías...</p>
+      <div className="Category-catalog-wrapper">
+        <div className="category-catalog-container">
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p>Cargando categorías...</p>
+          </div>
         </div>
       </div>
     );
@@ -208,75 +209,79 @@ const CategoryCatalog = ({ onEditCategory, refreshTrigger }) => {
 
   if (error) {
     return (
-      <div className="category-catalog-container">
-        <div className="error-overlay">
-          <p>Error al cargar categorías: {error}</p>
-          <motion.button 
-            onClick={handleRefresh} 
-            className="retry-btn"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Reintentar
-          </motion.button>
+      <div className="Category-catalog-wrapper">
+        <div className="category-catalog-container">
+          <div className="error-overlay">
+            <p>Error al cargar categorías: {error}</p>
+            <motion.button 
+              onClick={handleRefresh} 
+              className="retry-btn"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Reintentar
+            </motion.button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-  <motion.div 
-    className="category-catalog-container"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.5 }}
-  >
-    <div className="catalog-section">
-      <div className="section-header">
-        <label className="section-title">CATEGORÍAS</label>
-        <motion.button 
-          onClick={handleRefresh} 
-          className="refresh-btn" 
-          title="Actualizar lista"
-          whileHover={{ rotate: 90, scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FaSync />
-        </motion.button>
-      </div>
-      
-      <div className="search-container">
-        <FaSearch className="search-icon" />
-        <input
-          type="text"
-          placeholder="Buscar categoría..."
-          className="category-search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {searchTerm && (
-          <button className="clear-search" onClick={() => setSearchTerm('')} title="Limpiar búsqueda">
-            ×
-          </button>
-        )}
-      </div>
+    <div className="Category-catalog-wrapper">
+      <motion.div 
+        className="category-catalog-container"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="catalog-section">
+          <div className="section-header">
+            <label className="section-title">CATEGORÍAS</label>
+            <motion.button 
+              onClick={handleRefresh} 
+              className="refresh-btn" 
+              title="Actualizar lista"
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <FaSync />
+            </motion.button>
+          </div>
+          
+          <div className="search-container-category">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar categoría..."
+              className="category-search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button className="clear-search" onClick={() => setSearchTerm('')} title="Limpiar búsqueda">
+                ×
+              </button>
+            )}
+          </div>
 
-      <div className="category-list-container">
-        <div className="category-list">
-          {Array.isArray(filteredCategories) && filteredCategories.length > 0 ? (
-            buildTree(filteredCategories)
-          ) : (
-            <div className="empty-message">
-              {searchTerm ?
-                'No se encontraron categorías que coincidan con la búsqueda' :
-                'No hay categorías creadas'}
+          <div className="category-list-container">
+            <div className="category-list">
+              {Array.isArray(filteredCategories) && filteredCategories.length > 0 ? (
+                buildTree(filteredCategories)
+              ) : (
+                <div className="empty-message">
+                  {searchTerm ?
+                    'No se encontraron categorías que coincidan con la búsqueda' :
+                    'No hay categorías creadas'}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
-  </motion.div>
-);
+  );
 };
 
 export default CategoryCatalog;

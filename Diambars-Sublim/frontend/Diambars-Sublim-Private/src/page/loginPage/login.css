@@ -83,17 +83,6 @@ font-style: italic;
   flex-direction: column;
 }
 
-.diambars-brand-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px;
-  position: relative;
-  top: 80px;
-  margin-bottom: 50px;
-  font-family: 'Poppins';
-}
 
 .diambars-logo-container {
   width: 150px;
@@ -157,24 +146,7 @@ font-style: italic;
   position: relative;
 }
 
-.diambars-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #DDD;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 0;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  background-color: #ffffff !important;
-}
 
-.diambars-input:focus {
-  outline: none;
-  border-color: #000;
-  background-color: #ffffff !important;
-}
 
 .diambars-input.input-error {
   border-color: #ff4444;
@@ -188,7 +160,7 @@ font-style: italic;
 
 .alert-error {
   position: absolute;
-  bottom: -1.25rem;
+  bottom: -1.65rem;
   left: 0;
   width: calc(100% - 2px);
   display: flex;
@@ -605,6 +577,22 @@ font-style: italic;
     font-size: 0.85rem;
     padding: 12px;
     margin-bottom: 12px;
+  }
+
+  .diambars-input::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(
+      220deg,
+      rgba(255, 246, 226, 0.15), 
+      rgba(245, 231, 198, 0.08) 
+    );
+    z-index: -1;
+    transform: translateY(6px) scale(0.98);
+    filter: blur(8px);
+    opacity: 0.5;
   }
 
   .diambars-login-button {
