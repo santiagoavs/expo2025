@@ -60,7 +60,7 @@
 /* Configuración base del HTML */
 html {
   height: 100%;   /* Asegura que el HTML ocupe toda la altura disponible */
- background: linear-gradient(135deg, #ffffff, #f7eaea);
+
 }
 
 /* Configuración base del body */
