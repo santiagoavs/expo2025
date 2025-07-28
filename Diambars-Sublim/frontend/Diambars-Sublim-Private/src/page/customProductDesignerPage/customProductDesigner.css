@@ -2,9 +2,68 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #ffffff, #ffffff);
-  padding-top: 325px; /* 🧱 Espacio para navbar fijo */
-}
+  padding-top: 325px;
+  background: 
+    radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+    radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+    radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, 
+      #FFF6E2 0%,
+      #F5E7C6 20%,
+      #F0DFB8 40%,
+      #EBD7AA 60%,
+      #E6CF9C 80%,
+      #F2E4C1 100%
+    );
+  background-size: 
+    140% 140%, 
+    130% 130%, 
+    160% 160%, 
+    135% 135%, 
+    125% 125%, 
+    180% 180%, 
+    100% 100%;
+  animation: backgroundFlow 25s ease-in-out infinite alternate;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+  }
+  
+  @keyframes backgroundFlow {
+    0% {
+      background-position: 
+        25% 15%,
+        85% 25%,
+        15% 70%,
+        70% 85%,
+        90% 60%,
+        45% 35%,
+        0% 0%;
+    }
+    50% {
+      background-position: 
+        30% 20%,
+        80% 30%,
+        20% 65%,
+        65% 80%,
+        85% 65%,
+        50% 40%,
+        0% 0%;
+    }
+    100% {
+      background-position: 
+        35% 25%,
+        75% 35%,
+        25% 60%,
+        60% 75%,
+        80% 70%,
+        55% 45%,
+        0% 0%;
+    }
+  }
 
 /* 🔘 Alineación del botón */
 .custom-continue-button-wrapper {
@@ -20,9 +79,14 @@
 
 /*CARD productPreviewCard*/
 .ppc-card {
-  background-color:  #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
   padding: 32px;
   max-width: 380px;
   width: 100%;
