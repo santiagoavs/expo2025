@@ -1,5 +1,5 @@
 .profile-page {
-  min-height: 100vh;
+  min-height: 120vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -68,8 +68,7 @@
 .profile-title {
   text-align: center;
   font-size: 3rem;
-  margin-bottom: 2rem;
-  margin-top: 100px;
+  margin-top: 140px;
   font-family: 'DiambarsFont';
   font-weight: bold;
   font-style: italic;

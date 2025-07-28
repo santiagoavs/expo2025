@@ -10,11 +10,11 @@ const About = () => {
       <img src={bgLogo} alt="Logo de fondo" className="about-bg-logo" />
 
       <h1 className="about-title">Conócenos</h1>
-
+      <div className="about-main-container">
       <div className="about-main-text">
         En Diambars Sublim nos apasiona transformar objetos cotidianos en piezas únicas y memorables. Nacimos con la visión de ofrecer a nuestros clientes la libertad de expresar su estilo y creatividad a través de la técnica de sublimación, convirtiendo desde tazas y camisetas hasta llaveros, cojines y más, en verdaderos artículos personalizados.
       </div>
-
+      <div className='about-container'>
       <div className="about-section">
         <h3>¿Nuestro propósito?</h3>
         <p>
@@ -34,12 +34,14 @@ const About = () => {
       <div className="about-section">
         <h3>¿Qué sublimamos?</h3>
         <ul>
-          <li>Textiles: camisetas, sudaderas, bolsas de tela, pañuelos y más.</li>
-          <li>Artículos de cerámica y vidrio: tazas, platos, vasos, jarras.</li>
-          <li>Accesorios: llaveros, carcasas de móvil, mousepads.</li>
-          <li>Decoración: cojines, tapetes, cuadros y puzzles.</li>
+          <li><strong>Textiles:</strong> camisetas, sudaderas, bolsas de tela, pañuelos y más.</li>
+          <li><strong>Artículos de cerámica y vidrio:</strong> tazas, platos, vasos, jarras.</li>
+          <li><strong>Accesorios:</strong> llaveros, carcasas de móvil, mousepads.</li>
+          <li><strong>Decoración:</strong> cojines, tapetes, cuadros y puzzles.</li>
         </ul>
         <p>¿Y si tienes en mente algún objeto especial, ¡pregúntanos! Nos encanta explorar nuevas posibilidades.</p>
+      </div>
+      </div>
       </div>
       <ContactButton />
       <Footer />

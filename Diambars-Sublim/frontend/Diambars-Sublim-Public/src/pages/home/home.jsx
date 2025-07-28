@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom'
 export default function Home() {
   const navigate = useNavigate();
   return (
-<>
-    <section className="home-section top">
+    <div className="home-page-wrapper">
+      <section className="home-section top">
         <div className="home-container">
           <div className="text-content">
             <img src="/images/home/titulo-superior.png" alt="Imprime tu estilo" className="title-img" />
@@ -16,7 +16,7 @@ export default function Home() {
               desde camisas, tazas y gorros.<br />
               El catálogo no tiene límites.
             </p>
-            <img src="/images/home/btnVerCatalogoHome.png" alt="Botón catálogo" className="view-catalogue-button" onClick={() => navigate('/catalogue')} style={{ cursor: 'pointer' }}/>
+            <button className="catalogue-button" onClick={() => navigate('/catalogue')} style={{ cursor: 'pointer' }}>Catalogo</button>
           </div>
           <img src="/images/home/decoracion-superior.png" alt="Productos parte superior" className="products-img" />
         </div>
@@ -37,6 +37,6 @@ export default function Home() {
       </section>
       <ContactButton />
       <Footer />
-      </>
+    </div>
   );
 }

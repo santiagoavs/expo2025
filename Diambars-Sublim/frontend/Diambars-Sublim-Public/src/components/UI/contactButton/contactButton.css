@@ -1,18 +1,58 @@
 .contact-button {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1000;
-    cursor: pointer;
-  }
-  
-  .contact-button img {
-    width: 160px;
-    height: auto;
-    transition: transform 0.2s ease;
-  }
-  
-  .contact-button:hover img {
-    transform: scale(1.05);
-  }
-  
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  background: rgba(255, 246, 226, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.contact-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(245, 231, 198, 0.3)
+  );
+  z-index: -1;
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.contact-button svg {
+  width: 30px;
+  height: 30px;
+  transition: transform 0.2s ease;
+}
+
+.contact-button:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.contact-button:hover svg {
+  transform: scale(1.15);
+}
+
+.contact-button:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.25);
+}

@@ -1,14 +1,97 @@
-.about-page {
-    position: relative;
-    background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
-    font-family: 'Inter', sans-serif;
-    font-style: italic;
+  .about-page {
+    min-height: 120vh;
     display: flex;
     flex-direction: column;
+    font-family: 'Inter', sans-serif;
     align-items: center;
-    z-index: 1;
-  }
+    background: 
+      radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+      radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+      radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+      radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+      linear-gradient(135deg, 
+        #FFF6E2 0%,
+        #F5E7C6 20%,
+        #F0DFB8 40%,
+        #EBD7AA 60%,
+        #E6CF9C 80%,
+        #F2E4C1 100%
+      );
+    background-size: 
+      140% 140%, 
+      130% 130%, 
+      160% 160%, 
+      135% 135%, 
+      125% 125%, 
+      180% 180%, 
+      100% 100%;
+    animation: backgroundFlow 25s ease-in-out infinite alternate;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow: hidden;
+    }
+    
+    @keyframes backgroundFlow {
+      0% {
+        background-position: 
+          25% 15%,
+          85% 25%,
+          15% 70%,
+          70% 85%,
+          90% 60%,
+          45% 35%,
+          0% 0%;
+      }
+      50% {
+        background-position: 
+          30% 20%,
+          80% 30%,
+          20% 65%,
+          65% 80%,
+          85% 65%,
+          50% 40%,
+          0% 0%;
+      }
+      100% {
+        background-position: 
+          35% 25%,
+          75% 35%,
+          25% 60%,
+          60% 75%,
+          80% 70%,
+          55% 45%,
+          0% 0%;
+      }
+    }
   
+  .about-main-container {
+    height: auto;
+    width: auto;
+    border-radius: 12px;
+    margin-bottom: 70px;
+    padding: 2rem;
+    z-index: 2;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    animation: fadeInUp 0.6s ease-out;
+  }  
+
+  .about-main-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #fff6e20d, #fff6e259);
+    transform: translateY(10px) scale(0.95);
+    filter: blur(17px);
+    opacity: 0.8;
+  }
+
   .about-bg-logo {
     position: absolute;
     bottom: 380px;
@@ -39,37 +122,47 @@
   }
   
   .about-section {
-    background: linear-gradient(220deg, #FFF6E2, #F5E7C6);
+    position: relative;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     padding: 1.5rem 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 20px;
     max-width: 850px;
     width: 100%;
     z-index: 2;
+    background: rgba(255, 246, 226, 0.08); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.05),
+      0 0 0 1px rgba(255, 255, 255, 0.15);
   }
-  
+
+  .about-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(
+      220deg,
+      rgba(255, 246, 226, 0.15), 
+      rgba(245, 231, 198, 0.08) 
+    );
+    z-index: -1;
+    transform: translateY(6px) scale(0.98);
+    filter: blur(8px);
+    opacity: 0.5;
+  }
+
   .about-section h3 {
     font-size: 1.2rem;
     margin-bottom: 1rem;
     color: #3F2724;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4); 
   }
   
   .about-section p,
   .about-section ul {
     color: #3F2724;
-    font-size: 1rem;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .about-section ul {
-    list-style: none;
-    padding-left: 0;
-  }
-  
-  .about-section ul li {
-    margin-bottom: 0.7rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3); 
   }
   
   @media (max-width: 768px) {
