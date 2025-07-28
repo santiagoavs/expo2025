@@ -2,12 +2,13 @@ import React from 'react';
 import './contact.css';
 import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
+import BonziBuddy from '../../components/UI/bonziBuddy/bonziBuddy';
 
 const Contact = () => {
   return (
     <main className="contact-page">
       <h1 className="contact-title">Contáctanos</h1>
-
+      <BonziBuddy />
       <form className="contact-form">
         <label>
           Correo electrónico:

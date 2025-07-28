@@ -75,6 +75,11 @@
   color: #3F2724;
 }
 
+.login-container {
+  display: flex;
+  justify-content: center;
+}
+
 .profile-container {
   display: flex;
   justify-content: center;

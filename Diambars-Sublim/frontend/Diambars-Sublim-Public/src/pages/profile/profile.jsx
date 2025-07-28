@@ -16,7 +16,9 @@ const Profile = () => {
     return (
       <main className="profile-page">
         <h1 className="profile-title">Inicia sesión o regístrate</h1>
+        <div className='login-container'>
         <LoginForm />
+        </div>
         <Footer />
       </main>
     );

@@ -1,0 +1,33 @@
+.bonzi-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 160px;
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 9999;
+  }
+  
+  .bonzi-gif {
+    width: 150px;
+    height: 150px;
+    object-fit: contain; /* Ajusta proporción manteniendo todo visible */
+    image-rendering: auto;
+    pointer-events: none;
+  }
+  
+  .bonzi-bubble {
+    background-color: #fff;
+    border: 2px solid #aaa;
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-align: center;
+    color: #333;
+    max-width: 140px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
