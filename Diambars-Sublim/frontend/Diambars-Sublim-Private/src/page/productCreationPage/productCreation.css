@@ -21,10 +21,11 @@ html, body {
 
 .product-creation-content {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: flex-start; /* ✅ Mantiene alineación superior */
   gap: 80px;
   width: 100%;
+  margin-top: 150px;
   min-width: 2800px;
 }
 
