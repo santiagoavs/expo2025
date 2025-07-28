@@ -8,8 +8,14 @@
 }
 
 .ppc-card {
-  background: linear-gradient(162deg, #f5f5f5, #ffffff);
-  border-radius: 16px;
+  background: rgba(255, 246, 226, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
   padding: 40px;
   max-width: 400px;
   width: 100%;
