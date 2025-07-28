@@ -1,14 +1,7 @@
-/* Estilos base */
-.category-page-container {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
-  min-height: 100vh;
-  padding-top: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  position: relative;
+.category-content-wrapper {
+
+  width: 100vw;
+  height: 100vh;
   background: 
   radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
   radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
@@ -22,120 +15,11 @@
     #F0DFB8 40%,
     #EBD7AA 60%,
     #E6CF9C 80%,
-    #F2E4C1 100%
-  );
-background-size: 
-  140% 140%, 
-  130% 130%, 
-  160% 160%, 
-  135% 135%, 
-  125% 125%, 
-  180% 180%, 
-  100% 100%;
-animation: backgroundFlow 25s ease-in-out infinite alternate;
-font-family: 'Inter', sans-serif;
-position: relative;
-overflow: hidden;
-}
-
-@keyframes backgroundFlow {
-  0% {
-    background-position: 
-      25% 15%,
-      85% 25%,
-      15% 70%,
-      70% 85%,
-      90% 60%,
-      45% 35%,
-      0% 0%;
-  }
-  50% {
-    background-position: 
-      30% 20%,
-      80% 30%,
-      20% 65%,
-      65% 80%,
-      85% 65%,
-      50% 40%,
-      0% 0%;
-  }
-  100% {
-    background-position: 
-      35% 25%,
-      75% 35%,
-      25% 60%,
-      60% 75%,
-      80% 70%,
-      55% 45%,
-      0% 0%;
-  }
-}
-
-.category-page-container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
-  z-index: -1;
-  
-}
-
-.category-content-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 30px;
-  width: 100%;
-  max-width: 1400px;
-  padding: 0 20px;
-  box-sizing: border-box;
-  margin: 20px 0;
-}
-
-/* Contenedor del formulario */
-.category-form-container {
-  min-width: 0;
-}
-
-/* Contenedor del catálogo */
-.category-catalog-container {
-  background: linear-gradient(135deg, rgba(255, 246, 226, 0.9) 0%, rgba(245, 231, 198, 0.95) 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    #F2E4C1 100%);
   display: flex;
-  flex-direction: column;
-  backdrop-filter: blur(12px);
-  height: 87.3vh; /* Altura fija en lugar de auto */
 }
 
-/* Estilos responsivos */
-@media (max-width: 1200px) {
-  .category-content-wrapper {
-    grid-template-columns: 1fr 300px;
-  }
-}
 
-@media (max-width: 992px) {
-  .category-content-wrapper {
-    grid-template-columns: 1fr;
-    max-width: 800px;
-  }
-  
-  .category-catalog-container {
-    margin-top: 30px;
-  }
-}
 
-@media (max-width: 768px) {
-  .category-page-container {
-    padding-top: 70px;
-    padding: 70px 10px 20px;
-  }
-  
-  .category-content-wrapper {
-    padding: 0;
-  }
-}
+
+

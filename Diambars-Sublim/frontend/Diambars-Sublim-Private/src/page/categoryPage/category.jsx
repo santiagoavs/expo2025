@@ -31,6 +31,7 @@ const CategoryPage = () => {
   };
 
   return (
+   
     <div className="category-page-container">
       <Navbar />
       <div className="category-content-wrapper">
@@ -49,6 +50,7 @@ const CategoryPage = () => {
         </div>
       </div>
     </div>
+ 
   );
 };
 
