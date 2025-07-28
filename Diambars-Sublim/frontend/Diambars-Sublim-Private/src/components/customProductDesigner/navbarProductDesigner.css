@@ -1,7 +1,9 @@
 html, body {
   margin: 0;
   padding: 0;
-  padding-top: 195px; /* 👁️ Espacio para que el contenido no tape el navbar */
+ display: flex;
+ justify-content: center;
+ align-items: center;
 
 }
 

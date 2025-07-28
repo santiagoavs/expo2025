@@ -3,14 +3,7 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #ffffff, #ffffff);
-  padding-top: 7px; /* 🧱 Espacio para navbar fijo */
-}
-
-.custom-step-content {
-  flex-grow: 1;
-  padding: 32px;
-  max-width: 1000px;
-  margin: 0 auto;
+  padding-top: 325px; /* 🧱 Espacio para navbar fijo */
 }
 
 /* 🔘 Alineación del botón */
@@ -67,8 +60,8 @@
 /*BUTTON continueButton*/
 .custom-continue-button-wrapper {
   position: relative;
-  top: -250px;   /* ↕ Mover hacia arriba */
-  right: 260px;  /* ↔ Mover hacia la izquierda */
+  top: 130px;   /* ↕ Mover hacia arriba */
+  right: 258px;  /* ↔ Mover hacia la izquierda */
 }
 
 /* -----------------------------------------------------------------------------------------------------*/

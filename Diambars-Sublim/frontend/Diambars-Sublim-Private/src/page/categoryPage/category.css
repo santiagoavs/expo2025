@@ -1,80 +1,25 @@
-/* Estilos base */
-.category-page-container {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
-  min-height: 100vh;
-  padding-top: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  position: relative;
-}
-
-.category-page-container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #FFFAED 0%, #F5E7C6 100%);
-  z-index: -1;
-}
-
 .category-content-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 30px;
-  width: 100%;
-  max-width: 1400px;
-  padding: 0 20px;
-  box-sizing: border-box;
-  margin: 20px 0;
-}
 
-/* Contenedor del formulario */
-.category-form-container {
-  min-width: 0;
-}
-
-/* Contenedor del catálogo */
-.category-catalog-container {
-  background: linear-gradient(135deg, rgba(255, 246, 226, 0.9) 0%, rgba(245, 231, 198, 0.95) 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  width: 100vw;
+  height: 100vh;
+  background: 
+  radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+  radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+  radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+  radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+  radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+  radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+  linear-gradient(135deg, 
+    #FFF6E2 0%,
+    #F5E7C6 20%,
+    #F0DFB8 40%,
+    #EBD7AA 60%,
+    #E6CF9C 80%,
+    #F2E4C1 100%);
   display: flex;
-  flex-direction: column;
-  backdrop-filter: blur(12px);
-  height: 87.3vh; /* Altura fija en lugar de auto */
 }
 
-/* Estilos responsivos */
-@media (max-width: 1200px) {
-  .category-content-wrapper {
-    grid-template-columns: 1fr 300px;
-  }
-}
 
-@media (max-width: 992px) {
-  .category-content-wrapper {
-    grid-template-columns: 1fr;
-    max-width: 800px;
-  }
-  
-  .category-catalog-container {
-    margin-top: 30px;
-  }
-}
 
-@media (max-width: 768px) {
-  .category-page-container {
-    padding-top: 70px;
-    padding: 70px 10px 20px;
-  }
-  
-  .category-content-wrapper {
-    padding: 0;
-  }
-}
+
+

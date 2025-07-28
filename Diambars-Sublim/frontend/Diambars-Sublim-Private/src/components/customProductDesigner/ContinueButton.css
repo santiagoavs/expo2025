@@ -1,14 +1,15 @@
 .cb-btn {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #086788;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 190px;
-  font-family: 'Segoe UI', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s ease;
+      align-items: center;
+      justify-content: center;
+      background: #086788;
+      border: none;
+      border-radius: 12px;
+      position: static;
+      padding: 14px 190px;
+      font-family: 'Segoe UI', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s ease;
 }
 
 .cb-btn:hover {
