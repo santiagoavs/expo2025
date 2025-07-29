@@ -609,3 +609,145 @@ font-style: italic;
   }
 }
 
+/* Ajustes específicos para iPhone SE (375×667) */
+@media (max-width: 376px) {
+  .diambars-login-container {
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .diambars-login-card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .diambars-brand-column,
+  .diambars-form-column {
+    padding: 15px 8px;
+  }
+
+  .diambars-logo-container {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 1.6rem;
+    line-height: 1.1;
+  }
+
+  .diambars-brand-text p {
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  .diambars-form-column h2 {
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+  }
+
+  .diambars-input {
+    font-size: 0.8rem;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .diambars-login-button {
+    font-size: 0.95rem;
+    padding: 10px;
+    margin-top: 12px;
+  }
+
+  .diambars-forgot-password {
+    font-size: 0.7rem;
+    margin: 12px 0;
+  }
+
+  .diambars-divider {
+    margin: 15px 0;
+  }
+}
+
+/* Ajustes específicos para Tablet (768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .diambars-login-card {
+    max-width: 85%;
+    min-height: auto;
+    flex-direction: column;
+  }
+
+  .diambars-logo-container {
+    width: 110px;
+    height: 110px;
+    margin-bottom: 25px;
+  }
+
+  .diambars-brand-text h1 {
+    font-size: 2rem;
+  }
+
+  .diambars-brand-text p {
+    font-size: 1.1rem;
+    letter-spacing: 6px;
+    margin-top: -10px;
+  }
+
+  .diambars-form-column {
+    padding: 40px;
+  }
+
+  .diambars-form-column h2 {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+  }
+
+  .diambars-input {
+    font-size: 0.9rem;
+    padding: 12px 15px;
+    max-width: 100%;
+  }
+
+  .diambars-login-button {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 12px;
+  }
+
+  .diambars-forgot-password {
+    font-size: 0.8rem;
+  }
+}
+
+/* Ajustes generales para centrado perfecto */
+.diambars-login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.diambars-brand-column,
+.diambars-form-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.diambars-input-group {
+  width: 100%;
+  max-width: 320px;
+}
+
+.diambars-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.diambars-login-button {
+  display: block;
+  margin: 0 auto;
+}
