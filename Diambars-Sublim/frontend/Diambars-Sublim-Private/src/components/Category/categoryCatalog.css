@@ -16,7 +16,7 @@
     border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  height: 85vh; /* Altura fija en lugar de auto */
+  height: 800px; /* Altura fija en lugar de auto */
   max-height: 900px; /* Límite máximo */
 }
 

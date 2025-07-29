@@ -35,21 +35,20 @@ const CategoryPage = () => {
       <Navbar />
       <div className="category-content-wrapper">
         {/* Formulario fijado al viewport */}
-        <div className="category-form-fixed" data-aos="fade-right">
+
           <CategoryForm 
             editingCategory={editingCategory} 
             clearEditing={handleClearEditing}
             onSuccess={handleSuccess}
           />
-        </div>
 
         {/* Catálogo fijado al viewport */}
-        <div className="category-catalog-fixed" data-aos="fade-left">
+
           <CategoryCatalog 
             onEditCategory={handleEditCategory} 
             refreshTrigger={refreshTrigger}
           />
-        </div>
+
       </div>
     </div>
   );
