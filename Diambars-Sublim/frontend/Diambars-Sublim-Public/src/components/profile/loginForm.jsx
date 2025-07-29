@@ -58,7 +58,7 @@ export default function LoginForm() {
 
               <div className="phone-wrapper">
                 <span>+503</span>
-                <input
+                <input className='telephone-input'
                   type="tel"
                   placeholder="Número de teléfono"
                   {...regRegister('phone', {

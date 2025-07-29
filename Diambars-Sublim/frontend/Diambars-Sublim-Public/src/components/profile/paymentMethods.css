@@ -7,10 +7,7 @@
   flex-direction: column;
   gap: 5px;
   font-family: 'Inter', sans-serif;
-
   height: 250px;
-  
-  /* Efecto de cristal */
   background: rgba(255, 246, 226, 0.3);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -20,17 +17,12 @@
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-/* Efecto de profundidad para el cristal */
 .payment-container::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 246, 226, 0.5),
-    rgba(245, 231, 198, 0.3)
-  );
+  background: linear-gradient(135deg,rgba(255, 246, 226, 0.5),rgba(245, 231, 198, 0.3));
   z-index: -1;
   transform: translateY(8px) scale(0.98);
   filter: blur(10px);
