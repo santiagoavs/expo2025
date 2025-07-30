@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import userModel from "../models/users.js";
-import { sendWelcomeEmail, sendVerificationEmail } from "../utils/email.service.js";
+import { sendWelcomeEmail, sendVerificationEmail } from "../services/email.service.js";
 
 const verifyEmailController = {};
 

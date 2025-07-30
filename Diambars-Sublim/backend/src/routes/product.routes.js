@@ -1,46 +1,31 @@
 import express from "express";
+import multer from "multer";
 import { verifyToken, checkRole } from "../middlewares/auth.middleware.js";
 import productController from "../controllers/product.controller.js";
-import cloudinary from "../utils/cloudinary.js";
 
 const router = express.Router();
+const upload = multer({ dest: "public/uploads/products" }); // Configuración simple de Multer
 
-/**
- * Rutas para productos
- */
-// Obtener un producto específico por ID o slug (público)
+// --- Rutas Públicas ---
+router.get("/", productController.getAllProducts);
+router.get("/featured", productController.getFeaturedProducts);
 router.get("/:id", productController.getProductById);
 
-// Rutas protegidas
+// --- Rutas Protegidas ---
 router.post(
   "/",
   verifyToken,
   checkRole("admin", "manager"),
-  cloudinary.upload.single("mainImage"),
+  upload.array("images", 5), // Hasta 5 imágenes
   productController.createProduct
-);
-
-router.get(
-  "/",
-  verifyToken,
-  checkRole("admin", "manager", "employee", "warehouse"),
-  productController.getAllProducts
 );
 
 router.put(
   "/:id",
   verifyToken,
   checkRole("admin", "manager"),
-  cloudinary.upload.single("mainImage"),
+  upload.array("images", 5),
   productController.updateProduct
-);
-
-router.put(
-  "/variant/:id",
-  verifyToken,
-  checkRole("admin", "manager", "warehouse"),
-  cloudinary.upload.single("image"),
-  productController.updateVariant
 );
 
 router.delete(

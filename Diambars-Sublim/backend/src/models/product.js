@@ -1,72 +1,46 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-/**
- * Schema para productos base en el sistema de Diambars
- */
-const productSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "El nombre del producto es obligatorio"],
-      trim: true,
-      unique: true,
-    },
-    slug: {
-      type: String,
-      unique: true,
-      lowercase: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: [true, "La categoría es obligatoria"],
-    },
-    attributes: [
-      {
-        name: {
-          type: String,
-          required: true,
-        },
-        options: [
-          {
-            name: {
-              type: String,
-              required: true,
-            },
-          },
-        ],
-      },
-    ],
-    mainImage: {
-      type: String,
-      default: "",
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+const customizationAreaSchema = new mongoose.Schema({
+  name: 
+  { type: String, required: true },
+  position: { 
+    x:
+     { type: Number, 
+      required: true },
+    y: 
+    { type: Number, 
+      required: true },
+    width: 
+    { type: Number, 
+      required: true },
+    height:
+     { type: Number, 
+      required: true }
   },
-  { timestamps: true }
-);
-
-/**
- * Middleware para generar automáticamente un slug a partir del nombre
- */
-productSchema.pre("save", function (next) {
-  if (this.isModified("name") || this.isNew) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^\w\s]/gi, "")
-      .replace(/\s+/g, "-");
+  accepts: {
+    text: 
+    { type: Boolean, 
+      default: false },
+    image:
+     { type: Boolean, 
+      default: false }
   }
-  next();
-});
+}, { _id: false });
 
-const Product = mongoose.model("Product", productSchema);
+const productSchema = new mongoose.Schema({
+  name:
+   { type: String, 
+    required: true },
+  description:
+   {String},
+  baseImage: 
+  { type: String, 
+    required: true },
+  customizationAreas: 
+  [customizationAreaSchema],
+  isActive: 
+  { type: Boolean, 
+    default: true }
+}, { timestamps: true });
 
-export default Product;
+export default mongoose.model('Product', productSchema);
