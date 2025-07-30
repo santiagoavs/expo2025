@@ -43,7 +43,7 @@ export default function LoginForm() {
       <div className="form-content">
         <h2>{isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}</h2>
 
-        <form onSubmit={isLogin ? handleLoginSubmit(loginHandler) : handleRegisterSubmit(registerHandler)}>
+        <form className="form-content-content" onSubmit={isLogin ? handleLoginSubmit(loginHandler) : handleRegisterSubmit(registerHandler)}>
           {!isLogin && (
             <>
               <input

@@ -7,8 +7,6 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  
-  /* Efecto de cristal */
   background: rgba(255, 246, 226, 0.25);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -18,7 +16,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-/* Resto del CSS se mantiene igual */
 .user-info-container::before {
   content: '';
   position: absolute;
@@ -68,7 +65,7 @@
   column-gap: 16px;
   row-gap: 10px;
   margin-top: 12px;
-  padding: 0 16px; /* Añadido padding para consistencia */
+  padding: 0 16px; 
 }
 
 .info-section {

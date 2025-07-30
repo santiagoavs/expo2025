@@ -35,8 +35,10 @@
   .tabs button {
     flex: 1;
     padding: 0.8rem;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     font-weight: bold;
+    font-family: 'Spectral';
+    letter-spacing: -2.2px;
     font-style: italic;
     background: none;
     border: none;
@@ -47,7 +49,7 @@
   }
   
   .tabs button.active {
-    border-bottom: 3px solid #B02F2F;
+    border-bottom: 3px solid #b02f2f83;
   }
   
   .form-content h2 {
@@ -138,26 +140,81 @@
     margin-bottom: 1rem;
     color: #787878;
   }
-  
+
   .main-button {
-    width: 150px;
-    height: 45px;
-    background: linear-gradient(to right, #2D788E, #283C3E);
-    color: #FFF1D0;
-    border: none;
-    border-radius: 15px;
-    font-family: 'DiambarsFont', italic;
-    font-size: 1.1rem;
-    cursor: pointer;
-    margin: 1rem auto 0;
-    display: block;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: transform 0.2s ease;
-  }
-  
-  .main-button:hover {
-    transform: scale(1.05);
-  }
+  position: relative;
+  color: #FFF1D0;
+  border-radius: 15px;
+  padding: 12px 32px;
+  height: 50px; 
+  width: 160px;
+  margin: 0 145px;
+  font-size: 1.1rem;
+  font-family: 'DiambarsFont', italic;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: none;
+  overflow: hidden;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(45, 120, 142, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(40, 60, 62, 0.18),
+    0 0 0 1px rgba(180, 220, 255, 0.4);
+}
+
+.main-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg, 
+    rgba(45, 160, 190, 0.5), 
+    rgba(40, 60, 62, 0.2)
+  );
+  transform: translateY(10px) scale(0.95);
+  filter: blur(10px);
+  opacity: 0.8;
+}
+
+.main-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 185%;
+  height: 170%;
+  background: linear-gradient(
+    to right,
+    rgba(100, 200, 255, 0) 0%,
+    rgba(150, 220, 255, 0.3) 50%,
+    rgba(100, 200, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.main-button:hover {
+  transform: translateY(-2px);
+  background: rgba(45, 140, 160, 0.7);
+  box-shadow: 
+    0 10px 35px rgba(40, 80, 90, 0.25),
+    0 0 0 1px rgba(200, 230, 255, 0.5);
+}
+
+.main-button:hover::after {
+  left: 100%;
+}
+
+.main-button:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(8px);
+}
   
   .divider {
     text-align: center;
@@ -171,7 +228,7 @@
   width: 160px;
   font-size: 1.2rem;
   border: none;
-  border-radius: 20px;
+  border-radius: 15px;
   padding: 0.7rem 2rem;
   display: flex;
   align-items: center;
@@ -184,17 +241,14 @@
   z-index: 1;
   color: #FFF1D0;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  
-  /* Cristal marrón */
-  background: rgba(89, 61, 59, 0.6); /* Color base semitransparente */
+  background: rgba(89, 61, 59, 0.6); 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 
-    0 4px 20px rgba(63, 39, 36, 0.3), /* Sombra marrón */
-    0 0 0 1px rgba(255, 235, 220, 0.3); /* Borde dorado claro */
+    0 4px 20px rgba(63, 39, 36, 0.3), 
+    0 0 0 1px rgba(255, 235, 220, 0.3); 
 }
 
-/* Capa de gradiente marrón */
 .google-button::before {
   content: "";
   position: absolute;
@@ -203,34 +257,35 @@
   border-radius: inherit;
   background: linear-gradient(
     to right, 
-    rgba(89, 61, 59, 0.8), /* Marrón oscuro */
-    rgba(33, 21, 20, 0.6)  /* Marrón muy oscuro */
+    rgba(89, 61, 59, 0.8),
+    rgba(33, 21, 20, 0.6)  
   );
   transform: translateY(5px) scale(0.95);
   filter: blur(6px);
   opacity: 0.8;
 }
 
-/* Reflejos dorados */
 .google-button::after {
   content: '';
   position: absolute;
   top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  left: -60%; 
+  width: 205%;
+  height: 170%; 
   background: linear-gradient(
     to right,
     rgba(255, 235, 200, 0) 0%,
-    rgba(255, 225, 180, 0.3) 50%, /* Reflejo dorado */
+    rgba(255, 225, 180, 0.25) 30%,
+    rgba(255, 225, 180, 0.27) 50%,
+    rgba(255, 225, 180, 0.2) 70%,
     rgba(255, 235, 200, 0) 100%
   );
   transform: rotate(30deg);
   transition: all 0.7s ease;
   z-index: -1;
+  pointer-events: none; 
 }
 
-/* Efecto hover */
 .google-button:hover {
   transform: translateY(-3px) scale(1.05);
   background: rgba(107, 73, 70, 0.7);
@@ -244,7 +299,6 @@
   top: 100%;
 }
 
-/* Efecto active */
 .google-button:active {
   transform: translateY(1px);
   backdrop-filter: blur(6px);
