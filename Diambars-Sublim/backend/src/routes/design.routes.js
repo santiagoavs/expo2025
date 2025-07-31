@@ -1,16 +1,28 @@
 import express from "express";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyToken, checkRole } from "../middlewares/auth.middleware.js";
 import designController from "../controllers/design.controller.js";
 
 const router = express.Router();
 
-// --- Rutas Públicas ---
-router.get("/", designController.getAllDesigns);
-router.get("/user/:userId", designController.getUserDesigns);
+// --- Rutas Públicas (solo para diseños aprobados) ---
+router.get("/:id", designController.getDesignById);
 
-// --- Rutas Protegidas (solo usuarios autenticados) ---
+// --- Rutas Protegidas ---
 router.post("/", verifyToken, designController.createDesign);
-router.put("/:id", verifyToken, designController.updateDesign);
-router.delete("/:id", verifyToken, designController.deleteDesign);
+
+// Cotización (admin)
+router.post(
+  "/:id/quote",
+  verifyToken,
+  checkRole("admin", "manager"),
+  designController.submitQuote
+);
+
+// Respuesta del cliente
+router.post(
+  "/:id/respond-quote",
+  verifyToken,
+  designController.respondToQuote
+);
 
 export default router;

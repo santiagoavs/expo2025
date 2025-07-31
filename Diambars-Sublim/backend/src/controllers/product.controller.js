@@ -1,5 +1,5 @@
-import Product from "../models/Product.model.js";
-import Design from "../models/Design.model.js";
+import Product from "../models/product.js";
+import Design from "../models/designModel.js";
 import Category from "../models/category.js";
 import cloudinary from "../utils/cloudinary.js";
 import fs from "fs";
@@ -7,7 +7,7 @@ import {
   validateCustomizationAreas,
   validateDesignAgainstProduct,
   generateKonvaConfig
-} from "../utils/productUtils.js";
+} from "../utils/pruductUtils.js";
 
 const productController = {};
 
