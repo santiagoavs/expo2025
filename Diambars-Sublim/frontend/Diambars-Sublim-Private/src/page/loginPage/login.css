@@ -1,53 +1,65 @@
-.diambars-login-container {
+/* Base Styles */
+:root {
+  --primary-color: rgba(100, 0, 15, 0.6);
+  --primary-hover: rgba(180, 10, 30, 0.5);
+  --text-light: #FFF1D0;
+  --text-dark: #333;
+  --text-muted: #666;
+  --error-color: #ff4444;
+  --error-bg: #fff6f6;
+  --border-color: rgba(255, 255, 255, 0.4);
+  --glass-bg: rgba(255, 246, 226, 0.3);
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 35px rgba(160, 0, 25, 0.25);
+}
+
+/* Layout */
+.auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   width: 100vw;
   background: 
-  radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
-  radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
-  radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
-  radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
-  radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
-  radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
-  linear-gradient(135deg, 
-    #FFF6E2 0%,
-    #F5E7C6 20%,
-    #F0DFB8 40%,
-    #EBD7AA 60%,
-    #E6CF9C 80%,
-    #F2E4C1 100%);
+    radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+    radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+    radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, 
+      #FFF6E2 0%,
+      #F5E7C6 20%,
+      #F0DFB8 40%,
+      #EBD7AA 60%,
+      #E6CF9C 80%,
+      #F2E4C1 100%);
   padding: 20px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
-font-style: italic;
+  font-style: italic;
   position: fixed;
   inset: 0;
   overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
 }
 
-.diambars-login-card {
+.auth-card {
   display: flex;
   width: 100%;
   max-width: 900px;
   min-height: 500px;
-
-  /* 🌟 Glass exacto del ejemplo */
-  /* Efecto de cristal */
-  background: rgba(255, 246, 226, 0.3);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
-.diambars-login-card::before {
+.auth-card::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -63,7 +75,7 @@ font-style: italic;
   opacity: 0.8;
 }
 
-.diambars-login-card::after {
+.auth-card::after {
   content: '';
   position: absolute;
   top: 0;
@@ -78,54 +90,52 @@ font-style: italic;
   );
 }
 
-.login-container {
+/* Brand Section */
+.auth-brand-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
 }
 
-
-.diambars-logo-container {
+.auth-logo-wrapper {
   width: 150px;
   height: 150px;
   margin-bottom: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
 }
 
-.diambars-logo {
+.auth-logo {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.diambars-brand-text {
+.auth-brand-content {
   text-align: center;
-  font-family: 'Inter', !important;
 }
 
-.diambars-brand-text h1 {
+.auth-brand-title {
   font-size: 2.5rem;
   font-weight: 500;
-  color: #000;
+  color: var(--text-dark);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.diambars-brand-text p {
+.auth-brand-subtitle {
   font-size: 1.6rem;
   font-weight: 300;
-  color: #000;
+  color: var(--text-dark);
   margin: -15px 0 0 0;
   text-transform: lowercase;
   letter-spacing: 10px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.diambars-form-column {
+/* Form Section */
+.auth-form-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -133,32 +143,52 @@ font-style: italic;
   padding: 60px;
 }
 
-.diambars-form-column h2 {
+.auth-form-title {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-dark);
   margin-bottom: 30px;
   text-align: center;
 }
 
-.diambars-input-group {
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-group {
   margin-bottom: 1.5rem;
   position: relative;
 }
 
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 246, 226, 0.08);
+  box-shadow: var(--shadow-sm), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
 
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(100, 0, 15, 0.2);
+}
 
-.diambars-input.input-error {
-  border-color: #ff4444;
+.form-input.input-error {
+  border-color: var(--error-color);
   padding-right: 2.5rem;
-  background-color: #ffffff !important;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 1rem;
 }
 
-.alert-error {
+.input-error-message {
   position: absolute;
   bottom: -1.65rem;
   left: 0;
@@ -166,58 +196,48 @@ font-style: italic;
   display: flex;
   align-items: center;
   padding: 0.35rem 0.8rem;
-  background-color: #fff6f6;
+  background-color: var(--error-bg);
   border: 1px solid #ffdddd;
   border-top: none;
   border-radius: 0 0 6px 6px;
-  color: #ff4444;
+  color: var(--error-color);
   font-size: 0.75rem;
   animation: fadeIn 0.2s ease-out;
   box-sizing: border-box;
-  z-index: 1;
 }
 
-.alert-icon {
+.error-icon {
   width: 14px;
   height: 14px;
   margin-right: 0.4rem;
-  fill: #ff4444;
-  flex-shrink: 0;
+  fill: var(--error-color);
 }
 
-.diambars-forgot-password {
+.auth-link {
   display: block;
-  margin: 20px 0 20px;
+  margin: 20px 0;
   font-size: 0.85rem;
-  color: #666;
-  cursor: pointer;
-  transition: color 0.2s ease;
+  color: var(--text-muted);
   text-align: center;
+  transition: color 0.2s ease;
 }
 
-.diambars-forgot-password:hover {
-  color: #ff4444;
+.auth-link:hover {
+  color: var(--error-color);
 }
 
-.diambars-divider {
+.auth-divider {
   height: 1px;
   background: #EEE;
   margin: 20px 0;
 }
 
-@font-face {
-  font-family: 'DiambarsFont';
-  src: url('/fonts/AestheticMoment.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-.diambars-login-button {
+/* Button Styles */
+.auth-button {
   position: relative;
-  color: #FFF1D0;
+  color: var(--text-light);
   border-radius: 15px;
   padding: 12px 32px;
-  font-family: 'DiambarsFont', italic;
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -225,7 +245,7 @@ font-style: italic;
   overflow: hidden;
   z-index: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  background: rgba(100, 0, 15, 0.6);
+  background: var(--primary-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 
@@ -233,7 +253,7 @@ font-style: italic;
     0 0 0 1px rgba(255, 180, 180, 0.4);
 }
 
-.diambars-login-button::before {
+.auth-button::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -245,7 +265,7 @@ font-style: italic;
   opacity: 0.8;
 }
 
-.diambars-login-button:after {
+.auth-button:after {
   content: '';
   position: absolute;
   top: -50%;
@@ -258,33 +278,32 @@ font-style: italic;
   z-index: -1;
 }
 
-.diambars-login-button:hover {
+.auth-button:hover {
   transform: translateY(-2px);
-  background: rgba(180, 10, 30, 0.5);
-  box-shadow: 
-    0 10px 35px rgba(160, 0, 25, 0.25),
-    0 0 0 1px rgba(255, 200, 200, 0.5);
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 200, 200, 0.5);
 }
 
-.diambars-login-button:hover::after {
+.auth-button:hover::after {
   left: 100%;
 }
 
-.diambars-login-button:active {
+.auth-button:active {
   transform: translateY(1px);
   backdrop-filter: blur(8px);
 }
 
-
-.spinner {
+.auth-spinner {
   width: 20px;
   height: 20px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s ease-in-out infinite;
+  margin: 0 auto;
 }
 
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
@@ -294,460 +313,138 @@ font-style: italic;
   to { transform: rotate(360deg); }
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
-  .diambars-login-card {
+  .auth-card {
     flex-direction: column;
     min-height: auto;
+    max-width: 95%;
   }
 
-  .diambars-brand-column,
-  .diambars-form-column {
+  .auth-brand-section,
+  .auth-form-section {
     padding: 40px 30px;
   }
 
-  .diambars-brand-column {
+  .auth-brand-section {
     padding-bottom: 20px;
-    top: 0;
-    margin-bottom: 0;
   }
 
-  .diambars-logo-container {
+  .auth-logo-wrapper {
     width: 120px;
     height: 120px;
   }
 
-  .diambars-login-button {
+  .auth-brand-title {
+    font-size: 2rem;
+  }
+
+  .auth-brand-subtitle {
+    font-size: 1.2rem;
+    letter-spacing: 6px;
+  }
+
+  .auth-button {
     width: 100%;
     padding: 12px;
-   backdrop-filter: blur(5px);
-   -webkit-backdrop-filter: blur(5px);
   }
-
 }
 
-/* Teléfono pequeño (xs: 320-480px) */
 @media (max-width: 480px) {
-  .diambars-login-container {
+  .auth-container {
     padding: 12px;
   }
 
-  .diambars-login-card {
-    flex-direction: column;
-    max-width: 100%;
-    border-radius: 12px;
-  }
-
-  .diambars-brand-column,
-  .diambars-form-column {
+  .auth-brand-section,
+  .auth-form-section {
     padding: 30px 16px;
-    text-align: center;
   }
 
-  .diambars-logo-container {
+  .auth-logo-wrapper {
     width: 100px;
     height: 100px;
     margin-bottom: 20px;
   }
 
-  .diambars-brand-text h1 {
+  .auth-brand-title {
     font-size: 1.8rem;
   }
 
-  .diambars-brand-text p {
+  .auth-brand-subtitle {
     font-size: 1rem;
     letter-spacing: 4px;
     margin-top: 6px;
   }
 
-  .diambars-form-column h2 {
+  .auth-form-title {
     font-size: 1rem;
     margin-bottom: 20px;
   }
 
-  .diambars-input {
-    font-size: 0.8rem;
+  .form-input {
+    font-size: 0.85rem;
     padding: 12px;
   }
 
-  .diambars-login-button {
-    width: 100%;
+  .auth-button {
     font-size: 1rem;
     padding: 12px 0;
-    left: 0;
   }
 }
 
-/* Teléfono mediano (sm: 481-768px) */
-@media (max-width: 768px) {
-  .diambars-login-card {
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  .diambars-brand-column,
-  .diambars-form-column {
-    padding: 40px 30px;
-  }
-
-  .diambars-brand-column {
-    padding-bottom: 20px;
-    top: 0;
-    margin-bottom: 0;
-  }
-
-  .diambars-logo-container {
-    width: 120px;
-    height: 120px;
-  }
-
-  .diambars-brand-text h1 {
-    font-size: 2rem;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1.2rem;
-    letter-spacing: 6px;
-  }
-
-  .diambars-login-button {
-    width: 100%;
-    padding: 12px;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    left: 0;
-  }
-}
-
-/* Tablet (md: 769-1024px) */
-@media (max-width: 1024px) {
-  .diambars-login-card {
-    flex-direction: row;
-    max-width: 90%;
-  }
-
-  .diambars-brand-column,
-  .diambars-form-column {
-    padding: 50px 30px;
-  }
-
-  .diambars-brand-text h1 {
-    font-size: 2.2rem;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1.4rem;
-  }
-
-  .diambars-login-button {
-    font-size: 1rem;
-    padding: 14px 24px;
-  }
-}
-
-/* Laptop pequeño (lg: 1025-1280px) */
-@media (max-width: 1280px) {
-  .diambars-login-card {
-    max-width: 880px;
-  }
-
-  .diambars-login-button {
-    left: 40px;
-  }
-}
-
-/* Pantalla ancha (xxL: >1600px) */
-@media (min-width: 1601px) {
-  .diambars-login-container {
-    padding: 40px;
-  }
-
-  .diambars-login-card {
-    max-width: 1000px;
-  }
-
-  .diambars-login-button {
-    padding: 14px 40px;
-    font-size: 1.2rem;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1.8rem;
-    letter-spacing: 12px;
-  }
-
-  @media (min-width: 400px) and (max-width: 900px) {
-  .diambars-login-card {
-    flex-direction: column;
-    max-width: 100%;
-    min-height: auto;
-    border-radius: 16px;
-  }
-
-  .diambars-brand-column,
-  .diambars-form-column {
-    padding: 30px 24px;
-    text-align: center;
-  }
-
-  .diambars-logo-container {
-    width: 110px;
-    height: 110px;
-  }
-
-  .diambars-brand-text h1 {
-    font-size: 2rem;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1.2rem;
-    letter-spacing: 6px;
-  }
-
-  .diambars-form-column h2 {
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-  }
-
-  .diambars-input {
-    font-size: 0.85rem;
-    padding: 12px;
-  }
-
-  .diambars-login-button {
-    width: 100%;
-    font-size: 1rem;
-    padding: 14px 0;
-    left: 0;
-  }
-
-  .diambars-forgot-password {
-    font-size: 0.8rem;
-    margin-bottom: 20px;
-  }
-}
-
-
-}
-
-
-@media (max-width: 480px) {
-  .diambars-login-container {
-    padding: 12px;
-    overflow-y: auto;
-  }
-
-  .diambars-login-card {
-    flex-direction: column;
-    width: 100%;
-    max-width: none;
-    height: auto;
-    min-height: unset;
-    border-radius: 12px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    padding: 20px 16px;
-  }
-
-  .diambars-brand-column,
-  .diambars-form-column {
-    width: 100%;
-    padding: 20px 8px;
-    text-align: center;
-    align-items: center;
-  }
-
-  .diambars-logo-container {
-    width: 90px;
-    height: 90px;
-  }
-
-  .diambars-brand-text h1 {
-    font-size: 1.8rem;
-    line-height: 1.2;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1rem;
-    letter-spacing: 4px;
-    margin-top: 6px;
-  }
-
-  .diambars-input {
-    width: 100%;
-    font-size: 0.85rem;
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-
-  .diambars-input::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 12px;
-    background: linear-gradient(
-      220deg,
-      rgba(255, 246, 226, 0.15), 
-      rgba(245, 231, 198, 0.08) 
-    );
-    z-index: -1;
-    transform: translateY(6px) scale(0.98);
-    filter: blur(8px);
-    opacity: 0.5;
-  }
-
-  .diambars-login-button {
-    width: 100%;
-    font-size: 1rem;
-    padding: 12px;
-    margin-top: 16px;
-    left: 0;
-  }
-
-  .diambars-forgot-password {
-    font-size: 0.75rem;
-    margin-top: 10px;
-  }
-}
-
-/* Ajustes específicos para iPhone SE (375×667) */
+/* Specific adjustments for iPhone SE */
 @media (max-width: 376px) {
-  .diambars-login-container {
+  .auth-container {
     padding: 10px;
-    overflow-y: auto;
   }
 
-  .diambars-login-card {
+  .auth-card {
     padding: 15px;
     border-radius: 12px;
   }
 
-  .diambars-brand-column,
-  .diambars-form-column {
+  .auth-brand-section,
+  .auth-form-section {
     padding: 15px 8px;
   }
 
-  .diambars-logo-container {
+  .auth-logo-wrapper {
     width: 80px;
     height: 80px;
     margin-bottom: 15px;
   }
 
-  .diambars-brand-text h1 {
+  .auth-brand-title {
     font-size: 1.6rem;
-    line-height: 1.1;
   }
 
-  .diambars-brand-text p {
+  .auth-brand-subtitle {
     font-size: 0.9rem;
     letter-spacing: 3px;
     margin-top: 4px;
   }
 
-  .diambars-form-column h2 {
+  .auth-form-title {
     font-size: 0.95rem;
     margin-bottom: 15px;
   }
 
-  .diambars-input {
+  .form-input {
     font-size: 0.8rem;
     padding: 10px 12px;
-    margin-bottom: 10px;
   }
 
-  .diambars-login-button {
+  .auth-button {
     font-size: 0.95rem;
     padding: 10px;
-    margin-top: 12px;
   }
 
-  .diambars-forgot-password {
+  .auth-link {
     font-size: 0.7rem;
     margin: 12px 0;
   }
 
-  .diambars-divider {
+  .auth-divider {
     margin: 15px 0;
   }
-}
-
-/* Ajustes específicos para Tablet (768px) */
-@media (min-width: 481px) and (max-width: 768px) {
-  .diambars-login-card {
-    max-width: 85%;
-    min-height: auto;
-    flex-direction: column;
-  }
-
-  .diambars-logo-container {
-    width: 110px;
-    height: 110px;
-    margin-bottom: 25px;
-  }
-
-  .diambars-brand-text h1 {
-    font-size: 2rem;
-  }
-
-  .diambars-brand-text p {
-    font-size: 1.1rem;
-    letter-spacing: 6px;
-    margin-top: -10px;
-  }
-
-  .diambars-form-column {
-    padding: 40px;
-  }
-
-  .diambars-form-column h2 {
-    font-size: 1.2rem;
-    margin-bottom: 25px;
-  }
-
-  .diambars-input {
-    font-size: 0.9rem;
-    padding: 12px 15px;
-    max-width: 100%;
-  }
-
-  .diambars-login-button {
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-    padding: 12px;
-  }
-
-  .diambars-forgot-password {
-    font-size: 0.8rem;
-  }
-}
-
-/* Ajustes generales para centrado perfecto */
-.diambars-login-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.diambars-brand-column,
-.diambars-form-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.diambars-input-group {
-  width: 100%;
-  max-width: 320px;
-}
-
-.diambars-input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.diambars-login-button {
-  display: block;
-  margin: 0 auto;
 }
