@@ -64,7 +64,7 @@ const LoginPage = () => {
             <div className="diambars-input-group">
               <input
                 type="password"
-                placeholder="Contraseña"
+                placeholder="Contraseñaaa"
                 className={`diambars-input ${errors.password ? 'input-error' : ''}`}
                 {...register('password', { 
                   required: 'Este campo es requerido',
