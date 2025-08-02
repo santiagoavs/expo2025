@@ -13,7 +13,7 @@
   --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 35px rgba(160, 0, 25, 0.25);
 }
-
+ 
 /* Layout */
 .auth-container {
   display: flex;
@@ -21,14 +21,14 @@
   align-items: center;
   min-height: 100vh;
   width: 100vw;
-  background: 
+  background:
     radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
     radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
     radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
     radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
     radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
     radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, 
+    linear-gradient(135deg,
       #FFF6E2 0%,
       #F5E7C6 20%,
       #F0DFB8 40%,
@@ -43,7 +43,7 @@
   inset: 0;
   overflow: hidden;
 }
-
+ 
 .auth-card {
   display: flex;
   width: 100%;
@@ -58,7 +58,7 @@
   position: relative;
   overflow: hidden;
 }
-
+ 
 .auth-card::before {
   content: '';
   position: absolute;
@@ -74,7 +74,7 @@
   filter: blur(10px);
   opacity: 0.8;
 }
-
+ 
 .auth-card::after {
   content: '';
   position: absolute;
@@ -89,7 +89,7 @@
     rgba(255, 255, 255, 0.3)
   );
 }
-
+ 
 /* Brand Section */
 .auth-brand-section {
   flex: 1;
@@ -99,23 +99,23 @@
   justify-content: center;
   padding: 40px;
 }
-
+ 
 .auth-logo-wrapper {
   width: 150px;
   height: 150px;
   margin-bottom: 30px;
 }
-
+ 
 .auth-logo {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
-
+ 
 .auth-brand-content {
   text-align: center;
 }
-
+ 
 .auth-brand-title {
   font-size: 2.5rem;
   font-weight: 500;
@@ -124,7 +124,7 @@
   text-transform: uppercase;
   letter-spacing: 2px;
 }
-
+ 
 .auth-brand-subtitle {
   font-size: 1.6rem;
   font-weight: 300;
@@ -133,7 +133,7 @@
   text-transform: lowercase;
   letter-spacing: 10px;
 }
-
+ 
 /* Form Section */
 .auth-form-section {
   flex: 1;
@@ -142,7 +142,7 @@
   justify-content: center;
   padding: 60px;
 }
-
+ 
 .auth-form-title {
   font-size: 1.3rem;
   font-weight: 600;
@@ -150,18 +150,18 @@
   margin-bottom: 30px;
   text-align: center;
 }
-
+ 
 .auth-form {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
-
+ 
 .form-group {
   margin-bottom: 1.5rem;
   position: relative;
 }
-
+ 
 .form-input {
   width: 100%;
   padding: 14px 16px;
@@ -172,13 +172,13 @@
   background: rgba(255, 246, 226, 0.08);
   box-shadow: var(--shadow-sm), 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
-
+ 
 .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(100, 0, 15, 0.2);
 }
-
+ 
 .form-input.input-error {
   border-color: var(--error-color);
   padding-right: 2.5rem;
@@ -187,7 +187,7 @@
   background-position: right 0.7rem center;
   background-size: 1rem;
 }
-
+ 
 .input-error-message {
   position: absolute;
   bottom: -1.65rem;
@@ -205,14 +205,14 @@
   animation: fadeIn 0.2s ease-out;
   box-sizing: border-box;
 }
-
+ 
 .error-icon {
   width: 14px;
   height: 14px;
   margin-right: 0.4rem;
   fill: var(--error-color);
 }
-
+ 
 .auth-link {
   display: block;
   margin: 20px 0;
@@ -221,17 +221,17 @@
   text-align: center;
   transition: color 0.2s ease;
 }
-
+ 
 .auth-link:hover {
   color: var(--error-color);
 }
-
+ 
 .auth-divider {
   height: 1px;
   background: #EEE;
   margin: 20px 0;
 }
-
+ 
 /* Button Styles */
 .auth-button {
   position: relative;
@@ -248,11 +248,11 @@
   background: var(--primary-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(160, 0, 25, 0.18),
     0 0 0 1px rgba(255, 180, 180, 0.4);
 }
-
+ 
 .auth-button::before {
   content: "";
   position: absolute;
@@ -264,7 +264,7 @@
   filter: blur(10px);
   opacity: 0.8;
 }
-
+ 
 .auth-button:after {
   content: '';
   position: absolute;
@@ -277,22 +277,22 @@
   transition: all 0.7s ease;
   z-index: -1;
 }
-
+ 
 .auth-button:hover {
   transform: translateY(-2px);
   background: var(--primary-hover);
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 200, 200, 0.5);
 }
-
+ 
 .auth-button:hover::after {
   left: 100%;
 }
-
+ 
 .auth-button:active {
   transform: translateY(1px);
   backdrop-filter: blur(8px);
 }
-
+ 
 .auth-spinner {
   width: 20px;
   height: 20px;
@@ -302,17 +302,17 @@
   animation: spin 1s ease-in-out infinite;
   margin: 0 auto;
 }
-
+ 
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
+ 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
+ 
 /* Responsive Design */
 @media (max-width: 768px) {
   .auth-card {
@@ -320,130 +320,130 @@
     min-height: auto;
     max-width: 95%;
   }
-
+ 
   .auth-brand-section,
   .auth-form-section {
     padding: 40px 30px;
   }
-
+ 
   .auth-brand-section {
     padding-bottom: 20px;
   }
-
+ 
   .auth-logo-wrapper {
     width: 120px;
     height: 120px;
   }
-
+ 
   .auth-brand-title {
     font-size: 2rem;
   }
-
+ 
   .auth-brand-subtitle {
     font-size: 1.2rem;
     letter-spacing: 6px;
   }
-
+ 
   .auth-button {
     width: 100%;
     padding: 12px;
   }
 }
-
+ 
 @media (max-width: 480px) {
   .auth-container {
     padding: 12px;
   }
-
+ 
   .auth-brand-section,
   .auth-form-section {
     padding: 30px 16px;
   }
-
+ 
   .auth-logo-wrapper {
     width: 100px;
     height: 100px;
     margin-bottom: 20px;
   }
-
+ 
   .auth-brand-title {
     font-size: 1.8rem;
   }
-
+ 
   .auth-brand-subtitle {
     font-size: 1rem;
     letter-spacing: 4px;
     margin-top: 6px;
   }
-
+ 
   .auth-form-title {
     font-size: 1rem;
     margin-bottom: 20px;
   }
-
+ 
   .form-input {
     font-size: 0.85rem;
     padding: 12px;
   }
-
+ 
   .auth-button {
     font-size: 1rem;
     padding: 12px 0;
   }
 }
-
+ 
 /* Specific adjustments for iPhone SE */
 @media (max-width: 376px) {
   .auth-container {
     padding: 10px;
   }
-
+ 
   .auth-card {
     padding: 15px;
     border-radius: 12px;
   }
-
+ 
   .auth-brand-section,
   .auth-form-section {
     padding: 15px 8px;
   }
-
+ 
   .auth-logo-wrapper {
     width: 80px;
     height: 80px;
     margin-bottom: 15px;
   }
-
+ 
   .auth-brand-title {
     font-size: 1.6rem;
   }
-
+ 
   .auth-brand-subtitle {
     font-size: 0.9rem;
     letter-spacing: 3px;
     margin-top: 4px;
   }
-
+ 
   .auth-form-title {
     font-size: 0.95rem;
     margin-bottom: 15px;
   }
-
+ 
   .form-input {
     font-size: 0.8rem;
     padding: 10px 12px;
   }
-
+ 
   .auth-button {
     font-size: 0.95rem;
     padding: 10px;
   }
-
+ 
   .auth-link {
     font-size: 0.7rem;
     margin: 12px 0;
   }
-
+ 
   .auth-divider {
     margin: 15px 0;
   }

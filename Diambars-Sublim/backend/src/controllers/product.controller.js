@@ -1,3 +1,11 @@
+/**
+ * Crea un nuevo producto base para sublimación
+ * 
+ * - Valida campos requeridos
+ * - Sube imágenes a Cloudinary
+ * - Valida áreas de personalización
+ * - Genera configuración inicial para Konva
+ */
 import Product from "../models/product.js";
 import Design from "../models/designModel.js";
 import Category from "../models/category.js";
@@ -12,12 +20,7 @@ import {
 const productController = {};
 
 /**
- * Crea un nuevo producto base para sublimación
- * 
- * - Valida campos requeridos
- * - Sube imágenes a Cloudinary
- * - Valida áreas de personalización
- * - Genera configuración inicial para Konva
+ * Crea un nuevo producto con manejo robusto de errores
  */
 productController.createProduct = async (req, res) => {
   let tempFiles = [];
@@ -35,6 +38,7 @@ productController.createProduct = async (req, res) => {
 
     // Validación básica
     if (!req.files?.mainImage) {
+      console.error('Intento de crear producto sin imagen principal');
       return res.status(400).json({ 
         success: false,
         message: "La imagen principal es obligatoria" 
@@ -49,11 +53,21 @@ productController.createProduct = async (req, res) => {
     }
 
     // Verificar categoría
-    const category = await Category.findById(categoryId);
-    if (!category) {
-      return res.status(400).json({ 
+    let category;
+    try {
+      category = await Category.findById(categoryId);
+      if (!category) {
+        console.error(`Categoría no encontrada: ${categoryId}`);
+        return res.status(400).json({ 
+          success: false,
+          message: "La categoría especificada no existe" 
+        });
+      }
+    } catch (dbError) {
+      console.error('Error buscando categoría:', dbError);
+      return res.status(500).json({ 
         success: false,
-        message: "La categoría especificada no existe" 
+        message: "Error al validar la categoría" 
       });
     }
 
@@ -61,16 +75,25 @@ productController.createProduct = async (req, res) => {
     let parsedAreas = [];
     try {
       parsedAreas = JSON.parse(customizationAreas);
-      await validateCustomizationAreas(parsedAreas);
-    } catch (error) {
+      const validation = validateCustomizationAreas(parsedAreas);
+      if (!validation) {
+        console.error('Áreas de personalización inválidas:', parsedAreas);
+        return res.status(400).json({ 
+          success: false,
+          message: "Las áreas de personalización no son válidas",
+          errors: validation.errors
+        });
+      }
+    } catch (parseError) {
+      console.error('Error parseando áreas:', parseError);
       return res.status(400).json({ 
         success: false,
-        message: "Las áreas de personalización no son válidas",
-        error: error.message
+        message: "Formato de áreas de personalización inválido",
+        error: parseError.message
       });
     }
 
-    // Subir imágenes
+    // Subir imágenes con manejo de errores
     const uploadResults = {};
     tempFiles = Object.values(req.files).flat();
     
@@ -78,19 +101,40 @@ productController.createProduct = async (req, res) => {
       // Subir imagen principal
       uploadResults.mainImage = await cloudinary.uploader.upload(
         req.files.mainImage[0].path,
-        { folder: "products/base" }
+        { 
+          folder: "products/base",
+          resource_type: "auto"
+        }
       );
+      console.log(`Imagen principal subida: ${uploadResults.mainImage.secure_url}`);
 
       // Subir imágenes adicionales si existen
       if (req.files.additionalImages) {
         uploadResults.additionalImages = await Promise.all(
           req.files.additionalImages.map(file => 
-            cloudinary.uploader.upload(file.path, { folder: "products/additional" })
+            cloudinary.uploader.upload(file.path, { 
+              folder: "products/additional",
+              resource_type: "auto"
+            })
           )
         );
+        console.log(`${uploadResults.additionalImages.length} imágenes adicionales subidas`);
       }
     } catch (uploadError) {
-      console.error("Error al subir imágenes:", uploadError);
+      console.error("Error al subir imágenes:", {
+        error: uploadError.message,
+        files: req.files
+      });
+      
+      // Intentar borrar imágenes subidas en caso de error parcial
+      if (uploadResults.mainImage) {
+        try {
+          await cloudinary.uploader.destroy(uploadResults.mainImage.public_id);
+        } catch (cleanupError) {
+          console.error('Error limpiando imagen principal:', cleanupError);
+        }
+      }
+      
       return res.status(500).json({ 
         success: false,
         message: "Error al procesar las imágenes",
@@ -103,8 +147,8 @@ productController.createProduct = async (req, res) => {
       name: name.trim(),
       description: description ? description.trim() : "",
       category: category._id,
-      basePrice: parseFloat(basePrice) || 0,
-      productionTime: parseInt(productionTime) || 3,
+      basePrice: Math.max(0, parseFloat(basePrice)) || 0,
+      productionTime: Math.max(1, parseInt(productionTime)) || 3,
       isActive: isActive !== false,
       customizationAreas: parsedAreas,
       images: {
@@ -114,14 +158,19 @@ productController.createProduct = async (req, res) => {
     });
 
     await newProduct.save();
+    console.log(`Producto creado exitosamente: ${newProduct._id}`);
 
     // Generar configuración para Konva
-    const konvaConfig = generateKonvaConfig(newProduct);
+    let konvaConfig;
+    try {
+      konvaConfig = generateKonvaConfig(newProduct);
+    } catch (konvaError) {
+      console.error('Error generando configuración Konva:', konvaError);
+      konvaConfig = null;
+    }
 
-    // Limpiar archivos temporales
-    tempFiles.forEach(file => {
-      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-    });
+    // Limpieza de archivos temporales
+    cleanTempFiles(tempFiles);
 
     res.status(201).json({
       success: true,
@@ -131,12 +180,13 @@ productController.createProduct = async (req, res) => {
     });
 
   } catch (error) {
-    // Limpieza en caso de error
-    tempFiles.forEach(file => {
-      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    console.error("Error crítico en createProduct:", {
+      error: error.message,
+      stack: error.stack,
+      body: req.body
     });
-
-    console.error("Error al crear producto:", error);
+    
+    cleanTempFiles(tempFiles);
     res.status(500).json({ 
       success: false,
       message: "Error interno al crear el producto",
@@ -454,6 +504,19 @@ productController.getKonvaConfig = async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
+
+  function cleanTempFiles(files) {
+  files.forEach(file => {
+    try {
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+    } catch (cleanError) {
+      console.error('Error limpiando archivo temporal:', cleanError);
+    }
+  });
+}
+
 };
 
 export default productController;

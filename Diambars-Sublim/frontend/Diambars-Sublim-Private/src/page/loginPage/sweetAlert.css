@@ -1,0 +1,226 @@
+/* ============= ESTILOS PRINCIPALES DE SWEETALERT ============= */
+.diambars-swal-popup {
+  background: linear-gradient(135deg, #FFF6E2 0%, #F0D8AB 100%) !important;
+  border: 2px solid rgba(212, 175, 55, 0.3) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+ 
+.diambars-swal-title {
+  color: #2C2C2C !important;
+  font-weight: 600 !important;
+  font-size: 1.5rem !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 10px !important;
+}
+ 
+.diambars-swal-content {
+  color: #666666 !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 20px !important;
+}
+ 
+/* ============= BOTONES PERSONALIZADOS ============= */
+.diambars-swal-confirm {
+  background: linear-gradient(135deg, #D4AF37 0%, #F0D8AB 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #2C2C2C !important;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+ 
+.diambars-swal-confirm:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6) !important;
+  background: linear-gradient(135deg, #E6C547 0%, #F5E2BB 100%) !important;
+}
+ 
+.diambars-swal-confirm:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4) !important;
+}
+ 
+.diambars-swal-cancel {
+  background: transparent !important;
+  border: 2px solid #6c757d !important;
+  border-radius: 12px !important;
+  padding: 10px 22px !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  color: #6c757d !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+ 
+.diambars-swal-cancel:hover {
+  background: #6c757d !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
+}
+ 
+/* ============= ICONOS PERSONALIZADOS ============= */
+.swal2-icon {
+  border: none !important;
+  margin: 20px auto 30px !important;
+}
+ 
+.swal2-icon.swal2-success {
+  color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+ 
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: #28a745 !important;
+}
+ 
+.swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(40, 167, 69, 0.3) !important;
+}
+ 
+.swal2-icon.swal2-error {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+ 
+.swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+  background-color: #dc3545 !important;
+}
+ 
+.swal2-icon.swal2-warning {
+  color: #ffc107 !important;
+  border-color: #ffc107 !important;
+  font-size: 60px !important;
+}
+ 
+.swal2-icon.swal2-info {
+  color: #17a2b8 !important;
+  border-color: #17a2b8 !important;
+  font-size: 60px !important;
+}
+ 
+/* ============= BARRA DE PROGRESO ============= */
+.swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #D4AF37, #F0D8AB) !important;
+  height: 4px !important;
+}
+ 
+.swal2-timer-progress-bar-container {
+  background: rgba(255, 255, 255, 0.3) !important;
+  height: 4px !important;
+}
+ 
+/* ============= SPINNER DE CARGA ============= */
+.swal2-loader {
+  border-color: rgba(212, 175, 55, 0.2) rgba(212, 175, 55, 0.2) rgba(212, 175, 55, 0.2) #D4AF37 !important;
+}
+ 
+/* ============= FOOTER PERSONALIZADO ============= */
+.swal2-footer {
+  color: #999 !important;
+  font-size: 0.9rem !important;
+  border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
+  margin-top: 20px !important;
+  padding-top: 15px !important;
+}
+ 
+/* ============= ANIMACIONES PERSONALIZADAS ============= */
+@keyframes diambarsSlideInDown {
+  from {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+ 
+@keyframes diambarsSlideOutUp {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+}
+ 
+.animate__animated.animate__fadeInDown {
+  animation: diambarsSlideInDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+ 
+.animate__animated.animate__fadeOutUp {
+  animation: diambarsSlideOutUp 0.6s cubic-bezier(0.55, 0.06, 0.55, 0.94);
+}
+ 
+/* ============= RESPONSIVE ============= */
+@media (max-width: 768px) {
+  .diambars-swal-popup {
+    margin: 20px !important;
+    border-radius: 16px !important;
+  }
+ 
+  .diambars-swal-title {
+    font-size: 1.3rem !important;
+  }
+ 
+  .diambars-swal-content {
+    font-size: 0.9rem !important;
+  }
+ 
+  .diambars-swal-confirm,
+  .diambars-swal-cancel {
+    padding: 10px 20px !important;
+    font-size: 0.9rem !important;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .diambars-swal-popup {
+    margin: 10px !important;
+    border-radius: 12px !important;
+  }
+ 
+  .diambars-swal-title {
+    font-size: 1.2rem !important;
+  }
+ 
+  .diambars-swal-content {
+    font-size: 0.85rem !important;
+  }
+}
+ 
+/* ============= ESTADOS ESPECIALES ============= */
+.swal2-backdrop-show {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(5px) !important;
+}
+ 
+/* Toast notifications */
+.swal2-toast.diambars-swal-popup {
+  background: linear-gradient(135deg, #F0D8AB 0%, #D4AF37 100%) !important;
+  color: #2C2C2C !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+ 
+.swal2-toast .swal2-title {
+  color: #2C2C2C !important;
+  font-weight: 600 !important;
+}
+ 
+.swal2-toast .swal2-content {
+  color: #2C2C2C !important;
+}

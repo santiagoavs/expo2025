@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from '../../hooks/useLogin';
 import './login.css';
-
+ 
 const LoginPage = () => {
   console.log("[LoginPage] Rendering login page");
-  
+ 
   const {
     register,
     handleSubmit,
@@ -13,7 +13,12 @@ const LoginPage = () => {
     isSubmitting,
     onSubmit
   } = useLogin();
-
+ 
+  // Función para manejar el submit (mantiene tu lógica original)
+  const handleFormSubmit = async (data) => {
+    await onSubmit(data);
+  };
+ 
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -26,23 +31,23 @@ const LoginPage = () => {
             <p className="auth-brand-subtitle">sublimado</p>
           </div>
         </div>
-
+ 
         <div className="auth-form-section">
           <h2 className="auth-form-title">Acceso Administrativo</h2>
-          
+         
           {errors.root && (
             <div className="auth-form-error">
               {errors.root.message}
             </div>
           )}
-          
-          <form className='auth-form' onSubmit={handleSubmit(onSubmit)} noValidate>
+         
+          <form className='auth-form' onSubmit={handleSubmit(handleFormSubmit)} noValidate>
             <div className="form-group">
               <input
                 type="email"
                 placeholder="Correo electrónico"
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
-                {...register('email', { 
+                {...register('email', {
                   required: 'Este campo es requerido',
                   pattern: {
                     value: /^\S+@\S+\.\S+$/,
@@ -59,13 +64,13 @@ const LoginPage = () => {
                 </div>
               )}
             </div>
-            
+           
             <div className="form-group">
               <input
                 type="password"
                 placeholder="Contraseña"
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
-                {...register('password', { 
+                {...register('password', {
                   required: 'Este campo es requerido',
                   minLength: {
                     value: 6,
@@ -82,19 +87,23 @@ const LoginPage = () => {
                 </div>
               )}
             </div>
-            
+           
             <Link to="/recovery-password" className="auth-link">
               ¿Olvidaste tu contraseña?
             </Link>
-            
+           
             <div className="auth-divider"></div>
-            
-            <button 
-              type="submit" 
+           
+            <button
+              type="submit"
               className="auth-button"
               disabled={isSubmitting}
             >
-              {isSubmitting ? <div className="auth-spinner"></div> : 'Iniciar sesión'}
+              {isSubmitting ? (
+                <div className="auth-spinner"></div>
+              ) : (
+                'Iniciar sesión'
+              )}
             </button>
           </form>
         </div>
@@ -102,5 +111,5 @@ const LoginPage = () => {
     </div>
   );
 };
-
+ 
 export default LoginPage;
