@@ -24,6 +24,7 @@ function App() {
           <Route path="/profile" element={<Profile/>} />
           <Route path="/verifyEmail" element={<VerifyEmail/>} />
           <Route path="/verify-email/:token" element={<VerificationResultPage />} />
+          <Route path="/verify-email/debug" element={<VerificationResultPage debug />} />
         </Routes>
     </>
   );

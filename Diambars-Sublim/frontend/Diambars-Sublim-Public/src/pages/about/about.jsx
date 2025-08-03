@@ -39,7 +39,7 @@ const About = () => {
           <li><strong>Accesorios:</strong> llaveros, carcasas de móvil, mousepads.</li>
           <li><strong>Decoración:</strong> cojines, tapetes, cuadros y puzzles.</li>
         </ul>
-        <p>¿Y si tienes en mente algún objeto especial, ¡pregúntanos! Nos encanta explorar nuevas posibilidades.</p>
+        <p>Y si tienes en mente algún objeto especial, ¡pregúntanos! Nos encanta explorar nuevas posibilidades.</p>
       </div>
       </div>
       </div>
