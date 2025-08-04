@@ -33,7 +33,7 @@ const corsOptions = {
   origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true,
   exposedHeaders: ["set-cookie"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-access-token']
 };
 

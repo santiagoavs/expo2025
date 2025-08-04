@@ -76,7 +76,7 @@ function UserInfo() {
       <div className="info-section">
         <div className="info-header">
           <h3>Tu información personal</h3>
-          <a href="#">Restablecer contraseña</a>
+          <a className='change-password-link' href="/changePassword">Cambiar contraseña</a>
         </div>
 
         <div className="info-grid">
