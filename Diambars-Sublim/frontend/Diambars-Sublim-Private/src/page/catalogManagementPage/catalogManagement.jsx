@@ -6,7 +6,7 @@ import { MdPendingActions } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
 import { HiPlus, HiFilter, HiSearch, HiRefresh } from "react-icons/hi";
 import { toast } from 'react-hot-toast';
-import MainLayout from '../../';
+import Navbar from '../../components/navbar/navbar';
 import StatCard from '../../components/UI/StatCard';
 import ProductCard from '../../components/UI/ProductCard';
 import { useProducts } from '../../hooks/useProducts';
@@ -22,8 +22,12 @@ const CatalogManagement = () => {
     status: '',
     search: ''
   });
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Estados locales para UI
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // grid, list
+
+  // Fetch products using our custom hook
   const { 
     products, 
     pagination,
@@ -39,28 +43,29 @@ const CatalogManagement = () => {
       number: isLoading ? '...' : products.filter(p => p.isActive).length,
       title: "Productos activos",
       iconComponent: TbShirt,
-      iconColor: "catalog-management-icon-blue"
+      iconColor: "icon-blue"
     },
     {
       number: isLoading ? '...' : products.filter(p => !p.isActive).length,
       title: "Productos pendientes",
       iconComponent: MdPendingActions,
-      iconColor: "catalog-management-icon-pink"
+      iconColor: "icon-pink"
     },
     {
       number: isLoading ? '...' : getLatestProductTime(products),
       title: "Últimos artículos subidos",
       iconComponent: BiTime,
-      iconColor: "catalog-management-icon-green"
+      iconColor: "icon-green"
     }
   ];
 
+  // Get recent products (max 4)
   const recentProducts = isLoading ? [] : products
     .slice()
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 4);
 
-  // Event handlers (mantenidos igual)
+  // Handlers
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
   };
@@ -101,7 +106,7 @@ const CatalogManagement = () => {
     }
   };
 
-  // Auto-refresh every 5 minutes
+  // Effect to refresh data periodically
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
@@ -110,7 +115,7 @@ const CatalogManagement = () => {
     return () => clearInterval(interval);
   }, [refetch]);
 
-  // Helper function for time calculation
+  // Helper function to format time since last product
   function getLatestProductTime(products) {
     if (!products.length) return 'N/A';
     
@@ -130,107 +135,89 @@ const CatalogManagement = () => {
   // Loading state
   if (isLoading) {
     return (
-      <MainLayout pageId="cm">
-        <div className="catalog-management-page">
-          <div className="catalog-management-loading-container">
-            <div className="catalog-management-loading-spinner"></div>
-            <p className="catalog-management-loading-text">Cargando productos...</p>
-          </div>
+      <div className="catalog-page">
+        <Navbar />
+        <div className="catalog-loading-container">
+          <div className="catalog-loading-spinner"></div>
+          <p className="catalog-loading-text">Cargando productos...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   // Error state
   if (isError) {
     return (
-      <MainLayout pageId="cm">
-        <div className="catalog-management-page">
-          <div className="catalog-management-error-container">
-            <div className="catalog-management-error-content">
-              <h2 className="catalog-management-error-title">Error al cargar productos</h2>
-              <p className="catalog-management-error-message">
-                {error?.message || 'Ha ocurrido un error inesperado'}
-              </p>
-              <button 
-                onClick={handleRefresh}
-                className="catalog-management-error-retry-btn"
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? 'Reintentando...' : 'Reintentar'}
-              </button>
-            </div>
+      <div className="catalog-page">
+        <Navbar />
+        <div className="catalog-error-container">
+          <div className="catalog-error-content">
+            <h2 className="catalog-error-title">Error al cargar productos</h2>
+            <p className="catalog-error-message">{error.message}</p>
+            <button 
+              onClick={handleRefresh}
+              className="catalog-error-retry-btn"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? 'Reintentando...' : 'Reintentar'}
+            </button>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
-  // Main render
   return (
-    <MainLayout pageId="cm">
-      {/* ✅ WRAPPER PRINCIPAL - SIN CONTAINERS ANIDADOS */}
-      <div className="catalog-management-page">
-        <div className="catalog-management-content-wrapper">
+    <div className="catalog-page">
+      <Navbar />
+      
+      <div className="catalog-main-container">
+        <div className="catalog-content-wrapper">
           {/* Animated background */}
-          <div className="catalog-management-bg-animation"></div>
+          <div className="catalog-bg-animation"></div>
           
-          {/* Header */}
-          <motion.header 
-            className="catalog-management-header"
+          {/* Header del catálogo */}
+          <motion.div 
+            className="catalog-header"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="catalog-management-header-content">
-              <h1 className="catalog-management-header-title">Gestión de catálogo</h1>
-              <p className="catalog-management-header-subtitle">
-                Gestiona tu catálogo personalizado de sublimación e impresión
-              </p>
+            <div className="catalog-header-content">
+              <h1 className="catalog-header-title">Gestión de catálogo</h1>
+              <p className="catalog-header-subtitle">Gestiona tu catálogo personalizado de sublimación e impresión</p>
             </div>
             
-            {/* Search section */}
-            <div className="catalog-management-search-section">
-              <div className="catalog-management-search-input-container">
-                <div className="catalog-management-search-input-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Buscar productos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="catalog-management-search-input"
-                  />
-                  <div className="catalog-management-search-input-effects"></div>
-                </div>
-                
+            {/* Search bar */}
+            <div className="catalog-search-container">
+              <div className="catalog-search-wrapper">
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="catalog-search-input"
+                />
                 <button 
                   onClick={handleSearch}
-                  className="catalog-management-search-btn"
-                  aria-label="Buscar productos"
+                  className="catalog-search-btn"
                 >
-                  <HiSearch size={20} />
-                  <div className="catalog-management-btn-ripple"></div>
+                  <HiSearch size={18} />
                 </button>
               </div>
-              
               <button 
                 onClick={handleRefresh}
-                className="catalog-management-refresh-btn"
+                className="catalog-refresh-btn"
                 disabled={isRefreshing}
-                aria-label="Actualizar productos"
               >
-                <HiRefresh 
-                  size={20} 
-                  className={isRefreshing ? 'catalog-management-refresh-spinning' : ''} 
-                />
-                <div className="catalog-management-btn-ripple"></div>
+                <HiRefresh size={18} className={isRefreshing ? 'catalog-refresh-spinning' : ''} />
               </button>
             </div>
-          </motion.header>
+          </motion.div>
 
           {/* Stats cards */}
-          <div className="catalog-management-stats-grid">
+          <div className="catalog-stats-grid">
             {stats.map((stat, index) => (
               <StatCard
                 key={index}
@@ -243,15 +230,14 @@ const CatalogManagement = () => {
           </div>
 
           {/* Recent products section */}
-          <section className="catalog-management-section">
-            <div className="catalog-management-section-header">
-              <h2 className="catalog-management-section-title">Productos recientes</h2>
-              <div className="catalog-management-section-actions">
+          <div className="catalog-section">
+            <div className="catalog-section-header">
+              <h2 className="catalog-section-title">Productos recientes</h2>
+              <div className="catalog-section-actions">
                 <select 
-                  className="catalog-management-sort-select"
+                  className="catalog-sort-select"
                   value={filters.sort}
                   onChange={handleSortChange}
-                  aria-label="Ordenar productos"
                 >
                   <option value="newest">Más recientes</option>
                   <option value="oldest">Más antiguos</option>
@@ -260,21 +246,18 @@ const CatalogManagement = () => {
                   <option value="name_asc">Nombre: A-Z</option>
                   <option value="name_desc">Nombre: Z-A</option>
                 </select>
-                
                 <button 
-                  className="catalog-management-create-btn"
+                  className="catalog-create-btn"
                   onClick={handleCreateProduct}
                 >
-                  <HiPlus className="catalog-management-btn-icon" />
-                  <span className="catalog-management-btn-text">Crear producto</span>
-                  <div className="catalog-management-btn-shine"></div>
-                  <div className="catalog-management-btn-ripple"></div>
+                  <HiPlus className="catalog-btn-icon" />
+                  <span className="catalog-btn-text">Crear producto</span>
                 </button>
               </div>
             </div>
 
             {/* Recent products grid */}
-            <div className="catalog-management-recent-grid">
+            <div className="catalog-recent-grid">
               {recentProducts.length > 0 ? (
                 recentProducts.map(product => (
                   <ProductCard
@@ -285,29 +268,27 @@ const CatalogManagement = () => {
                   />
                 ))
               ) : (
-                <div className="catalog-management-empty-state">
-                  <p className="catalog-management-empty-text">No hay productos recientes</p>
+                <div className="catalog-empty-state">
+                  <p className="catalog-empty-text">No hay productos recientes</p>
                 </div>
               )}
             </div>
-          </section>
+          </div>
 
           {/* All products section */}
-          <section className="catalog-management-section">
-            <div className="catalog-management-section-header">
-              <h2 className="catalog-management-section-title">Todos los productos</h2>
-              <div className="catalog-management-section-actions">
-                <button className="catalog-management-filter-btn">
-                  <HiFilter className="catalog-management-btn-icon" />
-                  <span className="catalog-management-btn-text">Filtros</span>
-                  <div className="catalog-management-btn-shine"></div>
-                  <div className="catalog-management-btn-ripple"></div>
+          <div className="catalog-section">
+            <div className="catalog-section-header">
+              <h2 className="catalog-section-title">Todos los productos</h2>
+              <div className="catalog-section-actions">
+                <button className="catalog-filter-btn">
+                  <HiFilter className="catalog-btn-icon" />
+                  <span className="catalog-btn-text">Filtros</span>
                 </button>
               </div>
             </div>
 
             {/* All products grid */}
-            <div className="catalog-management-all-grid">
+            <div className="catalog-all-grid">
               {products.length > 0 ? (
                 products.map(product => (
                   <ProductCard
@@ -318,11 +299,11 @@ const CatalogManagement = () => {
                   />
                 ))
               ) : (
-                <div className="catalog-management-empty-state">
-                  <p className="catalog-management-empty-text">No hay productos disponibles</p>
+                <div className="catalog-empty-state catalog-empty-all">
+                  <p className="catalog-empty-text">No hay productos disponibles</p>
                   <button 
                     onClick={handleCreateProduct}
-                    className="catalog-management-empty-btn"
+                    className="catalog-empty-btn"
                   >
                     Crear tu primer producto
                   </button>
@@ -331,31 +312,31 @@ const CatalogManagement = () => {
             </div>
 
             {/* Pagination */}
-            {pagination?.totalPages > 1 && (
-              <div className="catalog-management-pagination">
+            {pagination.totalPages > 1 && (
+              <div className="catalog-pagination">
                 <button
                   disabled={!pagination.hasPrev}
                   onClick={() => setFilters(prev => ({ ...prev, page: pagination.prevPage }))}
-                  className="catalog-management-pagination-btn"
+                  className="catalog-pagination-btn catalog-pagination-prev"
                 >
                   Anterior
                 </button>
-                <span className="catalog-management-pagination-info">
+                <span className="catalog-pagination-info">
                   Página {pagination.currentPage} de {pagination.totalPages}
                 </span>
                 <button
                   disabled={!pagination.hasNext}
                   onClick={() => setFilters(prev => ({ ...prev, page: pagination.nextPage }))}
-                  className="catalog-management-pagination-btn"
+                  className="catalog-pagination-btn catalog-pagination-next"
                 >
                   Siguiente
                 </button>
               </div>
             )}
-          </section>
+          </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
