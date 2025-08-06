@@ -1,153 +1,132 @@
 import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
-// Esquema para opciones del producto (color, talla, etc.)
-const productOptionSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true, 
-    trim: true 
-  },
-  type: { 
-    type: String, 
-    required: true, 
-    enum: ['color', 'size', 'style', 'material', 'other'],
-    default: 'other' 
-  },
-  values: [{ 
-    label: { type: String, required: true, trim: true },
-    value: { type: String, required: true, trim: true }, 
-    // Para colores, esto podría ser un código hexadecimal
-    // Para tallas, podría ser S, M, L, etc.
-    additionalPrice: { type: Number, default: 0 }, // Precio adicional por esta opción
-    inStock: { type: Boolean, default: true },
-    metadata: { type: mongoose.Schema.Types.Mixed }
-  }],
-  required: { 
-    type: Boolean, 
-    default: false 
-  }
-}, { _id: false });
-
-// Esquema para áreas personalizables (donde se puede sublimar)
-const customizationAreaSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true, 
-    trim: true 
-  },
-  displayName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  position: { 
-    x: { type: Number, required: true },
-    y: { type: Number, required: true },
-    width: { type: Number, required: true },
-    height: { type: Number, required: true },
-    // Posición relativa al producto base (porcentaje o valores absolutos)
-    rotationDegree: { type: Number, default: 0 }
-  },
-  accepts: {
-    text: { type: Boolean, default: true },
-    image: { type: Boolean, default: true }
-  },
-  maxElements: { 
-    type: Number, 
-    default: 10 
-  },
-  defaultPlacement: {
-    type: String,
-    enum: ['center', 'top', 'bottom', 'left', 'right'],
-    default: 'center'
-  },
-  // Limitaciones técnicas para esta área
-  limitations: {
-    minWidth: { type: Number },
-    minHeight: { type: Number },
-    maxWidth: { type: Number },
-    maxHeight: { type: Number },
-    allowedFileTypes: [{ type: String }]
-  }
-}, { _id: true });
-
-// Esquema principal de producto
 const productSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true, 
-    trim: true,
-    index: true
-  },
-  description: { 
+  name: {
     type: String,
-    trim: true
+    required: [true, 'El nombre del producto es obligatorio'],
+    trim: true,
+    maxlength: [100, 'El nombre no puede exceder 100 caracteres']
   },
-  sku: {
+  description: {
     type: String,
     trim: true,
-    sparse: true
+    maxlength: [500, 'La descripción no puede exceder 500 caracteres']
   },
-  category: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
-    required: true,
-    index: true
+    required: [true, 'La categoría es obligatoria']
   },
-  basePrice: { 
-    type: Number, 
-    required: true,
-    min: 0
+  basePrice: {
+    type: Number,
+    required: [true, 'El precio base es obligatorio'],
+    min: [0, 'El precio no puede ser negativo']
   },
-  productionTime: { 
-    type: Number, 
+  productionTime: {
+    type: Number,
     default: 3,
-    min: 1
-  }, // Días estimados de producción
-  isActive: { 
-    type: Boolean, 
-    default: true,
-    index: true
+    min: [1, 'El tiempo de producción mínimo es 1 día']
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   },
   images: {
-    main: { type: String, required: true }, // URL de imagen principal
-    additional: [{ type: String }] // URLs de imágenes adicionales
-  },
-  customizationAreas: [customizationAreaSchema], // Áreas donde se puede sublimar
-  options: [productOptionSchema], // Opciones como color, talla, etc.
-  metadata: {
-    weight: { type: Number }, // Peso en gramos
-    dimensions: {
-      width: { type: Number },
-      height: { type: Number },
-      depth: { type: Number }
+    main: {
+      type: String,
+      required: [true, 'La imagen principal es obligatoria']
     },
-    featured: { type: Boolean, default: false },
-    searchTags: [{ type: String }],
-    recommendedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
+    additional: [{
+      type: String
+    }]
+  },
+  customizationAreas: [{
+    name: {
+      type: String,
+      required: true
+    },
+    x: {
+      type: Number,
+      required: true
+    },
+    y: {
+      type: Number,
+      required: true
+    },
+    width: {
+      type: Number,
+      required: true
+    },
+    height: {
+      type: Number,
+      required: true
+    },
+    maxElements: {
+      type: Number,
+      default: 5
+    }
+  }],
+  options: [{
+    name: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      enum: ['color', 'size', 'material', 'style'],
+      required: true
+    },
+    values: [{
+      name: String,
+      value: String,
+      additionalCost: {
+        type: Number,
+        default: 0
+      }
+    }]
+  }],
+  metadata: {
+    featured: {
+      type: Boolean,
+      default: false
+    },
+    searchTags: [String],
+    stats: {
+      views: {
+        type: Number,
+        default: 0
+      },
+      designs: {
+        type: Number,
+        default: 0
+      },
+      orders: {
+        type: Number,
+        default: 0
+      }
+    }
   }
-}, { 
+}, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Índices para búsquedas eficientes
-productSchema.index({ name: 'text', description: 'text' });
-productSchema.index({ 'metadata.featured': 1, createdAt: -1 });
+// Agregar el plugin de paginación
+productSchema.plugin(mongoosePaginate);
 
-// Virtuals
+// Índices para optimizar consultas
+productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ category: 1, isActive: 1 });
+productSchema.index({ createdAt: -1 });
+productSchema.index({ basePrice: 1 });
+
+// Virtual para el conteo de diseños
 productSchema.virtual('designCount', {
   ref: 'Design',
   localField: '_id',
   foreignField: 'product',
-  count: true
-});
-
-productSchema.virtual('orderCount', {
-  ref: 'Order',
-  localField: '_id',
-  foreignField: 'items.product',
   count: true
 });
 

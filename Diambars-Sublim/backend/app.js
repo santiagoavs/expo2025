@@ -16,7 +16,7 @@ import registerUsersRoutes from "./src/routes/registerUsers.routes.js";
 import verifyEmailRoutes from "./src/routes/verifyEmail.routes.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.routes.js";
 import categoryRoutes from "./src/routes/category.routes.js";
-import productRoutes from "./src/routes/product.routes.js";
+import productRoutes from "./src/routes/product.routes.js"; // ✅ Ya está importado
 import designRoutes from "./src/routes/design.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
@@ -33,7 +33,7 @@ const corsOptions = {
   origin: ["http://localhost:5173", "http://localhost:5174"],
   credentials: true,
   exposedHeaders: ["set-cookie"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // ✅ Agregado PATCH
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-access-token']
 };
 
@@ -135,10 +135,42 @@ app.use('/api/orders', (req, res, next) => {
 
 // Rutas que SÍ manejan archivos - SIN express.json()
 app.use("/api/categories", categoryRoutes);
-app.use("/api/products", productRoutes);
+
+// ✅ PRODUCTOS - Configuración especial para manejar tanto GET como POST/PUT con archivos
+app.use("/api/products", (req, res, next) => {
+  // Para rutas que no manejan archivos (GET, DELETE, PATCH stats), aplicar JSON
+  const isFileUploadRoute = (req.method === 'POST' || req.method === 'PUT') && 
+                           req.headers['content-type']?.includes('multipart/form-data');
+  
+  if (!isFileUploadRoute) {
+    express.json()(req, res, next);
+  } else {
+    next();
+  }
+}, productRoutes);
+
 app.use("/api/designs", designRoutes);
 
-// Ruta de prueba
+// ✅ Ruta de salud mejorada
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API Diambars Sublim funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      products: '/api/products',
+      categories: '/api/categories',
+      designs: '/api/designs',
+      orders: '/api/orders',
+      addresses: '/api/addresses'
+    }
+  });
+});
+
+// Ruta de prueba legacy
 app.get("/ping", (req, res) => res.send("pong"));
 
 // Middleware para manejar errores de Multer específicamente
@@ -147,27 +179,40 @@ app.use((err, req, res, next) => {
     name: err.name,
     message: err.message,
     code: err.code,
-    type: typeof err
+    type: typeof err,
+    url: req.url,
+    method: req.method
   });
 
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
-      message: 'El archivo es demasiado grande. Máximo 5MB permitido.'
+      message: 'El archivo es demasiado grande. Máximo 5MB permitido.',
+      error: 'FILE_TOO_LARGE'
+    });
+  }
+  
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({
+      success: false,
+      message: 'Demasiados archivos. Máximo 1 imagen principal y 5 adicionales.',
+      error: 'TOO_MANY_FILES'
     });
   }
   
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
     return res.status(400).json({
       success: false,
-      message: 'Campo de archivo inesperado. Verifica los nombres de los campos.'
+      message: 'Campo de archivo inesperado. Use "mainImage" y "additionalImages".',
+      error: 'UNEXPECTED_FILE_FIELD'
     });
   }
   
   if (err.message?.includes('Boundary not found')) {
     return res.status(400).json({
       success: false,
-      message: 'Error en el formato multipart/form-data. Asegúrate de no establecer Content-Type manualmente.',
+      message: 'Error en el formato multipart/form-data. No establezca Content-Type manualmente.',
+      error: 'INVALID_MULTIPART',
       debug: {
         receivedContentType: req.headers['content-type'],
         hasAuthToken: !!req.headers.authorization || !!req.cookies.authToken
@@ -178,7 +223,27 @@ app.use((err, req, res, next) => {
   if (err.message?.includes('Solo se permiten imágenes')) {
     return res.status(400).json({
       success: false,
-      message: err.message
+      message: err.message,
+      error: 'INVALID_FILE_TYPE'
+    });
+  }
+
+  // Errores de validación de Mongoose
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: 'Error de validación de datos',
+      error: 'VALIDATION_ERROR',
+      details: Object.values(err.errors).map(e => e.message)
+    });
+  }
+
+  // Errores de cast de MongoDB
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      message: 'ID inválido proporcionado',
+      error: 'INVALID_ID'
     });
   }
   
@@ -191,7 +256,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: "Ha ocurrido un error en el servidor",
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? {
+      message: err.message,
+      stack: err.stack
+    } : 'Error interno del servidor'
   });
 });
 
@@ -199,7 +267,17 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({ 
     success: false,
-    message: "Ruta no encontrada" 
+    message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
+    availableEndpoints: [
+      'GET /api/health',
+      'GET /api/products',
+      'POST /api/products (con archivos)',
+      'GET /api/products/:id',
+      'PUT /api/products/:id (con archivos)',
+      'DELETE /api/products/:id',
+      'GET /api/products/search',
+      'POST /api/products/dev/create-samples (desarrollo)'
+    ]
   });
 });
 
