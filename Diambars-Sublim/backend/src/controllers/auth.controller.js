@@ -91,10 +91,13 @@ authController.login = async (req, res) => {
       message: "Login exitoso",
       user: {
         id: user._id,
+        _id: user._id, 
         name: user.name,
         email: user.email,
+        phoneNumber: user.phoneNumber,
         role: userRole,
-        type: userType
+        type: userType,
+        verified: user.verified || false 
       },
       token
     });

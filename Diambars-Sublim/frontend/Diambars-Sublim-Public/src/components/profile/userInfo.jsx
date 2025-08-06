@@ -1,55 +1,203 @@
 import { useState, useEffect } from 'react';
 import './UserInfo.css';
 import { useAuth } from '../../context/authContext';
+import { updateUserProfile } from '../../api/updateProfileService';
+import { resendVerificationEmail } from '../../api/resendVerificatonService';
+import Swal from 'sweetalert2';
 
 function UserInfo() {
-  const { user, login, logout } = useAuth(); // Obtener el usuario del contexto
+  const { user, login, logout } = useAuth();
   
-  console.log('UserInfo renderizado, user:', user); // Debug principal
+  console.log('UserInfo renderizado, user:', user);
   
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    phoneNumber: '',
+    email: ''
+  });
+  const [originalData, setOriginalData] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // Cargar los datos del usuario cuando el componente se monta o cuando user cambia
   useEffect(() => {
     if (user) {
-      setName(user.name || '');
-      // Solo el número sin el +503, ya que lo mostraremos por separado
-      setPhone(user.phone || '');
-      setEmail(user.email || '');
-      // No cargamos la contraseña real por seguridad
-      setPassword('••••••••');
+      console.log('Usuario completo en useEffect:', user);
+      const userData = {
+        name: user.name || '',
+        phoneNumber: user.phoneNumber || '',
+        email: user.email || ''
+      };
+      setFormData(userData);
+      setOriginalData(userData);
     }
   }, [user]);
 
+  // Validaciones
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar nombre
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre es requerido';
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.name)) {
+      newErrors.name = 'El nombre solo puede contener letras y espacios';
+    }
+
+    // Validar email
+    if (!formData.email.trim()) {
+      newErrors.email = 'El correo electrónico es requerido';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(formData.email)) {
+      newErrors.email = 'Por favor ingrese un correo electrónico válido';
+    }
+
+    // Validar teléfono
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'El número de teléfono es requerido';
+    } else if (!/^[0-9]{8}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'El teléfono debe contener exactamente 8 dígitos';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Manejar cambios en los inputs
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Limpiar error específico cuando el usuario empieza a escribir
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  // Formatear número de teléfono para mostrar
+  const formatPhoneNumber = (phoneNumber) => {
+    if (!phoneNumber) return '';
+    // Solo mostrar los 8 dígitos, el +503 se muestra en el placeholder
+    return phoneNumber.replace(/^(\+503)?/, '');
+  };
+
+  // Verificar si hay cambios
+  const hasChanges = () => {
+    return JSON.stringify(formData) !== JSON.stringify(originalData);
+  };
+
   const handleSave = async () => {
+    // Limpiar errores previos
+    setErrors({});
+    
+    // Validar formulario
+    if (!validateForm()) {
+      return;
+    }
+
+    // Verificar si hay cambios
+    if (!hasChanges()) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin cambios',
+        text: 'No hay cambios para guardar',
+        confirmButtonColor: '#2d788e',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      // Preparar los datos actualizados
-      const updatedUserData = {
-        ...user,
-        name,
-        phoneNumber: phone, // Usar phoneNumber que es como se guarda en la BD
-        email,
-        // No incluir password en la actualización a menos que sea necesario
+      console.log('Guardando datos:', formData);
+      
+      // Determinar si el email cambió para la verificación automática
+      const emailChanged = formData.email !== originalData.email;
+      
+      // Preparar datos para enviar
+      const updateData = {
+        name: formData.name.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
+        email: formData.email.toLowerCase().trim()
       };
 
-      console.log('Guardando datos:', updatedUserData);
+      // Actualizar perfil (ya no necesitamos pasar userId porque la ruta es /users/profile)
+      const response = await updateUserProfile(null, updateData, originalData.email);
+      
+      // El backend devuelve el usuario actualizado en response.user
+      const updatedUserFromResponse = response.user || response;
+      
+      // Crear el usuario actualizado para el contexto
+      const updatedUser = {
+        ...user,
+        ...updatedUserFromResponse
+      };
 
-      // Aquí puedes hacer la llamada a tu API para actualizar los datos
-      // const response = await apiClient.put('/user/profile', updatedUserData);
-      
       // Actualizar el contexto con los nuevos datos
-      login(updatedUserData);
+      login(updatedUser);
+      setOriginalData(formData);
       
-      // Mostrar mensaje de éxito
-      alert('Datos guardados correctamente');
+      // Mostrar mensaje apropiado
+      if (emailChanged) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Perfil actualizado',
+          text: 'Perfil actualizado correctamente. Se ha enviado un correo de verificación a tu nueva dirección.',
+          confirmButtonColor: '#2d788e',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Perfil actualizado correctamente',
+          confirmButtonColor: '#2d788e',
+          confirmButtonText: 'OK'
+        });
+      }
       
     } catch (error) {
       console.error('Error al guardar datos:', error);
-      alert('Error al guardar los datos');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Error al actualizar el perfil',
+        confirmButtonColor: '#2d788e',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reenviar verificación manualmente
+  const handleResendVerification = async () => {
+    try {
+      setIsLoading(true);
+      await resendVerificationEmail(user.email);
+      Swal.fire({
+        icon: 'success',
+        title: 'Correo enviado',
+        text: 'Correo de verificación enviado correctamente',
+        confirmButtonColor: '#2d788e',
+        confirmButtonText: 'OK'
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al enviar el correo de verificación',
+        confirmButtonColor: '#2d788e',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,54 +231,94 @@ function UserInfo() {
           <div className="input-group">
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="underline-input"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              className={`underline-input ${errors.name ? 'error' : ''}`}
               placeholder="Nombre"
+              disabled={isLoading}
             />
+            {errors.name && <span className="error-text-info">{errors.name}</span>}
           </div>
 
           <div className="input-group">
             <input
               type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="underline-input"
+              value={formatPhoneNumber(formData.phoneNumber)}
+              onChange={(e) => {
+                // Solo permitir números y máximo 8 dígitos
+                const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+                handleInputChange('phoneNumber', value);
+              }}
+              className={`underline-input ${errors.phoneNumber ? 'error' : ''}`}
               placeholder="+503 Número de teléfono"
+              disabled={isLoading}
             />
+            {errors.phoneNumber && <span className="error-text-info">{errors.phoneNumber}</span>}
           </div>
 
           <div className="input-group">
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="underline-input"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className={`underline-input ${errors.email ? 'error' : ''}`}
               placeholder="Correo electrónico"
+              disabled={isLoading}
             />
+            {errors.email && <span className="error-text-info">{errors.email}</span>}
           </div>
 
           <div className="input-group password-field">
             <input
               type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value="••••••••"
               className="underline-input"
               placeholder="Contraseña"
-              disabled // Deshabilitado por seguridad, se puede cambiar por separado
+              disabled
+              readOnly
             />
             <span onClick={() => setShowPassword(!showPassword)} className="toggle-eye">👁️</span>
           </div>
         </div>
         
         <div className="email-status-row">
-          <p className="email-warning">
-            Confirmación de correo electrónico <span className="green-dot">●</span>
-          </p>
+          <div className="email-verification-status">
+            {/* Debug temporal - verificar diferentes posibles nombres de campo */}
+            {console.log('Usuario completo para verificación:', {
+              verified: user.verified,
+              isVerified: user.isVerified,
+              emailVerified: user.emailVerified
+            })}
+            {(user.verified === true || user.isVerified === true || user.emailVerified === true) ? (
+              <p className="email-verified">
+                Correo verificado <span className="green-dot">●</span>
+              </p>
+            ) : (
+              <div className="email-not-verified">
+                <p className="email-warning">
+                  Correo no verificado <span className="red-dot">●</span>
+                </p>
+                <button 
+                  onClick={handleResendVerification} 
+                  className="resend-verification-btn"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Enviando...' : 'Reenviar verificación'}
+                </button>
+              </div>
+            )}
+          </div>
           <button className="logout-link" onClick={handleLogout}>Cerrar sesión</button>
         </div>
 
-        <button type="submit" className="save-button" onClick={handleSave}>Guardar</button>
+        <button 
+          type="submit" 
+          className={`save-button ${!hasChanges() ? 'disabled' : ''}`}
+          onClick={handleSave}
+          disabled={isLoading || !hasChanges()}
+        >
+          {isLoading ? 'Guardando...' : 'Guardar'}
+        </button>
       </div>
     </div>
   );
