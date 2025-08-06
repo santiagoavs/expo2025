@@ -9,6 +9,10 @@ import AboutUs from './pages/about/about'
 import Contact from './pages/contact/contact'
 import VerifyEmail from './pages/profile/verifyEmail';
 import VerificationResultPage from './pages/profile/verificationResultPage';
+import ChangePassword from './pages/passwordEdit/changePassword';
+import ForgotPassword from './pages/passwordEdit/forgotPassword';
+import VerifyRecoveryCode from './pages/passwordEdit/verifyRecoveryCode';
+import PasswordReset from './pages/passwordEdit/passwordReset';
 
 function App() {
   return (
@@ -25,6 +29,10 @@ function App() {
           <Route path="/verifyEmail" element={<VerifyEmail/>} />
           <Route path="/verify-email/:token" element={<VerificationResultPage />} />
           <Route path="/verify-email/debug" element={<VerificationResultPage debug />} />
+          <Route path="/changePassword" element={<ChangePassword />} />
+          <Route path="/passwordRecovery" element={<ForgotPassword />} />
+          <Route path="/verifyRecoveryCode" element={<VerifyRecoveryCode />} />
+          <Route path="/passwordReset" element={<PasswordReset />} />
         </Routes>
     </>
   );

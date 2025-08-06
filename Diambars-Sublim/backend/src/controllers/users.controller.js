@@ -258,4 +258,54 @@ usersController.inactivateUser = async (req, res) => {
   }
 };
 
+/**
+ * PUT: Actualiza el perfil del usuario autenticado
+ */
+usersController.updateOwnProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // Del token JWT
+    const updateFields = { ...req.body };
+
+    console.log("[updateOwnProfile] Usuario ID del token:", userId);
+    console.log("[updateOwnProfile] Datos del req.user:", req.user);
+    console.log("[updateOwnProfile] Campos a actualizar:", updateFields);
+
+    // Evitar actualización de campos sensibles
+    delete updateFields.password;
+    delete updateFields.role;
+    delete updateFields.active;
+
+    // Buscar el usuario actual
+    const currentUser = await userModel.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Si cambia el email, marcar como no verificado
+    if (updateFields.email && updateFields.email.toLowerCase() !== currentUser.email.toLowerCase()) {
+      console.log("[updateOwnProfile] Email cambió, marcando como no verificado");
+      updateFields.verified = false;
+    }
+
+    // Actualizar el usuario
+    const updated = await userModel.findByIdAndUpdate(userId, updateFields, {
+      new: true,
+      runValidators: true
+    });
+
+    console.log("[updateOwnProfile] Usuario actualizado:", updated);
+
+    return res.status(200).json({ 
+      message: "Perfil actualizado correctamente", 
+      user: updated 
+    });
+  } catch (error) {
+    console.error("[updateOwnProfile] Error:", error);
+    return res.status(500).json({ 
+      message: "Error al actualizar perfil", 
+      error: error.message 
+    });
+  }
+};
+
 export default usersController;

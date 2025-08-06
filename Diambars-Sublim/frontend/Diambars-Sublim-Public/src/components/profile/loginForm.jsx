@@ -113,7 +113,11 @@ export default function LoginForm() {
                 }))}
           />
           {currentErrors.password && <p className="input-error">{currentErrors.password.message}</p>}
-
+          {isLogin && (
+            <a className='forgot-password-link-l' href="/passwordRecovery">
+              ¿Olvidaste tu contraseña?
+            </a>
+          )}
           <button type="submit" className="main-button" disabled={isLoggingIn || isRegistering}>
             {isLogin ? 'Entrar' : 'Siguiente'}
           </button>

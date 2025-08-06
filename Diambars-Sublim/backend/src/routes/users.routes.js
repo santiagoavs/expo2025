@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Rutas generales
 router.get("/", verifyToken, checkRole("Admin"), usersController.getUsers);
+router.put("/profile", verifyToken, usersController.updateOwnProfile);
 router.get("/:id", verifyToken, usersController.getUserById);
 router.put("/:id", verifyToken, usersController.updateUser);
 router.patch("/:id/password", verifyToken, usersController.changeUserPassword);

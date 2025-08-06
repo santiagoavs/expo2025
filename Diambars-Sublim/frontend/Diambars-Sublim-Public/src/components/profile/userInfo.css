@@ -83,7 +83,7 @@
   border: none;
   border-bottom: 2px solid rgba(63, 39, 36, 0.7);
   background: transparent;
-  margin: 10px 0;
+  margin: 1px 0;
   font-size: 14px;
   padding: 4px;
   color: #3F2724;
@@ -100,7 +100,7 @@
 .toggle-eye {
   position: absolute;
   right: 10px;
-  top: 9px;
+  top: 2px;
   cursor: pointer;
   font-size: 14px;
   color: #3F2724;
@@ -187,6 +187,15 @@
   backdrop-filter: blur(8px);
 }
 
+.change-password-link {
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: normal;
+  letter-spacing: -1px;
+  color: #BB4751;
+}
+
+
 .logout-link {
   background: none;
   border: none;
@@ -196,23 +205,292 @@
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.2s ease;
-  padding: 0px;
-  margin-left: 20px;
 }
 
 .logout-link:hover {
   color: #8B1E1E;
 }
 
-.email-warning {
-  color: #C54444;
-  font-size: 15px;
-  font-weight: bold;
-  margin: 6px 0;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-  padding: 0 16px
+.message {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.error-message-info {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.success-message-info {
+  background-color: #d1fae5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.underline-input.error {
+  border-bottom-color: #dc2626;
+  color: #dc2626;
+}
+
+.error-text-info {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 10px;
+  display: block;
 }
 
 .email-status-row {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 15px;
+}
+
+.email-verification-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.email-verified {
+  color: #059669;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.email-not-verified {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.email-warning {
+  color: #dc2626;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.green-dot {
+  color: #10b981;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.red-dot {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.resend-verification-btn {
+  background: none;
+  border: none;
+  color: #B02F2F;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+  padding-inline: 0 !important;
+  padding-block: 0 !important;
+  padding: 0 !important;
+  align-self: flex-start;
+}
+
+.resend-verification-btn:hover {
+  color: #8B1E1E;
+}
+
+.resend-verification-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.save-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+/* Estilos personalizados para SweetAlert2 - Mayor especificidad */
+
+/* Popup principal con estilo cristal */
+.swal2-popup.custom-swal-popup {
+  position: relative !important;
+  border-radius: 20px !important;
+  font-family: 'Inter', sans-serif !important;
+  padding: 2.5rem !important;
+  color: #3F2724 !important;
+  z-index: 2 !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  background: transparent !important;
+}
+
+/* Efecto de cristal - exactamente igual que tu verify-card */
+.swal2-popup.custom-swal-popup::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(135deg, #fff6e20d, #fff6e259) !important;
+  transform: translateY(10px) scale(0.95) !important;
+  filter: blur(17px) !important;
+  opacity: 0.8 !important;
+}
+
+/* Título personalizado */
+.swal2-popup .custom-swal-title,
+.swal2-popup .swal2-title {
+  color: #3F2724 !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Contenido del texto */
+.swal2-popup .custom-swal-content,
+.swal2-popup .swal2-html-container {
+  color: #3F2724 !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  opacity: 0.8 !important;
+}
+
+/* Botón personalizado */
+.swal2-popup .custom-swal-button,
+.swal2-popup .swal2-confirm {
+  background: rgba(45, 120, 142, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: none !important;
+  border-radius: 15px !important;
+  padding: 12px 32px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  color: #FFF1D0 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 
+    0 8px 32px rgba(40, 60, 62, 0.18),
+    0 0 0 1px rgba(180, 220, 255, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.swal2-popup .custom-swal-button:hover,
+.swal2-popup .swal2-confirm:hover {
+  transform: translateY(-2px) !important;
+  background: rgba(45, 140, 160, 0.9) !important;
+  box-shadow: 
+    0 12px 40px rgba(40, 80, 90, 0.25),
+    0 0 0 1px rgba(200, 230, 255, 0.5) !important;
+}
+
+.swal2-popup .custom-swal-button:active,
+.swal2-popup .swal2-confirm:active {
+  transform: translateY(0px) !important;
+}
+
+/* Personalizar iconos */
+.swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.swal2-icon.swal2-info {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+/* Animación de entrada personalizada - igual que fadeInUp */
+.swal2-popup.swal2-show {
+  animation: fadeInUp 0.6s ease-out !important;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Backdrop personalizado */
+.swal2-backdrop-show {
+  background: rgba(63, 39, 36, 0.4) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .custom-swal-popup {
+    margin: 1rem !important;
+    padding: 1.5rem !important;
+  }
+  
+  .custom-swal-title {
+    font-size: 1.25rem !important;
+  }
+  
+  .custom-swal-content {
+    font-size: 0.9rem !important;
+  }
+  
+  .custom-swal-button {
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .email-status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .email-verification-status {
+    width: 100%;
+  }
+  
+  .email-not-verified {
+    width: 100%;
+  }
 }

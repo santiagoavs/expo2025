@@ -51,6 +51,11 @@
   .tabs button.active {
     border-bottom: 3px solid #b02f2f83;
   }
+
+  .form-content-content {
+    display: flex;
+    flex-direction: column;
+  }
   
   .form-content h2 {
     font-family: 'DiambarsFont', cursive;
@@ -141,14 +146,25 @@
     color: #787878;
   }
 
+  .forgot-password-link-l {
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  letter-spacing: -1px;
+  color: #BB4751;
+  align-self: flex-end;
+  margin: 0 0.3rem 0.6rem;
+}
+
   .main-button {
   position: relative;
   color: #FFF1D0;
   border-radius: 15px;
   padding: 12px 32px;
   height: 50px; 
-  width: 160px;
-  margin: 0 145px;
+  width: 445px;
+  margin: 6px auto 0;
   font-size: 1.1rem;
   font-family: 'DiambarsFont', italic;
   cursor: pointer;
@@ -186,8 +202,8 @@
   position: absolute;
   top: -50%;
   left: -50%;
-  width: 185%;
-  height: 170%;
+  width: 240%;
+  height: 400%;
   background: linear-gradient(
     to right,
     rgba(100, 200, 255, 0) 0%,
@@ -225,7 +241,7 @@
   
   .google-button {
   position: relative;
-  width: 160px;
+  width: 445px;
   font-size: 1.2rem;
   border: none;
   border-radius: 15px;
@@ -235,7 +251,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  margin: auto;
+  margin: 6px auto 0;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
   z-index: 1;
@@ -270,8 +286,8 @@
   position: absolute;
   top: -50%;
   left: -60%; 
-  width: 205%;
-  height: 170%; 
+  width: 260%;
+  height: 400%; 
   background: linear-gradient(
     to right,
     rgba(255, 235, 200, 0) 0%,
