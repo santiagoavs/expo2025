@@ -1,157 +1,178 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import productService from '../api/productService';
-
-// Keys para React Query
-const queryKeys = {
-  all: ['products'],
-  detail: (id) => ['products', id],
-  konvaConfig: (id) => ['products', id, 'konva-config'],
-};
+import useCategories from './useCategories';
 
 /**
  * Hook para gestionar productos con manejo robusto de errores
+ * y soporte para categorías/subcategorías
  */
 export const useProducts = (filters = {}) => {
-  const queryClient = useQueryClient();
+  // Estados para datos
+  const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({});
   
-  // Obtener lista de productos con filtros
-  const {
-    data = { products: [], pagination: {} },
-    isLoading,
-    error,
-    refetch,
-    isError
-  } = useQuery({
-    queryKey: [...queryKeys.all, filters],
-    queryFn: async () => {
-      try {
-        console.log('🔄 Fetching products with filters:', filters);
-        const response = await productService.getAllProducts(filters);
-        console.log('✅ Products fetched successfully:', response);
-        return response;
-      } catch (error) {
-        console.error('❌ Error fetching products:', error);
-        throw error;
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    cacheTime: 10 * 60 * 1000, // 10 minutos
-    retry: (failureCount, error) => {
-      // Reintentar solo errores de red, no errores 4xx
-      if (error.statusCode >= 400 && error.statusCode < 500) {
-        return false;
-      }
-      return failureCount < 2;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
+  // Estados para operaciones
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
+  // Estados para resultados
+  const [createResult, setCreateResult] = useState(null);
+  const [updateResult, setUpdateResult] = useState(null);
+  const [deleteResult, setDeleteResult] = useState(null);
+  
+  // Obtener categorías/subcategorías usando el hook existente
+  const { 
+    categories, 
+    categoryTree, 
+    flatCategories, 
+    loading: loadingCategories 
+  } = useCategories();
+
+  // Función para obtener subcategorías de una categoría padre
+  const getSubcategories = useCallback((parentId = null) => {
+    if (!parentId) {
+      // Si no hay parentId, devolver categorías de nivel superior
+      return categoryTree.filter(cat => !cat.parentCategory);
+    }
+    
+    // Encontrar la categoría padre y devolver sus hijos
+    const parent = flatCategories.find(cat => cat._id === parentId);
+    if (!parent) return [];
+    
+    // Filtrar todas las categorías que tienen a este parent como padre
+    return flatCategories.filter(cat => 
+      cat.parentCategory && cat.parentCategory === parentId
+    );
+  }, [categoryTree, flatCategories]);
+
+  // Función para cargar productos
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 Fetching products with filters:', filters);
+      const response = await productService.getAllProducts(filters);
+      
+      setProducts(response.data?.products || []);
+      setPagination(response.data?.pagination || {});
+      console.log('✅ Products fetched successfully:', response);
+    } catch (err) {
+      console.error('❌ Error fetching products:', err);
+      setError(err.message || 'Error al cargar productos');
+      toast.error(err.message || 'Error al cargar productos');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  // Cargar productos al montar o cambiar filtros
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   // Crear un producto
-  const createMutation = useMutation({
-    mutationFn: async (productData) => {
+  const createProduct = async (productData) => {
+    try {
+      setIsCreating(true);
+      setError(null);
+      
       const response = await productService.createProduct(productData);
-      return response;
-    },
-    onSuccess: (data) => {
+      setCreateResult(response);
       toast.success('Producto creado exitosamente');
-      queryClient.invalidateQueries({ queryKey: queryKeys.all });
-      return data;
-    },
-    onError: (error) => {
-      console.error('❌ Error creating product:', error);
-      toast.error(error.message || 'Error al crear el producto');
+      
+      // Refrescar la lista
+      fetchProducts();
+      return response;
+    } catch (err) {
+      console.error('❌ Error creating product:', err);
+      setError(err.message || 'Error al crear el producto');
+      toast.error(err.message || 'Error al crear el producto');
+      throw err;
+    } finally {
+      setIsCreating(false);
     }
-  });
-  
+  };
+
   // Actualizar un producto
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
+  const updateProduct = async ({ id, data }) => {
+    try {
+      setIsUpdating(true);
+      setError(null);
+      
       const response = await productService.updateProduct(id, data);
-      return response;
-    },
-    onSuccess: (data, variables) => {
+      setUpdateResult(response);
       toast.success('Producto actualizado exitosamente');
-      queryClient.invalidateQueries({ queryKey: queryKeys.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.all });
-      return data;
-    },
-    onError: (error) => {
-      console.error('❌ Error updating product:', error);
-      toast.error(error.message || 'Error al actualizar el producto');
-    }
-  });
-  
-  // Eliminar un producto
-  const deleteMutation = useMutation({
-    mutationFn: async (id) => {
-      const response = await productService.deleteProduct(id);
+      
+      // Refrescar la lista
+      fetchProducts();
       return response;
-    },
-    onSuccess: (data) => {
-      toast.success('Producto eliminado exitosamente');
-      queryClient.invalidateQueries({ queryKey: queryKeys.all });
-      return data;
-    },
-    onError: (error) => {
-      console.error('❌ Error deleting product:', error);
-      toast.error(error.message || 'Error al eliminar el producto');
+    } catch (err) {
+      console.error('❌ Error updating product:', err);
+      setError(err.message || 'Error al actualizar el producto');
+      toast.error(err.message || 'Error al actualizar el producto');
+      throw err;
+    } finally {
+      setIsUpdating(false);
     }
-  });
-  
+  };
+
+  // Eliminar un producto
+  const deleteProduct = async (id) => {
+    try {
+      setIsDeleting(true);
+      setError(null);
+      
+      const response = await productService.deleteProduct(id);
+      setDeleteResult(response);
+      toast.success('Producto eliminado exitosamente');
+      
+      // Refrescar la lista
+      fetchProducts();
+      return response;
+    } catch (err) {
+      console.error('❌ Error deleting product:', err);
+      setError(err.message || 'Error al eliminar el producto');
+      toast.error(err.message || 'Error al eliminar el producto');
+      throw err;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return {
     // Datos
-    products: data.products || [],
-    pagination: data.pagination || {},
+    products,
+    pagination,
     
     // Estados
     isLoading,
-    isError,
+    isError: !!error,
     error,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    isCreating,
+    isUpdating,
+    isDeleting,
     
     // Acciones
-    refetch,
-    createProduct: createMutation.mutate,
-    updateProduct: updateMutation.mutate,
-    deleteProduct: deleteMutation.mutate,
+    refetch: fetchProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
     
     // Resultado de mutaciones
-    createResult: createMutation.data,
-    updateResult: updateMutation.data,
-    deleteResult: deleteMutation.data,
+    createResult,
+    updateResult,
+    deleteResult,
     
-    // Errores de mutaciones
-    createError: createMutation.error,
-    updateError: updateMutation.error,
-    deleteError: deleteMutation.error
+    // Categorías y subcategorías
+    categories,
+    categoryTree,
+    flatCategories,
+    getSubcategories,
+    isLoadingCategories: loadingCategories
   };
-};
-
-// Hook para obtener un producto específico
-export const useProduct = (id) => {
-  return useQuery({
-    queryKey: queryKeys.detail(id),
-    queryFn: async () => {
-      const response = await productService.getProductById(id);
-      return response;
-    },
-    enabled: !!id,
-    staleTime: 10 * 60 * 1000, // 10 minutos
-  });
-};
-
-// Hook para obtener configuración Konva
-export const useKonvaConfig = (id) => {
-  return useQuery({
-    queryKey: queryKeys.konvaConfig(id),
-    queryFn: async () => {
-      const response = await productService.getKonvaConfig(id);
-      return response;
-    },
-    enabled: !!id,
-    staleTime: 30 * 60 * 1000, // 30 minutos
-  });
 };

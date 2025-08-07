@@ -2,7 +2,7 @@ import React from 'react';
 import './CatalogManagement.css';
 import StatCard from '../../components/catalogManagement/statCard';
 import ProductCard from '../../components/catalogManagement/productCard';
-import Navbar from '../../components/Navbar/Navbar';
+import Navbar from '../../components/navbar/navbar';
 import { TbShirt } from "react-icons/tb";
 import { MdPendingActions } from "react-icons/md";
 import { BiTime } from "react-icons/bi";
