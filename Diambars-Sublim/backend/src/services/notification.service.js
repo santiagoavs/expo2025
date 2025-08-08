@@ -23,7 +23,7 @@ export const sendNotification = async (options) => {
   // Configuración por defecto para todos los correos
   const defaultConfig = {
     from: config.email.from,
-    logoUrl: "https://i.imgur.com/ZAatbcL.png",
+    logoUrl: `${config.server.FRONTEND_URL}/logo.png`,
     frontendUrl: config.server.FRONTEND_URL,
     currentYear: new Date().getFullYear()
   };
@@ -57,59 +57,88 @@ export const sendNotification = async (options) => {
 };
 
 /**
+ * Función para generar el header común de los emails
+ */
+const generateEmailHeader = (config, title, subtitle, accentColor = "#06AED5") => `
+  <div style="background: #ffffff; padding: 40px 30px 30px; text-align: center; border-bottom: 3px solid ${accentColor};">
+    <img src="${config.logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px;" />
+    <h1 style="color: #593D3B; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">${title}</h1>
+    ${subtitle ? `<p style="color: #086788; margin: 10px 0 0; font-size: 16px;">${subtitle}</p>` : ''}
+  </div>
+`;
+
+/**
+ * Función para generar el footer común de los emails
+ */
+const generateEmailFooter = (config) => `
+  <div style="background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef;">
+    <p style="font-size: 13px; color: #6c757d; margin: 0 0 10px;">
+      &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
+    </p>
+    <div style="margin-top: 15px;">
+      <a href="${config.frontendUrl}" style="color: #086788; text-decoration: none; font-size: 13px; font-weight: 500;">
+        Visita nuestro sitio web
+      </a>
+    </div>
+  </div>
+`;
+
+/**
  * Envía notificación sobre nuevo diseño a los administradores
  */
 async function sendNewDesignRequestNotification(data, config) {
-  // En producción, aquí se obtendría la lista de emails de administradores
   const adminEmails = ["admin@diambars.com"];
   
   const subject = "Nuevo diseño personalizado para cotizar";
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Nuevo diseño para cotizar</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Nuevo diseño para cotizar", "Acción requerida", "#E5446D")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Se ha recibido un nuevo diseño personalizado que requiere cotización:</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Producto:</strong> ${data.productName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>ID del diseño:</strong> ${data.designId}</p>
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #E5446D;">
+            <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">
+              Se ha recibido un nuevo diseño personalizado que requiere cotización
+            </p>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/admin/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 25px; margin: 25px 0;">
+            <div style="display: grid; gap: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Producto:</span>
+                <span style="color: #593D3B; font-weight: 600;">${data.productName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #6c757d; font-weight: 500;">ID del diseño:</span>
+                <span style="color: #086788; font-weight: 600; font-family: monospace;">${data.designId}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/admin/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #E5446D 0%, #593D3B 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(229,68,109,0.3);">
               Ver y cotizar diseño
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444;">La cotización oportuna mejora la experiencia del cliente y aumenta las posibilidades de conversión.</p>
+          <div style="background: #06AED5; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); border-radius: 8px; padding: 20px; color: #ffffff; text-align: center;">
+            <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+              💡 La cotización oportuna mejora la experiencia del cliente y aumenta las posibilidades de conversión
+            </p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar a todos los administradores
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: adminEmails.join(','),
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
@@ -118,230 +147,259 @@ async function sendNewDesignRequestNotification(data, config) {
 async function sendDesignQuotedNotification(data, config) {
   const subject = "Tu diseño personalizado ha sido cotizado";
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">¡Tu diseño ha sido cotizado!</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "¡Tu diseño ha sido cotizado!", "Revisa los detalles")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Hola ${data.userName || ''},</p>
-          <p style="font-size: 16px; color: #444;">Buenas noticias! Hemos revisado tu diseño personalizado para ${data.productName} y tenemos una cotización lista.</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Precio:</strong> $${data.price.toFixed(2)}</p>
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Tiempo de producción:</strong> ${data.productionDays} días</p>
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #06AED5;">
+            <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">¡Hola ${data.userName || 'Usuario'}!</p>
           </div>
           
-          <p style="font-size: 16px; color: #444;">Por favor revisa la cotización y confírmanos si deseas proceder con tu pedido.</p>
+          <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 0 0 25px;">
+            Buenas noticias! Hemos revisado tu diseño personalizado para <strong style="color: #086788;">${data.productName}</strong> y tenemos una cotización lista.
+          </p>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
-              Ver cotización
+          <div style="background: linear-gradient(135deg, #06AED5, #ffffff); border-radius: 8px; padding: 1px; margin: 30px 0;">
+            <div style="background: #ffffff; border-radius: 7px; padding: 30px;">
+              <div style="text-align: center;">
+                <div style="margin-bottom: 20px;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Precio</span>
+                  <div style="color: #E5446D; font-size: 32px; font-weight: 700; margin: 5px 0;">$${data.price.toFixed(2)}</div>
+                </div>
+                <div>
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Tiempo de producción</span>
+                  <div style="color: #086788; font-size: 24px; font-weight: 600; margin: 5px 0;">${data.productionDays} días</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 25px 0; text-align: center;">
+            Por favor revisa la cotización y confírmanos si deseas proceder con tu pedido.
+          </p>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(6,174,213,0.3);">
+              Ver cotización completa
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444; margin-top: 30px;">Si tienes alguna pregunta, no dudes en contactarnos.</p>
-          
-          <p style="font-size: 16px; color: #444; margin-bottom: 0;">¡Gracias por elegir Diambars!</p>
-          <p style="font-size: 16px; color: #444; margin-top: 5px;">El equipo de Diambars</p>
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">¡Gracias por elegir Diambars!</p>
+            <p style="font-size: 14px; color: #E5446D; margin: 5px 0 0; font-weight: 500;">El equipo de Diambars</p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar al usuario
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: data.userEmail,
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
  * Envía notificación al administrador cuando un usuario acepta una cotización
  */
 async function sendQuoteAcceptedNotification(data, config) {
-  // En producción, aquí se obtendría la lista de emails de administradores
   const adminEmails = ["admin@diambars.com"];
   
   const subject = "Cotización aceptada - Nuevo pedido";
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Cotización aceptada</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Cotización aceptada", "¡Nuevo pedido confirmado!", "#06AED5")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">¡Buenas noticias! Un cliente ha aceptado una cotización:</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Cliente:</strong> ${data.userName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Producto:</strong> ${data.productName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Orden #:</strong> ${data.orderNumber}</p>
+          <div style="background: linear-gradient(135deg, #06AED5, #ffffff); border-radius: 8px; padding: 1px; margin-bottom: 30px;">
+            <div style="background: #ffffff; border-radius: 7px; padding: 25px; text-align: center;">
+              <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">
+                🎉 ¡Buenas noticias! Un cliente ha aceptado una cotización
+              </p>
+            </div>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/admin/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
-              Ver pedido
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 25px; margin: 25px 0;">
+            <div style="display: grid; gap: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Cliente:</span>
+                <span style="color: #593D3B; font-weight: 600;">${data.userName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Producto:</span>
+                <span style="color: #086788; font-weight: 600;">${data.productName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #6c757d; font-weight: 500;">Orden #:</span>
+                <span style="color: #E5446D; font-weight: 600; font-family: monospace;">${data.orderNumber}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/admin/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(6,174,213,0.3);">
+              Ver detalles del pedido
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444;">Puedes comenzar la producción una vez confirmes los detalles del pedido.</p>
+          <div style="background: #FFF1D0; border-radius: 8px; padding: 20px; border-left: 4px solid #E5446D;">
+            <p style="margin: 0; font-size: 14px; color: #593D3B;">
+              💼 Puedes comenzar la producción una vez confirmes los detalles del pedido
+            </p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar a todos los administradores
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: adminEmails.join(','),
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
  * Envía notificación al administrador cuando un usuario rechaza una cotización
  */
 async function sendQuoteRejectedNotification(data, config) {
-  // En producción, aquí se obtendría la lista de emails de administradores
   const adminEmails = ["admin@diambars.com"];
   
   const subject = "Cotización rechazada";
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Cotización rechazada</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Cotización rechazada", "Oportunidad de mejora", "#593D3B")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Un cliente ha rechazado una cotización:</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Cliente:</strong> ${data.userName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Producto:</strong> ${data.productName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Motivo:</strong> ${data.reason || 'No especificado'}</p>
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #593D3B;">
+            <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">
+              Un cliente ha rechazado una cotización
+            </p>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/admin/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 25px; margin: 25px 0;">
+            <div style="display: grid; gap: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Cliente:</span>
+                <span style="color: #593D3B; font-weight: 600;">${data.userName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Producto:</span>
+                <span style="color: #086788; font-weight: 600;">${data.productName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #6c757d; font-weight: 500;">Motivo:</span>
+                <span style="color: #E5446D; font-weight: 600;">${data.reason || 'No especificado'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/admin/designs/${data.designId}" style="display: inline-block; background: linear-gradient(135deg, #593D3B 0%, #E5446D 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(89,61,59,0.3);">
               Ver diseño
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444;">Considere contactar al cliente para entender mejor sus necesidades y ofrecer una cotización alternativa.</p>
+          <div style="background: #06AED5; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); border-radius: 8px; padding: 20px; color: #ffffff; text-align: center;">
+            <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+              💡 Considera contactar al cliente para entender mejor sus necesidades y ofrecer una cotización alternativa
+            </p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar a todos los administradores
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: adminEmails.join(','),
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
  * Envía notificación al administrador cuando se crea un nuevo pedido
  */
 async function sendNewOrderNotification(data, config) {
-  // En producción, aquí se obtendría la lista de emails de administradores
   const adminEmails = ["admin@diambars.com"];
   
   const subject = "Nuevo pedido recibido";
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Nuevo pedido</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Nuevo pedido recibido", "Acción requerida", "#E5446D")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Se ha recibido un nuevo pedido:</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Orden #:</strong> ${data.orderNumber}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Cliente:</strong> ${data.userName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Email:</strong> ${data.userEmail}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Producto:</strong> ${data.productName}</p>
-            <p style="margin: 0 0 10px; font-size: 14px;"><strong>Total:</strong> $${data.total.toFixed(2)}</p>
+          <div style="background: linear-gradient(135deg, #E5446D, #ffffff); border-radius: 8px; padding: 1px; margin-bottom: 30px;">
+            <div style="background: #ffffff; border-radius: 7px; padding: 25px; text-align: center;">
+              <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">
+                📦 Se ha recibido un nuevo pedido
+              </p>
+            </div>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/admin/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 25px; margin: 25px 0;">
+            <div style="display: grid; gap: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Orden #:</span>
+                <span style="color: #E5446D; font-weight: 600; font-family: monospace;">${data.orderNumber}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Cliente:</span>
+                <span style="color: #593D3B; font-weight: 600;">${data.userName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Email:</span>
+                <span style="color: #086788; font-weight: 600;">${data.userEmail}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9ecef;">
+                <span style="color: #6c757d; font-weight: 500;">Producto:</span>
+                <span style="color: #593D3B; font-weight: 600;">${data.productName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #6c757d; font-weight: 500;">Total:</span>
+                <span style="color: #E5446D; font-weight: 700; font-size: 18px;">${data.total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/admin/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #E5446D 0%, #593D3B 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(229,68,109,0.3);">
               Ver detalles del pedido
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444;">Por favor revisa los detalles y confirma el pedido lo antes posible.</p>
+          <div style="background: #06AED5; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); border-radius: 8px; padding: 20px; color: #ffffff; text-align: center;">
+            <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+              ⚡ Por favor revisa los detalles y confirma el pedido lo antes posible
+            </p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar a todos los administradores
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: adminEmails.join(','),
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
@@ -367,63 +425,77 @@ async function sendOrderStatusUpdatedNotification(data, config) {
     cancelled: "Tu pedido ha sido cancelado. Si tienes preguntas, por favor contáctanos."
   };
   
+  const statusColors = {
+    in_production: "#06AED5",
+    ready_for_delivery: "#E5446D",
+    completed: "#086788",
+    cancelled: "#593D3B"
+  };
+  
   const subject = `Actualización de tu pedido #${data.orderNumber}`;
   
-  // Obtener mensaje apropiado según estado
   const statusName = statusMessages[data.newStatus] || data.newStatus;
   const description = statusDescriptions[data.newStatus] || `Tu pedido ha sido actualizado a: ${statusName}`;
+  const statusColor = statusColors[data.newStatus] || "#06AED5";
   
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Actualización de tu pedido</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Actualización de tu pedido", "Nuevas noticias", statusColor)}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Hola ${data.userName || ''},</p>
-          <p style="font-size: 16px; color: #444;">${description}</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Orden #:</strong> ${data.orderNumber}</p>
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Estado actual:</strong> ${statusName}</p>
-            ${data.notes ? `<p style="margin: 0; font-size: 16px;"><strong>Notas:</strong> ${data.notes}</p>` : ''}
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid ${statusColor};">
+            <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">¡Hola ${data.userName || 'Usuario'}!</p>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
+          <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 0 0 25px;">
+            ${description}
+          </p>
+          
+          <div style="background: linear-gradient(135deg, ${statusColor}, #ffffff); border-radius: 8px; padding: 1px; margin: 30px 0;">
+            <div style="background: #ffffff; border-radius: 7px; padding: 30px;">
+              <div style="display: grid; gap: 20px;">
+                <div style="text-align: center;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Orden</span>
+                  <div style="color: #593D3B; font-size: 24px; font-weight: 700; margin: 5px 0; font-family: monospace;">${data.orderNumber}</div>
+                </div>
+                <div style="text-align: center;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Estado actual</span>
+                  <div style="color: ${statusColor}; font-size: 20px; font-weight: 600; margin: 5px 0;">${statusName}</div>
+                </div>
+                ${data.notes ? `
+                <div style="background: #f8f9fa; border-radius: 6px; padding: 15px;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Notas</span>
+                  <div style="color: #495057; font-size: 14px; margin: 5px 0; line-height: 1.4;">${data.notes}</div>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, ${statusColor} 0%, #593D3B 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
               Ver detalles del pedido
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444; margin-top: 30px;">Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.</p>
-          
-          <p style="font-size: 16px; color: #444; margin-bottom: 0;">¡Gracias por elegir Diambars!</p>
-          <p style="font-size: 16px; color: #444; margin-top: 5px;">El equipo de Diambars</p>
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">¡Gracias por elegir Diambars!</p>
+            <p style="font-size: 14px; color: #E5446D; margin: 5px 0 0; font-weight: 500;">El equipo de Diambars</p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar al cliente
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: data.userEmail,
     subject,
     html
   });
-  
-  return result;
 }
 
 /**
@@ -432,7 +504,6 @@ async function sendOrderStatusUpdatedNotification(data, config) {
 async function sendPaymentConfirmedNotification(data, config) {
   const subject = `Pago confirmado - Pedido #${data.orderNumber}`;
   
-  // Obtener nombre del método de pago
   const paymentMethods = {
     cash: "Efectivo",
     card: "Tarjeta",
@@ -445,56 +516,67 @@ async function sendPaymentConfirmedNotification(data, config) {
   const paymentMethod = paymentMethods[data.method] || data.method;
   
   const html = `
-    <div style="background: #f6f6f6; padding: 40px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); padding: 30px; text-align: center;">
-          <img src="${config.logoUrl}" alt="Diambars" style="height: 80px; margin-bottom: 15px;" />
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Pago confirmado</h1>
-        </div>
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        ${generateEmailHeader(config, "Pago confirmado", "¡Transacción exitosa!", "#086788")}
         
-        <!-- Content -->
         <div style="padding: 40px 30px;">
-          <p style="font-size: 16px; color: #444; margin-top: 0;">Hola ${data.userName || ''},</p>
-          <p style="font-size: 16px; color: #444;">Hemos confirmado el pago de tu pedido. ¡Gracias por tu compra!</p>
-          
-          <div style="background: #f9f9f9; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Orden #:</strong> ${data.orderNumber}</p>
-            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Monto:</strong> $${data.amount.toFixed(2)}</p>
-            <p style="margin: 0; font-size: 16px;"><strong>Método de pago:</strong> ${paymentMethod}</p>
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #086788;">
+            <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">¡Hola ${data.userName || 'Usuario'}!</p>
           </div>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.frontendUrl}/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%); color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 4px; font-size: 16px;">
+          <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 0 0 25px; text-align: center;">
+            Hemos confirmado el pago de tu pedido. ¡Gracias por tu compra!
+          </p>
+          
+          <div style="background: linear-gradient(135deg, #086788, #ffffff); border-radius: 8px; padding: 1px; margin: 30px 0;">
+            <div style="background: #ffffff; border-radius: 7px; padding: 30px;">
+              <div style="display: grid; gap: 20px;">
+                <div style="text-align: center;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Orden</span>
+                  <div style="color: #593D3B; font-size: 24px; font-weight: 700; margin: 5px 0; font-family: monospace;">${data.orderNumber}</div>
+                </div>
+                <div style="text-align: center;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Monto</span>
+                  <div style="color: #E5446D; font-size: 32px; font-weight: 700; margin: 5px 0;">${data.amount.toFixed(2)}</div>
+                </div>
+                <div style="text-align: center;">
+                  <span style="color: #6c757d; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Método de pago</span>
+                  <div style="color: #086788; font-size: 18px; font-weight: 600; margin: 5px 0;">${paymentMethod}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${config.frontendUrl}/orders/${data.orderId}" style="display: inline-block; background: linear-gradient(135deg, #086788 0%, #06AED5 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 15px rgba(8,103,136,0.3);">
               Ver detalles del pedido
             </a>
           </div>
           
-          <p style="font-size: 16px; color: #444;">Seguiremos actualizándote sobre el estado de tu pedido.</p>
+          <div style="background: #06AED5; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); border-radius: 8px; padding: 20px; color: #ffffff; text-align: center;">
+            <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+              📦 Seguiremos actualizándote sobre el estado de tu pedido
+            </p>
+          </div>
           
-          <p style="font-size: 16px; color: #444; margin-top: 30px; margin-bottom: 0;">¡Gracias por elegir Diambars!</p>
-          <p style="font-size: 16px; color: #444; margin-top: 5px;">El equipo de Diambars</p>
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">¡Gracias por elegir Diambars!</p>
+            <p style="font-size: 14px; color: #E5446D; margin: 5px 0 0; font-weight: 500;">El equipo de Diambars</p>
+          </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: #f0f0f0; padding: 20px; text-align: center;">
-          <p style="font-size: 14px; color: #888; margin: 0;">
-            &copy; ${config.currentYear} Diambars. Todos los derechos reservados.
-          </p>
-        </div>
+        ${generateEmailFooter(config)}
       </div>
     </div>
   `;
   
-  // Enviar al cliente
-  const result = await transporter.sendMail({
+  return await transporter.sendMail({
     from: config.from,
     to: data.userEmail,
     subject,
     html
   });
-  
-  return result;
 }
 
 export default {

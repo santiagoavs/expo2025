@@ -9,6 +9,7 @@ import RecoveryPasswordPage from './pages/RecoveryPassword/RecoveryPasswordPage'
 import CodeConfirmationPage from './pages/CodeConfirmatioPage/CodeConfirmationPage';
 import NewPasswordPage from './pages/NewPassword/NewPasswordPage';
 import './App.css';
+import CategoryManagement from './pages/CategoryManagement/CategoryManagement';
 
 // Componente interno que maneja el estado del splash
 const AppContent = () => {
@@ -41,6 +42,12 @@ const AppContent = () => {
         path="/catalog-management" 
         element={
           isAuthenticated ? <CatalogManagement /> : <Navigate to="/login" replace />
+        } 
+      />
+      <Route 
+        path="/category-management" 
+        element={
+          isAuthenticated ? <CategoryManagement /> : <Navigate to="/login" replace />
         } 
       />
       

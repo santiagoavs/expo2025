@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaEye, FaStar, FaHeart, FaShare } from 'react-icons/fa';
-import { MdInventory, MdTrendingUp, MdDateRange } from 'react-icons/md';
-import { BiDollar } from 'react-icons/bi';
 import './ProductCard.css';
+
+// Componentes de iconos simples como reemplazo
+const EditIcon = () => <span style={{ fontSize: 'inherit' }}>✏️</span>;
+const TrashIcon = () => <span style={{ fontSize: 'inherit' }}>🗑️</span>;
+const EyeIcon = () => <span style={{ fontSize: 'inherit' }}>👁️</span>;
+const StarIcon = () => <span style={{ fontSize: 'inherit' }}>⭐</span>;
+const InventoryIcon = () => <span style={{ fontSize: 'inherit' }}>📦</span>;
+const DollarIcon = () => <span style={{ fontSize: 'inherit' }}>💲</span>;
 
 const ProductCard = ({ 
   id,
@@ -20,20 +25,20 @@ const ProductCard = ({
   onView
 }) => {
   const [imageError, setImageError] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
   const getStatusConfig = (status) => {
     const statusMap = {
-      active: { label: 'Activo', class: 'status-active' },
-      pending: { label: 'Pendiente', class: 'status-pending' },
-      inactive: { label: 'Inactivo', class: 'status-inactive' },
-      draft: { label: 'Borrador', class: 'status-draft' }
+      active: { label: 'Activo', class: 'product-status-active' },
+      pending: { label: 'Pendiente', class: 'product-status-pending' },
+      inactive: { label: 'Inactivo', class: 'product-status-inactive' },
+      draft: { label: 'Borrador', class: 'product-status-draft' }
     };
     return statusMap[status] || statusMap.active;
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       day: '2-digit',
@@ -51,11 +56,6 @@ const ProductCard = ({
 
   const handleImageError = () => {
     setImageError(true);
-  };
-
-  const handleLikeToggle = (e) => {
-    e.stopPropagation();
-    setIsLiked(!isLiked);
   };
 
   const handleAction = (action, e) => {
@@ -80,145 +80,103 @@ const ProductCard = ({
 
   return (
     <div 
-      className={`product-card ${isTopProduct ? 'top-product' : ''}`}
+      className={`product-card-container ${isTopProduct ? 'product-top-ranked' : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       {/* Ranking badge para productos top */}
       {isTopProduct && rank && (
-        <div className="rank-badge">
-          <FaStar className="rank-icon" />
+        <div className="product-rank-badge">
+          <StarIcon />
           <span>#{rank}</span>
         </div>
       )}
 
       {/* Imagen del producto */}
-      <div className="product-image-container">
+      <div className="product-image-wrapper">
         {!imageError ? (
           <img
             src={image}
             alt={name}
-            className="product-image"
+            className="product-card-image"
             onError={handleImageError}
+            loading="lazy"
           />
         ) : (
-          <div className="product-image-placeholder">
-            <MdInventory className="placeholder-icon" />
+          <div className="product-image-fallback">
+            <InventoryIcon />
             <span>Sin imagen</span>
           </div>
         )}
 
         {/* Overlay con acciones */}
-        <div className={`product-overlay ${showActions ? 'visible' : ''}`}>
-          <div className="product-actions">
+        <div className={`product-actions-overlay ${showActions ? 'product-overlay-visible' : ''}`}>
+          <div className="product-action-buttons">
             <button 
-              className="action-btn view-btn"
+              className="product-action-btn product-view-btn"
               onClick={(e) => handleAction('view', e)}
               title="Ver producto"
             >
-              <FaEye />
+              <EyeIcon />
             </button>
             <button 
-              className="action-btn edit-btn"
+              className="product-action-btn product-edit-btn"
               onClick={(e) => handleAction('edit', e)}
               title="Editar producto"
             >
-              <FaEdit />
+              <EditIcon />
             </button>
             <button 
-              className="action-btn delete-btn"
+              className="product-action-btn product-delete-btn"
               onClick={(e) => handleAction('delete', e)}
               title="Eliminar producto"
             >
-              <FaTrash />
-            </button>
-          </div>
-
-          {/* Acciones secundarias */}
-          <div className="secondary-actions">
-            <button 
-              className={`like-btn ${isLiked ? 'liked' : ''}`}
-              onClick={handleLikeToggle}
-              title="Me gusta"
-            >
-              <FaHeart />
-            </button>
-            <button 
-              className="share-btn"
-              onClick={(e) => e.stopPropagation()}
-              title="Compartir"
-            >
-              <FaShare />
+              <TrashIcon />
             </button>
           </div>
         </div>
 
         {/* Badge de estado */}
-        <div className={`status-badge ${statusConfig.class}`}>
+        <div className={`product-status-badge ${statusConfig.class}`}>
           {statusConfig.label}
         </div>
       </div>
 
       {/* Información del producto */}
-      <div className="product-info">
-        <div className="product-header">
-          <h3 className="product-name" title={name}>
+      <div className="product-card-info">
+        <div className="product-card-header">
+          <h3 className="product-card-name" title={name}>
             {name}
           </h3>
-          <span className="product-category">
+          <span className="product-card-category">
             {category}
           </span>
         </div>
 
-        <div className="product-details">
-          <div className="product-price">
-            <BiDollar className="price-icon" />
-            <span className="price-value">
+        <div className="product-card-details">
+          <div className="product-card-price">
+            <DollarIcon />
+            <span className="product-price-value">
               {formatPrice(price)}
             </span>
           </div>
-
-          {sales > 0 && (
-            <div className="product-sales">
-              <MdTrendingUp className="sales-icon" />
-              <span className="sales-value">
-                {sales} vendidos
-              </span>
-            </div>
-          )}
         </div>
 
-        <div className="product-meta">
-          <div className="meta-item">
-            <MdDateRange className="meta-icon" />
-            <span className="meta-text">
-              {formatDate(createdAt)}
+        <div className="product-card-meta">
+          <div className="product-meta-item">
+            <span className="product-meta-text">
+              Creado: {formatDate(createdAt)}
             </span>
           </div>
           
-          <div className="product-id">
-            ID: {id}
+          <div className="product-card-id">
+            ID: {id.slice(-8)}
           </div>
         </div>
       </div>
 
-      {/* Indicador de rendimiento para productos top */}
-      {isTopProduct && sales && (
-        <div className="performance-indicator">
-          <div className="performance-bar">
-            <div 
-              className="performance-fill"
-              style={{ width: `${Math.min((sales / 200) * 100, 100)}%` }}
-            ></div>
-          </div>
-          <span className="performance-text">
-            Performance: {Math.round((sales / 200) * 100)}%
-          </span>
-        </div>
-      )}
-
       {/* Efectos decorativos */}
-      <div className="card-glow"></div>
+      <div className="product-card-glow"></div>
     </div>
   );
 };

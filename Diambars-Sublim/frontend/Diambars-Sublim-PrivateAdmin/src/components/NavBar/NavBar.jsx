@@ -130,7 +130,7 @@ const Navbar = () => {
       description: "Administración de usuarios"
     },
     {
-      to: "/categories",
+      to: "/category-management",
       label: "Categorías",
       icon: <Folders size={20} weight="duotone" />,
       description: "Organización de productos"
@@ -167,7 +167,7 @@ const Navbar = () => {
         <div className="diambars-navbar__brand">
           <div className="diambars-navbar__logo">
             <div className="diambars-navbar__logo-circle">
-              <span className="diambars-navbar__logo-text">D</span>
+              <span className="diambars-navbar__logo-text"><img src="/logo.png" alt="logo" width="100%" /></span>
             </div>
             <div className="diambars-navbar__logo-pulse"></div>
           </div>
