@@ -1,0 +1,476 @@
+/* Página principal del catálogo */
+.catalog-page {
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Contenedor del catálogo */
+.catalog-container {
+  padding-top: 70px; /* Espacio para el navbar */
+  min-height: 100vh;
+}
+
+.catalog-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Loading state */
+.catalog-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #ffffff;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #fbbf24;
+  border-radius: 50%;
+  animation: loadingSpin 1s linear infinite;
+}
+
+@keyframes loadingSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.catalog-loading p {
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Header principal */
+.page-header {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(245, 158, 11, 0.02));
+  border: 1px solid rgba(251, 191, 36, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 40px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+  opacity: 0.6;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #1f2937, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-description {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.primary-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.primary-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.primary-btn:hover::before {
+  left: 100%;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+/* Secciones */
+.stats-section,
+.products-section {
+  margin-bottom: 48px;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-radius: 2px;
+}
+
+/* Grid de estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Header de secciones */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-count {
+  background: rgba(251, 191, 36, 0.1);
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Filtros */
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+}
+
+.filter-group:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
+}
+
+.filter-icon {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.filter-select {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+  outline: none;
+  min-width: 100px;
+}
+
+.view-all-btn,
+.analytics-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.view-all-btn:hover,
+.analytics-btn:hover {
+  color: #1f2937;
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.05);
+  transform: translateY(-1px);
+}
+
+/* Grids de productos */
+.products-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.recent-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.top-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .catalog-content {
+    max-width: 1200px;
+    padding: 24px 20px;
+  }
+
+  .page-title {
+    font-size: 2.2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .catalog-container {
+    padding-top: 60px;
+  }
+
+  .catalog-content {
+    padding: 20px 16px;
+  }
+
+  .page-header {
+    padding: 24px 20px;
+    margin-bottom: 32px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+  }
+
+  .page-description {
+    font-size: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .primary-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .section-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .recent-grid,
+  .top-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stats-section,
+  .products-section {
+    margin-bottom: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-content {
+    padding: 16px 12px;
+  }
+
+  .page-header {
+    padding: 20px 16px;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+  }
+
+  .filter-group,
+  .view-all-btn,
+  .analytics-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .section-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .filter-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-select {
+    min-width: auto;
+    flex: 1;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Aplicar animaciones */
+.page-header {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.stats-section {
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.products-section {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* Estados de enfoque para accesibilidad */
+.primary-btn:focus,
+.filter-select:focus,
+.view-all-btn:focus,
+.analytics-btn:focus {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+
+/* Mejoras de rendimiento */
+.catalog-page * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scroll suave */
+.catalog-container {
+  scroll-behavior: smooth;
+}
+
+/* Optimización para impresión */
+@media print {
+  .page-header,
+  .section-header {
+    break-inside: avoid;
+  }
+  
+  .products-grid {
+    break-inside: avoid;
+  }
+}
