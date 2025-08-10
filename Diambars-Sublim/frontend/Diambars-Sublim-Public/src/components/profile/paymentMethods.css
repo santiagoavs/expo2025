@@ -101,6 +101,12 @@
   flex-direction: row;
 }
 
+
+.payment-method p small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 .payment-method.active p {
   color: #000;
 }
@@ -275,3 +281,253 @@
   left: 100%;
   top: 100%;
 }
+
+/* Estilos para el formulario de tarjeta de crédito */
+.card-form-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+.credit-card-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.card-input {
+  position: relative;
+  padding: 12px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 1rem;
+  z-index: 2;
+  transition: all 0.3s ease-out;
+  background: rgba(255, 246, 226, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  color: #3F2724;
+}
+
+.card-input::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    220deg,
+    rgba(255, 246, 226, 0.15), 
+    rgba(245, 231, 198, 0.08)
+  );
+  z-index: -1;
+  transform: translateY(4px) scale(0.98);
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-input:hover {
+  background: rgba(255, 246, 226, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.card-input:hover::after {
+  opacity: 0.8;
+}
+
+.card-input:focus {
+  outline: none;
+  background: rgba(255, 246, 226, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 8px 28px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(255, 255, 255, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.card-input::placeholder {
+  color: rgba(63, 39, 36, 0.5);
+  font-style: italic;
+}
+
+.modal-save-btn {
+  position: relative;
+  border: none;
+  border-radius: 15px;
+  padding: 10px 20px;
+  width: 245px;
+  height: 50px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  z-index: 1;
+  color: #FFF1D0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  background: rgba(22, 120, 3, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 20px rgba(8, 50, 0, 0.2),
+    0 0 0 1px rgba(180, 255, 180, 0.3);
+}
+
+.modal-save-btn:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(30, 180, 50, 0.6), rgba(0, 100, 15, 0.9));
+  transform: translateY(5px) scale(0.95);
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.modal-delete-btn {
+  position: relative;
+  border: none;
+  border-radius: 15px;
+  padding: 15px 30px;
+  width: 245px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  z-index: 1;
+  color: #FFF1D0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(160, 0, 25, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 20px rgba(160, 0, 25, 0.3),
+    0 0 0 1px rgba(255, 180, 180, 0.3);
+  flex: 1;
+}
+
+.modal-delete-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(180, 30, 50, 0.7), rgba(100, 0, 15, 0.9));
+  transform: translateY(5px) scale(0.95);
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.modal-save-btn:hover,
+.modal-delete-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 25px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.modal-save-btn:active,
+.modal-delete-btn:active {
+  transform: translateY(1px);
+}
+
+.rccs {
+  width: 500px;
+}
+
+.rccs__card {
+  border-radius: 15px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  transform: scale(0.9);
+  height: 230px;
+  width: 400px;
+}
+
+.rccs__card--front,
+.rccs__card--back {
+  border-radius: 15px !important;
+}
+
+@media (max-width: 480px) {
+  .card-form-container {
+    max-width: 100%;
+    padding: 10px;
+  }
+  
+  .credit-card-preview {
+    padding: 10px;
+  }
+  
+  .rccs__card {
+    transform: scale(0.75);
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+}
+
+.card-input[name="number"] {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.card-input[name="name"] {
+  text-transform: uppercase;
+}
+
+.card-input[name="expiry"],
+.card-input[name="cvc"] {
+  font-family: 'Courier New', monospace;
+  text-align: center;
+}
+

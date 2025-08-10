@@ -29,41 +29,53 @@
   animation: backgroundFlow 25s ease-in-out infinite alternate;
   font-family: 'Inter', sans-serif;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  z-index: 0;
+}
+
+.profile-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes backgroundFlow {
+  0% {
+    background-position: 
+      25% 15%,
+      85% 25%,
+      15% 70%,
+      70% 85%,
+      90% 60%,
+      45% 35%,
+      0% 0%;
   }
-  
-  @keyframes backgroundFlow {
-    0% {
-      background-position: 
-        25% 15%,
-        85% 25%,
-        15% 70%,
-        70% 85%,
-        90% 60%,
-        45% 35%,
-        0% 0%;
-    }
-    50% {
-      background-position: 
-        30% 20%,
-        80% 30%,
-        20% 65%,
-        65% 80%,
-        85% 65%,
-        50% 40%,
-        0% 0%;
-    }
-    100% {
-      background-position: 
-        35% 25%,
-        75% 35%,
-        25% 60%,
-        60% 75%,
-        80% 70%,
-        55% 45%,
-        0% 0%;
-    }
+  50% {
+    background-position: 
+      30% 20%,
+      80% 30%,
+      20% 65%,
+      65% 80%,
+      85% 65%,
+      50% 40%,
+      0% 0%;
   }
+  100% {
+    background-position: 
+      35% 25%,
+      75% 35%,
+      25% 60%,
+      60% 75%,
+      80% 70%,
+      55% 45%,
+      0% 0%;
+  }
+}
 
 .profile-title {
   text-align: center;
@@ -73,11 +85,15 @@
   font-weight: bold;
   font-style: italic;
   color: #3F2724;
+  position: relative;
+  z-index: 1;
 }
 
 .login-container {
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-container {
@@ -86,14 +102,51 @@
   gap: 20px;
   flex-wrap: wrap; 
   margin-bottom: 100px;
+  position: relative;
+  z-index: 1;
 }
 
 .left-column {
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .right-column {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.profile-page *:not(.modal-backdrop):not(.modal-content):not(.modal-close) {
+  z-index: auto;
+}
+
+.profile-page .card:hover,
+.profile-page .payment-container:hover,
+.profile-page .shipping-container:hover {
+  z-index: 3;
+}
+
+body.modal-open .profile-page {
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+body.modal-open .profile-page * {
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profile-title {
+    font-size: 2.5rem;
+    margin-top: 100px;
+  }
 }
