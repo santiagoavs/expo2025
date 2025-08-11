@@ -1,3 +1,4 @@
+// src/hooks/useLogin.js - PANEL ADMIN CORREGIDO
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,8 +12,15 @@ export const useLogin = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setError
-  } = useForm();
+    setError,
+    reset
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
 
   // Configuración personalizada de SweetAlert con colores modernos
   const showAlert = (type, title, text, options = {}) => {
@@ -47,15 +55,30 @@ export const useLogin = () => {
 
   const onSubmit = async (data) => {
     try {
+      console.log('[useLogin-ADMIN] Iniciando login para:', data.email);
+      
       const user = await login(data);
+      
+      console.log('[useLogin-ADMIN] Usuario recibido:', user);
+      
+      // Verificar que el usuario tenga permisos (doble verificación)
       const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
+      const allowedRoles = ['admin', 'manager', 'employee', 'warehouse'];
+      
+      const userType = user.type?.toLowerCase();
+      const userRole = user.role?.toLowerCase();
+      
+      const hasValidType = allowedTypes.includes(userType);
+      const hasValidRole = allowedRoles.includes(userRole);
 
-      if (allowedTypes.includes(user.type.toLowerCase())) {
+      if (hasValidType || hasValidRole) {
+        console.log('[useLogin-ADMIN] Usuario autorizado, redirigiendo...');
+        
         // Alerta de éxito con información del usuario
         await showAlert(
           'success',
           '¡Bienvenido!',
-          `Inicio de sesión exitoso como ${user.type}`,
+          `Acceso autorizado como ${user.role || user.type}`,
           {
             timer: 2000,
             timerProgressBar: true,
@@ -65,80 +88,99 @@ export const useLogin = () => {
           }
         );
        
-        // Redirigir al catálogo después del login exitoso
+        // Limpiar formulario
+        reset();
+        
+        // Redirigir al panel después del login exitoso
         navigate('/catalog-management', { replace: true });
       } else {
+        console.warn('[useLogin-ADMIN] Usuario sin permisos suficientes');
+        
         // Alerta de acceso denegado
         await showAlert(
           'warning',
           'Acceso Denegado',
-          'Solo personal autorizado puede acceder al sistema',
+          'Se requiere una cuenta de empleado para acceder al panel administrativo',
           {
             confirmButtonText: 'Entendido'
           }
         );
        
         setError('root', {
-          message: 'Solo personal autorizado puede acceder'
+          message: 'Solo personal autorizado puede acceder al sistema'
         });
       }
     } catch (error) {
+      console.error('[useLogin-ADMIN] Error en login:', error);
+      
       let alertTitle = 'Error de Autenticación';
       let alertText = 'Ha ocurrido un error al iniciar sesión';
      
-      if (error.message.includes('Credenciales incorrectas')) {
+      if (error.message?.includes('Credenciales incorrectas') || 
+          error.message?.includes('credenciales')) {
         alertTitle = 'Credenciales Incorrectas';
-        alertText = 'El correo electrónico o la contraseña son incorrectos. Por favor, verifica tus datos e intenta nuevamente.';
+        alertText = 'El correo electrónico o la contraseña son incorrectos. Verifica tus datos e intenta nuevamente.';
        
         await showAlert('error', alertTitle, alertText, {
           confirmButtonText: 'Reintentar'
         });
        
-        setError('root', { message: 'Credenciales incorrectas' });
+        setError('root', { message: 'Email o contraseña incorrectos' });
+       
+      } else if (error.message?.includes('personal autorizado') || 
+                 error.message?.includes('empleado')) {
+        alertTitle = 'Acceso Restringido';
+        alertText = 'Se requiere una cuenta de empleado para acceder al panel administrativo.';
+       
+        await showAlert('warning', alertTitle, alertText, {
+          confirmButtonText: 'Entendido'
+        });
+       
+        setError('root', { message: 'Se requiere cuenta de empleado' });
        
       } else if (error.needsVerification) {
-        // Alerta para verificación de email
+        // Empleados normalmente no necesitan verificación, pero por si acaso
         const result = await showAlert(
           'info',
           'Verificación Requerida',
-          'Tu cuenta necesita ser verificada. ¿Deseas ir a la página de verificación?',
+          'Tu cuenta necesita ser verificada por un administrador.',
           {
-            showCancelButton: true,
-            confirmButtonText: 'Verificar Ahora',
-            cancelButtonText: 'Más Tarde',
-            reverseButtons: true
+            confirmButtonText: 'Entendido'
           }
         );
-
-        if (result.isConfirmed) {
-          navigate('/verify-email', { state: { email: data.email } });
-        }
+        
+        setError('root', { message: 'Cuenta pendiente de verificación' });
         return;
        
-      } else if (error.message.includes('red')) {
+      } else if (error.message?.includes('red') || error.code === 'NETWORK_ERROR') {
         alertTitle = 'Error de Conexión';
-        alertText = 'No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta nuevamente.';
+        alertText = 'No se pudo conectar con el servidor. Verifica tu conexión a internet y que el servidor esté funcionando.';
        
         await showAlert('error', alertTitle, alertText, {
           confirmButtonText: 'Reintentar'
         });
+        
+        setError('root', { message: 'Error de conexión con el servidor' });
        
-      } else if (error.message.includes('servidor')) {
+      } else if (error.message?.includes('servidor') || error.status >= 500) {
         alertTitle = 'Error del Servidor';
         alertText = 'El servidor está experimentando problemas. Por favor, intenta más tarde.';
        
         await showAlert('error', alertTitle, alertText, {
           confirmButtonText: 'Entendido'
         });
+        
+        setError('root', { message: 'Error del servidor, intenta más tarde' });
        
       } else {
         // Error genérico
+        alertText = error.message || 'Error desconocido al iniciar sesión';
         await showAlert('error', alertTitle, alertText, {
           confirmButtonText: 'Reintentar'
         });
+        
+        setError('root', { message: alertText });
       }
-     
-      setError('root', { message: alertText });
     }
   };
 
@@ -167,14 +209,40 @@ export const useLogin = () => {
     Swal.close();
   };
 
+  // Validaciones mejoradas
+  const validateEmail = (value) => {
+    if (!value?.trim()) return 'Email requerido';
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)) {
+      return 'Formato de email inválido';
+    }
+    return true;
+  };
+
+  const validatePassword = (value) => {
+    if (!value) return 'Contraseña requerida';
+    if (value.length < 6) return 'Mínimo 6 caracteres';
+    return true;
+  };
+
   return {
-    register,
+    register: (name, options = {}) => {
+      // Agregar validaciones automáticas según el campo
+      switch (name) {
+        case 'email':
+          return register(name, { ...options, validate: validateEmail });
+        case 'password':
+          return register(name, { ...options, validate: validatePassword });
+        default:
+          return register(name, options);
+      }
+    },
     handleSubmit,
     errors,
     isSubmitting,
     onSubmit,
     showAlert,
     showLoadingAlert,
-    closeLoadingAlert
+    closeLoadingAlert,
+    reset
   };
 };

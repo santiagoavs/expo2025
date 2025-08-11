@@ -15,30 +15,42 @@ export const authRequired = async (req, res, next) => {
     userAgent: req.headers['user-agent']?.substring(0, 50)
   });
 
-  // Priorizar tokens según el contexto
+  // Priorizar tokens según el contexto y detectar tipo de aplicación
   let token = null;
   let tokenSource = '';
+  let isAdminPanel = false;
 
+  // Detectar si es panel administrativo basado en headers o URL
+  const userAgent = req.headers['user-agent'] || '';
+  const isFromEmployeeRoute = req.originalUrl.includes('/employees') || 
+                             req.originalUrl.includes('/admin') ||
+                             req.originalUrl.includes('/dashboard');
+  
   // Si hay header Authorization (dashboard admin), usarlo con prioridad
   if (req.headers.authorization?.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
     tokenSource = 'Authorization header';
+    isAdminPanel = true;
   }
   // Si hay x-access-token header
   else if (req.headers['x-access-token']) {
     token = req.headers['x-access-token'];
     tokenSource = 'x-access-token header';
+    isAdminPanel = true;
   }
   // Solo usar cookies si no hay headers (app pública)
   else if (req.cookies.authToken) {
     token = req.cookies.authToken;
     tokenSource = 'Cookie';
+    isAdminPanel = false;
   }
 
   console.log('🔍 Token encontrado:', {
     source: tokenSource,
     tokenLength: token?.length,
-    tokenStart: token?.substring(0, 20) + '...'
+    tokenStart: token?.substring(0, 20) + '...',
+    isAdminPanel,
+    isFromEmployeeRoute
   });
 
   if (!token) {
@@ -139,14 +151,20 @@ export const authRequired = async (req, res, next) => {
       // Verificar que el tipo de usuario coincida con el contexto
       const isEmployeeRoute = req.originalUrl.includes('/employees') || 
                              req.originalUrl.includes('/admin') ||
-                             req.originalUrl.includes('/dashboard');
+                             req.originalUrl.includes('/dashboard') ||
+                             isAdminPanel;
       
       const isEmployee = userType === 'employee' || 
-                        ['admin', 'manager', 'employee'].includes(user.role?.toLowerCase());
+                        ['admin', 'manager', 'employee', 'warehouse'].includes(user.role?.toLowerCase());
 
-      // Si es una ruta de empleados pero el usuario no es empleado
+      // Si es una ruta de empleados o panel admin pero el usuario no es empleado
       if (isEmployeeRoute && !isEmployee) {
-        console.log('❌ Usuario no es empleado intentando acceder a ruta de empleados');
+        console.log('❌ Usuario no es empleado intentando acceder a ruta/panel de empleados:', {
+          userType,
+          userRole: user.role,
+          isEmployeeRoute,
+          isAdminPanel
+        });
         return res.status(403).json({ 
           success: false,
           message: "Acceso denegado - Se requiere cuenta de empleado",

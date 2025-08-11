@@ -108,11 +108,20 @@ authController.login = async (req, res) => {
 
     // Verificar estado de cuenta si es usuario normal (requiere verificación por correo)
     if (!isEmployee && !user.verified) {
-      console.log('📧 [authController.login] Usuario no verificado');
+      console.log('📧 [authController.login] Usuario público no verificado');
       return res.status(401).json({ 
         message: "Cuenta no verificada. Por favor, verifica tu correo electrónico antes de iniciar sesión.",
         needsVerification: true,
         error: 'USER_NOT_VERIFIED'
+      });
+    }
+
+    // Para empleados, no se requiere verificación por email pero sí que estén activos
+    if (isEmployee && !user.active) {
+      console.log('❌ [authController.login] Empleado inactivo');
+      return res.status(401).json({ 
+        message: "Cuenta de empleado desactivada. Contacta al administrador.",
+        error: 'EMPLOYEE_INACTIVE'
       });
     }
 

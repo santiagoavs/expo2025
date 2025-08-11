@@ -1,10 +1,10 @@
-// src/api/apiClient.js
+// src/api/ApiClient.js - PANEL ADMIN CORREGIDO
 import axios from 'axios';
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
-  withCredentials: true,
+  withCredentials: false, // IMPORTANTE: Panel admin NO usa cookies
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -14,23 +14,31 @@ const apiClient = axios.create({
 // Interceptor de request para agregar el token automáticamente
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`🚀 [apiClient] Request: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`🚀 [apiClient-ADMIN] Request: ${config.method?.toUpperCase()} ${config.url}`);
     
+    // IMPORTANTE: Panel admin usa SOLO headers, NO cookies
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`🔑 [apiClient] Token agregado`);
+      console.log(`🔑 [apiClient-ADMIN] Token agregado en Authorization header`);
+    } else {
+      console.log(`🔑 [apiClient-ADMIN] No hay token en localStorage`);
     }
+    
+    // Asegurar que no se usen cookies accidentally
+    config.withCredentials = false;
     
     // Log de la data que se está enviando
     if (config.data) {
-      console.log('📤 [apiClient] Request data:', config.data);
+      const logData = { ...config.data };
+      if (logData.password) logData.password = '***HIDDEN***';
+      console.log('📤 [apiClient-ADMIN] Request data:', logData);
     }
     
     return config;
   },
   (error) => {
-    console.error('❌ [apiClient] Request error:', error);
+    console.error('❌ [apiClient-ADMIN] Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -38,14 +46,14 @@ apiClient.interceptors.request.use(
 // Interceptor de response para manejar errores globalmente
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ [apiClient] Response exitoso: ${response.config.method?.toUpperCase()} ${response.config.url}`);
-    console.log('📥 [apiClient] Response data:', response.data);
+    console.log(`✅ [apiClient-ADMIN] Response exitoso: ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    console.log('📥 [apiClient-ADMIN] Response data:', response.data);
     
     // Retornar directamente los datos de la respuesta
     return response.data;
   },
   (error) => {
-    console.error('❌ [apiClient] Error en respuesta:', {
+    console.error('❌ [apiClient-ADMIN] Error en respuesta:', {
       status: error.response?.status,
       statusText: error.response?.statusText,
       url: error.config?.url,
@@ -63,19 +71,29 @@ apiClient.interceptors.response.use(
       
       if (status === 401) {
         // Error de autenticación
-        console.warn('🚪 [apiClient] Token inválido o expirado, limpiando...');
-        localStorage.removeItem('token');
-        enhancedError = new Error(data?.message || 'No autorizado');
+        console.warn('🚪 [apiClient-ADMIN] Token inválido, expirado o credenciales incorrectas');
         
-        // Solo redirigir si no estamos en rutas de auth
-        if (!window.location.pathname.includes('/login') && 
-            !window.location.pathname.includes('/recovery') && 
-            !window.location.pathname.includes('/code-confirmation') && 
-            !window.location.pathname.includes('/new-password')) {
+        // Solo limpiar token si NO estamos en login
+        if (!window.location.pathname.includes('/login')) {
+          console.log('🗑️ [apiClient-ADMIN] Limpiando token inválido');
+          localStorage.removeItem('token');
+          
           setTimeout(() => {
             window.location.href = '/login';
           }, 1000);
         }
+        
+        // Mejorar mensaje de error
+        let errorMessage = 'No autorizado';
+        if (data?.message?.includes('Credenciales') || 
+            data?.message?.includes('incorrectas') ||
+            window.location.pathname.includes('/login')) {
+          errorMessage = 'Credenciales incorrectas';
+        } else if (data?.message?.includes('Token')) {
+          errorMessage = 'Sesión expirada';
+        }
+        
+        enhancedError = new Error(errorMessage);
       } else if (status === 400) {
         // Error de validación o datos incorrectos
         const errorMsg = data?.message || data?.error || 'Solicitud incorrecta';
@@ -86,7 +104,7 @@ apiClient.interceptors.response.use(
           enhancedError.validationErrors = data.errors;
         }
       } else if (status === 403) {
-        enhancedError = new Error(data?.message || 'Acceso prohibido');
+        enhancedError = new Error(data?.message || 'Acceso prohibido - Se requieren permisos de empleado');
       } else if (status === 404) {
         enhancedError = new Error(data?.message || 'Recurso no encontrado');
       } else if (status === 422) {
@@ -102,12 +120,12 @@ apiClient.interceptors.response.use(
       enhancedError.data = data;
     } else if (error.request) {
       // La solicitud fue hecha pero no hubo respuesta
-      console.error('🌐 [apiClient] No response received:', error.request);
-      enhancedError = new Error('Sin respuesta del servidor - Verifica tu conexión');
+      console.error('🌐 [apiClient-ADMIN] No response received:', error.request);
+      enhancedError = new Error('Sin respuesta del servidor - Verifica que el backend esté funcionando');
       enhancedError.code = 'NETWORK_ERROR';
     } else {
       // Algo más causó el error
-      console.error('⚙️ [apiClient] Request setup error:', error.message);
+      console.error('⚙️ [apiClient-ADMIN] Request setup error:', error.message);
       enhancedError = new Error(error.message || 'Error desconocido');
     }
     

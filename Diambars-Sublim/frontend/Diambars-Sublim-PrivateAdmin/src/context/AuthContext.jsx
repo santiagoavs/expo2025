@@ -1,8 +1,8 @@
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx - PANEL ADMIN CORREGIDO
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import * as authService from '../api/authService';
+import * as authService from '../api/AuthService';
 
 export const AuthContext = createContext();
 
@@ -14,111 +14,120 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      console.log("[AuthContext] Checking authentication...");
+      console.log("[AuthContext-ADMIN] Verificando autenticación...");
       
-      // Verificar si hay token en localStorage/sessionStorage
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      // Verificar si hay token en localStorage
+      const token = localStorage.getItem('token');
       
       if (!token) {
-        console.log("[AuthContext] No token found, user not authenticated");
+        console.log("[AuthContext-ADMIN] No hay token, usuario no autenticado");
         setIsAuthenticated(false);
         setUser(null);
         return;
       }
 
+      console.log("[AuthContext-ADMIN] Token encontrado, verificando con servidor...");
       const response = await authService.getCurrentUser();
       
       if (response?.authenticated && response?.user) {
-        console.log("[AuthContext] User is authenticated:", response.user);
+        console.log("[AuthContext-ADMIN] Usuario autenticado:", response.user);
         setUser(response.user);
         setIsAuthenticated(true);
       } else {
-        console.log("[AuthContext] User is not authenticated");
+        console.log("[AuthContext-ADMIN] Usuario no autenticado según servidor");
         setIsAuthenticated(false);
         setUser(null);
         // Limpiar token si la respuesta indica que no está autenticado
         localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
       }
     } catch (error) {
-      console.warn('[AuthContext] Error checking authentication:', error);
+      console.warn('[AuthContext-ADMIN] Error verificando autenticación:', error);
       setIsAuthenticated(false);
       setUser(null);
       
       // Si el error es 401 o 403, limpiar tokens
       if (error.status === 401 || error.status === 403) {
+        console.log('[AuthContext-ADMIN] Limpiando token por error de auth');
         localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
       }
     } finally {
-      console.log("[AuthContext] Auth check complete, setting loading to false");
+      console.log("[AuthContext-ADMIN] Verificación de auth completada");
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Delay más largo para permitir que el splash se muestre completamente
+    // Delay para permitir que el splash se muestre
     const authTimer = setTimeout(() => {
       checkAuth();
-    }, 2000); // Aumentado de 100ms a 2000ms
+    }, 2000);
 
     return () => clearTimeout(authTimer);
   }, []);
 
   const login = async (credentials) => {
     try {
-      setLoading(true); // Mostrar loading durante el login
-      const response = await authService.login(credentials);
+      console.log("[AuthContext-ADMIN] Iniciando proceso de login...");
+      setLoading(true);
       
-      // Si el login devuelve un token, guardarlo
-      if (response?.token) {
-        localStorage.setItem('token', response.token);
-      }
+      const user = await authService.login(credentials);
+      console.log("[AuthContext-ADMIN] Login exitoso, usuario:", user);
       
-      // Verificar autenticación después de login
-      await checkAuth();
-      return response;
+      // Actualizar estado inmediatamente
+      setUser(user);
+      setIsAuthenticated(true);
+      setLoading(false);
+      
+      return user;
     } catch (error) {
-      setLoading(false); // Asegurar que loading se desactive si falla
+      console.error("[AuthContext-ADMIN] Error en login:", error);
+      setLoading(false);
+      
+      // Asegurar que el estado esté limpio después de error
+      setUser(null);
+      setIsAuthenticated(false);
+      
       throw error;
     }
   };
 
   const logout = async () => {
     try {
+      console.log("[AuthContext-ADMIN] Iniciando cierre de sesión...");
       setLoading(true);
+      
       await authService.logout();
       
-      // Limpiar tokens y estado
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
+      // Limpiar estado
       setUser(null);
       setIsAuthenticated(false);
       
       Swal.fire({
         position: 'top-end',
         icon: 'success',
-        title: 'Sesión cerrada',
+        title: 'Sesión cerrada correctamente',
         showConfirmButton: false,
-        timer: 1000,
-        toast: true
+        timer: 2000,
+        toast: true,
+        background: '#ffffff',
+        color: '#1f2937',
+        iconColor: '#10b981'
       });
       
-      // Espera 1s antes de redirigir para que se vea el mensaje
+      // Esperar un momento antes de redirigir
       setTimeout(() => {
         setLoading(false);
         navigate('/login', { replace: true });
       }, 1000);
       
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error("[AuthContext-ADMIN] Error al cerrar sesión:", error);
       
       // Limpiar estado local aunque falle el servidor
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
+      
       navigate('/login', { replace: true });
     }
   };
@@ -126,6 +135,7 @@ export const AuthProvider = ({ children }) => {
   // Función para refrescar la autenticación sin loading
   const refreshAuth = async () => {
     try {
+      console.log("[AuthContext-ADMIN] Refrescando autenticación...");
       const response = await authService.getCurrentUser();
       
       if (response?.authenticated && response?.user) {
@@ -135,15 +145,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         setUser(null);
         localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
       }
     } catch (error) {
-      console.warn('[AuthContext] Error refreshing authentication:', error);
+      console.warn('[AuthContext-ADMIN] Error refrescando autenticación:', error);
       if (error.status === 401 || error.status === 403) {
         setIsAuthenticated(false);
         setUser(null);
         localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
       }
     }
   };
