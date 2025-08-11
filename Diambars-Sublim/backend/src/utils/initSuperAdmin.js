@@ -18,21 +18,21 @@ export async function ensureSuperAdminExists() {
       // Validar formato de correo electrónico
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
       if (!emailRegex.test(email)) {
-        console.error("❌ El formato del correo electrónico del superadmin no es válido");
+        console.error("❌ El formato del correo electrónico del admin no es válido");
         return;
       }
 
       // Validar longitud de contraseña
       if (password.length < 6) {
-        console.error("❌ La contraseña del superadmin debe tener al menos 6 caracteres");
+        console.error("❌ La contraseña del admin debe tener al menos 6 caracteres");
         return;
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Crear superadmin con todos los campos requeridos
+      // Crear admin con todos los campos requeridos
       await employeeModel.create({
-        name: "Super Admin",
+        name: "Admin",
         birthday: new Date("1990-01-01"),
         email,
         address: "Oficina Central",
@@ -43,18 +43,18 @@ export async function ensureSuperAdminExists() {
         role: "Admin", // Usar el formato que espera tu esquema
         active: true,
       });
-      console.log("✅ Superadmin creado desde variables de entorno.");
+      console.log("✅ Admin creado desde variables de entorno.");
     } else {
       // Verificar que el usuario existente tenga el rol admin
       if (existing.role.toLowerCase() !== "admin") {
-        console.log("⚠️ El usuario con el email de superadmin existe pero no tiene rol admin. Actualizando...");
+        console.log("⚠️ El usuario con el email de admin existe pero no tiene rol admin. Actualizando...");
         await employeeModel.updateOne({ email }, { role: "Admin" });
-        console.log("✅ Rol de superadmin actualizado a Admin.");
+        console.log("✅ Rol de admin actualizado a Admin.");
       } else {
-        console.log("🔐 Superadmin ya existe con rol correcto.");
+        console.log("🔐 Admin ya existe con rol correcto.");
       }
     }
   } catch (error) {
-    console.error("❌ Error al inicializar superadmin:", error);
+    console.error("❌ Error al inicializar admin:", error);
   }
 }

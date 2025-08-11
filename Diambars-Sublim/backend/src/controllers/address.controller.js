@@ -1,5 +1,14 @@
+// controllers/address.controller.js - Controlador optimizado
 import Address from "../models/address.js";
 import mongoose from "mongoose";
+import { 
+  validateDepartmentAndMunicipality,
+  calculateDeliveryFee,
+  getDeliveryFeesMap,
+  getDeliveryOptions,
+  getLocationData,
+  DELIVERY_CONFIG
+} from "../utils/locationUtils.js";
 
 const addressController = {};
 
@@ -25,7 +34,20 @@ addressController.createAddress = async (req, res) => {
     if (!recipient || !phoneNumber || !department || !municipality || !address) {
       return res.status(400).json({ 
         success: false,
-        message: "Faltan campos requeridos en la dirección" 
+        message: "Faltan campos requeridos en la dirección",
+        error: 'MISSING_REQUIRED_FIELDS'
+      });
+    }
+    
+    // Validar departamento y municipio usando utilidad centralizada
+    const validation = validateDepartmentAndMunicipality(department, municipality);
+    if (!validation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: validation.message,
+        error: validation.error,
+        validDepartments: validation.validDepartments,
+        validMunicipalities: validation.validMunicipalities
       });
     }
     
@@ -39,7 +61,10 @@ addressController.createAddress = async (req, res) => {
       municipality,
       address,
       additionalDetails: additionalDetails || "",
-      location: location || { type: "Point", coordinates: [0, 0] },
+      location: location || { 
+        type: "Point", 
+        coordinates: DELIVERY_CONFIG.DEFAULT_COORDINATES 
+      },
       isDefault: isDefault === true
     });
     
@@ -48,17 +73,15 @@ addressController.createAddress = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Dirección creada exitosamente",
-      data: {
-        address: newAddress
-      }
+      data: { address: newAddress }
     });
     
   } catch (error) {
-    console.error("Error en createAddress:", error);
+    console.error("❌ Error en createAddress:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al crear la dirección",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
 };
@@ -70,22 +93,66 @@ addressController.getUserAddresses = async (req, res) => {
   try {
     const userId = req.user._id;
     
-    const addresses = await Address.find({ user: userId })
-      .sort({ isDefault: -1, createdAt: -1 });
+    // Usar método estático del modelo
+    const addresses = await Address.getUserAddresses(userId);
     
     res.status(200).json({
       success: true,
       data: {
-        addresses
+        addresses,
+        deliveryFees: getDeliveryFeesMap()
       }
     });
     
   } catch (error) {
-    console.error("Error en getUserAddresses:", error);
+    console.error("❌ Error en getUserAddresses:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al obtener las direcciones",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtiene una dirección específica por ID
+ */
+addressController.getAddressById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    
+    // Validar ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "ID de dirección inválido",
+        error: 'INVALID_ADDRESS_ID'
+      });
+    }
+    
+    // Buscar dirección
+    const address = await Address.findOne({ _id: id, user: userId, isActive: true });
+    
+    if (!address) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Dirección no encontrada",
+        error: 'ADDRESS_NOT_FOUND'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: { address }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getAddressById:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener la dirección",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
 };
@@ -102,21 +169,40 @@ addressController.updateAddress = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de dirección inválido" 
+        message: "ID de dirección inválido",
+        error: 'INVALID_ADDRESS_ID'
       });
     }
     
     // Verificar que la dirección exista y pertenezca al usuario
-    const address = await Address.findOne({ _id: id, user: userId });
+    const address = await Address.findOne({ _id: id, user: userId, isActive: true });
     
     if (!address) {
       return res.status(404).json({ 
         success: false,
-        message: "Dirección no encontrada" 
+        message: "Dirección no encontrada",
+        error: 'ADDRESS_NOT_FOUND'
       });
     }
     
-    // Actualizar campos
+    // Validar departamento y municipio si se están actualizando
+    if (req.body.department || req.body.municipality) {
+      const validation = validateDepartmentAndMunicipality(
+        req.body.department || address.department,
+        req.body.municipality || address.municipality
+      );
+      
+      if (!validation.isValid) {
+        return res.status(400).json({ 
+          success: false,
+          message: validation.message,
+          error: validation.error,
+          validMunicipalities: validation.validMunicipalities
+        });
+      }
+    }
+    
+    // Actualizar campos permitidos
     const updateableFields = [
       'label', 'recipient', 'phoneNumber', 'department', 
       'municipality', 'address', 'additionalDetails', 'location', 'isDefault'
@@ -133,23 +219,21 @@ addressController.updateAddress = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Dirección actualizada exitosamente",
-      data: {
-        address
-      }
+      data: { address }
     });
     
   } catch (error) {
-    console.error("Error en updateAddress:", error);
+    console.error("❌ Error en updateAddress:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al actualizar la dirección",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
 };
 
 /**
- * Elimina una dirección
+ * Elimina una dirección (soft delete)
  */
 addressController.deleteAddress = async (req, res) => {
   try {
@@ -160,17 +244,19 @@ addressController.deleteAddress = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de dirección inválido" 
+        message: "ID de dirección inválido",
+        error: 'INVALID_ADDRESS_ID'
       });
     }
     
     // Verificar que la dirección exista y pertenezca al usuario
-    const address = await Address.findOne({ _id: id, user: userId });
+    const address = await Address.findOne({ _id: id, user: userId, isActive: true });
     
     if (!address) {
       return res.status(404).json({ 
         success: false,
-        message: "Dirección no encontrada" 
+        message: "Dirección no encontrada",
+        error: 'ADDRESS_NOT_FOUND'
       });
     }
     
@@ -178,8 +264,9 @@ addressController.deleteAddress = async (req, res) => {
     if (address.isDefault) {
       const nextDefault = await Address.findOne({ 
         user: userId, 
-        _id: { $ne: id }
-      });
+        _id: { $ne: id },
+        isActive: true
+      }).sort({ createdAt: -1 });
       
       if (nextDefault) {
         nextDefault.isDefault = true;
@@ -187,7 +274,9 @@ addressController.deleteAddress = async (req, res) => {
       }
     }
     
-    await Address.findByIdAndDelete(id);
+    // Soft delete
+    address.isActive = false;
+    await address.save();
     
     res.status(200).json({
       success: true,
@@ -195,11 +284,11 @@ addressController.deleteAddress = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Error en deleteAddress:", error);
+    console.error("❌ Error en deleteAddress:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al eliminar la dirección",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
 };
@@ -216,44 +305,138 @@ addressController.setDefaultAddress = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de dirección inválido" 
+        message: "ID de dirección inválido",
+        error: 'INVALID_ADDRESS_ID'
       });
     }
     
     // Verificar que la dirección exista y pertenezca al usuario
-    const address = await Address.findOne({ _id: id, user: userId });
+    const address = await Address.findOne({ _id: id, user: userId, isActive: true });
     
     if (!address) {
       return res.status(404).json({ 
         success: false,
-        message: "Dirección no encontrada" 
+        message: "Dirección no encontrada",
+        error: 'ADDRESS_NOT_FOUND'
       });
     }
     
-    // Desmarcar la dirección predeterminada actual
-    await Address.updateMany(
-      { user: userId, isDefault: true },
-      { $set: { isDefault: false } }
-    );
-    
-    // Marcar la nueva dirección predeterminada
+    // Establecer como predeterminada (el middleware del modelo maneja la lógica)
     address.isDefault = true;
     await address.save();
     
     res.status(200).json({
       success: true,
       message: "Dirección establecida como predeterminada",
+      data: { address }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en setDefaultAddress:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al establecer la dirección predeterminada",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Valida una dirección con coordenadas
+ */
+addressController.validateAddress = async (req, res) => {
+  try {
+    const { department, municipality, address } = req.body;
+    
+    // Validaciones básicas
+    if (!department || !municipality || !address) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Faltan datos de dirección",
+        error: 'INCOMPLETE_ADDRESS'
+      });
+    }
+    
+    // Validar departamento y municipio usando utilidad centralizada
+    const validation = validateDepartmentAndMunicipality(department, municipality);
+    if (!validation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: validation.message,
+        error: validation.error,
+        validDepartments: validation.validDepartments,
+        validMunicipalities: validation.validMunicipalities
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: "Dirección válida",
       data: {
-        address
+        isValid: true,
+        department,
+        municipality,
+        estimatedDeliveryFee: calculateDeliveryFee(department),
+        deliveryOptions: getDeliveryOptions(department)
       }
     });
     
   } catch (error) {
-    console.error("Error en setDefaultAddress:", error);
+    console.error("❌ Error en validateAddress:", error);
     res.status(500).json({ 
       success: false,
-      message: "Error al establecer la dirección predeterminada",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Error al validar dirección",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtiene tarifas de envío por departamento
+ */
+addressController.getDeliveryFees = async (req, res) => {
+  try {
+    const deliveryFees = getDeliveryFeesMap();
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        fees: deliveryFees,
+        currency: DELIVERY_CONFIG.CURRENCY,
+        freeDeliveryThreshold: DELIVERY_CONFIG.FREE_DELIVERY_THRESHOLD,
+        expressDeliveryAvailable: true,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getDeliveryFees:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener tarifas",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtiene datos de ubicaciones (departamentos y municipios)
+ */
+addressController.getLocationData = async (req, res) => {
+  try {
+    const locationData = getLocationData();
+    
+    res.status(200).json({
+      success: true,
+      data: locationData
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getLocationData:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener datos de ubicaciones",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
 };

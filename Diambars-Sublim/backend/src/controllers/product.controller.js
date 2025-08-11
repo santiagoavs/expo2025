@@ -456,19 +456,21 @@ productController.createProduct = async (req, res) => {
     
     try {
       // Subir imagen principal
-      const mainImageResult = await cloudinary.uploader.upload(req.files.mainImage[0].path, {
-        folder: "products/main",
-        resource_type: "auto",
-        transformation: [
-          { width: 800, height: 800, crop: "limit" },
-          { quality: "auto:good" }
-        ]
-      });
+      const mainImageUrl = await cloudinary.uploadImage(
+  req.files.mainImage[0].path, 
+  "products/main",
+  {
+    width: 800,
+    height: 800,
+    crop: "limit",
+    quality: "auto:good"
+  }
+);
       
-      imageUrls.main = mainImageResult.secure_url;
+      imageUrls.main = mainImageUrl.secure_url;
       uploadedFiles.push({
         path: req.files.mainImage[0].path,
-        public_id: mainImageResult.public_id
+        public_id: mainImageUrl.public_id
       });
       
       // Subir imágenes adicionales si existen
@@ -703,16 +705,18 @@ productController.updateProduct = async (req, res) => {
           }
           
           // Subir nueva imagen
-          const mainImageResult = await cloudinary.uploader.upload(req.files.mainImage[0].path, {
-            folder: "products/main",
-            resource_type: "auto",
-            transformation: [
-              { width: 800, height: 800, crop: "limit" },
-              { quality: "auto:good" }
-            ]
-          });
-          
-          product.images.main = mainImageResult.secure_url;
+         const mainImageUrl = await cloudinary.uploadImage(
+  req.files.mainImage[0].path, 
+  "products/main",
+  {
+    width: 800,
+    height: 800,
+    crop: "limit",
+    quality: "auto:good"
+  }
+);
+
+          product.images.main = mainImageUrl;
           uploadedFiles.push({
             path: req.files.mainImage[0].path,
             public_id: mainImageResult.public_id
@@ -733,30 +737,22 @@ productController.updateProduct = async (req, res) => {
           for (const imageUrl of product.images.additional) {
             const imageId = extractCloudinaryId(imageUrl);
             if (imageId) {
-              await cloudinary.uploader.destroy(imageId);
+              await cloudinary.deleteImage(imageUrl, "products");
             }
           }
           
           // Subir nuevas imágenes
-          const additionalUrls = [];
-          for (const file of req.files.additionalImages) {
-            const result = await cloudinary.uploader.upload(file.path, {
-              folder: "products/additional",
-              resource_type: "auto",
-              transformation: [
-                { width: 600, height: 600, crop: "limit" },
-                { quality: "auto:good" }
-              ]
-            });
-            
-            additionalUrls.push(result.secure_url);
-            uploadedFiles.push({
-              path: file.path,
-              public_id: result.public_id
-            });
-          }
+          const additionalPaths = req.files.additionalImages.map(file => file.path);
           
-          product.images.additional = additionalUrls;
+          product.images.additional = await cloudinary.uploadMultipleImages(
+            additionalPaths,
+            "products/additional",
+            {
+              width: 600,
+              height: 600,
+              crop: "limit"
+            }
+          );
         } catch (uploadError) {
           return res.status(500).json({ 
             success: false,
@@ -859,7 +855,7 @@ productController.deleteProduct = async (req, res) => {
       for (const imageUrl of product.images.additional) {
         const imageId = extractCloudinaryId(imageUrl);
         if (imageId) {
-          await cloudinary.uploader.destroy(imageId);
+          await cloudinary.deleteImage(imageId, "products");
           console.log(`🗑️ Imagen adicional eliminada: ${imageId}`);
         }
       }
@@ -1379,6 +1375,141 @@ productController.createSampleProducts = async (req, res) => {
   }
 };
 
+/**
+ * Obtiene configuración para el editor de áreas (Admin)
+ */
+productController.getEditorConfig = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "ID de producto inválido",
+        error: 'INVALID_PRODUCT_ID'
+      });
+    }
+    
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        productId: product._id,
+        productName: product.name,
+        imageUrl: product.images.main,
+        stageConfig: product.getKonvaStageConfig(),
+        areas: product.customizationAreas.map(area => ({
+          ...product.getKonvaAreaConfig(area._id),
+          editable: true,
+          resizable: true,
+          draggable: true
+        })),
+        editorConfig: product.editorConfig
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getEditorConfig:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener configuración del editor",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Vista previa de áreas mientras se crean (Admin)
+ */
+productController.previewAreas = async (req, res) => {
+  try {
+    const { areas, imageUrl } = req.body;
+    
+    if (!areas || !Array.isArray(areas)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Debe proporcionar las áreas a previsualizar",
+        error: 'AREAS_REQUIRED'
+      });
+    }
+    
+    // Validar áreas
+    const validation = validateCustomizationAreas(areas);
+    if (!validation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Áreas inválidas",
+        errors: validation.errors
+      });
+    }
+    
+    // Generar configuración Konva para preview
+    const konvaConfig = {
+      stage: {
+        width: 800,
+        height: 600,
+        container: 'preview-container'
+      },
+      backgroundImage: imageUrl,
+      areas: areas.map((area, index) => ({
+        id: `preview-area-${index}`,
+        ...area.position,
+        stroke: area.konvaConfig?.strokeColor || '#06AED5',
+        strokeWidth: 2,
+        fill: area.konvaConfig?.strokeColor || '#06AED5',
+        opacity: 0.2,
+        dash: [5, 5],
+        name: area.name,
+        displayName: area.displayName
+      }))
+    };
+    
+    res.status(200).json({
+      success: true,
+      message: "Vista previa generada",
+      data: {
+        konvaConfig,
+        areasCount: areas.length,
+        hasOverlap: checkAreasOverlap(areas)
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en previewAreas:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al generar vista previa",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// Función auxiliar para verificar superposición
+function checkAreasOverlap(areas) {
+  for (let i = 0; i < areas.length; i++) {
+    for (let j = i + 1; j < areas.length; j++) {
+      const a1 = areas[i].position;
+      const a2 = areas[j].position;
+      
+      if (!(a1.x + a1.width < a2.x || 
+            a2.x + a2.width < a1.x || 
+            a1.y + a1.height < a2.y || 
+            a2.y + a2.height < a1.y)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // Funciones auxiliares
 function validateNumber(value, defaultValue = 0) {
   const num = Number(value);
@@ -1416,8 +1547,27 @@ function extractCloudinaryId(url) {
   if (!url || typeof url !== 'string') return null;
   
   try {
-    const match = url.match(/\/v\d+\/(.+?)\./);
-    return match ? match[1] : null;
+    // Usar la función que ya tienes en tu configuración de Cloudinary
+    const urlParts = url.split('/');
+    const uploadIndex = urlParts.findIndex(part => part === 'upload');
+    
+    if (uploadIndex === -1) {
+      throw new Error('URL de Cloudinary inválida');
+    }
+    
+    // Tomar todo después de 'upload' y antes de la extensión
+    const pathAfterUpload = urlParts.slice(uploadIndex + 1);
+    
+    // Remover versión si existe (v123456)
+    if (pathAfterUpload[0] && pathAfterUpload[0].startsWith('v')) {
+      pathAfterUpload.shift();
+    }
+    
+    // Unir el path y remover extensión
+    const fullPath = pathAfterUpload.join('/');
+    const publicId = fullPath.replace(/\.[^/.]+$/, ''); // Remover extensión
+    
+    return publicId;
   } catch (error) {
     console.error('Error extrayendo ID de Cloudinary:', error);
     return null;

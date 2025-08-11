@@ -1,0 +1,240 @@
+/* src/components/Modal/Modal.css */
+
+/* Overlay */
+.diambars-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(1, 3, 38, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: diambars-modal-overlay-enter 0.3s ease-out;
+}
+
+@keyframes diambars-modal-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal */
+.diambars-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(1, 3, 38, 0.3);
+  border: 1px solid rgba(4, 13, 191, 0.1);
+  overflow: hidden;
+  max-height: 90vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: diambars-modal-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes diambars-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tamaños */
+.diambars-modal--small {
+  max-width: 400px;
+}
+
+.diambars-modal--medium {
+  max-width: 600px;
+}
+
+.diambars-modal--large {
+  max-width: 900px;
+}
+
+.diambars-modal--fullscreen {
+  max-width: 95vw;
+  max-height: 95vh;
+}
+
+/* Header */
+.diambars-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(4, 13, 191, 0.1);
+  background: linear-gradient(135deg, rgba(4, 13, 191, 0.02), rgba(31, 100, 191, 0.01));
+}
+
+.diambars-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #010326;
+  margin: 0;
+  background: linear-gradient(135deg, #040DBF, #1F64BF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.diambars-modal-close {
+  width: 40px;
+  height: 40px;
+  background: rgba(4, 13, 191, 0.1);
+  border: 1px solid rgba(4, 13, 191, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #040DBF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.diambars-modal-close:hover {
+  background: #040DBF;
+  color: #ffffff;
+  transform: rotate(90deg) scale(1.05);
+  border-color: #040DBF;
+}
+
+/* Body */
+.diambars-modal-body {
+  padding: 28px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Scrollbar personalizado */
+.diambars-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.diambars-modal-body::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.diambars-modal-body::-webkit-scrollbar-thumb {
+  background: #040DBF;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.diambars-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #1F64BF;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .diambars-modal-overlay {
+    padding: 16px;
+  }
+  
+  .diambars-modal {
+    border-radius: 16px;
+    max-height: 85vh;
+  }
+  
+  .diambars-modal--small,
+  .diambars-modal--medium,
+  .diambars-modal--large {
+    max-width: 100%;
+  }
+  
+  .diambars-modal--fullscreen {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+  
+  .diambars-modal-header {
+    padding: 20px 24px;
+  }
+  
+  .diambars-modal-title {
+    font-size: 18px;
+  }
+  
+  .diambars-modal-close {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .diambars-modal-body {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .diambars-modal-overlay {
+    padding: 12px;
+  }
+  
+  .diambars-modal {
+    border-radius: 12px;
+    max-height: 80vh;
+  }
+  
+  .diambars-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .diambars-modal-title {
+    font-size: 16px;
+  }
+  
+  .diambars-modal-close {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .diambars-modal-body {
+    padding: 20px;
+  }
+}
+
+/* Estados focus para accesibilidad */
+.diambars-modal-close:focus {
+  outline: 3px solid #040DBF;
+  outline-offset: 2px;
+}
+
+/* Animación de salida */
+.diambars-modal-overlay.diambars-modal-overlay--closing {
+  animation: diambars-modal-overlay-exit 0.2s ease-in;
+}
+
+.diambars-modal-overlay--closing .diambars-modal {
+  animation: diambars-modal-exit 0.2s ease-in;
+}
+
+@keyframes diambars-modal-overlay-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes diambars-modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+}

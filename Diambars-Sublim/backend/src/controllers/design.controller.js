@@ -775,6 +775,205 @@ designController.updateDesign = async (req, res) => {
   }
 };
 
+/**
+ * Duplica/clona un diseño existente
+ */
+designController.cloneDesign = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const userId = req.user._id;
+    
+    console.log('📋 Clonando diseño:', { designId: id, userId });
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "ID de diseño inválido",
+        error: 'INVALID_DESIGN_ID'
+      });
+    }
+    
+    const originalDesign = await Design.findById(id)
+      .populate('product');
+    
+    if (!originalDesign) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Diseño no encontrado",
+        error: 'DESIGN_NOT_FOUND'
+      });
+    }
+    
+    // Verificar permisos
+    if (!originalDesign.user.equals(userId) && !req.user.roles?.includes('admin')) {
+      return res.status(403).json({ 
+        success: false,
+        message: "No tienes permiso para clonar este diseño",
+        error: 'UNAUTHORIZED_ACCESS'
+      });
+    }
+    
+    // Crear clon
+    const clonedData = {
+      product: originalDesign.product._id,
+      user: userId,
+      name: name || `Copia de ${originalDesign.name}`,
+      elements: JSON.parse(JSON.stringify(originalDesign.elements)),
+      productOptions: JSON.parse(JSON.stringify(originalDesign.productOptions)),
+      status: 'draft',
+      clientNotes: originalDesign.clientNotes || "",
+      metadata: {
+        ...originalDesign.metadata,
+        clonedFrom: originalDesign._id,
+        clonedAt: new Date()
+      }
+    };
+    
+    const clonedDesign = new Design(clonedData);
+    await clonedDesign.save();
+    
+    console.log('✅ Diseño clonado:', clonedDesign._id);
+    
+    res.status(201).json({
+      success: true,
+      message: "Diseño clonado exitosamente",
+      data: {
+        originalId: originalDesign._id,
+        clonedId: clonedDesign._id,
+        design: clonedDesign
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en cloneDesign:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al clonar el diseño",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Guarda diseño como borrador para editar después
+ */
+designController.saveDraft = async (req, res) => {
+  try {
+    const { 
+      productId, 
+      elements,
+      productOptions,
+      name,
+      clientNotes 
+    } = req.body;
+    const userId = req.user._id;
+    
+    console.log('💾 Guardando borrador de diseño');
+    
+    // Validaciones básicas
+    if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "ID de producto inválido",
+        error: 'INVALID_PRODUCT_ID'
+      });
+    }
+    
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
+      });
+    }
+    
+    // Crear diseño en estado draft
+    const draft = new Design({
+      product: productId,
+      user: userId,
+      name: name || `Borrador - ${product.name}`,
+      elements: elements || [],
+      productOptions: productOptions || [],
+      status: 'draft',
+      clientNotes: clientNotes || "",
+      metadata: {
+        mode: 'simple',
+        lastSavedAt: new Date()
+      }
+    });
+    
+    await draft.save();
+    
+    res.status(201).json({
+      success: true,
+      message: "Borrador guardado",
+      data: {
+        draftId: draft._id,
+        status: draft.status
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en saveDraft:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al guardar borrador",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtiene historial de diseños del usuario
+ */
+designController.getUserDesignHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { includeDetails = false } = req.query;
+    
+    const designs = await Design.find({ user: userId })
+      .populate('product', 'name images basePrice')
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+    
+    // Si no se piden detalles, enviar versión resumida
+    const formattedDesigns = designs.map(design => {
+      if (!includeDetails) {
+        return {
+          _id: design._id,
+          name: design.name,
+          productName: design.product.name,
+          productImage: design.product.images.main,
+          status: design.status,
+          createdAt: design.createdAt,
+          previewImage: design.previewImage,
+          canReuse: ['quoted', 'approved', 'completed'].includes(design.status)
+        };
+      }
+      return design;
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        designs: formattedDesigns,
+        total: formattedDesigns.length
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getUserDesignHistory:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener historial de diseños",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
 // Funciones auxiliares
 function extractColorsFromElements(elements) {
   if (!elements || !Array.isArray(elements)) return [];

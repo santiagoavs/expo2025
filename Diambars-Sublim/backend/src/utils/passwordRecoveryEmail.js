@@ -16,69 +16,37 @@ export async function sendRecoveryCode(email, code, userName) {
   const currentYear = new Date().getFullYear();
   
   const html = `
-  <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; line-height: 1.5;">
+    <!-- Header -->
+    <div style="text-align: center; padding: 30px 0 20px; border-bottom: 1px solid #eaeaea;">
+      <img src="${logoUrl}" alt="Diambars" style="height: 40px;" />
+      <h1 style="font-size: 24px; font-weight: 600; margin: 20px 0 10px; color: #1a1a1a;">Recuperación de contraseña</h1>
+    </div>
+    
+    <!-- Content -->
+    <div style="padding: 30px 25px;">
+      <p style="margin: 0 0 25px;">Hola ${userName || 'Usuario'},</p>
       
-      <!-- Header -->
-      <div style="background: #ffffff; padding: 40px 30px 30px; text-align: center; border-bottom: 3px solid #A00019;">
-        <img src="${logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px;" />
-        <h1 style="color: #593D3B; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Recuperación de Contraseña</h1>
-        <p style="color: #01446C; margin: 10px 0 0; font-size: 16px;">Código de verificación</p>
-      </div>
+      <p style="margin: 0 0 25px;">Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código de verificación:</p>
       
-      <!-- Content -->
-      <div style="padding: 40px 30px;">
-        <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #A00019;">
-          <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">¡Hola ${userName || 'Usuario'}!</p>
-        </div>
-        
-        <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 0 0 25px;">
-          Hemos recibido una solicitud para restablecer tu contraseña en Diambars. Utiliza el siguiente código para continuar con el proceso:
-        </p>
-        
-        <!-- Recovery Code -->
-        <div style="text-align: center; margin: 35px 0;">
-          <div style="background: linear-gradient(135deg, #01446C 0%, rgba(1,68,108,0.8) 100%); border-radius: 12px; padding: 2px; display: inline-block; box-shadow: 0 8px 32px rgba(1,68,108,0.15);">
-            <div style="background: #ffffff; border-radius: 10px; padding: 30px 45px; border: 1px solid rgba(1,68,108,0.1);">
-              <div style="margin-bottom: 15px;">
-                <span style="color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Tu código de recuperación</span>
-              </div>
-              <div style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace; font-size: 36px; font-weight: 700; letter-spacing: 6px; color: #A00019; text-shadow: 0 2px 4px rgba(160,0,25,0.15); line-height: 1.2;">
-                ${code}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; margin: 25px 0; border-left: 4px solid #01446C; box-shadow: 0 2px 12px rgba(1,68,108,0.08);">
-          <p style="font-size: 14px; color: #593D3B; margin: 0; font-weight: 500;">
-            ⏰ <strong>Tiempo de validez:</strong> Este código es válido por 20 minutos
-          </p>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #01446C 0%, rgba(1,68,108,0.9) 100%); border-radius: 12px; padding: 25px; color: #ffffff; text-align: center; margin: 25px 0; box-shadow: 0 4px 20px rgba(1,68,108,0.2);">
-          <p style="margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.95;">
-            🔐 Si no solicitaste este cambio, puedes ignorar este mensaje. Tu contraseña permanecerá igual.
-          </p>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-          <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">Saludos,</p>
-          <p style="font-size: 14px; color: #A00019; margin: 5px 0 0; font-weight: 500;">El equipo de Diambars</p>
+      <!-- Code Box -->
+      <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0; border: 1px solid #eaeaea;">
+        <div style="font-family: monospace; font-size: 32px; font-weight: 600; letter-spacing: 2px; color: #1a1a1a;">
+          ${code}
         </div>
       </div>
       
-      <!-- Footer -->
-      <div style="background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef;">
-        <p style="font-size: 13px; color: #6c757d; margin: 0 0 10px;">
-          &copy; ${currentYear} Diambars. Todos los derechos reservados.
-        </p>
-        <div style="margin-top: 15px;">
-          <a href="${config.server.FRONTEND_URL}" style="color: #01446C; text-decoration: none; font-size: 13px; font-weight: 500;">
-            Visita nuestro sitio web
-          </a>
-        </div>
+      <p style="margin: 0 0 25px;">Este código es válido por <strong>20 minutos</strong>.</p>
+      
+      <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 30px 0; font-size: 14px;">
+        <p style="margin: 0;">Si no solicitaste este cambio, puedes ignorar este mensaje. Tu contraseña permanecerá igual.</p>
       </div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding: 20px 0; text-align: center; border-top: 1px solid #eaeaea; font-size: 14px; color: #666;">
+      <p style="margin: 0 0 10px;">&copy; ${currentYear} Diambars. Todos los derechos reservados.</p>
+      <p style="margin: 0;">Equipo de Soporte</p>
     </div>
   </div>
   `;
@@ -87,7 +55,7 @@ export async function sendRecoveryCode(email, code, userName) {
     const info = await transporter.sendMail({
       from: config.email.from || `"Soporte Diambars" <${config.email.user}>`,
       to: email,
-      subject: "Código de recuperación de contraseña | Diambars",
+      subject: "Tu código de verificación | Diambars",
       html
     });
     
@@ -106,75 +74,52 @@ export async function sendPasswordResetConfirmation(email, userName) {
   const currentYear = new Date().getFullYear();
   
   const html = `
-  <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; line-height: 1.5;">
+    <!-- Header -->
+    <div style="text-align: center; padding: 30px 0 20px; border-bottom: 1px solid #eaeaea;">
+      <img src="${logoUrl}" alt="Diambars" style="height: 40px;" />
+      <h1 style="font-size: 24px; font-weight: 600; margin: 20px 0 10px; color: #1a1a1a;">Contraseña actualizada</h1>
+    </div>
+    
+    <!-- Content -->
+    <div style="padding: 30px 25px;">
+      <p style="margin: 0 0 25px;">Hola ${userName || 'Usuario'},</p>
       
-      <!-- Header -->
-      <div style="background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%); padding: 40px 30px 30px; text-align: center; border-bottom: 3px solid #01446C;">
-        <img src="${logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px;" />
-        <h1 style="color: #593D3B; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">¡Contraseña Restablecida!</h1>
-        <p style="color: #01446C; margin: 10px 0 0; font-size: 16px;">Proceso completado exitosamente</p>
-      </div>
+      <p style="margin: 0 0 25px;">Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tus nuevas credenciales.</p>
       
-      <!-- Content -->
-      <div style="padding: 40px 30px;">
-        <div style="background: linear-gradient(135deg, #01446C 0%, rgba(1,68,108,0.8) 100%); border-radius: 12px; padding: 1px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(1,68,108,0.1);">
-          <div style="background: #ffffff; border-radius: 11px; padding: 30px; text-align: center;">
-            <p style="font-size: 18px; color: #593D3B; margin: 0; font-weight: 500;">
-              ✅ ¡Hola ${userName || 'Usuario'}!
-            </p>
-          </div>
-        </div>
-        
-        <p style="font-size: 16px; color: #495057; line-height: 1.6; margin: 0 0 25px; text-align: center;">
-          Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión en tu cuenta de Diambars con tu nueva contraseña.
-        </p>
-        
-        <!-- Success Icon -->
-        <div style="text-align: center; margin: 35px 0;">
-          <div style="background: linear-gradient(135deg, #01446C 0%, rgba(1,68,108,0.85) 100%); border-radius: 50%; width: 90px; height: 90px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(1,68,108,0.2);">
-            <span style="color: #ffffff; font-size: 40px;">🔓</span>
-          </div>
-        </div>
-        
-        <!-- Login Button -->
-        <div style="text-align: center; margin: 40px 0;">
-          <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #01446C 0%, rgba(1,68,108,0.9) 100%); color: #ffffff; font-weight: 600; text-decoration: none; padding: 18px 45px; border-radius: 12px; font-size: 16px; box-shadow: 0 6px 24px rgba(1,68,108,0.25); transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);">
-            Iniciar sesión ahora
-          </a>
-        </div>
-        
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid #A00019;">
-          <h3 style="color: #593D3B; margin: 0 0 15px; font-size: 16px; font-weight: 600;">🔐 Consejos de seguridad:</h3>
-          <ul style="margin: 0; padding-left: 20px; color: #495057; font-size: 14px; line-height: 1.5;">
-            <li style="margin-bottom: 5px;">Usa una contraseña única y segura</li>
-            <li style="margin-bottom: 5px;">No compartas tus credenciales con nadie</li>
-            <li>Considera activar la autenticación en dos pasos</li>
-          </ul>
-        </div>
-        <div style="background: linear-gradient(135deg, #A00019 0%, rgba(160,0,25,0.9) 100%); border-radius: 12px; padding: 25px; color: #ffffff; text-align: center; margin: 30px 0; box-shadow: 0 4px 20px rgba(160,0,25,0.2);">
-          <p style="margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.95;">
-            🚨 Si no realizaste este cambio, contacta inmediatamente con nuestro soporte
-          </p>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-          <p style="font-size: 16px; color: #593D3B; margin: 0; font-weight: 500;">Saludos,</p>
-          <p style="font-size: 14px; color: #A00019; margin: 5px 0 0; font-weight: 500;">El equipo de Diambars</p>
+      <!-- Success Icon -->
+      <div style="text-align: center; margin: 30px 0;">
+        <div style="display: inline-block; background: #f0f9f0; border-radius: 50%; width: 80px; height: 80px; line-height: 80px; text-align: center; border: 1px solid #e0f0e0;">
+          <span style="font-size: 36px; color: #2e7d32;">✓</span>
         </div>
       </div>
       
-      <!-- Footer -->
-      <div style="background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef;">
-        <p style="font-size: 13px; color: #6c757d; margin: 0 0 10px;">
-          &copy; ${currentYear} Diambars. Todos los derechos reservados.
-        </p>
-        <div style="margin-top: 15px;">
-          <a href="${config.server.FRONTEND_URL}" style="color: #01446C; text-decoration: none; font-size: 13px; font-weight: 500;">
-            Visita nuestro sitio web
-          </a>
-        </div>
+      <!-- Login Button -->
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${loginUrl}" style="display: inline-block; background: #1a1a1a; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 500;">
+          Iniciar sesión
+        </a>
       </div>
+      
+      <!-- Security Note -->
+      <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 30px 0; font-size: 14px;">
+        <p style="margin: 0 0 10px; font-weight: 500;">Consejos de seguridad:</p>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 5px;">Usa una contraseña única</li>
+          <li style="margin-bottom: 5px;">No compartas tus credenciales</li>
+          <li>Considera autenticación en dos pasos</li>
+        </ul>
+      </div>
+      
+      <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 30px 0; font-size: 14px;">
+        <p style="margin: 0;">Si no realizaste este cambio, por favor contacta a nuestro equipo de soporte inmediatamente.</p>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding: 20px 0; text-align: center; border-top: 1px solid #eaeaea; font-size: 14px; color: #666;">
+      <p style="margin: 0 0 10px;">&copy; ${currentYear} Diambars. Todos los derechos reservados.</p>
+      <p style="margin: 0;">Equipo de Soporte</p>
     </div>
   </div>
   `;
@@ -183,7 +128,7 @@ export async function sendPasswordResetConfirmation(email, userName) {
     await transporter.sendMail({
       from: config.email.from || `"Soporte Diambars" <${config.email.user}>`,
       to: email,
-      subject: "Contraseña restablecida exitosamente | Diambars",
+      subject: "Contraseña actualizada | Diambars",
       html
     });
     return true;

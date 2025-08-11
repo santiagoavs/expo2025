@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import rateLimit from 'express-rate-limit';
 
 // Importación de rutas
 import authRoutes from "./src/routes/auth.routes.js";
@@ -16,11 +17,13 @@ import registerUsersRoutes from "./src/routes/registerUsers.routes.js";
 import verifyEmailRoutes from "./src/routes/verifyEmail.routes.js";
 import passwordRecoveryRoutes from "./src/routes/passwordRecovery.routes.js";
 import categoryRoutes from "./src/routes/category.routes.js";
-import productRoutes from "./src/routes/product.routes.js"; // ✅ Ya está importado
+import productRoutes from "./src/routes/product.routes.js";
 import designRoutes from "./src/routes/design.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
 
+// Importación de utilidades centralizadas
+import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,139 +31,138 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Configuración de CORS - DEBE IR ANTES de otros middlewares
+// ==================== CONFIGURACIÓN DE CORS ====================
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173",  // React dev
+      "http://localhost:5174",  // React dev publico
+      "http://localhost:3000",  // React Native dev
+      "http://localhost:19000", // Expo
+      "http://localhost:19001", // Expo
+      "http://localhost:19002", // Expo
+      process.env.FRONTEND_URL,
+      process.env.MOBILE_URL
+    ].filter(Boolean);
+    
+    // Permitir requests sin origin (ej: Postman, apps móviles)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
-  exposedHeaders: ["set-cookie"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'PATCH', 'OPTIONS'],
+  exposedHeaders: ["set-cookie", "x-total-count"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-access-token']
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// Middleware para logging - antes de procesar requests
-app.use(morgan("dev"));
-
-// Middleware para cookies - DEBE IR ANTES que las rutas que lo usan
-app.use(cookieParser());
-
-// Middleware para debugging de multipart/form-data
-app.use((req, res, next) => {
-  if (req.headers['content-type']?.includes('multipart/form-data')) {
-    console.log('🔧 Multipart request detected:', {
-      method: req.method,
-      url: req.url,
-      contentType: req.headers['content-type'],
-      contentLength: req.headers['content-length'],
-      hasAuthHeader: !!req.headers.authorization,
-      hasCookie: !!req.cookies.authToken,
-      hasXAccessToken: !!req.headers['x-access-token']
-    });
-  }
-  next();
+// ==================== RATE LIMITING ====================
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // límite de requests
+  message: 'Demasiadas solicitudes desde esta IP, intente más tarde',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// IMPORTANTE: Solo aplicar express.json() a rutas que NO manejan archivos
-// Rutas que solo manejan JSON
-app.use('/api/auth', express.json());
-app.use('/api/employees/register', express.json());
-app.use('/api/users/register', express.json());
-app.use('/api/verify-email', express.json());
-app.use('/api/password-recovery', express.json());
-app.use('/api/addresses', express.json());
+// Rate limit más estricto para auth
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Demasiados intentos de autenticación, intente más tarde',
+  skipSuccessfulRequests: true
+});
+
+// ==================== MIDDLEWARES GENERALES ====================
+app.use(morgan("dev"));
+app.use(cookieParser());
+app.use(limiter); // Aplicar rate limit general
+
+// Middleware para debugging
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`📝 ${req.method} ${req.url}`, {
+      body: Object.keys(req.body || {}).length > 0 ? '✅ Body present' : '❌ No body',
+      query: Object.keys(req.query || {}).length > 0 ? req.query : '❌ No query',
+      headers: {
+        'content-type': req.headers['content-type'],
+        'authorization': !!req.headers.authorization,
+        'x-access-token': !!req.headers['x-access-token']
+      },
+      cookies: Object.keys(req.cookies || {}).length
+    });
+    next();
+  });
+}
 
 // Middlewares de seguridad
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.cloudinary.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"]
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://wompi.co"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.wompi.co"],
+      frameSrc: ["'self'", "https://checkout.wompi.co"]
     }
   }
 }));
 
-// Middlewares para archivos estáticos
+// Archivos estáticos
 app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Crear directorios necesarios
 const dirs = [
-  path.join(__dirname, "public/uploads"),
-  path.join(__dirname, "public/uploads/products"),
-  path.join(__dirname, "public/uploads/designs"),
-  path.join(__dirname, "public/uploads/categories")
-];
+  "public/uploads",
+  "public/uploads/products",
+  "public/uploads/designs",
+  "public/uploads/categories",
+  "public/uploads/orders",
+  "public/uploads/temp"
+].map(dir => path.join(__dirname, dir));
 
 dirs.forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    console.log(`📁 Directorio creado: ${dir}`);
   }
 });
 
-// Rutas de la API
-app.use("/api/auth", authRoutes);
-app.use("/api/employees/register", debugEmailValidation, registerEmployeesRoutes);
-app.use("/api/users/register", debugEmailValidation, registerUsersRoutes);
-app.use("/api/verify-email", verifyEmailRoutes);
-app.use("/api/password-recovery", passwordRecoveryRoutes);
-app.use("/api/addresses", addressRoutes);
+// ==================== MIDDLEWARE PARA MANEJO DE JSON/MULTIPART ====================
+const jsonMiddleware = express.json({ limit: '10mb' });
+const urlencodedMiddleware = express.urlencoded({ extended: true, limit: '10mb' });
 
-// Rutas que pueden manejar tanto JSON como archivos
-// Aplicar express.json() condicionalmente
-app.use('/api/employees', (req, res, next) => {
-  if (!req.headers['content-type']?.includes('multipart/form-data')) {
-    express.json()(req, res, next);
-  } else {
+// Función helper para aplicar middleware condicional
+const conditionalJsonMiddleware = (req, res, next) => {
+  if (req.headers['content-type']?.includes('multipart/form-data')) {
     next();
-  }
-}, employeesRoutes);
-
-app.use('/api/users', (req, res, next) => {
-  if (!req.headers['content-type']?.includes('multipart/form-data')) {
-    express.json()(req, res, next);
   } else {
-    next();
+    jsonMiddleware(req, res, () => {
+      urlencodedMiddleware(req, res, next);
+    });
   }
-}, userRoutes);
+};
 
-app.use('/api/orders', (req, res, next) => {
-  if (!req.headers['content-type']?.includes('multipart/form-data')) {
-    express.json()(req, res, next);
-  } else {
-    next();
-  }
-}, orderRoutes);
+// ==================== RUTAS DE LA API ====================
 
-// Rutas que SÍ manejan archivos - SIN express.json()
-app.use("/api/categories", categoryRoutes);
-
-// ✅ PRODUCTOS - Configuración especial para manejar tanto GET como POST/PUT con archivos
-app.use("/api/products", (req, res, next) => {
-  // Para rutas que no manejan archivos (GET, DELETE, PATCH stats), aplicar JSON
-  const isFileUploadRoute = (req.method === 'POST' || req.method === 'PUT') && 
-                           req.headers['content-type']?.includes('multipart/form-data');
-  
-  if (!isFileUploadRoute) {
-    express.json()(req, res, next);
-  } else {
-    next();
-  }
-}, productRoutes);
-
-app.use("/api/designs", designRoutes);
-
-// ✅ Ruta de salud mejorada
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
     message: 'API Diambars Sublim funcionando correctamente',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: {
       auth: '/api/auth',
+      users: '/api/users',
+      employees: '/api/employees',
       products: '/api/products',
       categories: '/api/categories',
       designs: '/api/designs',
@@ -170,20 +172,106 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Ruta de prueba legacy
-app.get("/ping", (req, res) => res.send("pong"));
+// ========== RUTAS DE AUTENTICACIÓN ==========
+app.use("/api/auth", authLimiter, jsonMiddleware, authRoutes);
 
-// Middleware para manejar errores de Multer específicamente
-app.use((err, req, res, next) => {
-  console.error('🚨 Error capturado:', {
-    name: err.name,
-    message: err.message,
-    code: err.code,
-    type: typeof err,
-    url: req.url,
-    method: req.method
+// ========== RUTAS DE REGISTRO ==========
+app.use("/api/employees/register", jsonMiddleware, debugEmailValidation, registerEmployeesRoutes);
+app.use("/api/users/register", jsonMiddleware, debugEmailValidation, registerUsersRoutes);
+
+// ========== RUTAS DE VERIFICACIÓN Y RECUPERACIÓN ==========
+app.use("/api/verify-email", jsonMiddleware, verifyEmailRoutes);
+app.use("/api/password-recovery", authLimiter, jsonMiddleware, passwordRecoveryRoutes);
+
+// ========== RUTAS DE DIRECCIONES ==========
+app.use("/api/addresses", jsonMiddleware, addressRoutes);
+
+// ========== RUTAS DE USUARIOS Y EMPLEADOS ==========
+app.use('/api/employees', conditionalJsonMiddleware, employeesRoutes);
+app.use('/api/users', conditionalJsonMiddleware, userRoutes);
+
+// ========== RUTAS DE CATEGORÍAS ==========
+app.use("/api/categories", conditionalJsonMiddleware, categoryRoutes);
+
+// ========== RUTAS DE PRODUCTOS ==========
+app.use("/api/products", conditionalJsonMiddleware, productRoutes);
+
+// ========== RUTAS DE DISEÑOS ==========
+app.use("/api/designs", jsonMiddleware, designRoutes);
+
+// ========== RUTAS DE PEDIDOS ==========
+// Webhook de Wompi sin autenticación y con raw body
+app.post('/api/orders/webhook/wompi', 
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => {
+    // Convertir raw body a JSON para el controlador
+    try {
+      req.body = JSON.parse(req.body.toString());
+      next();
+    } catch (error) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Invalid JSON in webhook body' 
+      });
+    }
+  },
+  orderRoutes
+);
+
+// Resto de rutas de orders con middleware condicional
+app.use("/api/orders", conditionalJsonMiddleware, orderRoutes);
+
+// ==================== RUTAS DE CONFIGURACIÓN ====================
+
+// Ruta para obtener configuración de Wompi (para el frontend)
+app.get("/api/config/wompi", (req, res) => {
+  res.json({
+    publicKey: process.env.WOMPI_PUBLIC_KEY,
+    currency: DELIVERY_CONFIG.CURRENCY,
+    country: 'SV',
+    testMode: process.env.WOMPI_ENV !== 'production'
   });
+});
 
+// Ruta optimizada para obtener departamentos y municipios de El Salvador
+app.get("/api/config/locations", (req, res) => {
+  try {
+    const locationData = getLocationData();
+    res.json({
+      success: true,
+      data: locationData
+    });
+  } catch (error) {
+    console.error('❌ Error al obtener ubicaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener datos de ubicaciones'
+    });
+  }
+});
+
+// Ruta para servir imágenes con marca de agua on-the-fly
+app.get("/api/images/watermark/:path", (req, res) => {
+  // Implementar lógica de marca de agua si es necesario
+  res.status(501).json({ 
+    message: "Función de marca de agua pendiente de implementación" 
+  });
+});
+
+// ==================== MANEJO DE ERRORES ====================
+
+// Error 404 para rutas no encontradas
+app.use((req, res, next) => {
+  res.status(404).json({ 
+    success: false,
+    message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
+    error: 'ENDPOINT_NOT_FOUND',
+    suggestion: 'Verifica la ruta o consulta /api/health para ver endpoints disponibles'
+  });
+});
+
+// Manejador de errores de Multer
+app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
@@ -195,7 +283,7 @@ app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_COUNT') {
     return res.status(400).json({
       success: false,
-      message: 'Demasiados archivos. Máximo 1 imagen principal y 5 adicionales.',
+      message: 'Demasiados archivos.',
       error: 'TOO_MANY_FILES'
     });
   }
@@ -203,23 +291,11 @@ app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
     return res.status(400).json({
       success: false,
-      message: 'Campo de archivo inesperado. Use "mainImage" y "additionalImages".',
+      message: 'Campo de archivo inesperado.',
       error: 'UNEXPECTED_FILE_FIELD'
     });
   }
   
-  if (err.message?.includes('Boundary not found')) {
-    return res.status(400).json({
-      success: false,
-      message: 'Error en el formato multipart/form-data. No establezca Content-Type manualmente.',
-      error: 'INVALID_MULTIPART',
-      debug: {
-        receivedContentType: req.headers['content-type'],
-        hasAuthToken: !!req.headers.authorization || !!req.cookies.authToken
-      }
-    });
-  }
-
   if (err.message?.includes('Solo se permiten imágenes')) {
     return res.status(400).json({
       success: false,
@@ -228,22 +304,49 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Errores de validación de Mongoose
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
+  // Errores de CORS
+  if (err.message?.includes('CORS')) {
+    return res.status(403).json({
       success: false,
-      message: 'Error de validación de datos',
-      error: 'VALIDATION_ERROR',
-      details: Object.values(err.errors).map(e => e.message)
+      message: 'Origen no permitido por CORS',
+      error: 'CORS_ERROR'
     });
   }
 
-  // Errores de cast de MongoDB
+  next(err);
+});
+
+// Manejador de errores de validación de Mongoose
+app.use((err, req, res, next) => {
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(e => ({
+      field: e.path,
+      message: e.message
+    }));
+    
+    return res.status(400).json({
+      success: false,
+      message: 'Error de validación',
+      error: 'VALIDATION_ERROR',
+      errors
+    });
+  }
+  
   if (err.name === 'CastError') {
     return res.status(400).json({
       success: false,
-      message: 'ID inválido proporcionado',
+      message: 'ID inválido',
       error: 'INVALID_ID'
+    });
+  }
+  
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern)[0];
+    return res.status(400).json({
+      success: false,
+      message: `El ${field} ya está en uso`,
+      error: 'DUPLICATE_KEY',
+      field
     });
   }
   
@@ -260,24 +363,6 @@ app.use((err, req, res, next) => {
       message: err.message,
       stack: err.stack
     } : 'Error interno del servidor'
-  });
-});
-
-// Middleware para manejar rutas no encontradas
-app.use((req, res) => {
-  res.status(404).json({ 
-    success: false,
-    message: `Endpoint ${req.method} ${req.originalUrl} no encontrado`,
-    availableEndpoints: [
-      'GET /api/health',
-      'GET /api/products',
-      'POST /api/products (con archivos)',
-      'GET /api/products/:id',
-      'PUT /api/products/:id (con archivos)',
-      'DELETE /api/products/:id',
-      'GET /api/products/search',
-      'POST /api/products/dev/create-samples (desarrollo)'
-    ]
   });
 });
 
