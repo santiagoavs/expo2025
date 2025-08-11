@@ -1,9 +1,8 @@
-// routes/order.routes.js
+// routes/order.routes.js - Rutas optimizadas para órdenes
 import { Router } from "express";
 import orderController from "../controllers/order.controller.js";
 import { authRequired, roleRequired } from "../middlewares/auth.middleware.js";
 import { validateRequest, validateMongoId, validatePagination } from "../middlewares/validation.middleware.js";
-import cloudinary from "../utils/cloudinary.js";
 import { body, param, query } from "express-validator";
 
 const router = Router();
@@ -26,13 +25,40 @@ const orderValidations = {
     body('paymentTiming')
       .optional()
       .isIn(['on_delivery', 'advance']).withMessage('Timing de pago inválido'),
-    body('advancePercentage')
-      .optional()
-      .isFloat({ min: 0, max: 100 }).withMessage('Porcentaje de adelanto inválido'),
     body('clientNotes')
       .optional()
       .isString().withMessage('Las notas deben ser texto')
-      .isLength({ max: 1000 }).withMessage('Las notas no pueden exceder 1000 caracteres')
+      .isLength({ max: 1000 }).withMessage('Las notas no pueden exceder 1000 caracteres'),
+    // Validaciones para dirección nueva
+    body('address.recipient')
+      .if(body('deliveryType').equals('delivery'))
+      .optional()
+      .isString().withMessage('El destinatario debe ser texto'),
+    body('address.phoneNumber')
+      .if(body('deliveryType').equals('delivery'))
+      .optional()
+      .matches(/^[267]\d{7}$/).withMessage('Formato de teléfono inválido'),
+    body('address.department')
+      .if(body('deliveryType').equals('delivery'))
+      .optional()
+      .isString().withMessage('El departamento debe ser texto'),
+    body('address.municipality')
+      .if(body('deliveryType').equals('delivery'))
+      .optional()
+      .isString().withMessage('El municipio debe ser texto'),
+    body('address.address')
+      .if(body('deliveryType').equals('delivery'))
+      .optional()
+      .isString().withMessage('La dirección debe ser texto'),
+    // Validaciones para punto de encuentro
+    body('meetupDetails.date')
+      .if(body('deliveryType').equals('meetup'))
+      .optional()
+      .isISO8601().withMessage('Fecha de encuentro inválida'),
+    body('meetupDetails.address')
+      .if(body('deliveryType').equals('meetup'))
+      .optional()
+      .isString().withMessage('La dirección de encuentro debe ser texto')
   ],
   
   updateStatus: [
@@ -72,24 +98,12 @@ const orderValidations = {
   confirmPayment: [
     param('id').isMongoId().withMessage('ID de pedido inválido'),
     body('amount')
-      .notEmpty().withMessage('El monto es requerido')
+      .optional()
       .isFloat({ min: 0.01 }).withMessage('Monto inválido'),
     body('receiptNumber')
       .optional()
       .isString().withMessage('Número de recibo debe ser texto'),
     body('notes')
-      .optional()
-      .isString().withMessage('Las notas deben ser texto')
-  ],
-  
-  approvePhoto: [
-    param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('photoId').notEmpty().withMessage('ID de foto requerido'),
-    body('approved').isBoolean().withMessage('Aprobación debe ser true o false'),
-    body('changeRequested')
-      .optional()
-      .isString().withMessage('Los cambios solicitados deben ser texto'),
-    body('clientNotes')
       .optional()
       .isString().withMessage('Las notas deben ser texto')
   ],
@@ -102,22 +116,11 @@ const orderValidations = {
       .isLength({ max: 500 }).withMessage('La razón no puede exceder 500 caracteres')
   ],
   
-  refund: [
+  simulatePayment: [
     param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('amount')
+    body('status')
       .optional()
-      .isFloat({ min: 0.01 }).withMessage('Monto de reembolso inválido'),
-    body('reason')
-      .notEmpty().withMessage('La razón del reembolso es requerida')
-      .isString().withMessage('La razón debe ser texto')
-  ],
-  
-  notifyCustomer: [
-    param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('message')
-      .notEmpty().withMessage('El mensaje es requerido')
-      .isString().withMessage('El mensaje debe ser texto')
-      .isLength({ min: 1, max: 500 }).withMessage('El mensaje debe tener entre 1 y 500 caracteres')
+      .isIn(['approved', 'declined', 'error']).withMessage('Estado de simulación inválido')
   ]
 };
 
@@ -139,7 +142,10 @@ router.post('/',
 // Obtener pedidos del usuario actual
 router.get('/my-orders',
   authRequired,
-  validatePagination,
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('status').optional().isString(),
+  validateRequest,
   orderController.getAllOrders
 );
 
@@ -157,20 +163,22 @@ router.get('/:id/tracking',
   orderController.getOrderTracking
 );
 
-// Cliente aprueba o rechaza foto del producto
-router.post('/:id/approve-photo',
-  authRequired,
-  orderValidations.approvePhoto,
-  validateRequest,
-  orderController.approveProductPhoto
-);
-
 // Cancelar pedido (cliente o admin)
 router.post('/:id/cancel',
   authRequired,
   orderValidations.cancel,
   validateRequest,
   orderController.cancelOrder
+);
+
+// ==================== RUTAS DE DESARROLLO/TESTING ====================
+
+// Simular pago (solo para desarrollo o cuando Wompi no esté configurado)
+router.post('/:id/simulate-payment',
+  authRequired,
+  orderValidations.simulatePayment,
+  validateRequest,
+  orderController.simulatePayment
 );
 
 // ==================== RUTAS DE ADMINISTRADOR ====================
@@ -208,15 +216,6 @@ router.patch('/:id/production',
   orderController.updateProductionStatus
 );
 
-// Subir foto de producción con progreso
-router.post('/:id/production-photo',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  cloudinary.uploadProduct.single('photo'),
-  orderController.uploadProductionPhoto
-);
-
 // Confirmar pago manual (admin/manager)
 router.post('/:id/confirm-payment',
   authRequired,
@@ -226,21 +225,12 @@ router.post('/:id/confirm-payment',
   orderController.confirmPayment
 );
 
-// Procesar pago (generar link Wompi)
+// Procesar pago (generar link Wompi real o ficticio)
 router.post('/:id/process-payment',
   authRequired,
   roleRequired(['admin', 'manager']),
   validateMongoId('id'),
   orderController.processPayment
-);
-
-// Procesar reembolso
-router.post('/:id/refund',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  orderValidations.refund,
-  validateRequest,
-  orderController.processRefund
 );
 
 // Obtener estadísticas de pedidos
@@ -275,44 +265,14 @@ router.post('/:id/payment-reminder',
   orderController.sendPaymentReminder
 );
 
-// Notificar al cliente con mensaje personalizado
-router.post('/:id/notify-customer',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  orderValidations.notifyCustomer,
-  validateRequest,
-  orderController.notifyCustomer
-);
-
-// Marcar pedido como entregado
-router.patch('/:id/mark-delivered',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('deliveryNotes').optional().isString(),
-  body('deliveredAt').optional().isISO8601(),
-  validateRequest,
-  orderController.markAsDelivered
-);
-
-// Completar pedido
-router.patch('/:id/complete',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('completionNotes').optional().isString(),
-  validateRequest,
-  orderController.completeOrder
-);
-
 // ==================== RUTAS DE REPORTES ====================
 
 // Reporte de ventas por período
 router.get('/reports/sales',
   authRequired,
   roleRequired(['admin', 'manager']),
-  query('startDate').isISO8601().withMessage('Fecha de inicio requerida'),
-  query('endDate').isISO8601().withMessage('Fecha de fin requerida'),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
   query('groupBy').optional().isIn(['day', 'week', 'month']),
   validateRequest,
   orderController.getSalesReport
@@ -367,6 +327,70 @@ router.get('/export',
   query('status').optional().isString(),
   validateRequest,
   orderController.exportOrders
+);
+
+// ==================== RUTAS ADICIONALES PARA FUTURAS IMPLEMENTACIONES ====================
+
+// Procesar reembolso
+router.post('/:id/refund',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('amount').optional().isFloat({ min: 0.01 }),
+  body('reason').notEmpty().withMessage('Razón del reembolso requerida'),
+  validateRequest,
+  orderController.processRefund
+);
+
+// Notificar al cliente con mensaje personalizado
+router.post('/:id/notify-customer',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('message').notEmpty().withMessage('Mensaje requerido'),
+  validateRequest,
+  orderController.notifyCustomer
+);
+
+// Cliente aprueba o rechaza foto del producto
+router.post('/:id/approve-photo',
+  authRequired,
+  validateMongoId('id'),
+  body('photoId').notEmpty().withMessage('ID de foto requerido'),
+  body('approved').isBoolean().withMessage('Aprobación debe ser true o false'),
+  body('changeRequested').optional().isString(),
+  body('clientNotes').optional().isString(),
+  validateRequest,
+  orderController.approveProductPhoto
+);
+
+// Subir foto de producción con progreso
+router.post('/:id/production-photo',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  orderController.uploadProductionPhoto
+);
+
+// Marcar pedido como entregado
+router.patch('/:id/mark-delivered',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('deliveryNotes').optional().isString(),
+  body('deliveredAt').optional().isISO8601(),
+  validateRequest,
+  orderController.markAsDelivered
+);
+
+// Completar pedido
+router.patch('/:id/complete',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('completionNotes').optional().isString(),
+  validateRequest,
+  orderController.completeOrder
 );
 
 export default router;

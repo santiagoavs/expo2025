@@ -24,6 +24,7 @@ import addressRoutes from "./src/routes/address.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
+import { getPublicWompiConfig, isWompiConfigured } from "./src/services/wompi.service.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -105,7 +106,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.cloudinary.com", "https://wompi.co"],
+      connectSrc: ["'self'", "https://api.cloudinary.com", "https://wompi.co", "https://sandbox.wompi.co"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "blob:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.wompi.co"],
       frameSrc: ["'self'", "https://checkout.wompi.co"]
@@ -121,7 +122,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const dirs = [
   "public/uploads",
   "public/uploads/products",
-  "public/uploads/designs",
+  "public/uploads/designs", 
   "public/uploads/categories",
   "public/uploads/orders",
   "public/uploads/temp"
@@ -151,7 +152,7 @@ const conditionalJsonMiddleware = (req, res, next) => {
 
 // ==================== RUTAS DE LA API ====================
 
-// Health check
+// Health check con información de configuración
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -159,6 +160,10 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: '2.0.0',
+    wompi: {
+      configured: isWompiConfigured(),
+      mode: isWompiConfigured() ? 'real' : 'fictitious'
+    },
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
@@ -167,7 +172,8 @@ app.get("/api/health", (req, res) => {
       categories: '/api/categories',
       designs: '/api/designs',
       orders: '/api/orders',
-      addresses: '/api/addresses'
+      addresses: '/api/addresses',
+      config: '/api/config'
     }
   });
 });
@@ -209,6 +215,7 @@ app.post('/api/orders/webhook/wompi',
       req.body = JSON.parse(req.body.toString());
       next();
     } catch (error) {
+      console.error('❌ Error parseando webhook body:', error);
       res.status(400).json({ 
         success: false, 
         message: 'Invalid JSON in webhook body' 
@@ -223,13 +230,67 @@ app.use("/api/orders", conditionalJsonMiddleware, orderRoutes);
 
 // ==================== RUTAS DE CONFIGURACIÓN ====================
 
-// Ruta para obtener configuración de Wompi (para el frontend)
+// Ruta para obtener configuración completa del sistema (para el frontend)
+app.get("/api/config", (req, res) => {
+  try {
+    const config = {
+      // Configuración de Wompi
+      wompi: getPublicWompiConfig(),
+      
+      // Configuración de entrega
+      delivery: {
+        currency: DELIVERY_CONFIG.CURRENCY,
+        freeDeliveryThreshold: DELIVERY_CONFIG.FREE_DELIVERY_THRESHOLD,
+        defaultFee: DELIVERY_CONFIG.DEFAULT_FEE
+      },
+      
+      // Configuración de ubicaciones
+      locations: getLocationData(),
+      
+      // Configuración del sistema
+      system: {
+        environment: process.env.NODE_ENV || 'development',
+        version: '2.0.0',
+        supportEmail: 'soporte@diambars.com',
+        maxFileSize: '5MB',
+        allowedImageTypes: ['jpg', 'jpeg', 'png', 'webp'],
+        features: {
+          wompiPayments: isWompiConfigured(),
+          cashPayments: true,
+          deliveryTracking: true,
+          productionPhotos: true,
+          designCloning: true
+        }
+      },
+      
+      // URLs importantes
+      urls: {
+        frontend: process.env.FRONTEND_URL || 'http://localhost:5173',
+        backend: process.env.BACKEND_URL || 'http://localhost:4000',
+        support: 'mailto:soporte@diambars.com',
+        terms: '/terms',
+        privacy: '/privacy'
+      }
+    };
+
+    res.json({
+      success: true,
+      data: config
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener configuración del sistema'
+    });
+  }
+});
+
+// Ruta específica para configuración de Wompi (legacy)
 app.get("/api/config/wompi", (req, res) => {
   res.json({
-    publicKey: process.env.WOMPI_PUBLIC_KEY,
-    currency: DELIVERY_CONFIG.CURRENCY,
-    country: 'SV',
-    testMode: process.env.WOMPI_ENV !== 'production'
+    success: true,
+    data: getPublicWompiConfig()
   });
 });
 
@@ -250,11 +311,24 @@ app.get("/api/config/locations", (req, res) => {
   }
 });
 
-// Ruta para servir imágenes con marca de agua on-the-fly
-app.get("/api/images/watermark/:path", (req, res) => {
-  // Implementar lógica de marca de agua si es necesario
-  res.status(501).json({ 
-    message: "Función de marca de agua pendiente de implementación" 
+// Endpoint para verificar estado del servicio Wompi
+app.get("/api/config/payment-status", (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      wompi: {
+        configured: isWompiConfigured(),
+        environment: process.env.WOMPI_ENV || 'sandbox',
+        mode: isWompiConfigured() ? 'real' : 'fictitious',
+        message: isWompiConfigured() 
+          ? 'Wompi configurado correctamente'
+          : 'Wompi en modo ficticio - configurar credenciales para usar pagos reales'
+      },
+      cash: {
+        enabled: true,
+        message: 'Pagos en efectivo siempre disponibles'
+      }
+    }
   });
 });
 
