@@ -19,12 +19,11 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phoneNumber: '', // Cambio de phone a phoneNumber para coincidir con el backend
     password: '',
     confirmPassword: '',
-    role: 'user',
-    status: 'active',
-    permissions: []
+    role: 'customer', // Cambio de 'user' a 'customer'
+    active: true // Cambio de status a active
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -32,16 +31,30 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Actualizar roles para coincidir con el backend
   const roleOptions = [
-    { value: 'user', label: 'Usuario', icon: <User size={16} weight="duotone" />, description: 'Acceso básico al sistema' },
-    { value: 'admin', label: 'Administrador', icon: <Crown size={16} weight="duotone" />, description: 'Control total del sistema' }
+    { 
+      value: 'customer', 
+      label: 'Cliente', 
+      icon: <User size={16} weight="duotone" />, 
+      description: 'Acceso básico para compras',
+      permissions: ['catalog', 'orders', 'profile']
+    },
+    { 
+      value: 'premium', 
+      label: 'Premium', 
+      icon: <Crown size={16} weight="duotone" />, 
+      description: 'Acceso con descuentos y soporte prioritario',
+      permissions: ['catalog', 'orders', 'profile', 'discounts', 'priority_support']
+    },
+    { 
+      value: 'admin', 
+      label: 'Administrador', 
+      icon: <Shield size={16} weight="duotone" />, 
+      description: 'Control total del sistema',
+      permissions: ['users', 'orders', 'catalog', 'reports', 'settings', 'discounts', 'analytics']
+    }
   ];
-
-  const permissionsByRole = {
-    user: ['catalog'],
-    moderator: ['catalog', 'orders'],
-    admin: ['catalog', 'orders', 'users', 'reports', 'settings']
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -56,14 +69,6 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
         [field]: null
       }));
     }
-
-    // Actualizar permisos automáticamente cuando cambia el rol
-    if (field === 'role') {
-      setFormData(prev => ({
-        ...prev,
-        permissions: permissionsByRole[value] || []
-      }));
-    }
   };
 
   const validateForm = () => {
@@ -74,19 +79,21 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
       newErrors.name = 'El nombre es obligatorio';
     } else if (formData.name.length < 2) {
       newErrors.name = 'El nombre debe tener al menos 2 caracteres';
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.name)) {
+      newErrors.name = 'El nombre solo puede contener letras y espacios';
     }
 
     // Validación email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!formData.email.trim()) {
       newErrors.email = 'El email es obligatorio';
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Ingresa un email válido';
     }
 
-    // Validación teléfono
-    if (formData.phone && !/^\+?[\d\s\-()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Formato de teléfono inválido';
+    // Validación teléfono (opcional pero si se proporciona debe ser válido)
+    if (formData.phoneNumber && !/^[0-9]{8}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'El teléfono debe tener exactamente 8 dígitos';
     }
 
     // Validación contraseña
@@ -116,6 +123,12 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
 
     try {
       const { confirmPassword, ...submitData } = formData;
+      
+      // Asegurar que active sea boolean
+      submitData.active = submitData.active === true || submitData.active === 'true';
+      
+      console.log('[CreateUserModal] Enviando datos:', submitData);
+      
       await onSubmit(submitData);
     } catch (error) {
       console.error('Error creating user:', error);
@@ -124,9 +137,9 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
     }
   };
 
-  const getRoleIcon = (role) => {
-    const roleOption = roleOptions.find(option => option.value === role);
-    return roleOption ? roleOption.icon : <User size={16} weight="duotone" />;
+  const getCurrentRolePermissions = () => {
+    const role = roleOptions.find(r => r.value === formData.role);
+    return role ? role.permissions : [];
   };
 
   return (
@@ -168,7 +181,7 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
             <input
               type="email"
               className={`create-user-input ${errors.email ? 'create-user-input--error' : ''}`}
-              placeholder="usuario@diambars.com"
+              placeholder="usuario@ejemplo.com"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
             />
@@ -183,19 +196,20 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
           <div className="create-user-field">
             <label className="create-user-label">
               <Phone size={14} weight="duotone" />
-              Teléfono
+              Teléfono (opcional)
             </label>
             <input
               type="tel"
-              className={`create-user-input ${errors.phone ? 'create-user-input--error' : ''}`}
-              placeholder="+503 1234-5678"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              className={`create-user-input ${errors.phoneNumber ? 'create-user-input--error' : ''}`}
+              placeholder="12345678"
+              value={formData.phoneNumber}
+              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              maxLength="8"
             />
-            {errors.phone && (
+            {errors.phoneNumber && (
               <span className="create-user-error">
                 <Warning size={12} weight="duotone" />
-                {errors.phone}
+                {errors.phoneNumber}
               </span>
             )}
           </div>
@@ -306,20 +320,20 @@ const CreateUserModal = ({ onSubmit, onCancel }) => {
             <label className="create-user-label">Estado inicial</label>
             <select
               className="create-user-select"
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
+              value={formData.active}
+              onChange={(e) => handleInputChange('active', e.target.value === 'true')}
             >
-              <option value="active">Activo</option>
-              <option value="inactive">Inactivo</option>
+              <option value={true}>Activo</option>
+              <option value={false}>Inactivo</option>
             </select>
           </div>
 
           {/* Permisos Preview */}
-          {formData.permissions.length > 0 && (
+          {getCurrentRolePermissions().length > 0 && (
             <div className="create-user-permissions-preview">
               <span className="create-user-permissions-label">Permisos asignados:</span>
               <div className="create-user-permissions-list">
-                {formData.permissions.map((permission, index) => (
+                {getCurrentRolePermissions().map((permission, index) => (
                   <span key={index} className="create-user-permission-tag">
                     {permission}
                   </span>

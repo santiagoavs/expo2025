@@ -14,13 +14,23 @@ import UserCard from '../../components/UserCard/UserCard';
 import Modal from '../../components/Modal/Modal';
 import CreateUserModal from '../../components/CreateUserModal/CreateUserModal';
 import UserFilters from '../../components/UserFilters/UserFilters';
+import useUsers from '../../hooks/useUsers';
 import Swal from 'sweetalert2';
 import './Users.css';
 
 const Users = () => {
-  const [users, setUsers] = useState([]);
+  const {
+    users,
+    loading,
+    error,
+    createUser,
+    updateUser,
+    updateUserStatus,
+    deleteUser,
+    getUserStats
+  } = useUsers();
+
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -30,107 +40,40 @@ const Users = () => {
     dateRange: 'all'
   });
 
-  // Datos simulados - reemplazar con llamada a API
-  const mockUsers = [
-    {
-      id: 1,
-      name: 'Juan Carlos Pérez',
-      email: 'juan.perez@diambars.com',
-      role: 'admin',
-      status: 'active',
-      avatar: null,
-      phone: '+503 7894-5612',
-      createdAt: '2024-01-15',
-      lastLogin: '2024-08-09T10:30:00',
-      permissions: ['users', 'orders', 'catalog', 'reports']
-    },
-    {
-      id: 2,
-      name: 'María González',
-      email: 'maria.gonzalez@diambars.com',
-      role: 'moderator',
-      status: 'active',
-      avatar: null,
-      phone: '+503 7123-4567',
-      createdAt: '2024-02-20',
-      lastLogin: '2024-08-08T16:45:00',
-      permissions: ['orders', 'catalog']
-    },
-    {
-      id: 3,
-      name: 'Roberto Martínez',
-      email: 'roberto.martinez@diambars.com',
-      role: 'user',
-      status: 'inactive',
-      avatar: null,
-      phone: '+503 7555-8899',
-      createdAt: '2024-03-10',
-      lastLogin: '2024-07-25T09:15:00',
-      permissions: ['catalog']
-    },
-    {
-      id: 4,
-      name: 'Ana Sofía Ruiz',
-      email: 'ana.ruiz@diambars.com',
-      role: 'admin',
-      status: 'active',
-      avatar: null,
-      phone: '+503 7777-1234',
-      createdAt: '2024-01-08',
-      lastLogin: '2024-08-09T14:20:00',
-      permissions: ['users', 'orders', 'catalog', 'reports', 'settings']
-    },
-    {
-      id: 5,
-      name: 'Carlos Hernández',
-      email: 'carlos.hernandez@diambars.com',
-      role: 'moderator',
-      status: 'pending',
-      avatar: null,
-      phone: '+503 7666-9988',
-      createdAt: '2024-08-01',
-      lastLogin: null,
-      permissions: ['orders']
-    }
-  ];
-
-  // Cargar usuarios al iniciar
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        // Simular llamada a API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setUsers(mockUsers);
-        setFilteredUsers(mockUsers);
-      } catch (error) {
-        console.error('Error loading users:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar los usuarios',
-          confirmButtonColor: '#040DBF'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUsers();
-  }, []);
-
   // Filtrar usuarios por búsqueda y filtros
   useEffect(() => {
     let filtered = users.filter(user => {
       const matchesSearch = 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone.includes(searchQuery);
+        (user.phone && user.phone.includes(searchQuery));
 
       const matchesRole = filters.role === 'all' || user.role === filters.role;
       const matchesStatus = filters.status === 'all' || user.status === filters.status;
 
-      return matchesSearch && matchesRole && matchesStatus;
+      // Filtro por fecha (si se implementa)
+      let matchesDate = true;
+      if (filters.dateRange !== 'all') {
+        const now = new Date();
+        const userDate = new Date(user.createdAt);
+        const daysDiff = (now - userDate) / (1000 * 60 * 60 * 24);
+
+        switch (filters.dateRange) {
+          case 'week':
+            matchesDate = daysDiff <= 7;
+            break;
+          case 'month':
+            matchesDate = daysDiff <= 30;
+            break;
+          case 'year':
+            matchesDate = daysDiff <= 365;
+            break;
+          default:
+            matchesDate = true;
+        }
+      }
+
+      return matchesSearch && matchesRole && matchesStatus && matchesDate;
     });
 
     setFilteredUsers(filtered);
@@ -138,15 +81,7 @@ const Users = () => {
 
   const handleCreateUser = async (userData) => {
     try {
-      // Simular creación en API
-      const newUser = {
-        id: users.length + 1,
-        ...userData,
-        createdAt: new Date().toISOString().split('T')[0],
-        lastLogin: null
-      };
-
-      setUsers(prev => [newUser, ...prev]);
+      await createUser(userData);
       setShowCreateModal(false);
 
       Swal.fire({
@@ -163,7 +98,7 @@ const Users = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo crear el usuario',
+        text: error.message || 'No se pudo crear el usuario',
         confirmButtonColor: '#040DBF'
       });
     }
@@ -171,9 +106,7 @@ const Users = () => {
 
   const handleEditUser = async (userId, userData) => {
     try {
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, ...userData } : user
-      ));
+      await updateUser(userId, userData);
 
       Swal.fire({
         icon: 'success',
@@ -189,7 +122,7 @@ const Users = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo actualizar el usuario',
+        text: error.message || 'No se pudo actualizar el usuario',
         confirmButtonColor: '#040DBF'
       });
     }
@@ -197,9 +130,10 @@ const Users = () => {
 
   const handleDeleteUser = async (userId) => {
     try {
+      const user = users.find(u => u.id === userId);
       const result = await Swal.fire({
         title: '¿Eliminar usuario?',
-        text: 'Esta acción no se puede deshacer',
+        text: `¿Estás seguro de que quieres eliminar a ${user?.name}? Esta acción no se puede deshacer`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
@@ -209,7 +143,7 @@ const Users = () => {
       });
 
       if (result.isConfirmed) {
-        setUsers(prev => prev.filter(user => user.id !== userId));
+        await deleteUser(userId);
         
         Swal.fire({
           icon: 'success',
@@ -226,7 +160,7 @@ const Users = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo eliminar el usuario',
+        text: error.message || 'No se pudo eliminar el usuario',
         confirmButtonColor: '#040DBF'
       });
     }
@@ -234,14 +168,12 @@ const Users = () => {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, status: newStatus } : user
-      ));
+      const isActive = newStatus === 'active';
+      await updateUserStatus(userId, isActive);
 
       const statusText = {
         active: 'activado',
-        inactive: 'desactivado',
-        pending: 'puesto en espera'
+        inactive: 'desactivado'
       };
 
       Swal.fire({
@@ -258,34 +190,84 @@ const Users = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo actualizar el estado',
+        text: error.message || 'No se pudo actualizar el estado',
         confirmButtonColor: '#040DBF'
       });
     }
   };
 
   const handleExportUsers = () => {
-    // Simular exportación
-    Swal.fire({
-      icon: 'info',
-      title: 'Exportando usuarios',
-      text: 'Se iniciará la descarga en breve...',
-      confirmButtonColor: '#040DBF',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  };
+    try {
+      // Preparar datos para exportar
+      const exportData = filteredUsers.map(user => ({
+        Nombre: user.name,
+        Email: user.email,
+        Teléfono: user.phone || 'N/A',
+        Rol: user.role,
+        Estado: user.status === 'active' ? 'Activo' : 'Inactivo',
+        'Fecha de Creación': new Date(user.createdAt).toLocaleDateString('es-ES'),
+        'Último Login': user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('es-ES') : 'Nunca'
+      }));
 
-  const getUserStats = () => {
-    const total = users.length;
-    const active = users.filter(u => u.status === 'active').length;
-    const admins = users.filter(u => u.role === 'admin').length;
-    const pending = users.filter(u => u.status === 'pending').length;
+      // Crear CSV
+      const headers = Object.keys(exportData[0]);
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => `"${row[header]}"`).join(',')
+        )
+      ].join('\n');
 
-    return { total, active, admins, pending };
+      // Descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `usuarios_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Exportación exitosa',
+        text: 'Los usuarios han sido exportados correctamente',
+        confirmButtonColor: '#040DBF',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      console.error('Error exporting users:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo exportar la lista de usuarios',
+        confirmButtonColor: '#040DBF'
+      });
+    }
   };
 
   const stats = getUserStats();
+
+  // Mostrar error si hay problemas con la API
+  if (error && !loading) {
+    return (
+      <div className="users-admin-page">
+        <div className="users-admin-error">
+          <h3>Error al cargar usuarios</h3>
+          <p>{error}</p>
+          <button 
+            className="users-admin-btn users-admin-btn--primary"
+            onClick={() => window.location.reload()}
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -309,6 +291,9 @@ const Users = () => {
               <UsersIcon size={32} weight="duotone" />
               Gestión de Usuarios
             </h1>
+            <p className="users-admin-subtitle">
+              Administra usuarios, roles y permisos del sistema
+            </p>
           </div>
 
           <div className="users-admin-actions">
@@ -318,6 +303,15 @@ const Users = () => {
             >
               <FunnelSimple size={16} weight="duotone" />
               Filtros
+            </button>
+
+            <button 
+              className="users-admin-btn users-admin-btn--secondary"
+              onClick={handleExportUsers}
+              disabled={filteredUsers.length === 0}
+            >
+              <Export size={16} weight="duotone" />
+              Exportar
             </button>
 
             <button 
@@ -361,6 +355,16 @@ const Users = () => {
               <span className="users-admin-stat-label">Administradores</span>
             </div>
           </div>
+
+          <div className="users-admin-stat-card">
+            <div className="users-admin-stat-icon users-admin-stat-icon--premium">
+              <Shield size={24} weight="duotone" />
+            </div>
+            <div className="users-admin-stat-content">
+              <span className="users-admin-stat-number">{stats.premium}</span>
+              <span className="users-admin-stat-label">Premium</span>
+            </div>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -396,7 +400,12 @@ const Users = () => {
           <div className="users-admin-empty">
             <UsersIcon size={64} weight="duotone" />
             <h3>No se encontraron usuarios</h3>
-            <p>Intenta ajustar los filtros de búsqueda</p>
+            <p>
+              {searchQuery || filters.role !== 'all' || filters.status !== 'all'
+                ? 'Intenta ajustar los filtros de búsqueda'
+                : 'No hay usuarios registrados en el sistema'
+              }
+            </p>
           </div>
         ) : (
           <div className="users-admin-grid">

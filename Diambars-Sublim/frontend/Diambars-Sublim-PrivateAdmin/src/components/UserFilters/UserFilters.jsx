@@ -75,20 +75,32 @@ const UserFilters = ({ filters, onFiltersChange }) => {
                 checked={filters.role === 'admin'}
                 onChange={(e) => handleFilterChange('role', e.target.value)}
               />
-              <Crown size={14} weight="duotone" />
+              <Shield size={14} weight="duotone" />
               <span>Administradores</span>
             </label>
-        
-            <label className={`user-filters-option ${filters.role === 'user' ? 'user-filters-option--active' : ''}`}>
+
+            <label className={`user-filters-option ${filters.role === 'premium' ? 'user-filters-option--active' : ''}`}>
               <input
                 type="radio"
                 name="role"
-                value="user"
-                checked={filters.role === 'user'}
+                value="premium"
+                checked={filters.role === 'premium'}
+                onChange={(e) => handleFilterChange('role', e.target.value)}
+              />
+              <Crown size={14} weight="duotone" />
+              <span>Premium</span>
+            </label>
+        
+            <label className={`user-filters-option ${filters.role === 'customer' ? 'user-filters-option--active' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="customer"
+                checked={filters.role === 'customer'}
                 onChange={(e) => handleFilterChange('role', e.target.value)}
               />
               <User size={14} weight="duotone" />
-              <span>Usuarios</span>
+              <span>Clientes</span>
             </label>
           </div>
         </div>
@@ -153,17 +165,6 @@ const UserFilters = ({ filters, onFiltersChange }) => {
                 onChange={(e) => handleFilterChange('dateRange', e.target.value)}
               />
               <span>Todas las fechas</span>
-            </label>
-            
-            <label className={`user-filters-option ${filters.dateRange === 'today' ? 'user-filters-option--active' : ''}`}>
-              <input
-                type="radio"
-                name="dateRange"
-                value="today"
-                checked={filters.dateRange === 'today'}
-                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-              />
-              <span>Hoy</span>
             </label>
             
             <label className={`user-filters-option ${filters.dateRange === 'week' ? 'user-filters-option--active' : ''}`}>

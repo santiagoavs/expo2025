@@ -5,7 +5,7 @@ import { config } from "../config.js";
 /**
  * Middleware principal para verificar autenticación
  */
-export const authRequired = (req, res, next) => {
+export const authRequired = async (req, res, next) => {
   console.log('🔐 Verificando autenticación:', {
     url: req.url,
     method: req.method,
@@ -39,15 +39,50 @@ export const authRequired = (req, res, next) => {
       });
     }
 
+    // Buscar el usuario en la base de datos y actualizar lastLogin
+    try {
+      const User = (await import("../models/users.js")).default;
+      const Employee = (await import("../models/employees.js")).default;
+      
+      let user = null;
+      let userType = 'user';
+      
+      // Buscar primero en usuarios
+      user = await User.findById(decoded.id);
+      
+      // Si no se encuentra, buscar en empleados
+      if (!user) {
+        user = await Employee.findById(decoded.id);
+        userType = 'employee';
+      }
+
+      if (user && user.active !== false) {
+        // Actualizar último login
+        if (user.updateLastLogin && typeof user.updateLastLogin === 'function') {
+          await user.updateLastLogin();
+        } else {
+          // Fallback manual si el método no existe
+          user.lastLogin = new Date();
+          await user.save({ validateBeforeSave: false });
+        }
+        
+        console.log('📅 LastLogin actualizado para usuario:', user._id);
+      }
+    } catch (dbError) {
+      console.warn('⚠️ Error actualizando lastLogin:', dbError.message);
+      // No interrumpir el flujo por error de lastLogin
+    }
+
     // Normalizar estructura del usuario
     req.user = {
       _id: decoded.id,
       id: decoded.id,
-      type: decoded.type || 'user',
+      type: decoded.type || userType || 'user',
       roles: decoded.roles || [decoded.role] || ['user'],
       role: decoded.role || decoded.roles?.[0] || 'user',
       email: decoded.email,
-      name: decoded.name
+      name: decoded.name,
+      active: decoded.active !== false
     };
 
     console.log('✅ Usuario autenticado:', {
@@ -101,12 +136,15 @@ export const roleRequired = (allowedRoles = []) => {
       });
     }
 
+    // Normalizar roles permitidos para comparación insensible a mayúsculas
+    const normalizedAllowedRoles = allowedRoles.map(role => role.toLowerCase());
+    
     // Verificar si el usuario tiene alguno de los roles permitidos
     const userRoles = req.user.roles || [req.user.role];
-    const hasRole = allowedRoles.some(role => 
-      userRoles.some(userRole => 
-        userRole?.toLowerCase() === role.toLowerCase()
-      )
+    const normalizedUserRoles = userRoles.map(role => role?.toLowerCase());
+    
+    const hasRole = normalizedAllowedRoles.some(allowedRole => 
+      normalizedUserRoles.includes(allowedRole)
     );
 
     if (!hasRole) {
@@ -130,7 +168,11 @@ export const roleRequired = (allowedRoles = []) => {
 /**
  * Alias para compatibilidad
  */
-export const checkRole = roleRequired;
+export const checkRole = (...allowedRoles) => {
+  // Convertir argumentos a array plano
+  const roles = allowedRoles.flat();
+  return roleRequired(roles);
+};
 
 /**
  * Middleware para verificar tipo de usuario
@@ -186,7 +228,8 @@ export const authOptional = (req, res, next) => {
       roles: decoded.roles || [decoded.role] || ['user'],
       role: decoded.role || decoded.roles?.[0] || 'user',
       email: decoded.email,
-      name: decoded.name
+      name: decoded.name,
+      active: decoded.active !== false
     };
   } catch (error) {
     req.user = null;
@@ -212,7 +255,8 @@ export const ownershipRequired = (resourceGetter) => {
       }
 
       const isOwner = resource.user?.toString() === req.user._id.toString();
-      const isAdmin = req.user.roles?.includes('admin');
+      const isAdmin = req.user.roles?.some(role => role.toLowerCase() === 'admin') || 
+                      req.user.role?.toLowerCase() === 'admin';
 
       if (!isOwner && !isAdmin) {
         return res.status(403).json({
@@ -233,6 +277,43 @@ export const ownershipRequired = (resourceGetter) => {
       });
     }
   };
+};
+
+/**
+ * Middleware para verificar que el usuario es admin o está accediendo a sus propios datos
+ */
+export const checkOwnershipOrAdmin = (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Usuario no autenticado',
+        error: 'NOT_AUTHENTICATED' 
+      });
+    }
+
+    const userId = req.params.id;
+    const isAdmin = req.user.roles?.some(role => role.toLowerCase() === 'admin') || 
+                    req.user.role?.toLowerCase() === 'admin';
+    const isOwner = req.user.id === userId || req.user._id.toString() === userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Solo puedes acceder a tus propios datos o ser administrador',
+        error: 'ACCESS_DENIED' 
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error en verificación de propiedad:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor',
+      error: 'INTERNAL_ERROR' 
+    });
+  }
 };
 
 /**
@@ -288,6 +369,47 @@ export const checkAdminUniqueness = async (req, res, next) => {
   next();
 };
 
+/**
+ * Middleware para verificar usuarios activos
+ */
+export const checkActiveUser = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Usuario no autenticado",
+        error: 'NOT_AUTHENTICATED'
+      });
+    }
+
+    // Verificar en base de datos si el usuario sigue activo
+    const User = (await import("../models/users.js")).default;
+    const Employee = (await import("../models/employees.js")).default;
+    
+    let user = await User.findById(req.user.id);
+    if (!user) {
+      user = await Employee.findById(req.user.id);
+    }
+
+    if (!user || user.active === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Cuenta desactivada",
+        error: 'ACCOUNT_DISABLED'
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error verificando usuario activo:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Error verificando estado del usuario",
+      error: 'USER_CHECK_ERROR'
+    });
+  }
+};
+
 export default {
   authRequired,
   verifyToken,
@@ -296,5 +418,7 @@ export default {
   checkUserType,
   authOptional,
   ownershipRequired,
-  checkAdminUniqueness
+  checkOwnershipOrAdmin,
+  checkAdminUniqueness,
+  checkActiveUser
 };

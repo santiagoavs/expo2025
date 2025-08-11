@@ -23,12 +23,22 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
   const [editData, setEditData] = useState({
     name: user.name,
     email: user.email,
-    phone: user.phone,
+    phoneNumber: user.phoneNumber || user.phone || '', // Manejar ambos campos
     role: user.role
   });
 
   const handleEditSubmit = () => {
-    onEdit(user.id, editData);
+    // Preparar datos para envío
+    const dataToSubmit = {
+      name: editData.name,
+      email: editData.email,
+      phoneNumber: editData.phoneNumber, // Usar phoneNumber para backend
+      role: editData.role
+    };
+    
+    console.log('[UserCard] Enviando datos de edición:', dataToSubmit);
+    
+    onEdit(user.id, dataToSubmit);
     setIsEditing(false);
   };
 
@@ -36,7 +46,7 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
     setEditData({
       name: user.name,
       email: user.email,
-      phone: user.phone,
+      phoneNumber: user.phoneNumber || user.phone || '',
       role: user.role
     });
     setIsEditing(false);
@@ -45,9 +55,10 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
   const getRoleIcon = (role) => {
     switch (role) {
       case 'admin':
-        return <Crown size={16} weight="duotone" />;
-      case 'moderator':
         return <Shield size={16} weight="duotone" />;
+      case 'premium':
+        return <Crown size={16} weight="duotone" />;
+      case 'customer':
       default:
         return <User size={16} weight="duotone" />;
     }
@@ -57,10 +68,11 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
     switch (role) {
       case 'admin':
         return 'Administrador';
-      case 'moderator':
-        return 'Moderador';
+      case 'premium':
+        return 'Premium';
+      case 'customer':
       default:
-        return 'Usuario';
+        return 'Cliente';
     }
   };
 
@@ -70,8 +82,6 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
         return 'user-card-status--active';
       case 'inactive':
         return 'user-card-status--inactive';
-      case 'pending':
-        return 'user-card-status--pending';
       default:
         return 'user-card-status--inactive';
     }
@@ -83,17 +93,19 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
         return 'Activo';
       case 'inactive':
         return 'Inactivo';
-      case 'pending':
-        return 'Pendiente';
       default:
         return 'Desconocido';
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Nunca';
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const formatLastLogin = (dateString) => {
@@ -125,7 +137,7 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
             className="user-card-action-btn"
             onClick={() => setShowActions(!showActions)}
           >
-            <h4>X</h4>
+            <DotsThreeVertical size={16} weight="duotone" />
           </button>
 
           {showActions && (
@@ -209,8 +221,10 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
               <input
                 type="tel"
                 className="user-card-input"
-                value={editData.phone}
-                onChange={(e) => setEditData({...editData, phone: e.target.value})}
+                value={editData.phoneNumber}
+                onChange={(e) => setEditData({...editData, phoneNumber: e.target.value})}
+                placeholder="12345678"
+                maxLength="8"
               />
             </div>
 
@@ -221,8 +235,8 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
                 value={editData.role}
                 onChange={(e) => setEditData({...editData, role: e.target.value})}
               >
-                <option value="user">Usuario</option>
-                <option value="moderator">Moderador</option>
+                <option value="customer">Cliente</option>
+                <option value="premium">Premium</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
@@ -268,10 +282,12 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
                 <span className="user-card-contact-text">{user.email}</span>
               </div>
               
-              <div className="user-card-contact-item">
-                <Phone size={14} weight="duotone" />
-                <span className="user-card-contact-text">{user.phone}</span>
-              </div>
+              {(user.phoneNumber || user.phone) && (
+                <div className="user-card-contact-item">
+                  <Phone size={14} weight="duotone" />
+                  <span className="user-card-contact-text">{user.phoneNumber || user.phone}</span>
+                </div>
+              )}
             </div>
 
             {/* Meta Info */}
@@ -288,6 +304,20 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
                 <span className="user-card-meta-value">{formatLastLogin(user.lastLogin)}</span>
               </div>
             </div>
+
+            {/* Permissions */}
+            {user.permissions && user.permissions.length > 0 && (
+              <div className="user-card-permissions">
+                <span className="user-card-permissions-label">Permisos:</span>
+                <div className="user-card-permissions-list">
+                  {user.permissions.map((permission, index) => (
+                    <span key={index} className="user-card-permission-tag">
+                      {permission}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

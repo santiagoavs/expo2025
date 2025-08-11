@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-//schema de usuario
-// Este modelo representa a los usuarios en la base de datos
+
+// Schema de usuario actualizado
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -25,10 +25,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: [6, "La contraseña debe tener al menos 6 caracteres"],
-    select: false  // No devuelve password en consultas
+    select: false
   },
-  phoneNumber: {  // Nombre estandarizado con el modelo de empleados
+  phoneNumber: {
     type: String,
+    required: false, // Hacer opcional
     match: [
       /^[0-9]{8}$/,
       "El teléfono debe contener exactamente 8 dígitos numéricos"
@@ -36,7 +37,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'premium', 'admin'],  // Mantén la nomenclatura en minúscula
+    enum: ['customer', 'premium', 'admin'],
     default: 'customer'
   },
   defaultAddress: {
@@ -55,26 +56,48 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-    verificationToken: {
+  lastLogin: {
+    type: Date,
+    default: null
+  },
+  avatar: {
+    type: String,
+    default: null
+  },
+  verificationToken: {
     type: String,
     select: false
   },
-    verificationExpires: {
+  verificationExpires: {
     type: Date,
     select: false
   },
-    verified: {
-    type: Boolean,
-    default: false
-},
-recoveryData: {
-  type: mongoose.Schema.Types.Mixed,
-  default: null
-},
+  recoveryData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
 }, { 
   timestamps: true,
-  toJSON: { virtuals: true }
+  toJSON: { 
+    virtuals: true,
+    transform: function(doc, ret) {
+      // Agregar permisos basados en el rol
+      ret.permissions = getUserPermissions(ret.role);
+      return ret;
+    }
+  }
 });
+
+// Función para obtener permisos basados en el rol
+function getUserPermissions(role) {
+  const permissions = {
+    customer: ['catalog', 'orders', 'profile'],
+    premium: ['catalog', 'orders', 'profile', 'discounts', 'priority_support'],
+    admin: ['users', 'orders', 'catalog', 'reports', 'settings', 'discounts', 'analytics']
+  };
+  
+  return permissions[role] || permissions.customer;
+}
 
 // Virtual para obtener direcciones relacionadas
 userSchema.virtual('addresses', {
@@ -82,6 +105,17 @@ userSchema.virtual('addresses', {
   localField: '_id',
   foreignField: 'user'
 });
+
+// Método para actualizar último login
+userSchema.methods.updateLastLogin = function() {
+  this.lastLogin = new Date();
+  return this.save({ validateBeforeSave: false });
+};
+
+// Método estático para obtener permisos
+userSchema.statics.getPermissionsByRole = function(role) {
+  return getUserPermissions(role);
+};
 
 // Evitar errores de overwriting del modelo
 export default mongoose.models.User || mongoose.model('User', userSchema);
