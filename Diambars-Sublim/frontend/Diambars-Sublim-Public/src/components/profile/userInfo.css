@@ -330,8 +330,10 @@
 }
 
 .input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
   position: relative;
-  margin-bottom: 20px;
 }
 
 /* Estilos personalizados para SweetAlert2 - Mayor especificidad */

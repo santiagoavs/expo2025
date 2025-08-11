@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-// Schema de usuario actualizado
+// Schema de usuario con compatibilidad total
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -29,11 +29,20 @@ const userSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    required: false, // Hacer opcional
-    match: [
-      /^[0-9]{8}$/,
-      "El teléfono debe contener exactamente 8 dígitos numéricos"
-    ]
+    required: false,
+    validate: {
+      validator: function(v) {
+        // Si se proporciona, debe ser exactamente 8 dígitos
+        return !v || /^[0-9]{8}$/.test(v);
+      },
+      message: "El teléfono debe contener exactamente 8 dígitos numéricos"
+    }
+  },
+  // Campo adicional para compatibilidad con registro público
+  address: {
+    type: String,
+    required: false,
+    trim: true
   },
   role: {
     type: String,
@@ -83,6 +92,26 @@ const userSchema = new mongoose.Schema({
     transform: function(doc, ret) {
       // Agregar permisos basados en el rol
       ret.permissions = getUserPermissions(ret.role);
+      
+      // Compatibilidad: Agregar campo phone como alias de phoneNumber
+      if (ret.phoneNumber && !ret.phone) {
+        ret.phone = ret.phoneNumber;
+      }
+      
+      return ret;
+    }
+  },
+  toObject: {
+    virtuals: true,
+    transform: function(doc, ret) {
+      // Agregar permisos basados en el rol
+      ret.permissions = getUserPermissions(ret.role);
+      
+      // Compatibilidad: Agregar campo phone como alias de phoneNumber
+      if (ret.phoneNumber && !ret.phone) {
+        ret.phone = ret.phoneNumber;
+      }
+      
       return ret;
     }
   }
@@ -106,6 +135,11 @@ userSchema.virtual('addresses', {
   foreignField: 'user'
 });
 
+// Virtual para compatibilidad: phone como alias de phoneNumber
+userSchema.virtual('phone').get(function() {
+  return this.phoneNumber;
+});
+
 // Método para actualizar último login
 userSchema.methods.updateLastLogin = function() {
   this.lastLogin = new Date();
@@ -116,6 +150,26 @@ userSchema.methods.updateLastLogin = function() {
 userSchema.statics.getPermissionsByRole = function(role) {
   return getUserPermissions(role);
 };
+
+// Middleware pre-save para normalizar datos
+userSchema.pre('save', function(next) {
+  // Normalizar email a lowercase
+  if (this.email) {
+    this.email = this.email.toLowerCase().trim();
+  }
+  
+  // Normalizar nombre
+  if (this.name) {
+    this.name = this.name.trim();
+  }
+  
+  // Normalizar phoneNumber
+  if (this.phoneNumber) {
+    this.phoneNumber = this.phoneNumber.trim();
+  }
+  
+  next();
+});
 
 // Evitar errores de overwriting del modelo
 export default mongoose.models.User || mongoose.model('User', userSchema);

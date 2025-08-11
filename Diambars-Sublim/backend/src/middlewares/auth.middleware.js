@@ -1,4 +1,4 @@
-// middlewares/auth.middleware.js
+// middlewares/auth.middleware.js - VERSIÓN CORREGIDA
 import jwt from "jsonwebtoken";
 import { config } from "../config.js";
 
@@ -11,12 +11,35 @@ export const authRequired = async (req, res, next) => {
     method: req.method,
     hasCookie: !!req.cookies.authToken,
     hasHeader: !!req.headers.authorization,
-    hasXAccessToken: !!req.headers['x-access-token']
+    hasXAccessToken: !!req.headers['x-access-token'],
+    userAgent: req.headers['user-agent']?.substring(0, 50)
   });
 
-  const token = req.cookies.authToken 
-    || req.headers['x-access-token']
-    || req.headers.authorization?.split(' ')[1];
+  // Priorizar tokens según el contexto
+  let token = null;
+  let tokenSource = '';
+
+  // Si hay header Authorization (dashboard admin), usarlo con prioridad
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+    tokenSource = 'Authorization header';
+  }
+  // Si hay x-access-token header
+  else if (req.headers['x-access-token']) {
+    token = req.headers['x-access-token'];
+    tokenSource = 'x-access-token header';
+  }
+  // Solo usar cookies si no hay headers (app pública)
+  else if (req.cookies.authToken) {
+    token = req.cookies.authToken;
+    tokenSource = 'Cookie';
+  }
+
+  console.log('🔍 Token encontrado:', {
+    source: tokenSource,
+    tokenLength: token?.length,
+    tokenStart: token?.substring(0, 20) + '...'
+  });
 
   if (!token) {
     console.log('❌ Token no proporcionado');
@@ -28,13 +51,23 @@ export const authRequired = async (req, res, next) => {
   }
 
   try {
+    // Verificar y decodificar el token
     const decoded = jwt.verify(token, config.JWT.secret);
+    
+    console.log('🔓 Token decodificado:', {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      type: decoded.type,
+      exp: new Date(decoded.exp * 1000),
+      iat: new Date(decoded.iat * 1000)
+    });
     
     if (!decoded.id) {
       console.log('❌ Token inválido - sin ID');
       return res.status(401).json({ 
         success: false,
-        message: "Token inválido",
+        message: "Token inválido - sin ID de usuario",
         error: 'INVALID_TOKEN'
       });
     }
@@ -47,17 +80,49 @@ export const authRequired = async (req, res, next) => {
       let user = null;
       let userType = 'user';
       
-      // Buscar primero en usuarios
-      user = await User.findById(decoded.id);
-      
-      // Si no se encuentra, buscar en empleados
-      if (!user) {
+      // Determinar dónde buscar basado en el tipo de token
+      if (decoded.type === 'employee' || ['admin', 'manager', 'employee'].includes(decoded.role?.toLowerCase())) {
+        // Buscar primero en empleados
         user = await Employee.findById(decoded.id);
         userType = 'employee';
+        
+        // Si no se encuentra en empleados, buscar en usuarios
+        if (!user) {
+          user = await User.findById(decoded.id);
+          userType = 'user';
+        }
+      } else {
+        // Buscar primero en usuarios
+        user = await User.findById(decoded.id);
+        userType = 'user';
+        
+        // Si no se encuentra en usuarios, buscar en empleados
+        if (!user) {
+          user = await Employee.findById(decoded.id);
+          userType = 'employee';
+        }
       }
 
-      if (user && user.active !== false) {
-        // Actualizar último login
+      if (!user) {
+        console.log('❌ Usuario no encontrado en BD:', decoded.id);
+        return res.status(401).json({ 
+          success: false,
+          message: "Usuario no encontrado",
+          error: 'USER_NOT_FOUND'
+        });
+      }
+
+      if (user.active === false) {
+        console.log('❌ Usuario inactivo:', decoded.id);
+        return res.status(401).json({ 
+          success: false,
+          message: "Cuenta desactivada",
+          error: 'ACCOUNT_DISABLED'
+        });
+      }
+
+      // Actualizar último login
+      try {
         if (user.updateLastLogin && typeof user.updateLastLogin === 'function') {
           await user.updateLastLogin();
         } else {
@@ -65,15 +130,48 @@ export const authRequired = async (req, res, next) => {
           user.lastLogin = new Date();
           await user.save({ validateBeforeSave: false });
         }
-        
         console.log('📅 LastLogin actualizado para usuario:', user._id);
+      } catch (lastLoginError) {
+        console.warn('⚠️ Error actualizando lastLogin:', lastLoginError.message);
+        // No interrumpir el flujo por error de lastLogin
       }
+
+      // Verificar que el tipo de usuario coincida con el contexto
+      const isEmployeeRoute = req.originalUrl.includes('/employees') || 
+                             req.originalUrl.includes('/admin') ||
+                             req.originalUrl.includes('/dashboard');
+      
+      const isEmployee = userType === 'employee' || 
+                        ['admin', 'manager', 'employee'].includes(user.role?.toLowerCase());
+
+      // Si es una ruta de empleados pero el usuario no es empleado
+      if (isEmployeeRoute && !isEmployee) {
+        console.log('❌ Usuario no es empleado intentando acceder a ruta de empleados');
+        return res.status(403).json({ 
+          success: false,
+          message: "Acceso denegado - Se requiere cuenta de empleado",
+          error: 'EMPLOYEE_REQUIRED'
+        });
+      }
+      
+      console.log('✅ Usuario verificado en BD:', {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        type: userType,
+        active: user.active
+      });
+      
     } catch (dbError) {
-      console.warn('⚠️ Error actualizando lastLogin:', dbError.message);
-      // No interrumpir el flujo por error de lastLogin
+      console.error('❌ Error verificando usuario en BD:', dbError.message);
+      return res.status(500).json({ 
+        success: false,
+        message: "Error verificando usuario",
+        error: 'DB_ERROR'
+      });
     }
 
-    // Normalizar estructura del usuario
+    // Normalizar estructura del usuario para req.user
     req.user = {
       _id: decoded.id,
       id: decoded.id,
@@ -85,16 +183,31 @@ export const authRequired = async (req, res, next) => {
       active: decoded.active !== false
     };
 
-    console.log('✅ Usuario autenticado:', {
+    console.log('✅ Usuario autenticado exitosamente:', {
       id: req.user.id,
       type: req.user.type,
       roles: req.user.roles,
-      email: req.user.email
+      email: req.user.email,
+      tokenSource
     });
 
     next();
   } catch (error) {
-    console.log('❌ Error verificando token:', error.message);
+    console.log('❌ Error verificando token:', {
+      message: error.message,
+      name: error.name,
+      tokenSource
+    });
+    
+    // Limpiar cookie corrupta si el error viene de cookie
+    if (tokenSource === 'Cookie' && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
+      console.log('🗑️ Limpiando cookie corrupta');
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      });
+    }
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
@@ -104,10 +217,18 @@ export const authRequired = async (req, res, next) => {
       });
     }
     
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false,
+        message: "Token inválido o corrupto",
+        error: 'INVALID_TOKEN'
+      });
+    }
+    
     return res.status(401).json({ 
       success: false,
-      message: "Token inválido",
-      error: 'INVALID_TOKEN'
+      message: "Error de autenticación",
+      error: 'AUTH_ERROR'
     });
   }
 };

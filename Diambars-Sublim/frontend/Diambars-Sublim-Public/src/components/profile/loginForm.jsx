@@ -1,3 +1,4 @@
+// src/components/profile/loginForm.jsx
 import { useState } from 'react';
 import './loginForm.css';
 import { useLogin } from '../../hooks/useLogin';
@@ -20,7 +21,8 @@ export default function LoginForm() {
     handleSubmit: handleRegisterSubmit,
     errors: registerErrors,
     isSubmitting: isRegistering,
-    onSubmit: registerHandler
+    onSubmit: registerHandler,
+    watch: watchRegister
   } = useRegister(() => setIsLogin(true)); // callback para cambiar de vista tras registro
 
   const handleTabSwitch = (mode) => {
@@ -28,6 +30,9 @@ export default function LoginForm() {
   };
 
   const currentErrors = isLogin ? loginErrors : registerErrors;
+
+  // Watch para validación en tiempo real del teléfono
+  const phoneValue = watchRegister ? watchRegister('phone') : '';
 
   return (
     <div className="login-form-container">
@@ -46,95 +51,103 @@ export default function LoginForm() {
         <form className="form-content-content" onSubmit={isLogin ? handleLoginSubmit(loginHandler) : handleRegisterSubmit(registerHandler)}>
           {!isLogin && (
             <>
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                {...regRegister('name', {
-                  required: 'Nombre requerido',
-                  minLength: { value: 3, message: 'Debe tener al menos 3 caracteres' }
-                })}
-              />
-              {registerErrors.name && <p className="input-error">{registerErrors.name.message}</p>}
-
-              <div className="phone-wrapper">
-                <span>+503</span>
-                <input className='telephone-input'
-                  type="tel"
-                  placeholder="Número de teléfono"
-                  {...regRegister('phone', {
-                    required: 'Teléfono requerido',
-                    pattern: {
-                      value: /^[267][0-9]{7}$/,
-                      message: 'Número inválido (8 dígitos, comienza con 2, 6 o 7)'
-                    }
-                  })}
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Nombre completo"
+                  {...regRegister('name')}
+                  className={registerErrors.name ? 'input-error-border' : ''}
                 />
+                {registerErrors.name && <p className="input-error">{registerErrors.name.message}</p>}
               </div>
-              {registerErrors.phone && <p className="input-error">{registerErrors.phone.message}</p>}
 
-              <input
-                type="text"
-                placeholder="Dirección"
-                {...regRegister('address', {
-                  required: 'Dirección requerida',
-                  minLength: { value: 5, message: 'Debe tener al menos 5 caracteres' }
-                })}
-              />
-              {registerErrors.address && <p className="input-error">{registerErrors.address.message}</p>}
+              <div className="input-group">
+                <div className="phone-wrapper">
+                  <span>+503</span>
+                  <input 
+                    className={`telephone-input ${registerErrors.phone ? 'input-error-border' : ''}`}
+                    type="tel"
+                    placeholder="Número de teléfono"
+                    maxLength="8"
+                    {...regRegister('phone')}
+                    onInput={(e) => {
+                      // Solo permitir números
+                      e.target.value = e.target.value.replace(/\D/g, '');
+                    }}
+                  />
+                </div>
+                {registerErrors.phone && <p className="input-error">{registerErrors.phone.message}</p>}
+                {/* Validación visual en tiempo real */}
+                {phoneValue && phoneValue.length > 0 && phoneValue.length < 8 && !registerErrors.phone && (
+                  <p className="input-hint">Ingresa los 8 dígitos completos</p>
+                )}
+              </div>
+
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Dirección"
+                  {...regRegister('address')}
+                  className={registerErrors.address ? 'input-error-border' : ''}
+                />
+                {registerErrors.address && <p className="input-error">{registerErrors.address.message}</p>}
+              </div>
             </>
           )}
 
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            {...(isLogin
-              ? loginRegister('email', { required: 'Correo requerido' })
-              : regRegister('email', {
-                  required: 'Correo requerido',
-                  pattern: {
-                    value: /^\S+@\S+\.\S+$/,
-                    message: 'Formato de correo inválido'
-                  }
-                }))}
-          />
-          {currentErrors.email && <p className="input-error">{currentErrors.email.message}</p>}
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              {...(isLogin
+                ? loginRegister('email', { required: 'Correo requerido' })
+                : regRegister('email'))}
+              className={currentErrors.email ? 'input-error-border' : ''}
+            />
+            {currentErrors.email && <p className="input-error">{currentErrors.email.message}</p>}
+          </div>
 
-          <input
-            type="password"
-            placeholder="Contraseña"
-            {...(isLogin
-              ? loginRegister('password', { required: 'Contraseña requerida' })
-              : regRegister('password', {
-                  required: 'Contraseña requerida',
-                  minLength: {
-                    value: 6,
-                    message: 'Mínimo 6 caracteres'
-                  }
-                }))}
-          />
-          {currentErrors.password && <p className="input-error">{currentErrors.password.message}</p>}
+          <div className="input-group">
+            <input
+              type="password"
+              placeholder="Contraseña"
+              {...(isLogin
+                ? loginRegister('password', { required: 'Contraseña requerida' })
+                : regRegister('password'))}
+              className={currentErrors.password ? 'input-error-border' : ''}
+            />
+            {currentErrors.password && <p className="input-error">{currentErrors.password.message}</p>}
+          </div>
+
           {isLogin && (
             <a className='forgot-password-link-l' href="/passwordRecovery">
               ¿Olvidaste tu contraseña?
             </a>
           )}
+
           <button type="submit" className="main-button" disabled={isLoggingIn || isRegistering}>
-            {isLogin ? 'Entrar' : 'Siguiente'}
+            {isLogin 
+              ? (isLoggingIn ? 'Iniciando...' : 'Entrar') 
+              : (isRegistering ? 'Registrando...' : 'Siguiente')
+            }
           </button>
+
+          {/* Mostrar errores generales del registro */}
+          {!isLogin && registerErrors.root && (
+            <div className="form-error-message">
+              {registerErrors.root.message}
+            </div>
+          )}
         </form>
 
         {/* Mover el mensaje de error fuera del form y mostrarlo siempre que haya un error de login */}
         {isLogin && loginErrors.root && (
-          <div style={{ textAlign: 'center', marginTop: '1rem', color: 'red' }}>
+          <div className="form-error-message">
             {loginErrors.root.message === 'NEEDS_VERIFICATION' ? (
               <>
                 Correo no verificado, {' '}
                 <span 
-                  style={{ 
-                    color: '#007bff', 
-                    cursor: 'pointer', 
-                    textDecoration: 'underline' 
-                  }}
+                  className="verify-link"
                   onClick={() => handleVerifyEmailClick(loginErrors.root.email)}
                 >
                   verifícalo

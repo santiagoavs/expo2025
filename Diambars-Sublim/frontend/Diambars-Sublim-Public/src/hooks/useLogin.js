@@ -12,65 +12,125 @@ export const useLogin = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setError
-  } = useForm();
+    setError,
+    clearErrors
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
 
   const onSubmit = async (data) => {
     try {
-      const user = await loginUser(data);
-      console.log('Datos recibidos de loginUser:', user);
-      console.log('Keys de user:', Object.keys(user));
-      login(user); // Guardar usuario en contexto
+      console.log('[useLogin] Iniciando proceso de login');
       
-      // Si llega aquí, significa que el usuario sí está verificado
+      // Limpiar errores previos
+      clearErrors();
+      
+      // Normalizar email
+      const loginData = {
+        email: data.email.toLowerCase().trim(),
+        password: data.password
+      };
+      
+      console.log('[useLogin] Datos de login normalizados:', { email: loginData.email });
+      
+      const user = await loginUser(loginData);
+      
+      console.log('[useLogin] Usuario recibido del servicio:', user);
+      console.log('[useLogin] Propiedades del usuario:', Object.keys(user));
+      
+      // Guardar usuario en contexto
+      login(user);
+      
+      console.log('[useLogin] Login completado, redirigiendo a perfil');
+      
+      // Redirigir al perfil
       navigate('/profile');
+      
     } catch (error) {
-      // Debug: ver qué está llegando del backend
-      console.log('Error completo:', error);
-      console.log('Status:', error?.response?.status);
-      console.log('Data:', error?.response?.data);
-      console.log('Message:', error?.message);
-      console.log('needsVerification:', error?.needsVerification);
-
-      let message = 'Error al iniciar sesión';
-
-      // Verificar si es un error de correo no verificado
-      // El error puede venir en diferentes formatos
-      const isVerificationError = 
-        error?.needsVerification === true || 
-        error?.response?.data?.needsVerification === true ||
-        (error?.message && error.message.toLowerCase().includes('verifica')) ||
-        (error?.response?.data?.message && error.response.data.message.toLowerCase().includes('verifica'));
-
-      if (isVerificationError) {
-        console.log('Detectado error de verificación');
+      console.error('[useLogin] Error en el proceso de login:', error);
+      
+      // Manejar error de verificación
+      if (error.needsVerification === true) {
+        console.log('[useLogin] Detectado error de verificación para:', error.email || data.email);
         setError('root', { 
+          type: 'manual',
           message: 'NEEDS_VERIFICATION',
-          email: data.email 
+          email: error.email || data.email
         });
         return;
       }
-
-      // Verificar otros tipos de error
-      if (error?.response?.status === 401 || 
-          (error?.message && error.message.toLowerCase().includes('credenciales'))) {
-        message = 'Credenciales incorrectas';
+      
+      // Manejar otros errores
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (error.message) {
+        if (error.message.toLowerCase().includes('credenciales')) {
+          errorMessage = 'Email o contraseña incorrectos';
+        } else if (error.message.toLowerCase().includes('verificado') || 
+                   error.message.toLowerCase().includes('verifica')) {
+          // Por si acaso no se detectó como needsVerification
+          setError('root', { 
+            type: 'manual',
+            message: 'NEEDS_VERIFICATION',
+            email: data.email
+          });
+          return;
+        } else {
+          errorMessage = error.message;
+        }
       }
-
-      setError('root', { message });
+      
+      console.log('[useLogin] Estableciendo error:', errorMessage);
+      setError('root', { type: 'manual', message: errorMessage });
     }
   };
 
   const handleVerifyEmailClick = (email) => {
-    navigate('/verifyEmail', { state: { email, fromLogin: true } });
+    console.log('[useLogin] Redirigiendo a verificación para:', email);
+    navigate('/verifyEmail', { 
+      state: { 
+        email: email || 'tu correo',
+        fromLogin: true 
+      } 
+    });
+  };
+
+  // Validaciones mejoradas
+  const validateEmail = (value) => {
+    if (!value?.trim()) return 'Email requerido';
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)) {
+      return 'Formato de email inválido';
+    }
+    return true;
+  };
+
+  const validatePassword = (value) => {
+    if (!value) return 'Contraseña requerida';
+    if (value.length < 1) return 'Contraseña no puede estar vacía';
+    return true;
   };
 
   return {
-    register,
+    register: (name, options = {}) => {
+      // Agregar validaciones automáticas
+      switch (name) {
+        case 'email':
+          return register(name, { ...options, validate: validateEmail });
+        case 'password':
+          return register(name, { ...options, validate: validatePassword });
+        default:
+          return register(name, options);
+      }
+    },
     handleSubmit,
     errors,
     isSubmitting,
     onSubmit,
-    handleVerifyEmailClick
+    handleVerifyEmailClick,
+    clearErrors
   };
 };

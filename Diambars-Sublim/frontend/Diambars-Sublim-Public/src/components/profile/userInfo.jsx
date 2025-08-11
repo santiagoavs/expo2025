@@ -1,3 +1,4 @@
+// src/components/profile/UserInfo.jsx
 import { useState, useEffect } from 'react';
 import './UserInfo.css';
 import { useAuth } from '../../context/authContext';
@@ -24,11 +25,17 @@ function UserInfo() {
   useEffect(() => {
     if (user) {
       console.log('Usuario completo en useEffect:', user);
+      
+      // Compatibilidad: usar phoneNumber o phone según lo que esté disponible
+      const phoneValue = user.phoneNumber || user.phone || '';
+      
       const userData = {
         name: user.name || '',
-        phoneNumber: user.phoneNumber || '',
+        phoneNumber: phoneValue,
         email: user.email || ''
       };
+      
+      console.log('Datos del usuario cargados:', userData);
       setFormData(userData);
       setOriginalData(userData);
     }
@@ -52,11 +59,11 @@ function UserInfo() {
       newErrors.email = 'Por favor ingrese un correo electrónico válido';
     }
 
-    // Validar teléfono
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'El número de teléfono es requerido';
-    } else if (!/^[0-9]{8}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'El teléfono debe contener exactamente 8 dígitos';
+    // Validar teléfono (opcional, pero si se proporciona debe ser válido)
+    if (formData.phoneNumber && formData.phoneNumber.trim()) {
+      if (!/^[0-9]{8}$/.test(formData.phoneNumber.trim())) {
+        newErrors.phoneNumber = 'El teléfono debe contener exactamente 8 dígitos';
+      }
     }
 
     setErrors(newErrors);
@@ -120,24 +127,33 @@ function UserInfo() {
       // Determinar si el email cambió para la verificación automática
       const emailChanged = formData.email !== originalData.email;
       
-      // Preparar datos para enviar
+      // Preparar datos para enviar - usar phoneNumber para el backend
       const updateData = {
         name: formData.name.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
+        phoneNumber: formData.phoneNumber ? formData.phoneNumber.trim() : '',
         email: formData.email.toLowerCase().trim()
       };
 
-      // Actualizar perfil (ya no necesitamos pasar userId porque la ruta es /users/profile)
+      console.log('Datos a enviar al backend:', updateData);
+
+      // Actualizar perfil usando la ruta /users/profile
       const response = await updateUserProfile(null, updateData, originalData.email);
+      
+      console.log('Respuesta del servidor:', response);
       
       // El backend devuelve el usuario actualizado en response.user
       const updatedUserFromResponse = response.user || response;
       
-      // Crear el usuario actualizado para el contexto
+      // Crear el usuario actualizado para el contexto, asegurando compatibilidad
       const updatedUser = {
         ...user,
-        ...updatedUserFromResponse
+        ...updatedUserFromResponse,
+        // Asegurar que tanto phone como phoneNumber estén disponibles
+        phone: updatedUserFromResponse.phoneNumber || updatedUserFromResponse.phone,
+        phoneNumber: updatedUserFromResponse.phoneNumber || updatedUserFromResponse.phone
       };
+
+      console.log('Usuario actualizado para contexto:', updatedUser);
 
       // Actualizar el contexto con los nuevos datos
       login(updatedUser);
@@ -250,7 +266,7 @@ function UserInfo() {
                 handleInputChange('phoneNumber', value);
               }}
               className={`underline-input ${errors.phoneNumber ? 'error' : ''}`}
-              placeholder="+503 Número de teléfono"
+              placeholder="+503 Número de teléfono (opcional)"
               disabled={isLoading}
             />
             {errors.phoneNumber && <span className="error-text-info">{errors.phoneNumber}</span>}
@@ -283,7 +299,7 @@ function UserInfo() {
         
         <div className="email-status-row">
           <div className="email-verification-status">
-            {/* Debug temporal - verificar diferentes posibles nombres de campo */}
+            {/* Verificación de estado de email con múltiples campos posibles */}
             {console.log('Usuario completo para verificación:', {
               verified: user.verified,
               isVerified: user.isVerified,
