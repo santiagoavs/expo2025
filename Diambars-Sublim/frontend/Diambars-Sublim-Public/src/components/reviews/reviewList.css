@@ -22,7 +22,9 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  flex-direction: column-reverse;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .review-profile-pic {
@@ -51,12 +53,18 @@
   font-size: 1rem;
   font-weight: bold;
   color: #3F2724;
+  margin-bottom: 5px;
+
+}
+.review-stars{
+  margin-left: 400px;
+  margin-right: 20px;
 }
 
 .review-text {
   margin-top: 1rem;
   font-size: 1.1rem;
-  text-align: center;
+  text-align: left;
   color: #3F2724;
   padding: 0 1rem;
 }

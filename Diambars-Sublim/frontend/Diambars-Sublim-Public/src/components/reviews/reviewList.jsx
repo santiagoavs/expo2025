@@ -6,17 +6,7 @@ import profilePic from '/images/reviews/profileDefault.png';
 import { useDataReviews } from '../../hooks/useDataReviews';
 
 
-const ReviewList = () => {
-
-    const { rating,
-        setRating,
-        comment,
-        setComment,
-        isActive,
-        setIsActive,
-        reviews,
-        setReviews,
-        handleSubmit, } =useDataReviews();
+const ReviewList = ({reviews}) => {
 
   return (
     <div className="review-list">
@@ -30,7 +20,9 @@ const ReviewList = () => {
               <div className="review-user-info">
                 <div className="review-user-top">
                   <span className="review-username">{review.userId.name}</span>
-                  <ReadOnlyStars rating={review.rating} />
+                  <div className='review-stars'>
+                  <label>Rating</label><ReadOnlyStars rating={review.rating} />
+                  </div>
                 </div>
               </div>
             </div>
