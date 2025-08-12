@@ -21,11 +21,13 @@ import productRoutes from "./src/routes/product.routes.js";
 import designRoutes from "./src/routes/design.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
+import reviewsRoutes from "./src/routes/reviews.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
 import { getPublicWompiConfig, isWompiConfigured } from "./src/services/wompi.service.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
+import Review from './src/models/reviews.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -165,6 +167,7 @@ app.get("/api/health", (req, res) => {
       mode: isWompiConfigured() ? 'real' : 'fictitious'
     },
     endpoints: {
+      Reviews: "/api/reviews",
       auth: '/api/auth',
       users: '/api/users',
       employees: '/api/employees',
@@ -201,6 +204,7 @@ app.use("/api/categories", conditionalJsonMiddleware, categoryRoutes);
 
 // ========== RUTAS DE PRODUCTOS ==========
 app.use("/api/products", conditionalJsonMiddleware, productRoutes);
+app.use("/api/reviews", jsonMiddleware, reviewsRoutes);
 
 // ========== RUTAS DE DISEÑOS ==========
 app.use("/api/designs", jsonMiddleware, designRoutes);
