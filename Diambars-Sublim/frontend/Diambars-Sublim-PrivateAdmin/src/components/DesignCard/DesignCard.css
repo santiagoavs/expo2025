@@ -1,0 +1,532 @@
+/* === DESIGN CARD STYLES - SIGUIENDO PALETA ESTABLECIDA === */
+
+.design-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(1, 3, 38, 0.1);
+    border: 1px solid rgba(31, 100, 191, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .design-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(1, 3, 38, 0.15);
+    border-color: rgba(31, 100, 191, 0.2);
+  }
+  
+  .design-card--loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  
+  /* Header con estado y precio */
+  .design-card__header {
+    padding: 16px 16px 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .design-card__status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .design-card__status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+  }
+  
+  .design-card__status-badge--blue {
+    background: rgba(31, 100, 191, 0.1);
+    color: #1F64BF;
+    border-color: rgba(31, 100, 191, 0.2);
+  }
+  
+  .design-card__status-badge--orange {
+    background: rgba(255, 165, 0, 0.1);
+    color: #FF8C00;
+    border-color: rgba(255, 165, 0, 0.2);
+  }
+  
+  .design-card__status-badge--green {
+    background: rgba(3, 44, 166, 0.1);
+    color: #032CA6;
+    border-color: rgba(3, 44, 166, 0.2);
+  }
+  
+  .design-card__status-badge--red {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: rgba(220, 53, 69, 0.2);
+  }
+  
+  .design-card__status-badge--purple {
+    background: rgba(4, 13, 191, 0.1);
+    color: #040DBF;
+    border-color: rgba(4, 13, 191, 0.2);
+  }
+  
+  .design-card__status-badge--gray {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border-color: rgba(108, 117, 125, 0.2);
+  }
+  
+  .design-card__price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #032CA6;
+    background: rgba(3, 44, 166, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(3, 44, 166, 0.2);
+  }
+  
+  /* Vista previa del diseño */
+  .design-card__preview {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: #F2F2F2;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  
+  .design-card__preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .design-card:hover .design-card__preview-image {
+    transform: scale(1.05);
+  }
+  
+  .design-card__preview-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #032CA6;
+    font-size: 14px;
+    font-weight: 500;
+    gap: 8px;
+    background: linear-gradient(135deg, #F2F2F2, rgba(31, 100, 191, 0.05));
+  }
+  
+  .design-card__preview-placeholder span:first-child {
+    font-size: 24px;
+  }
+  
+  /* Overlay con información rápida */
+  .design-card__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(1, 3, 38, 0.8));
+    padding: 12px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .design-card:hover .design-card__overlay {
+    transform: translateY(0);
+  }
+  
+  .design-card__quick-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .design-card__info-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+  }
+  
+  /* Contenido principal */
+  .design-card__content {
+    padding: 0 16px 16px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .design-card__main-info {
+    flex: 1;
+  }
+  
+  .design-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #010326;
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .design-card__product-name {
+    font-size: 14px;
+    color: #032CA6;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .design-card__client-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #032CA6;
+    font-size: 13px;
+  }
+  
+  .design-card__client-name {
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Fechas */
+  .design-card__dates {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(31, 100, 191, 0.1);
+  }
+  
+  .design-card__date-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  
+  .design-card__date-label {
+    color: #032CA6;
+    font-weight: 500;
+  }
+  
+  .design-card__date-value {
+    color: #010326;
+    font-weight: 600;
+  }
+  
+  /* Acciones */
+  .design-card__actions {
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid rgba(31, 100, 191, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .design-card__primary-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .design-card__response-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .design-card__secondary-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  /* Botones */
+  .design-card__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    min-height: 36px;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .design-card__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  .design-card__btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .design-card__btn:hover::before {
+    left: 100%;
+  }
+  
+  /* Botón primario */
+  .design-card__btn--primary {
+    background: linear-gradient(135deg, #1F64BF, #032CA6);
+    color: white;
+    border-color: #1F64BF;
+    flex: 1;
+  }
+  
+  .design-card__btn--primary:hover {
+    background: linear-gradient(135deg, #032CA6, #010326);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 100, 191, 0.3);
+  }
+  
+  /* Botón de éxito */
+  .design-card__btn--success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-color: #28a745;
+    flex: 1;
+  }
+  
+  .design-card__btn--success:hover {
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  }
+  
+  /* Botón de peligro */
+  .design-card__btn--danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border-color: #dc3545;
+    flex: 1;
+  }
+  
+  .design-card__btn--danger:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  }
+  
+  /* Botón secundario */
+  .design-card__btn--secondary {
+    background: rgba(31, 100, 191, 0.1);
+    color: #1F64BF;
+    border-color: rgba(31, 100, 191, 0.2);
+    min-width: 40px;
+    padding: 8px;
+  }
+  
+  .design-card__btn--secondary:hover {
+    background: rgba(31, 100, 191, 0.2);
+    border-color: #1F64BF;
+    color: #032CA6;
+  }
+  
+  /* Botón de peligro outline */
+  .design-card__btn--danger-outline {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: rgba(220, 53, 69, 0.2);
+    min-width: 40px;
+    padding: 8px;
+  }
+  
+  .design-card__btn--danger-outline:hover {
+    background: rgba(220, 53, 69, 0.2);
+    border-color: #dc3545;
+  }
+  
+  /* Overlay de carga */
+  .design-card__loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+  }
+  
+  .design-card__loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(31, 100, 191, 0.2);
+    border-top: 3px solid #1F64BF;
+    border-radius: 50%;
+    animation: designCardSpin 1s linear infinite;
+  }
+  
+  @keyframes designCardSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .design-card__preview {
+      height: 160px;
+    }
+  
+    .design-card__btn {
+      font-size: 12px;
+      padding: 6px 10px;
+      min-height: 32px;
+    }
+  
+    .design-card__response-actions {
+      flex-direction: column;
+    }
+  
+    .design-card__title {
+      font-size: 15px;
+    }
+  
+    .design-card__product-name {
+      font-size: 13px;
+    }
+  
+    .design-card__quick-info {
+      justify-content: center;
+    }
+  
+    .design-card__info-item {
+      font-size: 11px;
+      padding: 3px 6px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .design-card__content {
+      padding: 0 12px 12px 12px;
+    }
+  
+    .design-card__actions {
+      padding: 12px;
+    }
+  
+    .design-card__header {
+      padding: 12px 12px 0 12px;
+    }
+  
+    .design-card__preview {
+      height: 140px;
+      margin: 8px 0;
+    }
+  
+    .design-card__secondary-actions {
+      gap: 6px;
+    }
+  
+    .design-card__btn--secondary,
+    .design-card__btn--danger-outline {
+      min-width: 36px;
+      padding: 6px;
+    }
+  }
+  
+  /* Animaciones mejoradas */
+  .design-card {
+    animation: designCardFadeIn 0.4s ease-out;
+  }
+  
+  @keyframes designCardFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Estados especiales */
+  .design-card--highlighted {
+    border-color: #1F64BF;
+    box-shadow: 0 4px 16px rgba(31, 100, 191, 0.2);
+  }
+  
+  .design-card--urgent {
+    border-left: 4px solid #dc3545;
+  }
+  
+  .design-card--success {
+    border-left: 4px solid #28a745;
+  }
+  
+  /* Accesibilidad */
+  .design-card__btn:focus {
+    outline: 2px solid #1F64BF;
+    outline-offset: 2px;
+  }
+  
+  .design-card:focus-within {
+    box-shadow: 0 0 0 2px rgba(31, 100, 191, 0.3);
+  }
+  
+  /* Mejoras de rendimiento */
+  .design-card * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }

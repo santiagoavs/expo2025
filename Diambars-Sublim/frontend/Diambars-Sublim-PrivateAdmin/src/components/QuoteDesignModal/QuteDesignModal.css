@@ -1,0 +1,626 @@
+/* === QUOTE DESIGN MODAL STYLES - SIGUIENDO PALETA ESTABLECIDA === */
+
+.quote-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(1, 3, 38, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+    animation: quoteModalOverlayFadeIn 0.3s ease-out;
+  }
+  
+  @keyframes quoteModalOverlayFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .quote-modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(1, 3, 38, 0.3);
+    border: 1px solid rgba(31, 100, 191, 0.1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    animation: quoteModalSlideIn 0.3s ease-out;
+    position: relative;
+  }
+  
+  @keyframes quoteModalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* Header del modal */
+  .quote-modal__header {
+    padding: 24px 24px 20px 24px;
+    border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+  }
+  
+  .quote-modal__header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #1F64BF, #032CA6, #040DBF);
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .quote-modal__header-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .quote-modal__icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, rgba(31, 100, 191, 0.1), rgba(3, 44, 166, 0.1));
+    border: 1px solid rgba(31, 100, 191, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #1F64BF;
+  }
+  
+  .quote-modal__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #010326;
+    margin: 0 0 4px 0;
+    background: linear-gradient(135deg, #010326, #1F64BF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .quote-modal__subtitle {
+    font-size: 14px;
+    color: #032CA6;
+    margin: 0;
+    font-weight: 500;
+  }
+  
+  .quote-modal__close-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(31, 100, 191, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #1F64BF;
+    font-size: 18px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  
+  .quote-modal__close-btn:hover {
+    background: rgba(31, 100, 191, 0.2);
+    color: #032CA6;
+    transform: rotate(90deg);
+  }
+  
+  .quote-modal__close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Información del diseño */
+  .quote-modal__design-info {
+    padding: 20px 24px;
+    background: rgba(31, 100, 191, 0.02);
+    border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .quote-modal__design-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #F2F2F2;
+    border: 1px solid rgba(31, 100, 191, 0.1);
+  }
+  
+  .quote-modal__design-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .quote-modal__design-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #032CA6;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .quote-modal__design-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .quote-modal__detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  .quote-modal__detail-label {
+    color: #032CA6;
+    font-weight: 500;
+    min-width: 80px;
+  }
+  
+  .quote-modal__detail-value {
+    color: #010326;
+    font-weight: 600;
+    text-align: right;
+  }
+  
+  .quote-modal__complexity {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .quote-modal__complexity--low {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+  }
+  
+  .quote-modal__complexity--medium {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+  }
+  
+  .quote-modal__complexity--high {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+  }
+  
+  /* Formulario */
+  .quote-modal__form {
+    padding: 24px;
+  }
+  
+  .quote-modal__field-group {
+    margin-bottom: 20px;
+  }
+  
+  .quote-modal__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #010326;
+    margin-bottom: 8px;
+  }
+  
+  .quote-modal__input-wrapper {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .quote-modal__input,
+  .quote-modal__textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(31, 100, 191, 0.2);
+    border-radius: 10px;
+    font-size: 14px;
+    color: #010326;
+    background: #F2F2F2;
+    transition: all 0.3s ease;
+    outline: none;
+    font-family: inherit;
+  }
+  
+  .quote-modal__input:focus,
+  .quote-modal__textarea:focus {
+    border-color: #1F64BF;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(31, 100, 191, 0.1);
+  }
+  
+  .quote-modal__input--error,
+  .quote-modal__textarea--error {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+  }
+  
+  .quote-modal__input:disabled,
+  .quote-modal__textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #e9ecef;
+  }
+  
+  .quote-modal__textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+  }
+  
+  .quote-modal__suggestion-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(31, 100, 191, 0.1);
+    border: 1px solid rgba(31, 100, 191, 0.2);
+    border-radius: 8px;
+    color: #1F64BF;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .quote-modal__suggestion-btn:hover {
+    background: rgba(31, 100, 191, 0.2);
+    border-color: #1F64BF;
+    transform: translateY(-1px);
+  }
+  
+  .quote-modal__suggestion-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .quote-modal__char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #032CA6;
+    margin-top: 4px;
+  }
+  
+  .quote-modal__error {
+    display: block;
+    color: #dc3545;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+  }
+  
+  /* Resumen de cotización */
+  .quote-modal__summary {
+    margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(31, 100, 191, 0.05), rgba(3, 44, 166, 0.02));
+    border: 1px solid rgba(31, 100, 191, 0.1);
+    border-radius: 12px;
+    position: relative;
+  }
+  
+  .quote-modal__summary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #1F64BF, #032CA6);
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .quote-modal__summary-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #010326;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .quote-modal__summary-title::before {
+    content: '💰';
+    font-size: 18px;
+  }
+  
+  .quote-modal__summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .quote-modal__summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+  }
+  
+  .quote-modal__summary-item:last-child {
+    border-bottom: none;
+  }
+  
+  .quote-modal__summary-item--highlight {
+    background: rgba(31, 100, 191, 0.1);
+    margin: 0 -12px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(31, 100, 191, 0.2);
+    font-weight: 600;
+  }
+  
+  .quote-modal__summary-value {
+    font-weight: 700;
+    color: #1F64BF;
+    font-size: 16px;
+  }
+  
+  .quote-modal__summary-item--highlight .quote-modal__summary-value {
+    color: #032CA6;
+  }
+  
+  /* Botones de acción */
+  .quote-modal__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(31, 100, 191, 0.1);
+  }
+  
+  .quote-modal__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    min-height: 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .quote-modal__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  .quote-modal__btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .quote-modal__btn:hover::before {
+    left: 100%;
+  }
+  
+  .quote-modal__btn--primary {
+    background: linear-gradient(135deg, #1F64BF, #032CA6);
+    color: white;
+    border-color: #1F64BF;
+    box-shadow: 0 4px 12px rgba(31, 100, 191, 0.3);
+  }
+  
+  .quote-modal__btn--primary:hover {
+    background: linear-gradient(135deg, #032CA6, #010326);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(31, 100, 191, 0.4);
+  }
+  
+  .quote-modal__btn--secondary {
+    background: rgba(31, 100, 191, 0.1);
+    color: #1F64BF;
+    border-color: rgba(31, 100, 191, 0.2);
+  }
+  
+  .quote-modal__btn--secondary:hover {
+    background: rgba(31, 100, 191, 0.2);
+    border-color: #1F64BF;
+    color: #032CA6;
+  }
+  
+  /* Loading spinner */
+  .quote-modal__loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: quoteModalSpin 1s linear infinite;
+  }
+  
+  @keyframes quoteModalSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .quote-modal-overlay {
+      padding: 16px;
+    }
+  
+    .quote-modal {
+      max-width: 100%;
+      max-height: 95vh;
+      border-radius: 16px;
+    }
+  
+    .quote-modal__header {
+      padding: 20px 20px 16px 20px;
+    }
+  
+    .quote-modal__title {
+      font-size: 20px;
+    }
+  
+    .quote-modal__design-info {
+      padding: 16px 20px;
+      flex-direction: column;
+      gap: 16px;
+    }
+  
+    .quote-modal__design-preview {
+      align-self: center;
+      width: 100px;
+      height: 100px;
+    }
+  
+    .quote-modal__form {
+      padding: 20px;
+    }
+  
+    .quote-modal__actions {
+      flex-direction: column-reverse;
+    }
+  
+    .quote-modal__btn {
+      width: 100%;
+      justify-content: center;
+    }
+  
+    .quote-modal__input-wrapper {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .quote-modal__suggestion-btn {
+      align-self: flex-start;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .quote-modal-overlay {
+      padding: 12px;
+    }
+  
+    .quote-modal__header {
+      padding: 16px;
+    }
+  
+    .quote-modal__header-info {
+      gap: 12px;
+    }
+  
+    .quote-modal__icon {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+  
+    .quote-modal__title {
+      font-size: 18px;
+    }
+  
+    .quote-modal__form {
+      padding: 16px;
+    }
+  
+    .quote-modal__design-info {
+      padding: 16px;
+    }
+  
+    .quote-modal__summary {
+      margin: 20px 0;
+      padding: 16px;
+    }
+  
+    .quote-modal__btn {
+      padding: 10px 20px;
+      min-height: 40px;
+      font-size: 13px;
+    }
+  }
+  
+  /* Mejoras de accesibilidad */
+  .quote-modal__btn:focus {
+    outline: 2px solid #1F64BF;
+    outline-offset: 2px;
+  }
+  
+  .quote-modal__input:focus,
+  .quote-modal__textarea:focus {
+    outline: none;
+  }
+  
+  /* Animación de entrada más suave en móviles */
+  @media (prefers-reduced-motion: reduce) {
+    .quote-modal,
+    .quote-modal-overlay {
+      animation: none;
+    }
+    
+    .quote-modal__btn::before {
+      transition: none;
+    }
+  }

@@ -1,167 +1,111 @@
-/* === CREATE PRODUCT MODAL STYLES === */
+/* === ESTILOS ADICIONALES PARA MODAL MEJORADO === */
 
-/* Overlay del modal */
-.create-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(1, 3, 38, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(5px);
-  padding: 20px;
-  animation: createModalFadeIn 0.3s ease-out;
+/* Modal más grande para tabs */
+.create-modal-large {
+  max-width: 1200px;
+  max-height: 95vh;
 }
 
-@keyframes createModalFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Contenedor principal del modal */
-.create-modal-container {
-  background: white;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(1, 3, 38, 0.3);
-  border: 1px solid rgba(31, 100, 191, 0.1);
-  animation: createModalSlideIn 0.3s ease-out;
-  display: flex;
-  flex-direction: column;
-}
-
-@keyframes createModalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Header del modal */
-.create-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 32px;
-  background: linear-gradient(135deg, #F2F2F2, rgba(31, 100, 191, 0.05));
-  border-bottom: 2px solid rgba(31, 100, 191, 0.1);
-  flex-shrink: 0;
-}
-
-.create-modal-title-wrapper {
+/* Header con acciones adicionales */
+.create-modal-header-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.create-modal-icon {
-  color: #1F64BF;
-  font-size: 24px;
-}
-
-.create-modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #010326;
-  margin: 0;
-}
-
-.create-modal-close-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: rgba(1, 3, 38, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #010326;
-  font-size: 20px;
-}
-
-.create-modal-close-btn:hover {
-  background: #010326;
-  color: white;
-  transform: scale(1.1);
-}
-
-/* Contenido del modal */
-.create-modal-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0;
-}
-
-/* Formulario */
-.create-product-form {
-  padding: 32px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Secciones del formulario */
-.create-form-section {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.create-form-section:last-of-type {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.create-form-section-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #010326;
-  margin: 0 0 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.create-form-section-title::before {
-  content: '';
-  width: 3px;
-  height: 20px;
-  background: linear-gradient(135deg, #1F64BF, #032CA6);
-  border-radius: 2px;
-}
-
-/* Header de sección con botón */
-.create-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.create-add-area-btn {
+.create-preview-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #1F64BF, #032CA6);
+  background: rgba(31, 100, 191, 0.1);
+  color: #1F64BF;
+  border: 1px solid rgba(31, 100, 191, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-preview-btn:hover {
+  background: #1F64BF;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Sistema de tabs */
+.create-modal-tabs {
+  display: flex;
+  background: #F2F2F2;
+  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+  padding: 0 32px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.create-tab-btn {
+  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  color: #032CA6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 8px 8px 0 0;
+}
+
+.create-tab-btn:hover {
+  background: rgba(31, 100, 191, 0.05);
+  color: #1F64BF;
+}
+
+.create-tab-btn.active {
+  background: white;
+  color: #010326;
+  font-weight: 600;
+  border-bottom: 2px solid #1F64BF;
+}
+
+.create-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: white;
+}
+
+/* Contenido de tabs */
+.create-tab-content {
+  animation: createTabFadeIn 0.3s ease-out;
+}
+
+@keyframes createTabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Acciones de áreas mejoradas */
+.create-area-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.create-konva-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #032CA6, #1F64BF);
   color: white;
   border: none;
   border-radius: 8px;
@@ -172,252 +116,76 @@
   transition: all 0.3s ease;
 }
 
-.create-add-area-btn:hover {
+.create-konva-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(31, 100, 191, 0.3);
 }
 
-/* Filas del formulario */
-.create-form-row {
+.create-konva-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Imágenes adicionales */
+.create-additional-upload {
+  min-height: 120px;
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.create-additional-previews {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Grupos del formulario */
-.create-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.create-form-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #010326;
-  margin-bottom: 4px;
-}
-
-.create-form-input,
-.create-form-select,
-.create-form-textarea {
-  padding: 12px 16px;
-  border: 1px solid rgba(31, 100, 191, 0.2);
-  border-radius: 8px;
-  font-size: 14px;
-  color: #010326;
-  background: #F2F2F2;
-  transition: all 0.3s ease;
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.create-form-input:focus,
-.create-form-select:focus,
-.create-form-textarea:focus {
-  border-color: #1F64BF;
-  box-shadow: 0 0 0 3px rgba(31, 100, 191, 0.1);
-  background: white;
-}
-
-.create-form-input::placeholder,
-.create-form-textarea::placeholder {
-  color: rgba(3, 44, 166, 0.6);
-}
-
-.create-input-error {
-  border-color: #040DBF !important;
-  box-shadow: 0 0 0 3px rgba(4, 13, 191, 0.1) !important;
-}
-
-.create-form-error {
-  color: #040DBF;
-  font-size: 12px;
-  font-weight: 500;
-  margin-top: 4px;
-  display: block;
-}
-
-.create-submit-error {
-  background: rgba(4, 13, 191, 0.1);
-  border: 1px solid rgba(4, 13, 191, 0.3);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-weight: 600;
-}
-
-/* Textarea específico */
-.create-form-textarea {
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
-}
-
-/* Checkbox personalizado */
-.create-form-checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 12px 0;
-}
-
-.create-form-checkbox {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #1F64BF;
-  border-radius: 4px;
-  background: #F2F2F2;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.create-form-checkbox:checked {
-  background: #1F64BF;
-  border-color: #1F64BF;
-}
-
-.create-form-checkbox:checked::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.create-form-checkbox-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #010326;
-}
-
-/* Subida de imagen */
-.create-image-upload-container {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 12px;
+  margin-top: 16px;
 }
 
-.create-image-upload-area {
-  border: 2px dashed rgba(31, 100, 191, 0.3);
-  border-radius: 12px;
-  padding: 32px;
-  text-align: center;
-  background: rgba(31, 100, 191, 0.02);
-  transition: all 0.3s ease;
+.create-additional-preview {
   position: relative;
-}
-
-.create-image-upload-area:hover {
-  border-color: #1F64BF;
-  background: rgba(31, 100, 191, 0.05);
-}
-
-.create-image-upload-label {
-  cursor: pointer;
-  display: block;
-}
-
-.create-image-upload-input {
-  display: none;
-}
-
-.create-upload-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.create-upload-icon {
-  font-size: 32px;
-  color: #1F64BF;
-}
-
-.create-upload-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #010326;
-}
-
-.create-upload-hint {
-  font-size: 14px;
-  color: #032CA6;
-  opacity: 0.8;
-}
-
-/* Preview de imagen */
-.create-image-preview {
-  position: relative;
-  display: inline-block;
-}
-
-.create-preview-image {
-  max-width: 200px;
-  max-height: 200px;
   border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+}
+
+.create-additional-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border: 2px solid rgba(31, 100, 191, 0.2);
+  border-radius: 8px;
 }
 
-.create-image-remove-btn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-  background: #040DBF;
-  color: white;
-  border: none;
-  border-radius: 50%;
+/* Checkboxes en grupo */
+.create-checkbox-group {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.create-image-remove-btn:hover {
-  background: #010326;
-  transform: scale(1.1);
-}
-
-/* Áreas de personalización - CORREGIDO COMPLETAMENTE */
-.create-customization-area {
+/* Opciones de producto */
+.create-product-option {
   background: rgba(31, 100, 191, 0.02);
   border: 1px solid rgba(31, 100, 191, 0.1);
   border-radius: 12px;
   padding: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   transition: all 0.3s ease;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.create-customization-area:hover {
+.create-product-option:hover {
   border-color: #1F64BF;
   box-shadow: 0 2px 8px rgba(31, 100, 191, 0.1);
 }
 
-.create-area-header {
+.create-option-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
 
-.create-area-number {
+.create-option-number {
   font-size: 14px;
   font-weight: 600;
   color: #1F64BF;
@@ -427,7 +195,66 @@
   border: 1px solid rgba(31, 100, 191, 0.2);
 }
 
-.create-remove-area-btn {
+.create-option-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Valores de opciones */
+.create-option-values {
+  background: white;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.create-values-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+}
+
+.create-add-value-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(31, 100, 191, 0.1);
+  color: #1F64BF;
+  border: 1px solid rgba(31, 100, 191, 0.2);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-add-value-btn:hover {
+  background: #1F64BF;
+  color: white;
+}
+
+.create-option-value {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #F2F2F2;
+  border-radius: 6px;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+}
+
+.create-value-fields {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.create-remove-value-btn {
   width: 28px;
   height: 28px;
   background: rgba(4, 13, 191, 0.1);
@@ -442,239 +269,107 @@
   font-size: 12px;
 }
 
-.create-remove-area-btn:hover {
+.create-remove-value-btn:hover {
   background: #040DBF;
   color: white;
 }
 
-.create-area-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* GRID DE DIMENSIONES COMPLETAMENTE CORREGIDO */
-.create-area-dimensions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.create-dimension-input {
+/* Estado vacío para opciones */
+.create-empty-options {
   text-align: center;
-  min-width: 0;
-  width: 100%;
-  padding: 8px 4px;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-/* Footer del modal */
-.create-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 24px 32px;
-  border-top: 1px solid rgba(31, 100, 191, 0.1);
-  flex-shrink: 0;
-}
-
-.create-cancel-btn,
-.create-submit-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
+  padding: 40px 20px;
+  color: #032CA6;
+  background: rgba(31, 100, 191, 0.02);
+  border: 2px dashed rgba(31, 100, 191, 0.2);
   border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
+  font-style: italic;
 }
 
-.create-cancel-btn {
-  background: rgba(1, 3, 38, 0.1);
-  color: #010326;
-  border: 1px solid rgba(1, 3, 38, 0.2);
-}
-
-.create-cancel-btn:hover {
-  background: rgba(1, 3, 38, 0.2);
-  transform: translateY(-2px);
-}
-
-.create-submit-btn {
-  background: linear-gradient(135deg, #1F64BF, #032CA6);
-  color: white;
-  box-shadow: 0 4px 12px rgba(31, 100, 191, 0.3);
-}
-
-.create-submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(31, 100, 191, 0.4);
-}
-
-.create-submit-btn:disabled,
-.create-cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-/* Spinner del botón */
-.create-btn-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: createBtnSpin 1s linear infinite;
-}
-
-@keyframes createBtnSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Responsive Design - MEJORADO Y CORREGIDO */
+/* Responsive para tabs */
 @media (max-width: 768px) {
-  .create-modal-container {
+  .create-modal-large {
     max-width: calc(100vw - 20px);
     max-height: calc(100vh - 20px);
-    margin: 10px;
   }
 
-  .create-modal-header,
-  .create-product-form,
-  .create-modal-footer {
-    padding-left: 16px;
-    padding-right: 16px;
+  .create-modal-tabs {
+    padding: 0 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .create-product-form {
-    padding: 20px 16px;
+  .create-tab-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
-  .create-form-row {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .create-area-dimensions {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .create-section-header {
+  .create-area-actions {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
   }
 
+  .create-konva-btn,
   .create-add-area-btn {
     width: 100%;
     justify-content: center;
   }
 
-  .create-modal-footer {
-    flex-direction: column-reverse;
-    gap: 12px;
+  .create-value-fields {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .create-cancel-btn,
-  .create-submit-btn {
+  .create-additional-previews {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+
+  .create-checkbox-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .create-modal-header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .create-preview-btn {
     width: 100%;
     justify-content: center;
-  }
-
-  .create-customization-area {
-    padding: 16px;
-  }
-
-  .create-dimension-input {
-    font-size: 12px;
-    padding: 6px 4px;
   }
 }
 
 @media (max-width: 480px) {
-  .create-modal-overlay {
-    padding: 5px;
+  .create-modal-tabs {
+    padding: 0 8px;
   }
 
-  .create-modal-container {
-    max-width: calc(100vw - 10px);
-    max-height: calc(100vh - 10px);
+  .create-tab-btn {
+    padding: 10px 12px;
+    font-size: 12px;
   }
 
-  .create-modal-header {
-    padding: 12px;
-  }
-
-  .create-modal-title {
-    font-size: 1.2rem;
-  }
-
-  .create-product-form {
+  .create-product-option,
+  .create-customization-area {
     padding: 16px 12px;
   }
 
-  .create-form-section {
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-  }
-
-  .create-area-dimensions {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .create-dimension-input {
-    font-size: 11px;
-    padding: 4px 2px;
-  }
-
-  .create-image-upload-area {
-    padding: 20px;
-  }
-
-  .create-upload-icon {
-    font-size: 24px;
-  }
-
-  .create-upload-text {
-    font-size: 14px;
-  }
-
-  .create-modal-footer {
+  .create-option-values {
     padding: 12px;
   }
 
-  .create-customization-area {
-    padding: 12px;
-  }
-
-  .create-area-header {
-    margin-bottom: 12px;
-  }
-
-  .create-area-number {
-    font-size: 12px;
-    padding: 4px 8px;
+  .create-value-fields {
+    gap: 6px;
   }
 }
 
 /* Animaciones adicionales */
-@keyframes createAreaSlideIn {
+@keyframes createOptionSlideIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -682,30 +377,140 @@
   }
 }
 
-.create-customization-area {
-  animation: createAreaSlideIn 0.3s ease-out;
+.create-product-option {
+  animation: createOptionSlideIn 0.3s ease-out;
 }
 
-/* Scrollbar personalizada */
-.create-modal-content::-webkit-scrollbar {
-  width: 6px;
+.create-option-value {
+  animation: createOptionSlideIn 0.2s ease-out;
 }
 
-.create-modal-content::-webkit-scrollbar-track {
+/* Scrollbar personalizada para tabs */
+.create-modal-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.create-modal-tabs::-webkit-scrollbar-track {
   background: #F2F2F2;
 }
 
-.create-modal-content::-webkit-scrollbar-thumb {
+.create-modal-tabs::-webkit-scrollbar-thumb {
   background: rgba(31, 100, 191, 0.3);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.create-modal-content::-webkit-scrollbar-thumb:hover {
+.create-modal-tabs::-webkit-scrollbar-thumb:hover {
   background: rgba(31, 100, 191, 0.5);
 }
 
-/* ICONOS COMO TEXTO (Fallback para Phosphor Icons) */
-.icon-package::before { content: '📦'; }
-.icon-x::before { content: '✖'; }
-.icon-upload::before { content: '⬆'; }
-.icon-plus::before { content: '+'; }
+/* Estados de carga mejorados */
+.create-tab-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-form-input:disabled,
+.create-form-select:disabled,
+.create-form-textarea:disabled {
+  background: rgba(31, 100, 191, 0.05);
+  color: #032CA6;
+  cursor: not-allowed;
+}
+
+/* Tooltips informativos */
+.create-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.create-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #010326;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  animation: createTooltipFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes createTooltipFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mejoras de accesibilidad */
+.create-tab-btn:focus,
+.create-konva-btn:focus,
+.create-preview-btn:focus {
+  outline: 2px solid #1F64BF;
+  outline-offset: 2px;
+}
+
+/* Estados de validación mejorados */
+.create-form-group.has-error .create-form-input,
+.create-form-group.has-error .create-form-select,
+.create-form-group.has-error .create-form-textarea {
+  border-color: #040DBF;
+  box-shadow: 0 0 0 3px rgba(4, 13, 191, 0.1);
+}
+
+.create-form-group.has-success .create-form-input,
+.create-form-group.has-success .create-form-select,
+.create-form-group.has-success .create-form-textarea {
+  border-color: #032CA6;
+  box-shadow: 0 0 0 3px rgba(3, 44, 166, 0.1);
+}
+
+/* Indicadores de progreso */
+.create-progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: rgba(31, 100, 191, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+}
+
+.create-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(31, 100, 191, 0.3);
+  transition: all 0.3s ease;
+}
+
+.create-progress-dot.active {
+  background: #1F64BF;
+  transform: scale(1.2);
+}
+
+.create-progress-dot.completed {
+  background: #032CA6;
+}
+
+/* Efectos de hover mejorados */
+.create-customization-area:hover,
+.create-product-option:hover {
+  transform: translateY(-2px);
+}
+
+.create-option-value:hover {
+  background: white;
+  border-color: #1F64BF;
+  transform: translateY(-1px);
+}
+
+/* Transiciones suaves para todos los elementos */
+* {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
