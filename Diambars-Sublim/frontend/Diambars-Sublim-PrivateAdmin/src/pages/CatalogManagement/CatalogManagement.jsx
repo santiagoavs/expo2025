@@ -3,8 +3,6 @@ import './CatalogManagement.css';
 import Navbar from '../../components/NavBar/NavBar';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import CreateProductModal from '../../components/CreateProductModal/CreateProductModal';
-import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../../hooks/useProduct';
 import Swal from 'sweetalert2';
 
 // Componentes de iconos simples como reemplazo

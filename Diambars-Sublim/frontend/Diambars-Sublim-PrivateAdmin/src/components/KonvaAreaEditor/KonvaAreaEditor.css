@@ -1,0 +1,729 @@
+/* === KONVA AREA EDITOR STYLES === */
+
+.konva-editor-container {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(1, 3, 38, 0.1);
+}
+
+/* Toolbar */
+.konva-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #F2F2F2, rgba(31, 100, 191, 0.05));
+  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.konva-toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.konva-toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #010326;
+  margin: 0;
+}
+
+.konva-areas-count {
+  background: rgba(31, 100, 191, 0.1);
+  color: #032CA6;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 100, 191, 0.2);
+}
+
+.konva-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border-left: 1px solid rgba(31, 100, 191, 0.1);
+}
+
+.konva-toolbar-group:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.konva-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  color: #010326;
+  border: 1px solid rgba(31, 100, 191, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 36px;
+  justify-content: center;
+}
+
+.konva-toolbar-btn:hover:not(:disabled) {
+  background: rgba(31, 100, 191, 0.05);
+  border-color: #1F64BF;
+  transform: translateY(-1px);
+}
+
+.konva-toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.konva-toolbar-btn.active {
+  background: #1F64BF;
+  color: white;
+  border-color: #1F64BF;
+}
+
+.konva-btn-primary {
+  background: linear-gradient(135deg, #1F64BF, #032CA6);
+  color: white;
+  border-color: #1F64BF;
+}
+
+.konva-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #032CA6, #040DBF);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(31, 100, 191, 0.3);
+}
+
+.konva-btn-danger {
+  color: #040DBF;
+  border-color: rgba(4, 13, 191, 0.3);
+}
+
+.konva-btn-danger:hover:not(:disabled) {
+  background: rgba(4, 13, 191, 0.1);
+  border-color: #040DBF;
+}
+
+.konva-btn-success {
+  background: linear-gradient(135deg, #032CA6, #1F64BF);
+  color: white;
+  border-color: #032CA6;
+}
+
+.konva-btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1F64BF, #032CA6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(3, 44, 166, 0.3);
+}
+
+/* Canvas del editor */
+.konva-editor-canvas {
+  background: #F2F2F2;
+  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: auto;
+}
+
+.konva-editor-canvas canvas {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(1, 3, 38, 0.15);
+  border: 1px solid rgba(31, 100, 191, 0.2);
+}
+
+/* Panel de propiedades */
+.konva-area-properties {
+  padding: 16px 20px;
+  background: rgba(31, 100, 191, 0.02);
+  border-bottom: 1px solid rgba(31, 100, 191, 0.1);
+}
+
+.konva-properties-content {
+  max-width: 100%;
+}
+
+.konva-properties-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010326;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.konva-properties-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: #1F64BF;
+  border-radius: 2px;
+}
+
+.konva-properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.konva-property-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.konva-property-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #032CA6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.konva-property-row {
+  display: flex;
+  gap: 12px;
+}
+
+.konva-property-row span,
+.konva-property-group > span {
+  font-size: 0.85rem;
+  color: #010326;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 500;
+}
+
+.konva-accepts-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.konva-accept-tag {
+  background: rgba(31, 100, 191, 0.1);
+  color: #032CA6;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 100, 191, 0.2);
+}
+
+/* Lista de áreas */
+.konva-areas-list {
+  padding: 16px 20px;
+  background: white;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.konva-list-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #010326;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.konva-list-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: #032CA6;
+  border-radius: 2px;
+}
+
+.konva-areas-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.konva-area-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #F2F2F2;
+  border: 1px solid rgba(31, 100, 191, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.konva-area-item:hover {
+  background: rgba(31, 100, 191, 0.05);
+  border-color: #1F64BF;
+  transform: translateX(2px);
+}
+
+.konva-area-item.selected {
+  background: rgba(31, 100, 191, 0.1);
+  border-color: #1F64BF;
+  box-shadow: 0 2px 8px rgba(31, 100, 191, 0.2);
+}
+
+.konva-area-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.konva-area-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #010326;
+}
+
+.konva-area-dimensions {
+  font-size: 0.75rem;
+  color: #032CA6;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.konva-area-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(1, 3, 38, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .konva-editor-toolbar {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .konva-toolbar-section {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .konva-toolbar-group {
+    border-left: none;
+    border-top: 1px solid rgba(31, 100, 191, 0.1);
+    padding: 8px 0 0 0;
+    justify-content: center;
+  }
+
+  .konva-toolbar-group:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .konva-editor-canvas {
+    padding: 12px;
+    overflow-x: auto;
+  }
+
+  .konva-properties-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .konva-areas-list {
+    padding: 12px 16px;
+  }
+
+  .konva-area-properties {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .konva-toolbar-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 32px;
+  }
+
+  .konva-toolbar-btn span {
+    display: none;
+  }
+
+  .konva-btn-primary span,
+  .konva-btn-success span {
+    display: inline;
+  }
+
+  .konva-editor-canvas {
+    padding: 8px;
+  }
+
+  .konva-editor-canvas canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .konva-area-item {
+    padding: 8px 10px;
+  }
+
+  .konva-area-name {
+    font-size: 0.85rem;
+  }
+
+  .konva-area-dimensions {
+    font-size: 0.7rem;
+  }
+
+  .konva-area-color {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Scrollbar personalizada para lista de áreas */
+.konva-areas-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.konva-areas-list::-webkit-scrollbar-track {
+  background: #F2F2F2;
+  border-radius: 3px;
+}
+
+.konva-areas-list::-webkit-scrollbar-thumb {
+  background: rgba(31, 100, 191, 0.3);
+  border-radius: 3px;
+}
+
+.konva-areas-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 100, 191, 0.5);
+}
+
+/* Animaciones */
+@keyframes konvaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.konva-area-properties {
+  animation: konvaFadeIn 0.3s ease-out;
+}
+
+.konva-area-item {
+  animation: konvaFadeIn 0.3s ease-out;
+}
+
+/* Estados especiales */
+.konva-editor-container.readonly {
+  opacity: 0.8;
+}
+
+.konva-editor-container.readonly .konva-toolbar-btn {
+  cursor: default;
+}
+
+.konva-editor-container.readonly .konva-area-item {
+  cursor: default;
+}
+
+/* Indicador de cambios sin guardar */
+.konva-toolbar-btn.konva-btn-success {
+  position: relative;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(3, 44, 166, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(3, 44, 166, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(3, 44, 166, 0.3);
+  }
+}
+
+/* Mejoras visuales para el transformer de Konva */
+.konva-editor-canvas .konva-transformer {
+  border-color: #1F64BF !important;
+}
+
+/* Loading state */
+.konva-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: #F2F2F2;
+  border-radius: 8px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.konva-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(31, 100, 191, 0.2);
+  border-top: 4px solid #1F64BF;
+  border-radius: 50%;
+  animation: konvaLoadingSpin 1s linear infinite;
+}
+
+@keyframes konvaLoadingSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.konva-loading-text {
+  color: #032CA6;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Error state */
+.konva-editor-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: rgba(4, 13, 191, 0.05);
+  border: 1px solid rgba(4, 13, 191, 0.2);
+  border-radius: 8px;
+  flex-direction: column;
+  gap: 16px;
+  color: #040DBF;
+}
+
+.konva-error-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.konva-error-message {
+  text-align: center;
+  max-width: 300px;
+}
+
+.konva-error-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.konva-error-description {
+  font-size: 14px;
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Empty state */
+.konva-editor-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: rgba(31, 100, 191, 0.02);
+  border: 2px dashed rgba(31, 100, 191, 0.3);
+  border-radius: 8px;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.konva-empty-icon {
+  font-size: 64px;
+  color: rgba(31, 100, 191, 0.4);
+}
+
+.konva-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #010326;
+  margin: 0;
+}
+
+.konva-empty-description {
+  font-size: 14px;
+  color: #032CA6;
+  margin: 0;
+  max-width: 300px;
+}
+
+/* Tooltips personalizados */
+.konva-tooltip {
+  position: absolute;
+  background: #010326;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(1, 3, 38, 0.3);
+}
+
+.konva-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #010326;
+}
+
+/* Mejoras de accesibilidad */
+.konva-toolbar-btn:focus {
+  outline: 2px solid #1F64BF;
+  outline-offset: 2px;
+}
+
+.konva-area-item:focus {
+  outline: 2px solid #1F64BF;
+  outline-offset: -2px;
+}
+
+/* Animaciones de entrada */
+.konva-editor-container {
+  animation: konvaSlideIn 0.5s ease-out;
+}
+
+@keyframes konvaSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Indicadores visuales para diferentes tipos de áreas */
+.konva-area-item[data-accepts="text"] .konva-area-color {
+  border-left: 3px solid #1F64BF;
+}
+
+.konva-area-item[data-accepts="image"] .konva-area-color {
+  border-right: 3px solid #032CA6;
+}
+
+.konva-area-item[data-accepts="both"] .konva-area-color {
+  background: linear-gradient(45deg, #1F64BF 50%, #032CA6 50%);
+}
+
+/* Efectos hover mejorados */
+.konva-toolbar-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.konva-toolbar-btn:hover::before {
+  left: 100%;
+}
+
+/* Estilos para modo oscuro (futuro) */
+@media (prefers-color-scheme: dark) {
+  .konva-editor-container {
+    background: #1a1a1a;
+    border-color: rgba(31, 100, 191, 0.3);
+  }
+
+  .konva-toolbar-title,
+  .konva-properties-title,
+  .konva-list-title,
+  .konva-area-name {
+    color: #e5e5e5;
+  }
+
+  .konva-editor-canvas {
+    background: #2a2a2a;
+  }
+
+  .konva-toolbar-btn {
+    background: #3a3a3a;
+    color: #e5e5e5;
+    border-color: rgba(31, 100, 191, 0.3);
+  }
+
+  .konva-area-item {
+    background: #3a3a3a;
+    border-color: rgba(31, 100, 191, 0.3);
+  }
+}
+
+/* Print styles */
+@media print {
+  .konva-editor-toolbar,
+  .konva-area-properties,
+  .konva-areas-list {
+    display: none;
+  }
+
+  .konva-editor-canvas {
+    padding: 0;
+    background: white;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .konva-toolbar-btn {
+    border-width: 2px;
+  }
+
+  .konva-area-item {
+    border-width: 2px;
+  }
+
+  .konva-area-color {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .konva-editor-container,
+  .konva-toolbar-btn,
+  .konva-area-item,
+  .konva-area-properties {
+    animation: none;
+    transition: none;
+  }
+
+  .konva-loading-spinner {
+    animation: none;
+    border: 4px solid #1F64BF;
+  }
+}
