@@ -1,5 +1,5 @@
 // src/api/userService.js
-import apiClient from './apiClient';
+import apiClient from './ApiClient';
 
 const BASE_URL = '/users';
 
