@@ -244,7 +244,7 @@ function UserInfo() {
         </div>
 
         <div className="info-grid">
-          <div className="input-group">
+          <div className="input-group-info">
             <input
               type="text"
               value={formData.name}
@@ -256,7 +256,7 @@ function UserInfo() {
             {errors.name && <span className="error-text-info">{errors.name}</span>}
           </div>
 
-          <div className="input-group">
+          <div className="input-group-info">
             <input
               type="text"
               value={formatPhoneNumber(formData.phoneNumber)}
@@ -272,7 +272,7 @@ function UserInfo() {
             {errors.phoneNumber && <span className="error-text-info">{errors.phoneNumber}</span>}
           </div>
 
-          <div className="input-group">
+          <div className="input-group-info">
             <input
               type="email"
               value={formData.email}
@@ -284,7 +284,7 @@ function UserInfo() {
             {errors.email && <span className="error-text-info">{errors.email}</span>}
           </div>
 
-          <div className="input-group password-field">
+          <div className="input-group-info password-field">
             <input
               type={showPassword ? 'text' : 'password'}
               value="••••••••"

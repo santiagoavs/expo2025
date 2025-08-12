@@ -329,16 +329,13 @@
   background-color: #9ca3af;
 }
 
-.input-group {
+.input-group-info {
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
   position: relative;
 }
 
-/* Estilos personalizados para SweetAlert2 - Mayor especificidad */
-
-/* Popup principal con estilo cristal */
 .swal2-popup.custom-swal-popup {
   position: relative !important;
   border-radius: 20px !important;
@@ -353,7 +350,6 @@
   background: transparent !important;
 }
 
-/* Efecto de cristal - exactamente igual que tu verify-card */
 .swal2-popup.custom-swal-popup::before {
   content: "" !important;
   position: absolute !important;
@@ -366,7 +362,6 @@
   opacity: 0.8 !important;
 }
 
-/* Título personalizado */
 .swal2-popup .custom-swal-title,
 .swal2-popup .swal2-title {
   color: #3F2724 !important;
@@ -376,7 +371,6 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Contenido del texto */
 .swal2-popup .custom-swal-content,
 .swal2-popup .swal2-html-container {
   color: #3F2724 !important;
@@ -385,7 +379,6 @@
   opacity: 0.8 !important;
 }
 
-/* Botón personalizado */
 .swal2-popup .custom-swal-button,
 .swal2-popup .swal2-confirm {
   background: rgba(45, 120, 142, 0.9) !important;
@@ -420,7 +413,6 @@
   transform: translateY(0px) !important;
 }
 
-/* Personalizar iconos */
 .swal2-icon.swal2-success {
   border-color: #10b981 !important;
   color: #10b981 !important;
@@ -436,7 +428,6 @@
   color: #3b82f6 !important;
 }
 
-/* Animación de entrada personalizada - igual que fadeInUp */
 .swal2-popup.swal2-show {
   animation: fadeInUp 0.6s ease-out !important;
 }
@@ -452,14 +443,12 @@
   }
 }
 
-/* Backdrop personalizado */
 .swal2-backdrop-show {
   background: rgba(63, 39, 36, 0.4) !important;
   backdrop-filter: blur(5px) !important;
   -webkit-backdrop-filter: blur(5px) !important;
 }
 
-/* Responsive para móviles */
 @media (max-width: 768px) {
   .custom-swal-popup {
     margin: 1rem !important;
@@ -480,7 +469,6 @@
   }
 }
 
-/* Responsive para móviles */
 @media (max-width: 768px) {
   .email-status-row {
     flex-direction: column;

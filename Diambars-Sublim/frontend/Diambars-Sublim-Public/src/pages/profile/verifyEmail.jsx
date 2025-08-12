@@ -145,7 +145,7 @@ export default function VerifyEmailPage() {
           </button>
         </div>
       </div>
-      <Footer />
+
     </main>
   );
 }

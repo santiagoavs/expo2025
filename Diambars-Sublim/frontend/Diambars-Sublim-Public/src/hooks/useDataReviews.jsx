@@ -7,10 +7,12 @@ export const useDataReviews  =() =>{
     const [rating, setRating] = useState(0); 
     const [comment, setComment] = useState(""); 
     const [isActive, setIsActive] = useState(true);
+    const [success, setSuccess] = useState(false);
     const [reviews, setReviews] = useState([]);
 
-useEffect(() => {
-        const fetchReviews = async () => {
+    
+
+    const fetchReviews = async () => {
         try {
             const response = await fetch('http://localhost:4000/api/reviews', {
                 method: 'GET',
@@ -21,17 +23,16 @@ useEffect(() => {
             });
             const data = await response.json();
             setReviews(data);
+            console.log("Reseñas obtenidas:", data);
+            return data; // Retorna los datos obtenidos
         } catch (error) {
             console.error('Error al obtener las reseñas: ', error);
         }
+        console.log("usuario actual: " + user);
     };
 
-    fetchReviews();
-    }, []);
-
-    
     const handleSubmit = async (e) => {
-
+        e.preventDefault();
         const newReview = {
             userId: user.id,
             rating,
@@ -40,7 +41,7 @@ useEffect(() => {
         };
 
         try {
-            const response = fetch('/api/reviews', {
+            const response = await fetch('http://localhost:4000/api/reviews', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -48,14 +49,25 @@ useEffect(() => {
                 credentials: 'include',
                 body: JSON.stringify(newReview),
             });
-            const data = await response.json();
-            console.log('Review enviada: ', data);
+
+
+            if (response.ok) {
+                const updatedReviews = await fetchReviews(); // Espera a que fetchReviews termine
+                console.log("Reseñas actualizadas:", updatedReviews); 
+                setComment("");
+                setRating(0);
+            }
+
+
         } catch (error) {
             console.error('Error al enviar la reseña: ', error);
         }
 
     }
 
+    useEffect(() => { 
+        fetchReviews();   
+    }, []);
 
     return{
         rating,
@@ -67,7 +79,8 @@ useEffect(() => {
         reviews,
         setReviews,
         handleSubmit,
-        reviews
+        success, 
+        setSuccess,
     }
 }
 

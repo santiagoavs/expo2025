@@ -4,12 +4,24 @@ import { motion } from 'framer-motion';
 import btnEnviar from '/images/reviews/btnEnviarReviews.png'
 import './reviewForm.css';
 
-const ReviewForm = () => {
+
+const ReviewForm = ({    rating,
+    setRating,
+    comment,
+    setComment,
+    isActive,
+    setIsActive,
+    handleSubmit,
+    success,
+    setSuccess,}) => {
+  /*
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [reviews, setReviews] = useState([]);
   const [success, setSuccess] = useState(false);
+  */
 
+/*
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('reviews')) || [];
     setReviews(stored);
@@ -34,24 +46,26 @@ const ReviewForm = () => {
 
     setTimeout(() => setSuccess(false), 2000);
   };
+*/
 
   return (
     <div className="review-form">
-      <form onSubmit={handleSubmit}>
+      <form >
         <motion.textarea
           className="review-textarea"
           placeholder="¡Dejanos tu reseña!"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
           rows="4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         />
+      <StarRating rating={rating} onRatingChange={setRating} />
 
         <img src="/images/reviews/btnEnviarReviews.png" alt="Enviar" className="review-button" onClick={handleSubmit}></img>
       </form>
-      <StarRating rating={rating} onRatingChange={setRating} />
+
 
       {success && (
         <motion.div
