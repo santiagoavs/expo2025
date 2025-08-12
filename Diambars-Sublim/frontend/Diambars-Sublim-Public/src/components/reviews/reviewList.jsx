@@ -3,14 +3,20 @@ import StarRating from './starRating';
 import ReadOnlyStars from './readOnlyStars';
 import './reviewList.css';
 import profilePic from '/images/reviews/profileDefault.png';
+import { useDataReviews } from '../../hooks/useDataReviews';
+
 
 const ReviewList = () => {
-  const [reviews, setReviews] = useState([]);
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('reviews')) || [];
-    setReviews(stored.reverse());
-  }, []);
+    const { rating,
+        setRating,
+        comment,
+        setComment,
+        isActive,
+        setIsActive,
+        reviews,
+        setReviews,
+        handleSubmit, } =useDataReviews();
 
   return (
     <div className="review-list">
@@ -23,12 +29,12 @@ const ReviewList = () => {
               <img src={profilePic} alt="Perfil" className="review-profile-pic" />
               <div className="review-user-info">
                 <div className="review-user-top">
-                  <span className="review-username">Santiago Ávila</span>
+                  <span className="review-username">{review.userId.name}</span>
                   <ReadOnlyStars rating={review.rating} />
                 </div>
               </div>
             </div>
-            <p className="review-text">“{review.text}”</p>
+            <p className="review-text">“{review.comment}”</p>
           </div>
         ))
       )}
