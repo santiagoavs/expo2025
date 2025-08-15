@@ -22,6 +22,7 @@ import designRoutes from "./src/routes/design.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
 import reviewsRoutes from "./src/routes/reviews.routes.js";
+import paymentRoutes from "./src/routes/payment.routes.js"; // NUEVA RUTA AGREGADA
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
@@ -176,6 +177,7 @@ app.get("/api/health", (req, res) => {
       designs: '/api/designs',
       orders: '/api/orders',
       addresses: '/api/addresses',
+      payments: '/api/payments', // NUEVO ENDPOINT
       config: '/api/config'
     }
   });
@@ -231,6 +233,9 @@ app.post('/api/orders/webhook/wompi',
 
 // Resto de rutas de orders con middleware condicional
 app.use("/api/orders", conditionalJsonMiddleware, orderRoutes);
+
+// ========== RUTAS DE PAGOS (NUEVA) ==========
+app.use("/api/payments", jsonMiddleware, paymentRoutes);
 
 // ==================== RUTAS DE CONFIGURACIÓN ====================
 

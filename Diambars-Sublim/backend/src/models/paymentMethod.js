@@ -1,6 +1,6 @@
 // models/PaymentMethod.js
-const mongoose = require('mongoose');
-const crypto = require('crypto');
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 const paymentMethodSchema = new mongoose.Schema({
   userId: {
@@ -182,4 +182,5 @@ paymentMethodSchema.pre('save', async function(next) {
   next();
 });
 
-module.exports = mongoose.model('PaymentMethod', paymentMethodSchema);
+const PaymentMethod = mongoose.model('PaymentMethod', paymentMethodSchema);
+export default PaymentMethod;

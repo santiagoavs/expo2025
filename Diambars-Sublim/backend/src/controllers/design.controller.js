@@ -4,7 +4,7 @@ import Order from "../models/order.js";
 import User from "../models/users.js";
 import mongoose from "mongoose";
 import cloudinary from "../utils/cloudinary.js";
-import { sendNotification } from "../services/notification.service.js";
+import { notificationService } from "../services/notification.service.js";
 import { 
   validateDesignElements, 
   validateElementPosition, 

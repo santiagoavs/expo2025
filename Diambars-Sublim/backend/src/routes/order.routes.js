@@ -1,8 +1,10 @@
-// routes/order.routes.js - Rutas optimizadas para órdenes
+// routes/order.routes.js - REFACTORIZADO
 import { Router } from "express";
 import orderController from "../controllers/order.controller.js";
+import paymentController from "../controllers/payment.controller.js";
+import reportController from "../controllers/report.controller.js";
 import { authRequired, roleRequired } from "../middlewares/auth.middleware.js";
-import { validateRequest, validateMongoId, validatePagination } from "../middlewares/validation.middleware.js";
+import { validateRequest, validateMongoId } from "../middlewares/validation.middleware.js";
 import { body, param, query } from "express-validator";
 
 const router = Router();
@@ -22,57 +24,34 @@ const orderValidations = {
     body('paymentMethod')
       .optional()
       .isIn(['cash', 'card', 'transfer', 'wompi']).withMessage('Método de pago inválido'),
-    body('paymentTiming')
-      .optional()
-      .isIn(['on_delivery', 'advance']).withMessage('Timing de pago inválido'),
     body('clientNotes')
       .optional()
-      .isString().withMessage('Las notas deben ser texto')
-      .isLength({ max: 1000 }).withMessage('Las notas no pueden exceder 1000 caracteres'),
-    // Validaciones para dirección nueva
-    body('address.recipient')
-      .if(body('deliveryType').equals('delivery'))
-      .optional()
-      .isString().withMessage('El destinatario debe ser texto'),
-    body('address.phoneNumber')
-      .if(body('deliveryType').equals('delivery'))
-      .optional()
-      .matches(/^[267]\d{7}$/).withMessage('Formato de teléfono inválido'),
-    body('address.department')
-      .if(body('deliveryType').equals('delivery'))
-      .optional()
-      .isString().withMessage('El departamento debe ser texto'),
-    body('address.municipality')
-      .if(body('deliveryType').equals('delivery'))
-      .optional()
-      .isString().withMessage('El municipio debe ser texto'),
-    body('address.address')
-      .if(body('deliveryType').equals('delivery'))
-      .optional()
-      .isString().withMessage('La dirección debe ser texto'),
-    // Validaciones para punto de encuentro
-    body('meetupDetails.date')
-      .if(body('deliveryType').equals('meetup'))
-      .optional()
-      .isISO8601().withMessage('Fecha de encuentro inválida'),
-    body('meetupDetails.address')
-      .if(body('deliveryType').equals('meetup'))
-      .optional()
-      .isString().withMessage('La dirección de encuentro debe ser texto')
+      .isLength({ max: 1000 }).withMessage('Las notas no pueden exceder 1000 caracteres')
   ],
   
-  updateStatus: [
+  submitQuote: [
     param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('status')
-      .notEmpty().withMessage('El estado es requerido')
-      .isIn([
-        'pending_approval', 'quoted', 'approved', 'rejected',
-        'in_production', 'ready_for_delivery', 'delivered', 
-        'completed', 'cancelled'
-      ]).withMessage('Estado inválido'),
+    body('totalPrice')
+      .notEmpty().withMessage('El precio total es requerido')
+      .isFloat({ min: 0.01 }).withMessage('El precio debe ser mayor que 0'),
+    body('deliveryFee')
+      .optional()
+      .isFloat({ min: 0 }).withMessage('La tarifa de envío debe ser mayor o igual a 0'),
+    body('tax')
+      .optional()
+      .isFloat({ min: 0 }).withMessage('El impuesto debe ser mayor o igual a 0'),
     body('notes')
       .optional()
-      .isString().withMessage('Las notas deben ser texto')
+      .isLength({ max: 500 }).withMessage('Las notas no pueden exceder 500 caracteres')
+  ],
+  
+  respondToQuote: [
+    param('id').isMongoId().withMessage('ID de pedido inválido'),
+    body('accept')
+      .notEmpty().withMessage('Debe especificar si acepta la cotización')
+      .isBoolean().withMessage('accept debe ser true o false'),
+    body('clientNotes')
+      .optional()
       .isLength({ max: 500 }).withMessage('Las notas no pueden exceder 500 caracteres')
   ],
   
@@ -86,50 +65,30 @@ const orderValidations = {
       ]).withMessage('Etapa de producción inválida'),
     body('notes')
       .optional()
-      .isString().withMessage('Las notas deben ser texto'),
+      .isLength({ max: 500 }).withMessage('Las notas no pueden exceder 500 caracteres'),
     body('photoUrl')
       .optional()
-      .isURL().withMessage('URL de foto inválida'),
-    body('estimatedCompletion')
-      .optional()
-      .isISO8601().withMessage('Fecha de completación inválida')
+      .isURL().withMessage('URL de foto inválida')
   ],
   
-  confirmPayment: [
+  cashPayment: [
     param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('amount')
-      .optional()
-      .isFloat({ min: 0.01 }).withMessage('Monto inválido'),
-    body('receiptNumber')
-      .optional()
-      .isString().withMessage('Número de recibo debe ser texto'),
-    body('notes')
-      .optional()
-      .isString().withMessage('Las notas deben ser texto')
-  ],
-  
-  cancel: [
-    param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('reason')
-      .optional()
-      .isString().withMessage('La razón debe ser texto')
-      .isLength({ max: 500 }).withMessage('La razón no puede exceder 500 caracteres')
-  ],
-  
-  simulatePayment: [
-    param('id').isMongoId().withMessage('ID de pedido inválido'),
-    body('status')
-      .optional()
-      .isIn(['approved', 'declined', 'error']).withMessage('Estado de simulación inválido')
+    body('totalAmount')
+      .notEmpty().withMessage('Monto total requerido')
+      .isFloat({ min: 0.01 }).withMessage('Monto total debe ser mayor que 0'),
+    body('cashReceived')
+      .notEmpty().withMessage('Monto recibido requerido')
+      .isFloat({ min: 0.01 }).withMessage('Monto recibido debe ser mayor que 0'),
+    body('paymentLocation')
+      .notEmpty().withMessage('Ubicación del pago requerida')
+      .isLength({ min: 5, max: 200 }).withMessage('Ubicación debe tener entre 5 y 200 caracteres')
   ]
 };
 
-// ==================== RUTAS PÚBLICAS (WEBHOOKS) ====================
+// ==================== WEBHOOKS (SIN AUTENTICACIÓN) ====================
+router.post('/webhook/wompi', paymentController.wompiWebhook);
 
-// Webhook de Wompi (sin autenticación) - Se maneja en app.js con raw body
-router.post('/webhook/wompi', orderController.wompiWebhook);
-
-// ==================== RUTAS DE CLIENTE ====================
+// ==================== RUTAS CLIENTE + ADMIN ====================
 
 // Crear nuevo pedido
 router.post('/',
@@ -139,58 +98,71 @@ router.post('/',
   orderController.createOrder
 );
 
-// Obtener pedidos del usuario actual
-router.get('/my-orders',
-  authRequired,
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 100 }),
-  query('status').optional().isString(),
-  validateRequest,
-  orderController.getAllOrders
-);
-
-// Obtener detalle de un pedido específico
+// Obtener pedido por ID
 router.get('/:id',
   authRequired,
   validateMongoId('id'),
   orderController.getOrderById
 );
 
-// Obtener tracking detallado de un pedido
+// Obtener tracking detallado tipo Temu
 router.get('/:id/tracking',
   authRequired,
   validateMongoId('id'),
   orderController.getOrderTracking
 );
 
-// Cancelar pedido (cliente o admin)
+// ==================== RUTAS SOLO CLIENTE ====================
+
+// Obtener mis pedidos
+router.get('/my/orders',
+  authRequired,
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 }),
+  query('status').optional().isString(),
+  validateRequest,
+  orderController.getMyOrders
+);
+
+// Responder a cotización (aceptar/rechazar)
+router.post('/:id/respond-quote',
+  authRequired,
+  orderValidations.respondToQuote,
+  validateRequest,
+  orderController.respondToQuote
+);
+
+// Aprobar foto de control de calidad
+router.post('/:id/approve-photo',
+  authRequired,
+  validateMongoId('id'),
+  body('photoId').notEmpty().withMessage('ID de foto requerido'),
+  body('approved').isBoolean().withMessage('Aprobación debe ser true o false'),
+  body('changeRequested').optional().isString(),
+  body('clientNotes').optional().isLength({ max: 500 }),
+  validateRequest,
+  orderController.approveProductPhoto
+);
+
+// Cancelar pedido
 router.post('/:id/cancel',
   authRequired,
-  orderValidations.cancel,
+  validateMongoId('id'),
+  body('reason').optional().isLength({ max: 500 }),
   validateRequest,
   orderController.cancelOrder
 );
 
-// ==================== RUTAS DE DESARROLLO/TESTING ====================
+// ==================== RUTAS SOLO ADMIN ====================
 
-// Simular pago (solo para desarrollo o cuando Wompi no esté configurado)
-router.post('/:id/simulate-payment',
-  authRequired,
-  orderValidations.simulatePayment,
-  validateRequest,
-  orderController.simulatePayment
-);
-
-// ==================== RUTAS DE ADMINISTRADOR ====================
-
-// Obtener todos los pedidos (admin/manager)
-router.get('/',
+// Obtener todas las solicitudes
+router.get('/admin/all',
   authRequired,
   roleRequired(['admin', 'manager']),
-  query('status').optional().isString(),
-  query('user').optional().isMongoId(),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('status').optional().isString(),
+  query('user').optional().isMongoId(),
   query('search').optional().isString(),
   query('startDate').optional().isISO8601(),
   query('endDate').optional().isISO8601(),
@@ -198,74 +170,117 @@ router.get('/',
   orderController.getAllOrders
 );
 
-// Actualizar estado del pedido (admin/manager)
+// Cotizar manualmente (SIN cálculos automáticos)
+router.post('/:id/quote',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  orderValidations.submitQuote,
+  validateRequest,
+  orderController.submitQuote
+);
+
+// Actualizar estado del pedido
 router.patch('/:id/status',
   authRequired,
   roleRequired(['admin', 'manager']),
-  orderValidations.updateStatus,
+  validateMongoId('id'),
+  body('status')
+    .notEmpty()
+    .isIn([
+      'pending_approval', 'quoted', 'approved', 'rejected',
+      'in_production', 'ready_for_delivery', 'delivered', 
+      'completed', 'cancelled'
+    ]),
+  body('notes').optional().isLength({ max: 500 }),
   validateRequest,
   orderController.updateOrderStatus
 );
 
-// Actualizar estado de producción (admin/manager)
+// Actualizar etapas de producción
 router.patch('/:id/production',
   authRequired,
   roleRequired(['admin', 'manager']),
   orderValidations.updateProduction,
   validateRequest,
-  orderController.updateProductionStatus
+  orderController.updateProductionStage
 );
 
-// Confirmar pago manual (admin/manager)
-router.post('/:id/confirm-payment',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  orderValidations.confirmPayment,
-  validateRequest,
-  orderController.confirmPayment
-);
-
-// Procesar pago (generar link Wompi real o ficticio)
-router.post('/:id/process-payment',
+// Subir foto de control de calidad
+router.post('/:id/production-photo',
   authRequired,
   roleRequired(['admin', 'manager']),
   validateMongoId('id'),
-  orderController.processPayment
-);
-
-// Obtener estadísticas de pedidos
-router.get('/admin/stats',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  query('startDate').optional().isISO8601(),
-  query('endDate').optional().isISO8601(),
+  body('stage')
+    .notEmpty()
+    .isIn(['printing', 'sublimating', 'quality_check', 'final']),
+  body('photoUrl').notEmpty().isURL(),
+  body('notes').optional().isLength({ max: 500 }),
   validateRequest,
-  orderController.getOrderStats
+  orderController.uploadProductionPhoto
 );
 
-// Obtener pedidos del día (para app móvil/dashboard)
-router.get('/admin/today',
+// Registrar pago en efectivo
+router.post('/:id/cash-payment',
   authRequired,
   roleRequired(['admin', 'manager']),
-  orderController.getTodayOrders
+  orderValidations.cashPayment,
+  validateRequest,
+  orderController.registerCashPayment
 );
 
-// Obtener pedidos pendientes de producción
-router.get('/admin/pending-production',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  orderController.getPendingProduction
-);
-
-// Enviar recordatorio de pago
-router.post('/:id/payment-reminder',
+// Finalizar pedido presencial
+router.post('/:id/finalize',
   authRequired,
   roleRequired(['admin', 'manager']),
   validateMongoId('id'),
-  orderController.sendPaymentReminder
+  body('deliveryNotes').optional().isLength({ max: 500 }),
+  body('customerSatisfaction').optional().isInt({ min: 1, max: 5 }),
+  validateRequest,
+  orderController.finalizeOrder
+);
+
+// ==================== RUTAS DE PAGOS ====================
+
+// Procesar pago con Wompi
+router.post('/:id/payment/wompi',
+  authRequired,
+  validateMongoId('id'),
+  body('paymentMethodId').optional().isMongoId(),
+  body('customerData').optional().isObject(),
+  validateRequest,
+  paymentController.processWompiPayment
+);
+
+// Simular pago (desarrollo/testing)
+router.post('/:id/payment/simulate',
+  authRequired,
+  validateMongoId('id'),
+  body('status').optional().isIn(['approved', 'declined', 'error']),
+  validateRequest,
+  paymentController.simulatePayment
+);
+
+// Confirmar pago manual (admin)
+router.post('/:id/payment/confirm',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('method').notEmpty().isIn(['cash', 'card', 'transfer']),
+  body('amount').optional().isFloat({ min: 0.01 }),
+  body('receiptNumber').optional().isString(),
+  body('notes').optional().isLength({ max: 500 }),
+  validateRequest,
+  paymentController.confirmManualPayment
 );
 
 // ==================== RUTAS DE REPORTES ====================
+
+// Dashboard con métricas generales
+router.get('/reports/dashboard',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  reportController.getDashboardStats
+);
 
 // Reporte de ventas por período
 router.get('/reports/sales',
@@ -274,8 +289,9 @@ router.get('/reports/sales',
   query('startDate').optional().isISO8601(),
   query('endDate').optional().isISO8601(),
   query('groupBy').optional().isIn(['day', 'week', 'month']),
+  query('includeDetails').optional().isBoolean(),
   validateRequest,
-  orderController.getSalesReport
+  reportController.getSalesReport
 );
 
 // Reporte de productos más vendidos
@@ -286,7 +302,7 @@ router.get('/reports/top-products',
   query('endDate').optional().isISO8601(),
   query('limit').optional().isInt({ min: 1, max: 50 }),
   validateRequest,
-  orderController.getTopProductsReport
+  reportController.getTopProductsReport
 );
 
 // Reporte de clientes frecuentes
@@ -296,101 +312,109 @@ router.get('/reports/top-customers',
   query('startDate').optional().isISO8601(),
   query('endDate').optional().isISO8601(),
   query('limit').optional().isInt({ min: 1, max: 50 }),
+  query('sortBy').optional().isIn(['totalSpent', 'totalOrders', 'averageOrderValue', 'lastOrderDate']),
   validateRequest,
-  orderController.getTopCustomersReport
+  reportController.getTopCustomersReport
 );
 
-// ==================== RUTAS DE BÚSQUEDA Y FILTROS ====================
-
-// Buscar pedidos por múltiples criterios
-router.get('/search',
+// Reporte de tiempos de producción
+router.get('/reports/production',
   authRequired,
   roleRequired(['admin', 'manager']),
-  query('q').optional().isString(),
-  query('orderNumber').optional().isString(),
-  query('customerEmail').optional().isEmail(),
-  query('productName').optional().isString(),
-  query('minTotal').optional().isFloat({ min: 0 }),
-  query('maxTotal').optional().isFloat({ min: 0 }),
-  validatePagination,
-  validateRequest,
-  orderController.searchOrders
-);
-
-// Exportar pedidos a CSV/Excel
-router.get('/export',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  query('format').isIn(['csv', 'excel']).withMessage('Formato debe ser csv o excel'),
   query('startDate').optional().isISO8601(),
   query('endDate').optional().isISO8601(),
-  query('status').optional().isString(),
   validateRequest,
-  orderController.exportOrders
+  reportController.getProductionReport
 );
 
-// ==================== RUTAS ADICIONALES PARA FUTURAS IMPLEMENTACIONES ====================
+// ==================== RUTAS DE MÉTODOS DE PAGO ====================
 
-// Procesar reembolso
-router.post('/:id/refund',
+// Obtener métodos de pago del usuario
+router.get('/payment-methods',
+  authRequired,
+  paymentController.getPaymentMethods
+);
+
+// Crear método de pago
+router.post('/payment-methods',
+  authRequired,
+  body('number').isLength({ min: 13, max: 19 }).matches(/^\d+$/),
+  body('name').isLength({ min: 2, max: 100 }),
+  body('expiry').matches(/^(0[1-9]|1[0-2])\/\d{2}$/),
+  body('cvc').isLength({ min: 3, max: 4 }).matches(/^\d+$/),
+  body('issuer').optional().isIn(['visa', 'mastercard', 'amex', 'discover', 'unknown']),
+  validateRequest,
+  paymentController.createPaymentMethod
+);
+
+// Actualizar método de pago
+router.put('/payment-methods/:methodId',
+  authRequired,
+  validateMongoId('methodId'),
+  body('number').optional().isLength({ min: 13, max: 19 }).matches(/^\d+$/),
+  body('name').optional().isLength({ min: 2, max: 100 }),
+  body('expiry').optional().matches(/^(0[1-9]|1[0-2])\/\d{2}$/),
+  body('cvc').optional().isLength({ min: 3, max: 4 }).matches(/^\d+$/),
+  validateRequest,
+  paymentController.updatePaymentMethod
+);
+
+// Eliminar método de pago
+router.delete('/payment-methods/:methodId',
+  authRequired,
+  validateMongoId('methodId'),
+  paymentController.deletePaymentMethod
+);
+
+// Activar/desactivar método de pago
+router.patch('/payment-methods/:methodId/toggle',
+  authRequired,
+  validateMongoId('methodId'),
+  body('active').isBoolean(),
+  validateRequest,
+  paymentController.togglePaymentMethod
+);
+
+// ==================== RUTAS DE HISTORIAL DE PAGOS ====================
+
+// Historial de pagos en efectivo (admin)
+router.get('/payments/cash/history',
   authRequired,
   roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('amount').optional().isFloat({ min: 0.01 }),
-  body('reason').notEmpty().withMessage('Razón del reembolso requerida'),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('adminId').optional().isMongoId(),
   validateRequest,
-  orderController.processRefund
+  paymentController.getCashPaymentHistory
 );
 
-// Notificar al cliente con mensaje personalizado
-router.post('/:id/notify-customer',
+// Estadísticas de pagos
+router.get('/payments/stats',
   authRequired,
   roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('message').notEmpty().withMessage('Mensaje requerido'),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('method').optional().isIn(['cash', 'card', 'transfer', 'wompi']),
   validateRequest,
-  orderController.notifyCustomer
+  paymentController.getPaymentStats
 );
 
-// Cliente aprueba o rechaza foto del producto
-router.post('/:id/approve-photo',
-  authRequired,
-  validateMongoId('id'),
-  body('photoId').notEmpty().withMessage('ID de foto requerido'),
-  body('approved').isBoolean().withMessage('Aprobación debe ser true o false'),
-  body('changeRequested').optional().isString(),
-  body('clientNotes').optional().isString(),
-  validateRequest,
-  orderController.approveProductPhoto
-);
+// ==================== RUTAS LEGACY (REDIRECCIONES) ====================
 
-// Subir foto de producción con progreso
-router.post('/:id/production-photo',
+// Mantener compatibilidad con rutas existentes
+router.get('/', 
   authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  orderController.uploadProductionPhoto
-);
-
-// Marcar pedido como entregado
-router.patch('/:id/mark-delivered',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('deliveryNotes').optional().isString(),
-  body('deliveredAt').optional().isISO8601(),
-  validateRequest,
-  orderController.markAsDelivered
-);
-
-// Completar pedido
-router.patch('/:id/complete',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('completionNotes').optional().isString(),
-  validateRequest,
-  orderController.completeOrder
+  (req, res, next) => {
+    // Si es admin, redirigir a la nueva ruta
+    if (req.user.roles?.some(role => ['admin', 'manager'].includes(role))) {
+      req.url = '/admin/all';
+      return next();
+    }
+    // Si es usuario normal, redirigir a mis pedidos
+    req.url = '/my/orders';
+    next();
+  },
+  orderController.getAllOrders
 );
 
 export default router;

@@ -264,6 +264,121 @@ const productionPhotoSchema = new mongoose.Schema({
   }
 }, { _id: true });
 
+// Función para formatear respuesta de orden
+const formatOrderForResponse = (order, includeDetails = false) => {
+  if (!order) return null;
+  
+  // Datos básicos siempre incluidos
+  const basicData = {
+    _id: order._id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    total: order.total,
+    subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    discounts: order.discounts,
+    tax: order.tax,
+    estimatedReadyDate: order.estimatedReadyDate,
+    actualReadyDate: order.actualReadyDate,
+    deliveredAt: order.deliveredAt,
+    completedAt: order.completedAt,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+    deliveryType: order.deliveryType,
+    canReview: order.canReview,
+    // Información básica de usuario (sin datos sensibles)
+    user: order.user ? {
+      _id: order.user._id || order.user,
+      name: order.user.name,
+      email: order.user.email
+    } : order.user,
+    // Información básica de items
+    items: order.items?.map(item => ({
+      _id: item._id,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      subtotal: item.subtotal,
+      status: item.status,
+      productionStatus: item.productionStatus,
+      productionProgress: item.productionProgress,
+      product: item.product,
+      design: item.design,
+      options: item.options
+    })) || [],
+    // Estado de pago (información básica)
+    payment: {
+      method: order.payment?.method,
+      status: order.payment?.status,
+      timing: order.payment?.timing,
+      amount: order.payment?.amount,
+      currency: order.payment?.currency
+    }
+  };
+
+  // Si no se requieren detalles, retornar solo básicos
+  if (!includeDetails) {
+    return basicData;
+  }
+
+  // Agregar información detallada
+  return {
+    ...basicData,
+    // Dirección completa
+    deliveryAddress: order.deliveryAddress,
+    meetupDetails: order.meetupDetails,
+    // Pago completo (excluyendo datos sensibles de Wompi)
+    payment: {
+      ...order.payment?.toObject?.() || order.payment,
+      wompiData: order.payment?.wompiData ? {
+        transactionId: order.payment.wompiData.transactionId,
+        reference: order.payment.wompiData.reference,
+        status: order.payment.wompiData.status,
+        statusMessage: order.payment.wompiData.statusMessage,
+        paymentMethod: order.payment.wompiData.paymentMethod,
+        lastFourDigits: order.payment.wompiData.lastFourDigits,
+        cardBrand: order.payment.wompiData.cardBrand,
+        completedAt: order.payment.wompiData.completedAt,
+        expiresAt: order.payment.wompiData.expiresAt
+        // No incluir signature ni otros datos sensibles
+      } : undefined
+    },
+    // Items con detalles de producción
+    items: order.items?.map(item => ({
+      ...item.toObject?.() || item,
+      productionStages: item.productionStages
+    })) || [],
+    // Historial de estados
+    statusHistory: order.statusHistory,
+    // Fotos de producción
+    productionPhotos: order.productionPhotos,
+    // Notas
+    clientNotes: order.clientNotes,
+    adminNotes: order.adminNotes,
+    // Mensajes (últimos 10 para no sobrecargar)
+    messages: order.messages?.slice(-10) || [],
+    // Control de calidad
+    qualityCheck: order.qualityCheck,
+    // Review
+    review: order.review,
+    // Metadata (excluyendo datos sensibles)
+    metadata: order.metadata ? {
+      source: order.metadata.source,
+      priority: order.metadata.priority,
+      tags: order.metadata.tags,
+      isLargeOrder: order.metadata.isLargeOrder,
+      requiresAdvancePayment: order.metadata.requiresAdvancePayment,
+      isRush: order.metadata.isRush,
+      rushFee: order.metadata.rushFee
+      // No incluir deviceInfo ni otros datos sensibles
+    } : undefined,
+    // Campos virtuales
+    daysInProduction: order.daysInProduction,
+    isOverdue: order.isOverdue,
+    paymentPending: order.paymentPending,
+    productionProgressPercentage: order.productionProgressPercentage
+  };
+};
+
 // Esquema principal de orden - SIN ÍNDICES EN LOS CAMPOS
 const orderSchema = new mongoose.Schema({
   // ✅ CAMPO LIMPIO - Sin unique, index, sparse - Todo se define en schema.index()
@@ -749,6 +864,20 @@ orderSchema.methods.applyDiscount = function(code, amount, percentage) {
   });
   
   this.total = Math.round((this.subtotal + this.deliveryFee + this.tax - this.discounts) * 100) / 100;
+};
+
+// ==================== MÉTODOS NUEVOS PARA RESPUESTAS SEGURAS ====================
+
+// Método para respuesta básica (lista de órdenes)
+orderSchema.methods.toSafeObject = function() {
+  const obj = this.toObject();
+  return formatOrderForResponse(obj, false);
+};
+
+// Método para respuesta detallada (orden individual)
+orderSchema.methods.toDetailedObject = function() {
+  const obj = this.toObject();
+  return formatOrderForResponse(obj, true);
 };
 
 export default mongoose.model('Order', orderSchema);
