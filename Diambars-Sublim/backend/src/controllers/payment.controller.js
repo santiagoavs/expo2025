@@ -1,129 +1,81 @@
-// controllers/payment.controller.js - Manejo de PaymentMethod + Efectivo + Webhooks
-import { paymentService } from "../services/payment.service.js";
-import { 
-  processWompiPayment, 
-  validateWompiWebhook, 
-  simulatePaymentConfirmation,
-  isWompiConfigured 
-} from "../services/wompi.service.js";
+// src/controllers/payment.controller.js - Controlador simplificado
+import { paymentService } from "../services/unifiedPayment.service.js";
+import { validators } from "../utils/validators.utils.js";
 
 const paymentController = {};
 
-// ==================== MÉTODOS DE PAGO DIGITALES ====================
+// ==================== PROCESAMIENTO DE PAGOS ====================
 
 /**
- * Procesar pago con Wompi
+ * Procesar pago digital (Wompi)
  */
-paymentController.processWompiPayment = async (req, res) => {
+paymentController.processDigitalPayment = async (req, res) => {
   try {
-    const { orderId, paymentMethodId, customerData } = req.body;
-    const userId = req.user._id;
+    const { orderId, customerData } = req.body;
+    
+    // Validar entrada
+    const orderIdCheck = validators.mongoId(orderId, 'ID de pedido');
+    if (!orderIdCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: orderIdCheck.error,
+        error: 'INVALID_ORDER_ID'
+      });
+    }
 
-    const result = await paymentService.processDigitalPayment({
-      orderId,
-      paymentMethodId,
-      customerData,
-      userId,
-      method: 'wompi'
+    const result = await paymentService.processPayment('wompi', {
+      orderId: orderIdCheck.cleaned,
+      customerData
     });
 
     res.status(200).json({
       success: true,
-      message: "Link de pago generado",
+      message: result.isFictitious ? 'Link de pago simulado generado' : 'Link de pago generado',
       data: result
     });
 
   } catch (error) {
-    console.error("❌ Error en processWompiPayment:", error);
+    console.error("❌ Error en processDigitalPayment:", error);
     res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Error al procesar pago",
+      message: error.message || "Error al procesar pago digital",
       error: error.code || 'PAYMENT_ERROR'
     });
   }
 };
 
 /**
- * Simular pago para desarrollo/testing
- */
-paymentController.simulatePayment = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { status = 'approved' } = req.body;
-
-    // Solo permitir en desarrollo o cuando Wompi no esté configurado
-    if (process.env.NODE_ENV === 'production' && isWompiConfigured()) {
-      return res.status(403).json({
-        success: false,
-        message: "Simulación no disponible en producción con Wompi configurado",
-        error: 'SIMULATION_NOT_ALLOWED'
-      });
-    }
-
-    const result = await paymentService.simulatePayment(orderId, status);
-
-    res.status(200).json({
-      success: true,
-      message: result.message,
-      data: result.data
-    });
-
-  } catch (error) {
-    console.error("❌ Error en simulatePayment:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al simular pago",
-      error: error.code || 'SIMULATION_ERROR'
-    });
-  }
-};
-
-/**
- * Confirmar pago manual (admin)
- */
-paymentController.confirmManualPayment = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { method, amount, receiptNumber, notes } = req.body;
-    const adminId = req.user._id;
-
-    const result = await paymentService.confirmManualPayment({
-      orderId,
-      method,
-      amount,
-      receiptNumber,
-      notes,
-      adminId
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Pago confirmado exitosamente",
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en confirmManualPayment:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al confirmar pago",
-      error: error.code || 'PAYMENT_CONFIRMATION_ERROR'
-    });
-  }
-};
-
-// ==================== PAGOS EN EFECTIVO ====================
-
-/**
- * Registrar pago en efectivo (entrega presencial)
+ * Registrar pago en efectivo
  */
 paymentController.registerCashPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const cashData = req.body;
     const adminId = req.user._id;
+    
+    // Validar datos de entrada
+    const orderIdCheck = validators.mongoId(orderId, 'ID de pedido');
+    if (!orderIdCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: orderIdCheck.error,
+        error: 'INVALID_ORDER_ID'
+      });
+    }
 
-    const result = await paymentService.registerCashPayment(orderId, adminId, cashData);
+    const cashCheck = validators.cashPayment(req.body, null); // null porque se valida en el servicio
+    if (!cashCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: cashCheck.error,
+        error: 'INVALID_CASH_DATA'
+      });
+    }
+
+    const result = await paymentService.processPayment('cash', {
+      orderId: orderIdCheck.cleaned,
+      ...cashCheck.cleaned,
+      adminId
+    });
 
     res.status(200).json({
       success: true,
@@ -142,29 +94,117 @@ paymentController.registerCashPayment = async (req, res) => {
 };
 
 /**
- * Obtener historial de pagos en efectivo
+ * Confirmar pago manualmente (admin)
  */
-paymentController.getCashPaymentHistory = async (req, res) => {
+paymentController.confirmManualPayment = async (req, res) => {
   try {
-    const { startDate, endDate, adminId } = req.query;
+    const { orderId, method, amount, notes } = req.body;
+    const adminId = req.user._id;
 
-    const result = await paymentService.getCashPaymentHistory({
-      startDate,
-      endDate,
-      adminId
+    // Validaciones
+    const orderIdCheck = validators.mongoId(orderId, 'ID de pedido');
+    if (!orderIdCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: orderIdCheck.error,
+        error: 'INVALID_ORDER_ID'
+      });
+    }
+
+    if (!method || !['cash', 'card', 'transfer'].includes(method)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Método de pago inválido',
+        error: 'INVALID_PAYMENT_METHOD'
+      });
+    }
+
+    if (amount) {
+      const amountCheck = validators.price(amount);
+      if (!amountCheck.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: amountCheck.error,
+          error: 'INVALID_AMOUNT'
+        });
+      }
+    }
+
+    const result = await paymentService.processPayment('manual', {
+      orderId: orderIdCheck.cleaned,
+      method,
+      amount,
+      adminId,
+      notes: notes?.trim()
     });
 
     res.status(200).json({
       success: true,
+      message: "Pago confirmado manualmente",
       data: result
     });
 
   } catch (error) {
-    console.error("❌ Error en getCashPaymentHistory:", error);
-    res.status(500).json({
+    console.error("❌ Error en confirmManualPayment:", error);
+    res.status(error.statusCode || 500).json({
       success: false,
-      message: "Error al obtener historial de pagos",
-      error: 'HISTORY_ERROR'
+      message: error.message || "Error al confirmar pago",
+      error: error.code || 'MANUAL_PAYMENT_ERROR'
+    });
+  }
+};
+
+/**
+ * Simular pago (desarrollo/testing)
+ */
+paymentController.simulatePayment = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status = 'approved' } = req.body;
+
+    // Solo permitir en desarrollo
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        message: "Simulación no disponible en producción",
+        error: 'SIMULATION_NOT_ALLOWED'
+      });
+    }
+
+    const orderIdCheck = validators.mongoId(orderId, 'ID de pedido');
+    if (!orderIdCheck.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: orderIdCheck.error,
+        error: 'INVALID_ORDER_ID'
+      });
+    }
+
+    if (!['approved', 'declined'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Estado de simulación inválido',
+        error: 'INVALID_STATUS'
+      });
+    }
+
+    const result = await paymentService.processPayment('simulate', {
+      orderId: orderIdCheck.cleaned,
+      status
+    });
+
+    res.status(200).json({
+      success: true,
+      message: result.success ? "Pago simulado exitoso" : "Pago simulado falló",
+      data: result
+    });
+
+  } catch (error) {
+    console.error("❌ Error en simulatePayment:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error al simular pago",
+      error: error.code || 'SIMULATION_ERROR'
     });
   }
 };
@@ -179,7 +219,7 @@ paymentController.wompiWebhook = async (req, res) => {
     console.log('📥 Webhook recibido de Wompi');
 
     // Validar webhook
-    const isValid = await validateWompiWebhook(req);
+    const isValid = paymentService.validateWompiWebhook(req);
     if (!isValid) {
       console.error('❌ Webhook inválido');
       return res.status(400).json({ 
@@ -188,22 +228,8 @@ paymentController.wompiWebhook = async (req, res) => {
       });
     }
 
-    const event = req.body;
-    console.log('📨 Evento válido:', event.event, event.data?.id);
-
-    // Procesar según tipo de evento
-    let result;
-    switch (event.event) {
-      case 'transaction.updated':
-        result = await paymentService.handleTransactionUpdate(event.data);
-        break;
-      case 'payment_link.paid':
-        result = await paymentService.handlePaymentLinkPaid(event.data);
-        break;
-      default:
-        console.log('ℹ️ Evento no manejado:', event.event);
-        result = { processed: false, message: 'Evento no manejado' };
-    }
+    // Procesar webhook
+    const result = await paymentService.processWompiWebhook(req.body);
 
     res.status(200).json({ 
       received: true,
@@ -220,162 +246,112 @@ paymentController.wompiWebhook = async (req, res) => {
   }
 };
 
-// ==================== MÉTODOS DE PAGO GUARDADOS ====================
+// ==================== CONFIGURACIÓN ====================
 
 /**
- * Obtener métodos de pago del usuario
+ * Obtener configuración pública de pagos
  */
-paymentController.getPaymentMethods = async (req, res) => {
+paymentController.getPaymentConfig = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const config = paymentService.getPublicConfig();
     
-    const methods = await paymentService.getUserPaymentMethods(userId);
+    res.status(200).json({
+      success: true,
+      data: config
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getPaymentConfig:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error obteniendo configuración",
+      error: 'CONFIG_ERROR'
+    });
+  }
+};
+
+/**
+ * Verificar estado de pagos
+ */
+paymentController.getPaymentStatus = async (req, res) => {
+  try {
+    const config = paymentService.getPublicConfig();
     
     res.status(200).json({
       success: true,
       data: {
-        paymentMethods: methods,
-        wompiConfigured: isWompiConfigured()
+        wompi: {
+          enabled: config.wompi.enabled,
+          environment: config.wompi.environment,
+          message: config.wompi.enabled 
+            ? 'Wompi configurado correctamente'
+            : 'Wompi en modo simulado'
+        },
+        cash: {
+          enabled: true,
+          message: 'Pagos en efectivo disponibles'
+        },
+        manual: {
+          enabled: true,
+          message: 'Confirmación manual disponible'
+        }
       }
     });
 
   } catch (error) {
-    console.error("❌ Error en getPaymentMethods:", error);
+    console.error("❌ Error en getPaymentStatus:", error);
     res.status(500).json({
       success: false,
-      message: "Error obteniendo métodos de pago",
-      error: 'METHODS_ERROR'
+      message: "Error verificando estado de pagos",
+      error: 'STATUS_ERROR'
     });
   }
 };
 
-/**
- * Crear método de pago
- */
-paymentController.createPaymentMethod = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const methodData = req.body;
-
-    const result = await paymentService.createPaymentMethod(userId, methodData);
-
-    res.status(201).json({
-      success: true,
-      message: "Método de pago creado",
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en createPaymentMethod:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error creando método de pago",
-      error: error.code || 'METHOD_CREATION_ERROR'
-    });
-  }
-};
+// ==================== ESTADÍSTICAS (BÁSICAS) ====================
 
 /**
- * Actualizar método de pago
+ * Estadísticas básicas de pagos
  */
-paymentController.updatePaymentMethod = async (req, res) => {
+paymentController.getBasicStats = async (req, res) => {
   try {
-    const { methodId } = req.params;
-    const userId = req.user._id;
-    const updateData = req.body;
+    const { startDate, endDate } = req.query;
+    
+    // Validar fechas si se proporcionan
+    let dateFilter = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Fechas inválidas',
+          error: 'INVALID_DATES'
+        });
+      }
+      
+      dateFilter = { startDate: start, endDate: end };
+    }
 
-    const result = await paymentService.updatePaymentMethod(methodId, userId, updateData);
-
+    // Por ahora, respuesta básica - implementar lógica real después
     res.status(200).json({
       success: true,
-      message: "Método de pago actualizado",
-      data: result
+      message: "Estadísticas básicas",
+      data: {
+        totalPayments: 0,
+        methods: {
+          cash: 0,
+          wompi: 0,
+          manual: 0
+        },
+        revenue: 0,
+        filters: dateFilter
+      }
     });
 
   } catch (error) {
-    console.error("❌ Error en updatePaymentMethod:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error actualizando método de pago",
-      error: error.code || 'METHOD_UPDATE_ERROR'
-    });
-  }
-};
-
-/**
- * Eliminar método de pago
- */
-paymentController.deletePaymentMethod = async (req, res) => {
-  try {
-    const { methodId } = req.params;
-    const userId = req.user._id;
-
-    await paymentService.deletePaymentMethod(methodId, userId);
-
-    res.status(200).json({
-      success: true,
-      message: "Método de pago eliminado"
-    });
-
-  } catch (error) {
-    console.error("❌ Error en deletePaymentMethod:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error eliminando método de pago",
-      error: error.code || 'METHOD_DELETE_ERROR'
-    });
-  }
-};
-
-/**
- * Activar/desactivar método de pago
- */
-paymentController.togglePaymentMethod = async (req, res) => {
-  try {
-    const { methodId } = req.params;
-    const { active } = req.body;
-    const userId = req.user._id;
-
-    const result = await paymentService.togglePaymentMethod(methodId, userId, active);
-
-    res.status(200).json({
-      success: true,
-      message: `Método ${active ? 'activado' : 'desactivado'}`,
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en togglePaymentMethod:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error cambiando estado del método",
-      error: error.code || 'METHOD_TOGGLE_ERROR'
-    });
-  }
-};
-
-// ==================== REPORTES DE PAGOS ====================
-
-/**
- * Obtener estadísticas de pagos
- */
-paymentController.getPaymentStats = async (req, res) => {
-  try {
-    const { startDate, endDate, method } = req.query;
-
-    const stats = await paymentService.getPaymentStats({
-      startDate,
-      endDate,
-      method
-    });
-
-    res.status(200).json({
-      success: true,
-      data: stats
-    });
-
-  } catch (error) {
-    console.error("❌ Error en getPaymentStats:", error);
+    console.error("❌ Error en getBasicStats:", error);
     res.status(500).json({
       success: false,
       message: "Error obteniendo estadísticas",

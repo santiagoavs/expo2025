@@ -4,7 +4,8 @@ import Category from "../models/category.js";
 import cloudinary from "../utils/cloudinary.js";
 import fs from "fs";
 import mongoose from "mongoose";
-import { validateCustomizationAreas, generateKonvaConfig } from "../utils/pruductUtils.js";
+import { validateCustomizationAreas, generateKonvaConfig } from "../utils/productUtils.js";
+import { validators, validateFields } from "../utils/validators.utils.js";
 
 const productController = {};
 
@@ -25,13 +26,30 @@ productController.getAllProducts = async (req, res) => {
       featured
     } = req.query;
 
+    // Validar parámetros de paginación usando validadores centralizados
+    const paginationValidation = validateFields({ page, limit }, {
+      page: (value) => validators.quantity(value, 1, 1000),
+      limit: (value) => validators.quantity(value, 1, 50)
+    });
+
+    if (!paginationValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: `Parámetros de paginación inválidos: ${paginationValidation.errors.join('; ')}`,
+        error: 'INVALID_PAGINATION'
+      });
+    }
+
+    const { page: pageNum, limit: limitNum } = paginationValidation.cleaned;
+
     // Construir filtro con validación
     const filter = {};
     
-    // Filtro por categoría
+    // Filtro por categoría con validación de ObjectId
     if (category && category.trim() !== '') {
-      if (mongoose.Types.ObjectId.isValid(category)) {
-        filter.category = new mongoose.Types.ObjectId(category);
+      const categoryValidation = validators.mongoId(category, 'Categoría');
+      if (categoryValidation.isValid) {
+        filter.category = new mongoose.Types.ObjectId(categoryValidation.cleaned);
       } else {
         console.log('⚠️ ID de categoría inválido:', category);
       }
@@ -47,44 +65,50 @@ productController.getAllProducts = async (req, res) => {
       filter['metadata.featured'] = featured === 'true';
     }
     
-    // Filtro por búsqueda de texto
+    // Filtro por búsqueda de texto con validación
     if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      filter.$or = [
-        { name: searchRegex },
-        { description: searchRegex },
-        { 'metadata.searchTags': searchRegex }
-      ];
+      const searchValidation = validators.text(search, 1, 100);
+      if (searchValidation.isValid) {
+        const searchRegex = new RegExp(searchValidation.cleaned, 'i');
+        filter.$or = [
+          { name: searchRegex },
+          { description: searchRegex },
+          { 'metadata.searchTags': searchRegex }
+        ];
+      }
     }
 
-    // Configurar ordenamiento
+    // Configurar ordenamiento con validación
     let sortOption = {};
-    switch (sort) {
-      case 'newest':
-        sortOption = { createdAt: -1 };
-        break;
-      case 'oldest':
-        sortOption = { createdAt: 1 };
-        break;
-      case 'price_asc':
-        sortOption = { basePrice: 1 };
-        break;
-      case 'price_desc':
-        sortOption = { basePrice: -1 };
-        break;
-      case 'name_asc':
-        sortOption = { name: 1 };
-        break;
-      case 'name_desc':
-        sortOption = { name: -1 };
-        break;
-      default:
-        sortOption = { createdAt: -1 };
+    const validSortOptions = ['newest', 'oldest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'];
+    
+    if (!validSortOptions.includes(sort)) {
+      console.log('⚠️ Opción de ordenamiento inválida:', sort);
+      sortOption = { createdAt: -1 }; // Default
+    } else {
+      switch (sort) {
+        case 'newest':
+          sortOption = { createdAt: -1 };
+          break;
+        case 'oldest':
+          sortOption = { createdAt: 1 };
+          break;
+        case 'price_asc':
+          sortOption = { basePrice: 1 };
+          break;
+        case 'price_desc':
+          sortOption = { basePrice: -1 };
+          break;
+        case 'name_asc':
+          sortOption = { name: 1 };
+          break;
+        case 'name_desc':
+          sortOption = { name: -1 };
+          break;
+        default:
+          sortOption = { createdAt: -1 };
+      }
     }
-
-    // Opciones de paginación con validación
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 12));
 
     const options = {
       page: pageNum,
@@ -147,14 +171,18 @@ productController.getAllProducts = async (req, res) => {
       .filter(product => product && typeof product === 'object')
       .map(product => {
         try {
+          // Validar precio usando validador centralizado
+          const priceValidation = validators.price(product.basePrice, 0);
+          const productionTimeValidation = validators.quantity(product.productionTime, 1, 30);
+
           // Validar y establecer valores por defecto seguros
           const safeProduct = {
             _id: product._id || null,
             name: product.name || 'Producto sin nombre',
             description: product.description || '',
             category: product.category || null,
-            basePrice: validateNumber(product.basePrice, 0),
-            productionTime: validateNumber(product.productionTime, 3),
+            basePrice: priceValidation.isValid ? priceValidation.cleaned : 0,
+            productionTime: productionTimeValidation.isValid ? productionTimeValidation.cleaned : 3,
             isActive: Boolean(product.isActive),
             images: {
               main: product.images?.main || '',
@@ -192,7 +220,7 @@ productController.getAllProducts = async (req, res) => {
           console.error('❌ Error transformando producto:', product._id, transformError);
           return null;
         }
-      })
+      })        
       .filter(product => product !== null);
 
     console.log(`✅ Productos procesados exitosamente: ${products.length}`);
@@ -275,29 +303,36 @@ productController.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID usando validador centralizado
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de producto inválido" 
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    const product = await Product.findById(id)
+    const product = await Product.findById(idValidation.cleaned)
       .populate('category', 'name description slug isActive')
       .lean();
     
     if (!product) {
       return res.status(404).json({ 
         success: false,
-        message: "Producto no encontrado" 
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
 
-    // Validar datos del producto
+    // Validar y limpiar datos del producto usando validadores centralizados
+    const priceValidation = validators.price(product.basePrice, 0);
+    const productionTimeValidation = validators.quantity(product.productionTime, 1, 30);
+
     const safeProduct = {
       ...product,
-      basePrice: validateNumber(product.basePrice, 0),
-      productionTime: validateNumber(product.productionTime, 3),
+      basePrice: priceValidation.isValid ? priceValidation.cleaned : 0,
+      productionTime: productionTimeValidation.isValid ? productionTimeValidation.cleaned : 3,
       images: {
         main: product.images?.main || '',
         additional: Array.isArray(product.images?.additional) ? product.images.additional : []
@@ -316,7 +351,7 @@ productController.getProductById = async (req, res) => {
     };
 
     // Incrementar contador de vistas
-    await Product.findByIdAndUpdate(id, {
+    await Product.findByIdAndUpdate(idValidation.cleaned, {
       $inc: { 'metadata.stats.views': 1 }
     });
 
@@ -373,27 +408,63 @@ productController.createProduct = async (req, res) => {
 
     console.log('🆕 Creando producto:', { name, categoryId, basePrice });
 
-    // Validación básica
-    if (!name || !name.trim()) {
+    // Validación básica usando validadores centralizados
+    const basicValidation = validateFields({
+      name,
+      description,
+      categoryId,
+      basePrice,
+      productionTime
+    }, {
+      name: (value) => validators.text(value, 1, 100),
+      description: (value) => validators.text(value, 0, 500),
+      categoryId: (value) => validators.mongoId(value, 'ID de categoría'),
+      basePrice: (value) => validators.price(value, 0.01),
+      productionTime: (value) => validators.quantity(value, 1, 30)
+    });
+
+    if (!basicValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "El nombre del producto es obligatorio" 
+        message: `Datos básicos inválidos: ${basicValidation.errors.join('; ')}`,
+        error: 'VALIDATION_ERROR'
       });
     }
 
+    const { 
+      name: cleanName, 
+      description: cleanDescription, 
+      categoryId: validCategoryId, 
+      basePrice: validPrice, 
+      productionTime: validProductionTime 
+    } = basicValidation.cleaned;
+
+    // Validar que existe imagen principal
     if (!req.files?.mainImage) {
       return res.status(400).json({ 
         success: false,
-        message: "La imagen principal es obligatoria" 
+        message: "La imagen principal es obligatoria",
+        error: 'MAIN_IMAGE_REQUIRED'
+      });
+    }
+
+    // Validar archivo de imagen principal
+    const mainImageValidation = validators.imageFile(req.files.mainImage[0]);
+    if (!mainImageValidation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: `Imagen principal inválida: ${mainImageValidation.error}`,
+        error: 'INVALID_MAIN_IMAGE'
       });
     }
 
     // Verificar categoría
-    const category = await Category.findById(categoryId);
+    const category = await Category.findById(validCategoryId);
     if (!category) {
       return res.status(400).json({ 
         success: false,
-        message: "La categoría especificada no existe" 
+        message: "La categoría especificada no existe",
+        error: 'CATEGORY_NOT_FOUND'
       });
     }
 
@@ -408,20 +479,22 @@ productController.createProduct = async (req, res) => {
           return res.status(400).json({ 
             success: false,
             message: "Las áreas de personalización no son válidas",
-            errors: areaValidation.errors
+            errors: areaValidation.errors,
+            error: 'INVALID_CUSTOMIZATION_AREAS'
           });
         }
       } else {
         return res.status(400).json({
           success: false,
-          message: "Debe definir al menos un área personalizable"
+          message: "Debe definir al menos un área personalizable",
+          error: 'CUSTOMIZATION_AREAS_REQUIRED'
         });
       }
     } catch (parseError) {
       return res.status(400).json({ 
         success: false,
         message: "Formato de áreas de personalización inválido",
-        error: parseError.message
+        error: 'INVALID_AREAS_FORMAT'
       });
     }
 
@@ -432,11 +505,43 @@ productController.createProduct = async (req, res) => {
         productOptions = JSON.parse(req.body.options);
         
         for (const option of productOptions) {
-          if (!option.name || !option.type || !Array.isArray(option.values) || option.values.length === 0) {
+          // Validar estructura de opción
+          const optionValidation = validateFields(option, {
+            name: (value) => validators.text(value, 1, 50),
+            type: (value) => validators.text(value, 1, 20)
+          });
+
+          if (!optionValidation.isValid) {
             return res.status(400).json({
               success: false,
-              message: `Opción inválida: ${option.name || 'sin nombre'}`
+              message: `Opción inválida: ${optionValidation.errors.join('; ')}`,
+              error: 'INVALID_PRODUCT_OPTION'
             });
+          }
+
+          if (!Array.isArray(option.values) || option.values.length === 0) {
+            return res.status(400).json({
+              success: false,
+              message: `La opción "${option.name}" debe tener al menos un valor`,
+              error: 'OPTION_VALUES_REQUIRED'
+            });
+          }
+
+          // Validar cada valor de la opción
+          for (const value of option.values) {
+            const valueValidation = validateFields(value, {
+              name: (val) => validators.text(val, 1, 50),
+              value: (val) => validators.text(val, 1, 50),
+              additionalCost: (val) => validators.price(val, 0)
+            });
+
+            if (!valueValidation.isValid) {
+              return res.status(400).json({
+                success: false,
+                message: `Valor de opción inválido en "${option.name}": ${valueValidation.errors.join('; ')}`,
+                error: 'INVALID_OPTION_VALUE'
+              });
+            }
           }
         }
       }
@@ -444,8 +549,22 @@ productController.createProduct = async (req, res) => {
       return res.status(400).json({ 
         success: false,
         message: "Formato de opciones del producto inválido",
-        error: parseError.message
+        error: 'INVALID_OPTIONS_FORMAT'
       });
+    }
+
+    // Validar imágenes adicionales si existen
+    if (req.files.additionalImages) {
+      for (const file of req.files.additionalImages) {
+        const imageValidation = validators.imageFile(file);
+        if (!imageValidation.isValid) {
+          return res.status(400).json({
+            success: false,
+            message: `Imagen adicional inválida: ${imageValidation.error}`,
+            error: 'INVALID_ADDITIONAL_IMAGE'
+          });
+        }
+      }
     }
 
     // Subir imágenes con manejo de errores
@@ -457,15 +576,15 @@ productController.createProduct = async (req, res) => {
     try {
       // Subir imagen principal
       const mainImageUrl = await cloudinary.uploadImage(
-  req.files.mainImage[0].path, 
-  "products/main",
-  {
-    width: 800,
-    height: 800,
-    crop: "limit",
-    quality: "auto:good"
-  }
-);
+        req.files.mainImage[0].path, 
+        "products/main",
+        {
+          width: 800,
+          height: 800,
+          crop: "limit",
+          quality: "auto:good"
+        }
+      );
       
       imageUrls.main = mainImageUrl.secure_url;
       uploadedFiles.push({
@@ -507,16 +626,23 @@ productController.createProduct = async (req, res) => {
       return res.status(500).json({ 
         success: false,
         message: "Error al procesar las imágenes",
-        error: uploadError.message
+        error: 'IMAGE_UPLOAD_ERROR'
       });
     }
 
-    // Procesar tags de búsqueda
+    // Procesar tags de búsqueda con validación
     let processedSearchTags = [];
     try {
       if (req.body.searchTags) {
         const tags = JSON.parse(req.body.searchTags);
-        processedSearchTags = Array.isArray(tags) ? tags : [];
+        if (Array.isArray(tags)) {
+          processedSearchTags = tags
+            .map(tag => {
+              const tagValidation = validators.text(tag, 1, 30);
+              return tagValidation.isValid ? tagValidation.cleaned : null;
+            })
+            .filter(tag => tag !== null);
+        }
       }
     } catch {
       processedSearchTags = [];
@@ -524,11 +650,11 @@ productController.createProduct = async (req, res) => {
 
     // Crear producto
     const newProduct = new Product({
-      name: name.trim(),
-      description: description ? description.trim() : "",
+      name: cleanName,
+      description: cleanDescription,
       category: category._id,
-      basePrice: parseFloat(basePrice) || 0,
-      productionTime: parseInt(productionTime) || 3,
+      basePrice: validPrice,
+      productionTime: validProductionTime,
       isActive: isActive !== "false",
       customizationAreas,
       options: productOptions,
@@ -599,53 +725,95 @@ productController.updateProduct = async (req, res) => {
 
     console.log(`🔄 Actualizando producto: ${id}`);
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID del producto
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de producto inválido" 
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(idValidation.cleaned);
     if (!product) {
       return res.status(404).json({ 
         success: false,
-        message: "Producto no encontrado" 
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
 
-    // Actualizar campos básicos
-    if (name && name.trim()) product.name = name.trim();
-    if (description !== undefined) product.description = description.trim();
-    if (basePrice !== undefined) product.basePrice = parseFloat(basePrice) || 0;
-    if (productionTime !== undefined) product.productionTime = parseInt(productionTime) || 3;
+    // Validar campos básicos si se proporcionan
+    const fieldsToValidate = {};
+    if (name !== undefined) fieldsToValidate.name = name;
+    if (description !== undefined) fieldsToValidate.description = description;
+    if (categoryId !== undefined) fieldsToValidate.categoryId = categoryId;
+    if (basePrice !== undefined) fieldsToValidate.basePrice = basePrice;
+    if (productionTime !== undefined) fieldsToValidate.productionTime = productionTime;
+
+    if (Object.keys(fieldsToValidate).length > 0) {
+      const basicValidation = validateFields(fieldsToValidate, {
+        name: (value) => validators.text(value, 1, 100),
+        description: (value) => validators.text(value, 0, 500),
+        categoryId: (value) => validators.mongoId(value, 'ID de categoría'),
+        basePrice: (value) => validators.price(value, 0.01),
+        productionTime: (value) => validators.quantity(value, 1, 30)
+      });
+
+      if (!basicValidation.isValid) {
+        return res.status(400).json({ 
+          success: false,
+          message: `Datos básicos inválidos: ${basicValidation.errors.join('; ')}`,
+          error: 'VALIDATION_ERROR'
+        });
+      }
+
+      // Actualizar campos validados
+      const cleanedFields = basicValidation.cleaned;
+      if (cleanedFields.name) product.name = cleanedFields.name;
+      if (cleanedFields.description !== undefined) product.description = cleanedFields.description;
+      if (cleanedFields.basePrice) product.basePrice = cleanedFields.basePrice;
+      if (cleanedFields.productionTime) product.productionTime = cleanedFields.productionTime;
+
+      // Actualizar categoría si se proporciona
+      if (cleanedFields.categoryId && product.category.toString() !== cleanedFields.categoryId) {
+        const category = await Category.findById(cleanedFields.categoryId);
+        if (!category) {
+          return res.status(400).json({ 
+            success: false,
+            message: "La categoría especificada no existe",
+            error: 'CATEGORY_NOT_FOUND'
+          });
+        }
+        product.category = category._id;
+      }
+    }
+
+    // Actualizar estado activo
     if (isActive !== undefined) product.isActive = isActive !== "false";
 
-    // Actualizar metadata
+    // Actualizar metadata con validación
     if (featured !== undefined) product.metadata.featured = featured === "true" || featured === true;
     
     if (searchTags) {
       try {
         const tags = JSON.parse(searchTags);
-        product.metadata.searchTags = Array.isArray(tags) ? tags : [];
+        if (Array.isArray(tags)) {
+          const processedTags = tags
+            .map(tag => {
+              const tagValidation = validators.text(tag, 1, 30);
+              return tagValidation.isValid ? tagValidation.cleaned : null;
+            })
+            .filter(tag => tag !== null);
+          product.metadata.searchTags = processedTags;
+        }
       } catch {
         // Mantener tags existentes si hay error de parsing
       }
     }
 
-    // Actualizar categoría
-    if (categoryId && product.category.toString() !== categoryId) {
-      const category = await Category.findById(categoryId);
-      if (!category) {
-        return res.status(400).json({ 
-          success: false,
-          message: "La categoría especificada no existe" 
-        });
-      }
-      product.category = category._id;
-    }
-
-    // Actualizar áreas de personalización
+    // Actualizar áreas de personalización con validación
     if (req.body.customizationAreas) {
       try {
         const customizationAreas = JSON.parse(req.body.customizationAreas);
@@ -655,7 +823,8 @@ productController.updateProduct = async (req, res) => {
           return res.status(400).json({ 
             success: false,
             message: "Las áreas de personalización no son válidas",
-            errors: areaValidation.errors
+            errors: areaValidation.errors,
+            error: 'INVALID_CUSTOMIZATION_AREAS'
           });
         }
         
@@ -664,22 +833,53 @@ productController.updateProduct = async (req, res) => {
         return res.status(400).json({ 
           success: false,
           message: "Formato de áreas de personalización inválido",
-          error: parseError.message
+          error: 'INVALID_AREAS_FORMAT'
         });
       }
     }
 
-    // Actualizar opciones del producto
+    // Actualizar opciones del producto con validación
     if (req.body.options) {
       try {
         const productOptions = JSON.parse(req.body.options);
         
         for (const option of productOptions) {
-          if (!option.name || !option.type || !Array.isArray(option.values) || option.values.length === 0) {
+          const optionValidation = validateFields(option, {
+            name: (value) => validators.text(value, 1, 50),
+            type: (value) => validators.text(value, 1, 20)
+          });
+
+          if (!optionValidation.isValid) {
             return res.status(400).json({
               success: false,
-              message: `Opción inválida: ${option.name || 'sin nombre'}`
+              message: `Opción inválida: ${optionValidation.errors.join('; ')}`,
+              error: 'INVALID_PRODUCT_OPTION'
             });
+          }
+
+          if (!Array.isArray(option.values) || option.values.length === 0) {
+            return res.status(400).json({
+              success: false,
+              message: `La opción "${option.name}" debe tener al menos un valor`,
+              error: 'OPTION_VALUES_REQUIRED'
+            });
+          }
+
+          // Validar cada valor de la opción
+          for (const value of option.values) {
+            const valueValidation = validateFields(value, {
+              name: (val) => validators.text(val, 1, 50),
+              value: (val) => validators.text(val, 1, 50),
+              additionalCost: (val) => validators.price(val, 0)
+            });
+
+            if (!valueValidation.isValid) {
+              return res.status(400).json({
+                success: false,
+                message: `Valor de opción inválido en "${option.name}": ${valueValidation.errors.join('; ')}`,
+                error: 'INVALID_OPTION_VALUE'
+              });
+            }
           }
         }
         
@@ -688,15 +888,24 @@ productController.updateProduct = async (req, res) => {
         return res.status(400).json({ 
           success: false,
           message: "Formato de opciones del producto inválido",
-          error: parseError.message
+          error: 'INVALID_OPTIONS_FORMAT'
         });
       }
     }
 
-    // Procesar imágenes si se proporcionan
+    // Procesar imágenes si se proporcionan con validación
     if (req.files) {
-      // Manejar imagen principal
+      // Validar imagen principal si se proporciona
       if (req.files.mainImage) {
+        const mainImageValidation = validators.imageFile(req.files.mainImage[0]);
+        if (!mainImageValidation.isValid) {
+          return res.status(400).json({
+            success: false,
+            message: `Imagen principal inválida: ${mainImageValidation.error}`,
+            error: 'INVALID_MAIN_IMAGE'
+          });
+        }
+
         try {
           // Eliminar imagen anterior de Cloudinary
           const mainImageId = extractCloudinaryId(product.images.main);
@@ -705,18 +914,18 @@ productController.updateProduct = async (req, res) => {
           }
           
           // Subir nueva imagen
-         const mainImageUrl = await cloudinary.uploadImage(
-  req.files.mainImage[0].path, 
-  "products/main",
-  {
-    width: 800,
-    height: 800,
-    crop: "limit",
-    quality: "auto:good"
-  }
-);
+          const mainImageResult = await cloudinary.uploadImage(
+            req.files.mainImage[0].path, 
+            "products/main",
+            {
+              width: 800,
+              height: 800,
+              crop: "limit",
+              quality: "auto:good"
+            }
+          );
 
-          product.images.main = mainImageUrl;
+          product.images.main = mainImageResult.secure_url;
           uploadedFiles.push({
             path: req.files.mainImage[0].path,
             public_id: mainImageResult.public_id
@@ -725,39 +934,59 @@ productController.updateProduct = async (req, res) => {
           return res.status(500).json({ 
             success: false,
             message: "Error al actualizar la imagen principal",
-            error: uploadError.message
+            error: 'IMAGE_UPLOAD_ERROR'
           });
         }
       }
       
-      // Manejar imágenes adicionales
+      // Validar y manejar imágenes adicionales
       if (req.files.additionalImages) {
+        // Validar todas las imágenes adicionales primero
+        for (const file of req.files.additionalImages) {
+          const imageValidation = validators.imageFile(file);
+          if (!imageValidation.isValid) {
+            return res.status(400).json({
+              success: false,
+              message: `Imagen adicional inválida: ${imageValidation.error}`,
+              error: 'INVALID_ADDITIONAL_IMAGE'
+            });
+          }
+        }
+
         try {
           // Eliminar imágenes anteriores de Cloudinary
           for (const imageUrl of product.images.additional) {
             const imageId = extractCloudinaryId(imageUrl);
             if (imageId) {
-              await cloudinary.deleteImage(imageUrl, "products");
+              await cloudinary.uploader.destroy(imageId);
             }
           }
           
           // Subir nuevas imágenes
-          const additionalPaths = req.files.additionalImages.map(file => file.path);
+          const newAdditionalImages = [];
+          for (const file of req.files.additionalImages) {
+            const result = await cloudinary.uploader.upload(file.path, {
+              folder: "products/additional",
+              resource_type: "auto",
+              transformation: [
+                { width: 600, height: 600, crop: "limit" },
+                { quality: "auto:good" }
+              ]
+            });
+            
+            newAdditionalImages.push(result.secure_url);
+            uploadedFiles.push({
+              path: file.path,
+              public_id: result.public_id
+            });
+          }
           
-          product.images.additional = await cloudinary.uploadMultipleImages(
-            additionalPaths,
-            "products/additional",
-            {
-              width: 600,
-              height: 600,
-              crop: "limit"
-            }
-          );
+          product.images.additional = newAdditionalImages;
         } catch (uploadError) {
           return res.status(500).json({ 
             success: false,
             message: "Error al actualizar las imágenes adicionales",
-            error: uploadError.message
+            error: 'IMAGE_UPLOAD_ERROR'
           });
         }
       }
@@ -778,7 +1007,7 @@ productController.updateProduct = async (req, res) => {
       data: {
         product: {
           ...product.toObject(),
-          formattedPrice: `$${product.basePrice.toFixed(2)}`
+          formattedPrice: `${product.basePrice.toFixed(2)}`
         },
         konvaConfig: generateKonvaConfig(product)
       }
@@ -809,23 +1038,27 @@ productController.deleteProduct = async (req, res) => {
     
     console.log(`🗑️ Eliminando producto: ${id}`);
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID usando validador centralizado
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de producto inválido" 
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(idValidation.cleaned);
     if (!product) {
       return res.status(404).json({ 
         success: false,
-        message: "Producto no encontrado" 
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
 
     // Verificar si hay diseños o pedidos asociados
-    const designCount = await Design.countDocuments({ product: id });
+    const designCount = await Design.countDocuments({ product: idValidation.cleaned });
     if (designCount > 0) {
       // En lugar de eliminar, desactivar el producto
       product.isActive = false;
@@ -855,7 +1088,7 @@ productController.deleteProduct = async (req, res) => {
       for (const imageUrl of product.images.additional) {
         const imageId = extractCloudinaryId(imageUrl);
         if (imageId) {
-          await cloudinary.deleteImage(imageId, "products");
+          await cloudinary.uploader.destroy(imageId);
           console.log(`🗑️ Imagen adicional eliminada: ${imageId}`);
         }
       }
@@ -865,7 +1098,7 @@ productController.deleteProduct = async (req, res) => {
     }
 
     // Eliminar producto
-    await Product.findByIdAndDelete(id);
+    await Product.findByIdAndDelete(idValidation.cleaned);
 
     console.log(`✅ Producto eliminado completamente: ${id}`);
 
@@ -898,27 +1131,45 @@ productController.getKonvaConfig = async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID usando validador centralizado
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de producto inválido" 
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(idValidation.cleaned);
     if (!product) {
       return res.status(404).json({ 
         success: false,
-        message: "Producto no encontrado" 
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
+
+    // Validar parámetros de consulta opcionales
+    const mode = req.query.mode || 'simple';
+    const validModes = ['simple', 'advanced', 'editor'];
+    if (!validModes.includes(mode)) {
+      return res.status(400).json({
+        success: false,
+        message: `Modo inválido. Modos válidos: ${validModes.join(', ')}`,
+        error: 'INVALID_MODE'
+      });
+    }
+
+    const includeGuides = req.query.guides === 'true';
+    const includeGrid = req.query.grid === 'true';
 
     // Generar configuración para Konva con opciones adicionales para el editor
     const konvaConfig = generateKonvaConfig(product, {
       includeProductOptions: true,
-      editorMode: req.query.mode || 'simple',
-      includeGuides: req.query.guides === 'true',
-      includeGrid: req.query.grid === 'true'
+      editorMode: mode,
+      includeGuides,
+      includeGrid
     });
 
     res.status(200).json({
@@ -951,14 +1202,27 @@ productController.searchProducts = async (req, res) => {
   try {
     const { q: query, limit = 10 } = req.query;
 
-    if (!query || query.trim().length < 2) {
+    // Validar consulta de búsqueda
+    const queryValidation = validators.text(query, 2, 100);
+    if (!queryValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "La consulta debe tener al menos 2 caracteres"
+        message: `Consulta de búsqueda inválida: ${queryValidation.error}`,
+        error: 'INVALID_SEARCH_QUERY'
       });
     }
 
-    const searchRegex = new RegExp(query.trim(), 'i');
+    // Validar límite
+    const limitValidation = validators.quantity(limit, 1, 50);
+    if (!limitValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: `Límite inválido: ${limitValidation.error}`,
+        error: 'INVALID_LIMIT'
+      });
+    }
+
+    const searchRegex = new RegExp(queryValidation.cleaned, 'i');
     
     const products = await Product.find({
       $and: [
@@ -973,29 +1237,34 @@ productController.searchProducts = async (req, res) => {
       ]
     })
     .populate('category', 'name')
-    .limit(parseInt(limit))
+    .limit(limitValidation.cleaned)
     .lean();
 
-    const formattedProducts = products.map(product => ({
-      _id: product._id,
-      name: product.name,
-      description: product.description,
-      basePrice: validateNumber(product.basePrice, 0),
-      formattedPrice: `$${validateNumber(product.basePrice, 0).toFixed(2)}`,
-      category: product.category,
-      images: product.images,
-      _links: {
-        self: `/api/products/${product._id}`,
-        konvaConfig: `/api/products/${product._id}/konva-config`
-      }
-    }));
+    const formattedProducts = products.map(product => {
+      const priceValidation = validators.price(product.basePrice, 0);
+      const validPrice = priceValidation.isValid ? priceValidation.cleaned : 0;
+
+      return {
+        _id: product._id,
+        name: product.name,
+        description: product.description,
+        basePrice: validPrice,
+        formattedPrice: `${validPrice.toFixed(2)}`,
+        category: product.category,
+        images: product.images,
+        _links: {
+          self: `/api/products/${product._id}`,
+          konvaConfig: `/api/products/${product._id}/konva-config`
+        }
+      };
+    });
 
     res.status(200).json({
       success: true,
       message: `${formattedProducts.length} productos encontrados`,
       data: {
         products: formattedProducts,
-        query: query.trim(),
+        query: queryValidation.cleaned,
         total: formattedProducts.length
       }
     });
@@ -1018,57 +1287,76 @@ productController.getRelatedProducts = async (req, res) => {
     const { id } = req.params;
     const { limit = 4 } = req.query;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID del producto
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "ID de producto inválido"
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    const product = await Product.findById(id);
+    // Validar límite
+    const limitValidation = validators.quantity(limit, 1, 20);
+    if (!limitValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: `Límite inválido: ${limitValidation.error}`,
+        error: 'INVALID_LIMIT'
+      });
+    }
+
+    const product = await Product.findById(idValidation.cleaned);
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Producto no encontrado"
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
 
     // Buscar productos relacionados por categoría
     const relatedProducts = await Product.find({
-      _id: { $ne: id },
+      _id: { $ne: idValidation.cleaned },
       category: product.category,
       isActive: true
     })
     .populate('category', 'name')
-    .limit(parseInt(limit))
+    .limit(limitValidation.cleaned)
     .lean();
 
     // Si no hay suficientes productos en la misma categoría, agregar productos aleatorios
-    if (relatedProducts.length < parseInt(limit)) {
+    if (relatedProducts.length < limitValidation.cleaned) {
       const additionalProducts = await Product.find({
         _id: { 
-          $ne: id, 
+          $ne: idValidation.cleaned, 
           $nin: relatedProducts.map(p => p._id) 
         },
         isActive: true
       })
       .populate('category', 'name')
-      .limit(parseInt(limit) - relatedProducts.length)
+      .limit(limitValidation.cleaned - relatedProducts.length)
       .lean();
 
       relatedProducts.push(...additionalProducts);
     }
 
-    const formattedProducts = relatedProducts.map(product => ({
-      _id: product._id,
-      name: product.name,
-      description: product.description,
-      basePrice: validateNumber(product.basePrice, 0),
-      formattedPrice: `$${validateNumber(product.basePrice, 0).toFixed(2)}`,
-      category: product.category,
-      images: product.images,
-      daysAgo: calculateDaysAgo(product.createdAt)
-    }));
+    const formattedProducts = relatedProducts.map(product => {
+      const priceValidation = validators.price(product.basePrice, 0);
+      const validPrice = priceValidation.isValid ? priceValidation.cleaned : 0;
+
+      return {
+        _id: product._id,
+        name: product.name,
+        description: product.description,
+        basePrice: validPrice,
+        formattedPrice: `${validPrice.toFixed(2)}`,
+        category: product.category,
+        images: product.images,
+        daysAgo: calculateDaysAgo(product.createdAt)
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -1099,26 +1387,32 @@ productController.getRelatedProducts = async (req, res) => {
 productController.updateProductStats = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action } = req.body; // 'view', 'design', 'order'
+    const { action } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID del producto
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "ID de producto inválido"
+        message: idValidation.error,
+        error: 'INVALID_PRODUCT_ID'
       });
     }
 
-    if (!['view', 'design', 'order'].includes(action)) {
+    // Validar acción
+    const validActions = ['view', 'design', 'order'];
+    if (!validActions.includes(action)) {
       return res.status(400).json({
         success: false,
-        message: "Acción inválida. Use: view, design, order"
+        message: `Acción inválida. Acciones válidas: ${validActions.join(', ')}`,
+        error: 'INVALID_ACTION'
       });
     }
 
     const updateField = `metadata.stats.${action}s`;
     
     const product = await Product.findByIdAndUpdate(
-      id,
+      idValidation.cleaned,
       { $inc: { [updateField]: 1 } },
       { new: true, lean: true }
     );
@@ -1126,7 +1420,8 @@ productController.updateProductStats = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Producto no encontrado"
+        message: "Producto no encontrado",
+        error: 'PRODUCT_NOT_FOUND'
       });
     }
 
@@ -1161,50 +1456,114 @@ productController.createSampleProducts = async (req, res) => {
     if (existingCount > 0) {
       return res.status(400).json({
         success: false,
-        message: `Ya existen ${existingCount} productos en la base de datos`
+        message: `Ya existen ${existingCount} productos en la base de datos`,
+        error: 'PRODUCTS_ALREADY_EXIST'
       });
     }
 
     // Buscar o crear categoría por defecto
     let defaultCategory = await Category.findOne({ name: 'General' });
     if (!defaultCategory) {
-      defaultCategory = new Category({
+      // Validar datos de la categoría por defecto
+      const categoryValidation = validateFields({
         name: 'General',
-        description: 'Categoría general para productos',
+        description: 'Categoría general para productos'
+      }, {
+        name: (value) => validators.text(value, 1, 50),
+        description: (value) => validators.text(value, 0, 200)
+      });
+
+      if (!categoryValidation.isValid) {
+        return res.status(500).json({
+          success: false,
+          message: `Error creando categoría por defecto: ${categoryValidation.errors.join('; ')}`,
+          error: 'CATEGORY_CREATION_ERROR'
+        });
+      }
+
+      defaultCategory = new Category({
+        name: categoryValidation.cleaned.name,
+        description: categoryValidation.cleaned.description,
         isActive: true
       });
       await defaultCategory.save();
     }
 
-    // Productos de ejemplo
-    const sampleProducts = [
+    // Productos de ejemplo con validación
+    const sampleProductsData = [
       {
         name: 'Camiseta Personalizable',
         description: 'Camiseta de algodón 100% ideal para personalización con sublimación',
-        category: defaultCategory._id,
         basePrice: 24.99,
         productionTime: 3,
+        searchTags: ['camiseta', 'algodón', 'personalizable', 'sublimación']
+      },
+      {
+        name: 'Taza Sublimable',
+        description: 'Taza de cerámica blanca perfecta para sublimación',
+        basePrice: 19.99,
+        productionTime: 2,
+        searchTags: ['taza', 'cerámica', 'sublimación', 'bebidas']
+      },
+      {
+        name: 'Funda para Teléfono',
+        description: 'Funda personalizable para diversos modelos de teléfono',
+        basePrice: 22.99,
+        productionTime: 2,
+        searchTags: ['funda', 'teléfono', 'protección', 'personalizable']
+      },
+      {
+        name: 'Bolso Tote',
+        description: 'Bolso de tela resistente ideal para diseños personalizados',
+        basePrice: 27.99,
+        productionTime: 4,
+        searchTags: ['bolso', 'tote', 'tela', 'eco']
+      }
+    ];
+
+    const validatedProducts = [];
+
+    // Validar cada producto de ejemplo
+    for (const productData of sampleProductsData) {
+      const validation = validateFields(productData, {
+        name: (value) => validators.text(value, 1, 100),
+        description: (value) => validators.text(value, 0, 500),
+        basePrice: (value) => validators.price(value, 0.01),
+        productionTime: (value) => validators.quantity(value, 1, 30)
+      });
+
+      if (!validation.isValid) {
+        console.error(`Error validando producto "${productData.name}":`, validation.errors);
+        continue;
+      }
+
+      // Validar tags de búsqueda
+      const validatedTags = productData.searchTags
+        .map(tag => {
+          const tagValidation = validators.text(tag, 1, 30);
+          return tagValidation.isValid ? tagValidation.cleaned : null;
+        })
+        .filter(tag => tag !== null);
+
+      validatedProducts.push({
+        name: validation.cleaned.name,
+        description: validation.cleaned.description,
+        category: defaultCategory._id,
+        basePrice: validation.cleaned.basePrice,
+        productionTime: validation.cleaned.productionTime,
         isActive: true,
         images: {
-          main: '/src/img/camiseta.png',
+          main: `/src/img/${productData.name.toLowerCase().replace(/\s+/g, '_')}.png`,
           additional: []
         },
         customizationAreas: [
           {
-            name: 'Frente',
+            name: 'Área principal',
             x: 50,
             y: 80,
             width: 200,
             height: 250,
             maxElements: 5
-          },
-          {
-            name: 'Espalda',
-            x: 50,
-            y: 50,
-            width: 200,
-            height: 300,
-            maxElements: 3
           }
         ],
         options: [
@@ -1217,139 +1576,26 @@ productController.createSampleProducts = async (req, res) => {
               { name: 'L', value: 'l', additionalCost: 2 },
               { name: 'XL', value: 'xl', additionalCost: 4 }
             ]
-          },
-          {
-            name: 'Color',
-            type: 'color',
-            values: [
-              { name: 'Blanco', value: '#FFFFFF', additionalCost: 0 },
-              { name: 'Negro', value: '#000000', additionalCost: 1 },
-              { name: 'Azul', value: '#0066CC', additionalCost: 1 }
-            ]
           }
         ],
         metadata: {
-          featured: true,
-          searchTags: ['camiseta', 'algodón', 'personalizable', 'sublimación'],
+          featured: Math.random() > 0.5,
+          searchTags: validatedTags,
           stats: { views: 0, designs: 0, orders: 0 }
         }
-      },
-      {
-        name: 'Taza Sublimable',
-        description: 'Taza de cerámica blanca perfecta para sublimación',
-        category: defaultCategory._id,
-        basePrice: 19.99,
-        productionTime: 2,
-        isActive: true,
-        images: {
-          main: '/src/img/taza.png',
-          additional: []
-        },
-        customizationAreas: [
-          {
-            name: 'Área principal',
-            x: 30,
-            y: 50,
-            width: 240,
-            height: 100,
-            maxElements: 3
-          }
-        ],
-        options: [
-          {
-            name: 'Tipo',
-            type: 'style',
-            values: [
-              { name: 'Estándar', value: 'standard', additionalCost: 0 },
-              { name: 'Mágica', value: 'magic', additionalCost: 5 }
-            ]
-          }
-        ],
-        metadata: {
-          featured: false,
-          searchTags: ['taza', 'cerámica', 'sublimación', 'bebidas'],
-          stats: { views: 0, designs: 0, orders: 0 }
-        }
-      },
-      {
-        name: 'Funda para Teléfono',
-        description: 'Funda personalizable para diversos modelos de teléfono',
-        category: defaultCategory._id,
-        basePrice: 22.99,
-        productionTime: 2,
-        isActive: true,
-        images: {
-          main: '/src/img/funda.png',
-          additional: []
-        },
-        customizationAreas: [
-          {
-            name: 'Parte trasera',
-            x: 20,
-            y: 40,
-            width: 160,
-            height: 280,
-            maxElements: 4
-          }
-        ],
-        options: [
-          {
-            name: 'Modelo',
-            type: 'style',
-            values: [
-              { name: 'iPhone 13', value: 'iphone13', additionalCost: 0 },
-              { name: 'iPhone 14', value: 'iphone14', additionalCost: 2 },
-              { name: 'Samsung S23', value: 'samsung_s23', additionalCost: 1 }
-            ]
-          }
-        ],
-        metadata: {
-          featured: true,
-          searchTags: ['funda', 'teléfono', 'protección', 'personalizable'],
-          stats: { views: 0, designs: 0, orders: 0 }
-        }
-      },
-      {
-        name: 'Bolso Tote',
-        description: 'Bolso de tela resistente ideal para diseños personalizados',
-        category: defaultCategory._id,
-        basePrice: 27.99,
-        productionTime: 4,
-        isActive: true,
-        images: {
-          main: '/src/img/bolso.png',
-          additional: []
-        },
-        customizationAreas: [
-          {
-            name: 'Frente',
-            x: 40,
-            y: 60,
-            width: 220,
-            height: 200,
-            maxElements: 3
-          }
-        ],
-        options: [
-          {
-            name: 'Material',
-            type: 'material',
-            values: [
-              { name: 'Algodón', value: 'cotton', additionalCost: 0 },
-              { name: 'Canvas', value: 'canvas', additionalCost: 3 }
-            ]
-          }
-        ],
-        metadata: {
-          featured: false,
-          searchTags: ['bolso', 'tote', 'tela', 'eco'],
-          stats: { views: 0, designs: 0, orders: 0 }
-        }
-      }
-    ];
+      });
+    }
+
+    if (validatedProducts.length === 0) {
+      return res.status(500).json({
+        success: false,
+        message: "No se pudieron validar productos de ejemplo",
+        error: 'VALIDATION_FAILED'
+      });
+    }
 
     // Crear productos
-    const createdProducts = await Product.insertMany(sampleProducts);
+    const createdProducts = await Product.insertMany(validatedProducts);
 
     console.log(`✅ ${createdProducts.length} productos de ejemplo creados`);
 
@@ -1359,7 +1605,7 @@ productController.createSampleProducts = async (req, res) => {
       data: {
         products: createdProducts.map(product => ({
           ...product.toObject(),
-          formattedPrice: `$${product.basePrice.toFixed(2)}`
+          formattedPrice: `${product.basePrice.toFixed(2)}`
         })),
         category: defaultCategory
       }
@@ -1382,15 +1628,17 @@ productController.getEditorConfig = async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validar ID usando validador centralizado
+    const idValidation = validators.mongoId(id, 'ID de producto');
+    if (!idValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "ID de producto inválido",
+        message: idValidation.error,
         error: 'INVALID_PRODUCT_ID'
       });
     }
     
-    const product = await Product.findById(id);
+    const product = await Product.findById(idValidation.cleaned);
     if (!product) {
       return res.status(404).json({ 
         success: false,
@@ -1405,14 +1653,14 @@ productController.getEditorConfig = async (req, res) => {
         productId: product._id,
         productName: product.name,
         imageUrl: product.images.main,
-        stageConfig: product.getKonvaStageConfig(),
+        stageConfig: product.getKonvaStageConfig ? product.getKonvaStageConfig() : {},
         areas: product.customizationAreas.map(area => ({
-          ...product.getKonvaAreaConfig(area._id),
+          ...area,
           editable: true,
           resizable: true,
           draggable: true
         })),
-        editorConfig: product.editorConfig
+        editorConfig: product.editorConfig || {}
       }
     });
     
@@ -1440,14 +1688,27 @@ productController.previewAreas = async (req, res) => {
         error: 'AREAS_REQUIRED'
       });
     }
+
+    // Validar URL de imagen si se proporciona
+    if (imageUrl) {
+      const urlValidation = validators.text(imageUrl, 1, 500);
+      if (!urlValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: `URL de imagen inválida: ${urlValidation.error}`,
+          error: 'INVALID_IMAGE_URL'
+        });
+      }
+    }
     
-    // Validar áreas
+    // Validar áreas usando la función existente
     const validation = validateCustomizationAreas(areas);
     if (!validation.isValid) {
       return res.status(400).json({ 
         success: false,
         message: "Áreas inválidas",
-        errors: validation.errors
+        errors: validation.errors,
+        error: 'INVALID_AREAS'
       });
     }
     
@@ -1458,7 +1719,7 @@ productController.previewAreas = async (req, res) => {
         height: 600,
         container: 'preview-container'
       },
-      backgroundImage: imageUrl,
+      backgroundImage: imageUrl || '',
       areas: areas.map((area, index) => ({
         id: `preview-area-${index}`,
         ...area.position,
@@ -1492,7 +1753,11 @@ productController.previewAreas = async (req, res) => {
   }
 };
 
-// Función auxiliar para verificar superposición
+// ==================== FUNCIONES AUXILIARES ====================
+
+/**
+ * Función auxiliar para verificar superposición de áreas
+ */
 function checkAreasOverlap(areas) {
   for (let i = 0; i < areas.length; i++) {
     for (let j = i + 1; j < areas.length; j++) {
@@ -1510,12 +1775,17 @@ function checkAreasOverlap(areas) {
   return false;
 }
 
-// Funciones auxiliares
+/**
+ * Validar número con valor por defecto
+ */
 function validateNumber(value, defaultValue = 0) {
-  const num = Number(value);
-  return isNaN(num) || !isFinite(num) ? defaultValue : Math.max(0, num);
+  const priceValidation = validators.price(value, 0);
+  return priceValidation.isValid ? priceValidation.cleaned : defaultValue;
 }
 
+/**
+ * Calcular días transcurridos desde una fecha
+ */
 function calculateDaysAgo(date) {
   if (!date) return 0;
   try {
@@ -1529,6 +1799,9 @@ function calculateDaysAgo(date) {
   }
 }
 
+/**
+ * Limpiar archivos temporales del sistema
+ */
 function cleanTempFiles(files) {
   if (!files || !Array.isArray(files)) return;
   
@@ -1536,6 +1809,7 @@ function cleanTempFiles(files) {
     try {
       if (file && file.path && fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
+        console.log(`🧹 Archivo temporal eliminado: ${file.path}`);
       }
     } catch (cleanError) {
       console.error('Error limpiando archivo temporal:', cleanError);
@@ -1543,11 +1817,17 @@ function cleanTempFiles(files) {
   });
 }
 
+/**
+ * Extraer ID público de Cloudinary desde URL
+ */
 function extractCloudinaryId(url) {
   if (!url || typeof url !== 'string') return null;
   
   try {
-    // Usar la función que ya tienes en tu configuración de Cloudinary
+    // Validar que sea una URL válida
+    const urlValidation = validators.text(url, 1, 500);
+    if (!urlValidation.isValid) return null;
+
     const urlParts = url.split('/');
     const uploadIndex = urlParts.findIndex(part => part === 'upload');
     
@@ -1572,6 +1852,242 @@ function extractCloudinaryId(url) {
     console.error('Error extrayendo ID de Cloudinary:', error);
     return null;
   }
+}
+
+/**
+ * Validar estructura completa de producto
+ */
+function validateProductStructure(productData) {
+  const errors = [];
+  const cleaned = {};
+
+  // Validar campos básicos
+  const basicValidation = validateFields(productData, {
+    name: (value) => validators.text(value, 1, 100),
+    description: (value) => validators.text(value, 0, 500),
+    basePrice: (value) => validators.price(value, 0.01),
+    productionTime: (value) => validators.quantity(value, 1, 30)
+  });
+
+  if (!basicValidation.isValid) {
+    errors.push(...basicValidation.errors);
+  } else {
+    Object.assign(cleaned, basicValidation.cleaned);
+  }
+
+  // Validar categoría si se proporciona
+  if (productData.categoryId) {
+    const categoryValidation = validators.mongoId(productData.categoryId, 'ID de categoría');
+    if (!categoryValidation.isValid) {
+      errors.push(categoryValidation.error);
+    } else {
+      cleaned.categoryId = categoryValidation.cleaned;
+    }
+  }
+
+  // Validar áreas de personalización
+  if (productData.customizationAreas && Array.isArray(productData.customizationAreas)) {
+    const areasValidation = validateCustomizationAreas(productData.customizationAreas);
+    if (!areasValidation.isValid) {
+      errors.push(...areasValidation.errors);
+    } else {
+      cleaned.customizationAreas = productData.customizationAreas;
+    }
+  }
+
+  // Validar opciones del producto
+  if (productData.options && Array.isArray(productData.options)) {
+    const validatedOptions = [];
+    for (const option of productData.options) {
+      const optionValidation = validateFields(option, {
+        name: (value) => validators.text(value, 1, 50),
+        type: (value) => validators.text(value, 1, 20)
+      });
+
+      if (!optionValidation.isValid) {
+        errors.push(`Opción "${option.name || 'sin nombre'}": ${optionValidation.errors.join('; ')}`);
+        continue;
+      }
+
+      if (!Array.isArray(option.values) || option.values.length === 0) {
+        errors.push(`La opción "${option.name}" debe tener al menos un valor`);
+        continue;
+      }
+
+      // Validar valores de la opción
+      const validatedValues = [];
+      for (const value of option.values) {
+        const valueValidation = validateFields(value, {
+          name: (val) => validators.text(val, 1, 50),
+          value: (val) => validators.text(val, 1, 50),
+          additionalCost: (val) => validators.price(val, 0)
+        });
+
+        if (valueValidation.isValid) {
+          validatedValues.push(valueValidation.cleaned);
+        } else {
+          errors.push(`Valor de opción inválido en "${option.name}": ${valueValidation.errors.join('; ')}`);
+        }
+      }
+
+      if (validatedValues.length > 0) {
+        validatedOptions.push({
+          ...optionValidation.cleaned,
+          values: validatedValues
+        });
+      }
+    }
+
+    if (validatedOptions.length > 0) {
+      cleaned.options = validatedOptions;
+    }
+  }
+
+  // Validar metadatos
+  if (productData.metadata) {
+    if (productData.metadata.searchTags && Array.isArray(productData.metadata.searchTags)) {
+      const validatedTags = productData.metadata.searchTags
+        .map(tag => {
+          const tagValidation = validators.text(tag, 1, 30);
+          return tagValidation.isValid ? tagValidation.cleaned : null;
+        })
+        .filter(tag => tag !== null);
+
+      if (validatedTags.length > 0) {
+        cleaned.searchTags = validatedTags;
+      }
+    }
+
+    if (typeof productData.metadata.featured === 'boolean') {
+      cleaned.featured = productData.metadata.featured;
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    cleaned
+  };
+}
+
+/**
+ * Formatear respuesta de error de validación
+ */
+function formatValidationError(errors, message = "Error de validación") {
+  return {
+    success: false,
+    message,
+    errors: Array.isArray(errors) ? errors : [errors],
+    error: 'VALIDATION_ERROR'
+  };
+}
+
+/**
+ * Formatear respuesta de producto para API
+ */
+function formatProductResponse(product, includeKonvaConfig = false) {
+  // Validar precio del producto
+  const priceValidation = validators.price(product.basePrice, 0);
+  const validPrice = priceValidation.isValid ? priceValidation.cleaned : 0;
+
+  const formattedProduct = {
+    _id: product._id,
+    name: product.name,
+    description: product.description,
+    category: product.category,
+    basePrice: validPrice,
+    formattedPrice: `${validPrice.toFixed(2)}`,
+    productionTime: product.productionTime,
+    isActive: product.isActive,
+    images: product.images,
+    customizationAreas: product.customizationAreas,
+    options: product.options,
+    metadata: product.metadata,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+    daysAgo: calculateDaysAgo(product.createdAt),
+    statusText: product.isActive ? 'Activo' : 'Inactivo',
+    _links: {
+      self: `/api/products/${product._id}`,
+      designs: `/api/products/${product._id}/designs`,
+      konvaConfig: `/api/products/${product._id}/konva-config`,
+      category: product.category?._id ? `/api/categories/${product.category._id}` : null,
+      update: `/api/products/${product._id}`,
+      delete: `/api/products/${product._id}`
+    }
+  };
+
+  if (includeKonvaConfig) {
+    formattedProduct.konvaConfig = generateKonvaConfig(product);
+  }
+
+  return formattedProduct;
+}
+
+/**
+ * Validar parámetros de consulta para filtros
+ */
+function validateQueryParams(query) {
+  const errors = [];
+  const cleaned = {};
+
+  // Validar paginación
+  if (query.page !== undefined) {
+    const pageValidation = validators.quantity(query.page, 1, 1000);
+    if (!pageValidation.isValid) {
+      errors.push(`Página: ${pageValidation.error}`);
+    } else {
+      cleaned.page = pageValidation.cleaned;
+    }
+  }
+
+  if (query.limit !== undefined) {
+    const limitValidation = validators.quantity(query.limit, 1, 50);
+    if (!limitValidation.isValid) {
+      errors.push(`Límite: ${limitValidation.error}`);
+    } else {
+      cleaned.limit = limitValidation.cleaned;
+    }
+  }
+
+  // Validar categoría
+  if (query.category && query.category.trim() !== '') {
+    const categoryValidation = validators.mongoId(query.category, 'Categoría');
+    if (categoryValidation.isValid) {
+      cleaned.category = categoryValidation.cleaned;
+    }
+  }
+
+  // Validar búsqueda
+  if (query.search && query.search.trim() !== '') {
+    const searchValidation = validators.text(query.search, 1, 100);
+    if (searchValidation.isValid) {
+      cleaned.search = searchValidation.cleaned;
+    }
+  }
+
+  // Validar ordenamiento
+  const validSortOptions = ['newest', 'oldest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'];
+  if (query.sort && !validSortOptions.includes(query.sort)) {
+    cleaned.sort = 'newest'; // Default
+  } else {
+    cleaned.sort = query.sort || 'newest';
+  }
+
+  // Validar booleanos
+  if (query.isActive !== undefined) {
+    cleaned.isActive = query.isActive === 'true';
+  }
+
+  if (query.featured !== undefined) {
+    cleaned.featured = query.featured === 'true';
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    cleaned
+  };
 }
 
 export default productController;

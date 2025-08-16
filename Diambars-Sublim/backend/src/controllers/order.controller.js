@@ -1,10 +1,11 @@
-// controllers/order.controller.js - REFACTORIZADO (Sin cálculos automáticos)
+// controllers/order.controller.js - REFACTORIZADO con Validators
 import Order from "../models/order.js";
 import Design from "../models/design.js";
 import Address from "../models/address.js";
 import mongoose from "mongoose";
 import { orderService } from "../services/order.service.js";
-import { paymentService } from "../services/payment.service.js";
+import { paymentService } from "../services/unifiedPayment.service.js";
+import { validators } from "../utils/validators.utils.js";
 import { notificationService } from "../services/notification.service.js";
 
 const orderController = {};
@@ -24,7 +25,36 @@ orderController.createOrder = async (req, res) => {
       isManualOrder: req.body.isManualOrder || false
     });
 
-    const orderData = await orderService.validateOrderData(req.body, req.user._id);
+    // Validar datos del pedido usando el validador
+    const orderValidation = validators.orderData(req.body);
+    if (!orderValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos de pedido inválidos",
+        error: orderValidation.error
+      });
+    }
+
+    // Validar dirección si es entrega a domicilio
+    if (req.body.deliveryType === 'delivery') {
+      const addressValidation = validators.address(req.body.deliveryAddress);
+      if (!addressValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Dirección de entrega inválida",
+          error: addressValidation.error
+        });
+      }
+      // Usar datos limpios de la validación
+      req.body.deliveryAddress = addressValidation.cleaned;
+    }
+
+    // Usar datos limpios de la validación
+    const orderData = {
+      ...orderValidation.cleaned,
+      userId: req.user._id,
+      isManualOrder: req.body.isManualOrder || false
+    };
     
     // Crear pedido usando el servicio
     const newOrder = await orderService.createOrder(orderData, session);
@@ -61,91 +91,6 @@ orderController.createOrder = async (req, res) => {
 };
 
 /**
- * Obtener pedido por ID (cliente o admin)
- */
-orderController.getOrderById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id;
-    const isAdmin = req.user.roles?.some(role => ['admin', 'manager'].includes(role));
-
-    const order = await orderService.getOrderById(id, userId, isAdmin);
-
-    res.status(200).json({
-      success: true,
-      data: { 
-        order: order.toDetailedObject(),
-        _links: {
-          tracking: `/api/orders/${order._id}/tracking`,
-          payment: order.payment.wompiData?.paymentUrl || null
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error("❌ Error en getOrderById:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al obtener el pedido",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
- * Obtener tracking detallado tipo Temu
- */
-orderController.getOrderTracking = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id;
-    const isAdmin = req.user.roles?.some(role => ['admin', 'manager'].includes(role));
-
-    const tracking = await orderService.getOrderTracking(id, userId, isAdmin);
-
-    res.status(200).json({
-      success: true,
-      data: { tracking }
-    });
-
-  } catch (error) {
-    console.error("❌ Error en getOrderTracking:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al obtener tracking",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-// ==================== MÉTODOS SOLO CLIENTE ====================
-
-/**
- * Obtener mis pedidos
- */
-orderController.getMyOrders = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const { page = 1, limit = 10, status } = req.query;
-
-    const result = await orderService.getUserOrders(userId, { page, limit, status });
-
-    res.status(200).json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en getMyOrders:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al obtener tus pedidos",
-      error: 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
  * Responder a cotización (aceptar/rechazar)
  */
 orderController.respondToQuote = async (req, res) => {
@@ -154,7 +99,36 @@ orderController.respondToQuote = async (req, res) => {
     const { accept, clientNotes } = req.body;
     const userId = req.user._id;
 
-    const result = await orderService.respondToQuote(id, userId, accept, clientNotes);
+    // Validar ID de la orden
+    const orderIdValidation = validators.mongoId(id, 'ID de pedido');
+    if (!orderIdValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de pedido inválido",
+        error: orderIdValidation.error
+      });
+    }
+
+    // Validar notas del cliente (opcional)
+    let validatedNotes;
+    if (clientNotes) {
+      const notesValidation = validators.text(clientNotes, 0, 1000);
+      if (!notesValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Notas inválidas",
+          error: notesValidation.error
+        });
+      }
+      validatedNotes = notesValidation.cleaned;
+    }
+
+    const result = await orderService.respondToQuote(
+      orderIdValidation.cleaned, 
+      userId, 
+      accept, 
+      validatedNotes
+    );
 
     res.status(200).json({
       success: true,
@@ -173,91 +147,6 @@ orderController.respondToQuote = async (req, res) => {
 };
 
 /**
- * Aprobar foto de control de calidad
- */
-orderController.approveProductPhoto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { photoId, approved, changeRequested, clientNotes } = req.body;
-    const userId = req.user._id;
-
-    const result = await orderService.approveProductPhoto(
-      id, userId, photoId, approved, changeRequested, clientNotes
-    );
-
-    res.status(200).json({
-      success: true,
-      message: result.message,
-      data: result.data
-    });
-
-  } catch (error) {
-    console.error("❌ Error en approveProductPhoto:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al procesar aprobación",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
- * Cancelar pedido
- */
-orderController.cancelOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-    const userId = req.user._id;
-    const isAdmin = req.user.roles?.some(role => ['admin', 'manager'].includes(role));
-
-    const result = await orderService.cancelOrder(id, userId, isAdmin, reason);
-
-    res.status(200).json({
-      success: true,
-      message: "Pedido cancelado exitosamente",
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en cancelOrder:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al cancelar pedido",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-// ==================== MÉTODOS SOLO ADMIN ====================
-
-/**
- * Obtener todas las solicitudes de pedidos
- */
-orderController.getAllOrders = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, status, user, search, startDate, endDate } = req.query;
-
-    const result = await orderService.getAllOrders({
-      page, limit, status, user, search, startDate, endDate
-    });
-
-    res.status(200).json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en getAllOrders:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error al obtener pedidos",
-      error: 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
  * Cotizar manualmente (SIN cálculos automáticos)
  */
 orderController.submitQuote = async (req, res) => {
@@ -266,17 +155,75 @@ orderController.submitQuote = async (req, res) => {
     const { totalPrice, deliveryFee, tax, notes } = req.body;
     const adminId = req.user._id;
 
-    // Validar precios manuales
-    if (!totalPrice || totalPrice <= 0) {
+    // Validar ID de la orden
+    const orderIdValidation = validators.mongoId(id, 'ID de pedido');
+    if (!orderIdValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "Debe proporcionar un precio total válido",
-        error: 'INVALID_PRICE'
+        message: "ID de pedido inválido",
+        error: orderIdValidation.error
       });
     }
 
+    // Validar precio total
+    const priceValidation = validators.price(totalPrice);
+    if (!priceValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Precio total inválido",
+        error: priceValidation.error
+      });
+    }
+
+    // Validar tarifa de entrega (opcional)
+    let validatedDeliveryFee = 0;
+    if (deliveryFee !== undefined) {
+      const deliveryFeeValidation = validators.price(deliveryFee, 0);
+      if (!deliveryFeeValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Tarifa de entrega inválida",
+          error: deliveryFeeValidation.error
+        });
+      }
+      validatedDeliveryFee = deliveryFeeValidation.cleaned;
+    }
+
+    // Validar impuesto (opcional)
+    let validatedTax = 0;
+    if (tax !== undefined) {
+      const taxValidation = validators.price(tax, 0);
+      if (!taxValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Impuesto inválido",
+          error: taxValidation.error
+        });
+      }
+      validatedTax = taxValidation.cleaned;
+    }
+
+    // Validar notas (opcional)
+    let validatedNotes;
+    if (notes) {
+      const notesValidation = validators.text(notes, 0, 500);
+      if (!notesValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Notas inválidas",
+          error: notesValidation.error
+        });
+      }
+      validatedNotes = notesValidation.cleaned;
+    }
+
     const result = await orderService.submitManualQuote(
-      id, adminId, totalPrice, deliveryFee || 0, tax || 0, notes
+      orderIdValidation.cleaned, 
+      adminId, 
+      priceValidation.cleaned, 
+      validatedDeliveryFee, 
+      validatedTax, 
+      validatedNotes
     );
 
     res.status(200).json({
@@ -296,91 +243,6 @@ orderController.submitQuote = async (req, res) => {
 };
 
 /**
- * Actualizar estado del pedido
- */
-orderController.updateOrderStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, notes } = req.body;
-    const adminId = req.user._id;
-
-    const result = await orderService.updateOrderStatus(id, adminId, status, notes);
-
-    res.status(200).json({
-      success: true,
-      message: `Estado actualizado a ${status}`,
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en updateOrderStatus:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al actualizar estado",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
- * Actualizar etapas de producción
- */
-orderController.updateProductionStage = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { productionStage, notes, photoUrl, estimatedCompletion } = req.body;
-    const adminId = req.user._id;
-
-    const result = await orderService.updateProductionStage(
-      id, adminId, productionStage, notes, photoUrl, estimatedCompletion
-    );
-
-    res.status(200).json({
-      success: true,
-      message: `Etapa "${productionStage}" completada`,
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en updateProductionStage:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al actualizar producción",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
- * Subir foto de control de calidad
- */
-orderController.uploadProductionPhoto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { stage, photoUrl, notes } = req.body;
-    const adminId = req.user._id;
-
-    const result = await orderService.uploadProductionPhoto(
-      id, adminId, stage, photoUrl, notes
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Foto subida exitosamente",
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en uploadProductionPhoto:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al subir foto",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
  * Registrar pago en efectivo
  */
 orderController.registerCashPayment = async (req, res) => {
@@ -389,7 +251,41 @@ orderController.registerCashPayment = async (req, res) => {
     const paymentData = req.body;
     const adminId = req.user._id;
 
-    const result = await paymentService.registerCashPayment(id, adminId, paymentData);
+    // Validar ID de la orden
+    const orderIdValidation = validators.mongoId(id, 'ID de pedido');
+    if (!orderIdValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de pedido inválido",
+        error: orderIdValidation.error
+      });
+    }
+
+    // Obtener el total del pedido para validación
+    const order = await Order.findById(orderIdValidation.cleaned);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido no encontrado",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Validar datos de pago en efectivo
+    const cashPaymentValidation = validators.cashPayment(paymentData, order.totalPrice);
+    if (!cashPaymentValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Datos de pago inválidos",
+        error: cashPaymentValidation.error
+      });
+    }
+
+    const result = await paymentService.registerCashPayment(
+      orderIdValidation.cleaned, 
+      adminId, 
+      cashPaymentValidation.cleaned
+    );
 
     res.status(200).json({
       success: true,
@@ -407,34 +303,5 @@ orderController.registerCashPayment = async (req, res) => {
   }
 };
 
-/**
- * Finalizar pedido presencial
- */
-orderController.finalizeOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { deliveryNotes, customerSatisfaction } = req.body;
-    const adminId = req.user._id;
-
-    const result = await orderService.finalizeOrder(id, adminId, {
-      deliveryNotes,
-      customerSatisfaction
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Pedido finalizado exitosamente",
-      data: result
-    });
-
-  } catch (error) {
-    console.error("❌ Error en finalizeOrder:", error);
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Error al finalizar pedido",
-      error: error.code || 'INTERNAL_ERROR'
-    });
-  }
-};
-
+// Exportar el controlador con métodos validados
 export default orderController;
