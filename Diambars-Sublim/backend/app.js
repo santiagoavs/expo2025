@@ -23,6 +23,7 @@ import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
 import reviewsRoutes from "./src/routes/reviews.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js"; // NUEVA RUTA AGREGADA
+import paymentMethodsRoutes from "./src/routes/paymentMethods.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
@@ -178,6 +179,7 @@ app.get("/api/health", (req, res) => {
       orders: '/api/orders',
       addresses: '/api/addresses',
       payments: '/api/payments', // NUEVO ENDPOINT
+      paymentMethods: '/api/payment-methods',
       config: '/api/config'
     }
   });
@@ -200,6 +202,9 @@ app.use("/api/addresses", jsonMiddleware, addressRoutes);
 // ========== RUTAS DE USUARIOS Y EMPLEADOS ==========
 app.use('/api/employees', conditionalJsonMiddleware, employeesRoutes);
 app.use('/api/users', conditionalJsonMiddleware, userRoutes);
+
+// ========== RUTAS DE MÉTODOS DE PAGO ==========
+app.use("/api/payment-methods", jsonMiddleware, paymentMethodsRoutes);
 
 // ========== RUTAS DE CATEGORÍAS ==========
 app.use("/api/categories", conditionalJsonMiddleware, categoryRoutes);

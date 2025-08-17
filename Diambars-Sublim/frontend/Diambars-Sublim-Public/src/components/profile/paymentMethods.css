@@ -302,7 +302,8 @@
 .card-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  align-items: center;
+  gap: 5px;
   margin-top: 5px;
 }
 
@@ -529,5 +530,6 @@
 .card-input[name="cvc"] {
   font-family: 'Courier New', monospace;
   text-align: center;
+  width: 165px;
 }
 

@@ -50,7 +50,7 @@ export const usePaymentMethods = () => {
   };
 
   const validateCard = (cardData) => {
-    const { number, name, expiry, cvc } = cardData;
+    const { number, name, expiry } = cardData;
     
     if (!number || number.replace(/\s/g, '').length < 13) {
       throw new Error('Ingresa un número de tarjeta válido (mínimo 13 dígitos)');
@@ -62,10 +62,6 @@ export const usePaymentMethods = () => {
     
     if (!expiry || expiry.length !== 5) {
       throw new Error('Ingresa una fecha de expiración válida (MM/AA)');
-    }
-    
-    if (!cvc || cvc.length < 3) {
-      throw new Error('Ingresa un CVC válido (3-4 dígitos)');
     }
 
     // Validar que la fecha no sea pasada
@@ -87,16 +83,16 @@ export const usePaymentMethods = () => {
       setLoading(true);
       setError(null);
 
-      // Validar datos
+      // Validar datos (sin CVC)
       validateCard(cardData);
 
-      // Preparar datos para enviar al backend
+      // Preparar datos para enviar al backend (SIN CVC)
       const paymentData = {
         number: cardData.number.replace(/\s/g, ''), // Enviar número completo al backend
         name: cardData.name.trim(),
         expiry: cardData.expiry,
-        cvc: cardData.cvc,
         issuer: detectCardType(cardData.number),
+        nickname: cardData.nickname?.trim() || '',
         active: false // Los nuevos métodos inician inactivos
       };
 
@@ -123,16 +119,16 @@ export const usePaymentMethods = () => {
       setLoading(true);
       setError(null);
 
-      // Validar datos
+      // Validar datos (sin CVC)
       validateCard(cardData);
 
-      // Preparar datos para enviar al backend
+      // Preparar datos para enviar al backend (SIN CVC)
       const paymentData = {
         number: cardData.number.replace(/\s/g, ''),
         name: cardData.name.trim(),
         expiry: cardData.expiry,
-        cvc: cardData.cvc,
-        issuer: detectCardType(cardData.number)
+        issuer: detectCardType(cardData.number),
+        nickname: cardData.nickname?.trim() || ''
       };
 
       const updatedMethod = await paymentMethodsService.updatePaymentMethod(methodId, paymentData);

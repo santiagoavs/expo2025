@@ -23,12 +23,12 @@ const PaymentMethods = () => {
   const [editingMethod, setEditingMethod] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
-  // Estado para el formulario de la tarjeta
+  // Estado para el formulario de la tarjeta (SIN CVC)
   const [cardForm, setCardForm] = useState({
     number: '',
     name: '',
     expiry: '',
-    cvc: '',
+    nickname: '',
     focus: ''
   });
 
@@ -41,7 +41,7 @@ const PaymentMethods = () => {
         </div>
         <div className="payment-underline"></div>
         <div className="auth-required-message">
-          <p>Esta función será implementada próximamente.</p>
+          <p>Debes iniciar sesión para gestionar tus métodos de pago.</p>
         </div>
       </div>
     );
@@ -67,14 +67,13 @@ const PaymentMethods = () => {
         .substring(0, 5);
       setCardForm(prev => ({ ...prev, [name]: formattedValue }));
     }
-    // Limitar CVC a 4 dígitos
-    else if (name === 'cvc') {
-      const formattedValue = value.replace(/\D/g, '').substring(0, 4);
-      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
-    }
     // Nombre en mayúsculas
     else if (name === 'name') {
       setCardForm(prev => ({ ...prev, [name]: value.toUpperCase().substring(0, 30) }));
+    }
+    // Nickname normal
+    else if (name === 'nickname') {
+      setCardForm(prev => ({ ...prev, [name]: value.substring(0, 50) }));
     }
     else {
       setCardForm(prev => ({ ...prev, [name]: value }));
@@ -90,7 +89,7 @@ const PaymentMethods = () => {
       number: '',
       name: '',
       expiry: '',
-      cvc: '',
+      nickname: '',
       focus: ''
     });
   };
@@ -168,7 +167,7 @@ const PaymentMethods = () => {
       number: '1234 5678 9012 ' + method.lastFourDigits,
       name: method.name,
       expiry: method.expiry,
-      cvc: method.cvc,
+      nickname: method.nickname || '',
       focus: ''
     });
   };
@@ -181,7 +180,7 @@ const PaymentMethods = () => {
 
   // Función para formatear el número de tarjeta mostrado
   const formatDisplayNumber = (method) => {
-    return `**** **** **** ${method.lastFourDigits || method.number?.slice(-4) || '****'}`;
+    return `**** **** **** ${method.lastFourDigits || '****'}`;
   };
 
   // Función para capitalizar el nombre del issuer
@@ -241,13 +240,16 @@ const PaymentMethods = () => {
         {methods.length === 0 ? (
           <div className="no-methods-message">
             <p>No tienes métodos de pago registrados</p>
+            <small>⚠️ Nota: El CVC se solicitará en cada transacción por seguridad</small>
           </div>
         ) : (
           methods.map((method) => (
             <div key={method._id} className={`payment-method ${method.active ? 'active' : 'inactive'}`}>
               <p>
                 {method.active ? 'Activa actualmente' : 'Registrada - Inactiva'}<br />
-                {formatIssuerName(method.issuer)} terminada en {method.lastFourDigits || method.number?.slice(-4)}<br />
+                {method.nickname && <strong>{method.nickname}</strong>}<br />
+                {formatIssuerName(method.issuer)} terminada en {method.lastFourDigits}<br />
+                <small>Expira: {method.expiry}</small>
               </p>
               <div className="payment-buttons">
                 <button
@@ -294,11 +296,24 @@ const PaymentMethods = () => {
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <div className="card-form-container">
           <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Añadir método de pago</h3>
+          
+          {/* Aviso de seguridad */}
+          <div style={{ 
+            background: '#e7f3ff', 
+            border: '1px solid #0066cc', 
+            borderRadius: '4px', 
+            padding: '10px', 
+            marginBottom: '15px',
+            fontSize: '14px'
+          }}>
+            🔒 <strong>Seguridad:</strong> El CVC se solicitará al momento del pago y nunca se almacena.
+          </div>
+          
           <Cards
             number={cardForm.number || ''}
             name={cardForm.name || ''}
             expiry={cardForm.expiry || ''}
-            cvc={cardForm.cvc || ''}
+            cvc="***" // Siempre mostrar asteriscos
             focused={cardForm.focus}
             locale={{
               valid: 'VÁLIDA HASTA',
@@ -309,6 +324,7 @@ const PaymentMethods = () => {
               name: 'TU NOMBRE'
             }}
           />
+          
           <form className="card-form" onSubmit={(e) => e.preventDefault()}>
             <div className="form-group">
               <input
@@ -336,6 +352,19 @@ const PaymentMethods = () => {
               />
             </div>
             
+            <div className="form-group">
+              <input
+                type="text"
+                name="nickname"
+                placeholder="Nombre para identificar (opcional)"
+                value={cardForm.nickname}
+                onChange={handleInputChange}
+                onFocus={handleInputFocus}
+                className="card-input"
+                disabled={submitting}
+              />
+            </div>
+            
             <div className="form-row">
               <div className="form-group">
                 <input
@@ -343,19 +372,6 @@ const PaymentMethods = () => {
                   name="expiry"
                   placeholder="MM/AA"
                   value={cardForm.expiry}
-                  onChange={handleInputChange}
-                  onFocus={handleInputFocus}
-                  className="card-input"
-                  disabled={submitting}
-                />
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="cvc"
-                  placeholder="CVC"
-                  value={cardForm.cvc}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
                   className="card-input"
@@ -381,13 +397,15 @@ const PaymentMethods = () => {
         <Modal isOpen={true} onClose={closeModal}>
           <div className="card-form-container">
             <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Editar método de pago</h3>
+            
             <Cards
               number={cardForm.number || ''}
               name={cardForm.name || ''}
               expiry={cardForm.expiry || ''}
-              cvc={cardForm.cvc || ''}
+              cvc="***" // Siempre mostrar asteriscos
               focused={cardForm.focus}
             />
+            
             <form className="card-form" onSubmit={(e) => e.preventDefault()}>
               <div className="form-group">
                 <input
@@ -415,6 +433,19 @@ const PaymentMethods = () => {
                 />
               </div>
               
+              <div className="form-group">
+                <input
+                  type="text"
+                  name="nickname"
+                  placeholder="Nombre para identificar (opcional)"
+                  value={cardForm.nickname}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  className="card-input"
+                  disabled={submitting}
+                />
+              </div>
+              
               <div className="form-row">
                 <div className="form-group">
                   <input
@@ -422,19 +453,6 @@ const PaymentMethods = () => {
                     name="expiry"
                     placeholder="MM/AA"
                     value={cardForm.expiry}
-                    onChange={handleInputChange}
-                    onFocus={handleInputFocus}
-                    className="card-input"
-                    disabled={submitting}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <input
-                    type="text"
-                    name="cvc"
-                    placeholder="CVC"
-                    value={cardForm.cvc}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
                     className="card-input"

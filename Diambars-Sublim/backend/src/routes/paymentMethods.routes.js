@@ -1,19 +1,19 @@
-const express = require('express');
-const router = express.Router();
-const {
+// routes/paymentMethods.routes.js - CORREGIDO PARA ES6
+import express from 'express';
+import {
   getPaymentMethods,
   createPaymentMethod,
   updatePaymentMethod,
   deletePaymentMethod,
   togglePaymentMethod,
   getActivePaymentMethod
-} = require('../controllers/paymentMethods.controller.js');
+} from '../controllers/paymentMethods.controller.js';
+import { authRequired } from '../middlewares/auth.middleware.js';
 
-// Middleware de autenticación (asume que ya tienes uno)
-const authMiddleware = require('../middleware/authMiddleware');
+const router = express.Router();
 
 // Aplicar autenticación a todas las rutas
-router.use(authMiddleware);
+router.use(authRequired);
 
 // Rutas principales
 router.get('/', getPaymentMethods);
@@ -23,4 +23,4 @@ router.put('/:id', updatePaymentMethod);
 router.delete('/:id', deletePaymentMethod);
 router.patch('/:id/toggle', togglePaymentMethod);
 
-module.exports = router;
+export default router;
