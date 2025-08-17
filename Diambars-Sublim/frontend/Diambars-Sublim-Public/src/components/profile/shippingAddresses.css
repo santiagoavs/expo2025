@@ -8,6 +8,7 @@
   gap: 5px;
   font-family: 'Inter', sans-serif;
   height: 250px;
+  overflow: hidden; /* Para el scroll */
   
   background: rgba(255, 246, 226, 0.3);
   backdrop-filter: blur(12px);
@@ -36,14 +37,17 @@
 
 .address-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* No se comprime con el scroll */
 }
 
 .address-underline {
   width: 100%;
   height: 1px;
   background-color: rgba(63, 39, 36, 0.5); 
+  flex-shrink: 0; /* No se comprime con el scroll */
 }
 
 .address-title {
@@ -57,6 +61,34 @@
 .address-list {
   display: flex;
   flex-direction: column;
+  overflow-y: auto; /* Scroll vertical */
+  flex: 1; /* Toma el espacio restante */
+  padding-right: 5px; /* Espacio para la barra de scroll */
+}
+
+/* Estilo minimalista para la barra de scroll */
+.address-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.address-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.address-list::-webkit-scrollbar-thumb {
+  background: rgba(63, 39, 36, 0.3);
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.address-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(63, 39, 36, 0.5);
+}
+
+/* Para Firefox */
+.address-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(63, 39, 36, 0.3) transparent;
 }
 
 .address-item {
@@ -67,21 +99,29 @@
   justify-content: space-between;
   align-items: center;
   flex-direction: row;
+  flex-shrink: 0;
 }
 
 .address-item.active p {
   color: #3F2724;
   font-weight: 500;
+  margin: 5px 0;
 }
 
 .address-item.inactive p {
   color: rgba(63, 39, 36, 0.6); 
+  margin: 5px 0;
 }
 
 .address-buttons {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin: 10px;
+}
+
+.error-message {
+  color: #ac0a28;
+  margin-bottom: 10px;
 }
 
 .address-button.active-toggle {
@@ -200,4 +240,370 @@
 .address-button:active {
   transform: translateY(1px);
   backdrop-filter: blur(6px);
+}
+
+.header-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.modal-content input {
+  position: relative;
+  width: 375px;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 1rem;
+  z-index: 2;
+  transition: all 0.3s ease-out;
+  background: rgba(255, 246, 226, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  color: #3F2724;
+}
+
+.modal-content input::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    220deg,
+    rgba(255, 246, 226, 0.15), 
+    rgba(245, 231, 198, 0.08)
+  );
+  z-index: -1;
+  transform: translateY(4px) scale(0.98);
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-content input:hover {
+  background: rgba(255, 246, 226, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.modal-content input:hover::after {
+  opacity: 0.8;
+}
+
+.modal-content input:focus {
+  outline: none;
+  background: rgba(255, 246, 226, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 8px 28px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(255, 255, 255, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.modal-content input::placeholder {
+  color: rgba(63, 39, 36, 0.5);
+  font-style: italic;
+}
+
+.modal-content select {
+  position: relative;
+  width: 400px;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 1rem;
+  z-index: 2;
+  transition: all 0.3s ease-out;
+  background: rgba(255, 246, 226, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  color: #3F2724;
+}
+
+.modal-content select::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    220deg,
+    rgba(255, 246, 226, 0.15), 
+    rgba(245, 231, 198, 0.08)
+  );
+  z-index: -1;
+  transform: translateY(4px) scale(0.98);
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-content select:hover {
+  background: rgba(255, 246, 226, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.modal-content select:hover::after {
+  opacity: 0.8;
+}
+
+.modal-content select:focus {
+  outline: none;
+  background: rgba(255, 246, 226, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 8px 28px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(255, 255, 255, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.modal-content select::placeholder {
+  color: rgba(63, 39, 36, 0.5);
+  font-style: italic;
+}
+
+.modal-content textarea {
+  position: relative;
+  resize: none;
+  width: 375px;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: 1rem;
+  z-index: 2;
+  transition: all 0.3s ease-out;
+  background: rgba(255, 246, 226, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  color: #3F2724;
+}
+
+.modal-content textarea::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    220deg,
+    rgba(255, 246, 226, 0.15), 
+    rgba(245, 231, 198, 0.08)
+  );
+  z-index: -1;
+  transform: translateY(4px) scale(0.98);
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-content textarea:hover {
+  background: rgba(255, 246, 226, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.modal-content textarea:hover::after {
+  opacity: 0.8;
+}
+
+.modal-content textarea:focus {
+  outline: none;
+  background: rgba(255, 246, 226, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 8px 28px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(255, 255, 255, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.modal-content textarea::placeholder {
+  color: rgba(63, 39, 36, 0.5);
+  font-style: italic;
+}
+
+.checkbox-input {
+  width: 10px !important;
+}
+
+.modal-content label {
+  margin-bottom: 7px;
+  font-size: 0.9rem;
+  font-weight: bold !important;
+}
+
+.modal-button-group {
+  margin-top: 10px;
+  display: flex ;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.submit-button {
+  position: relative;
+  color: #FFF1D0;
+  border-radius: 15px;
+  padding: 12px 32px;
+  height: 50px; 
+  width: 190px;
+  font-size: 1.1rem;
+  font-family: 'DiambarsFont', italic;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: none;
+  overflow: hidden;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  
+  background: rgba(45, 142, 90, 0.9); /* Verde principal */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(40, 62, 50, 0.18),
+    0 0 0 1px rgba(180, 255, 200, 0.4);
+}
+
+.submit-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg, 
+    rgba(45, 190, 120, 0.5), /* Verde claro */
+    rgba(40, 62, 50, 0.2)    /* Verde oscuro */
+  );
+  transform: translateY(10px) scale(0.95);
+  filter: blur(10px);
+  opacity: 0.8;
+}
+
+.submit-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(100, 255, 150, 0) 0%,
+    rgba(150, 255, 180, 0.3) 50%, /* Verde brillante */
+    rgba(100, 255, 150, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  background: rgba(45, 160, 100, 0.7); /* Verde intermedio */
+  box-shadow: 
+    0 10px 35px rgba(40, 90, 60, 0.25),
+    0 0 0 1px rgba(200, 255, 220, 0.5);
+}
+
+.submit-button:hover::after {
+  left: 100%;
+}
+
+.submit-button:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(8px);
+}
+
+.save-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+}
+
+.cancel-button {
+  position: relative;
+  height: 50px;
+  width: 190px; 
+  color: #FFF1D0;
+  border-radius: 15px;
+  padding: 12px 32px;
+  font-family: 'DiambarsFont', italic;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: none;
+  overflow: hidden;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(100, 0, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(160, 0, 25, 0.18),
+    0 0 0 1px rgba(255, 180, 180, 0.4);
+}
+
+.cancel-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(180, 30, 50, 0.5), rgba(100, 0, 15, 0.2));
+  transform: translateY(10px) scale(0.95);
+  filter: blur(10px);
+  opacity: 0.8;
+}
+
+.cancel-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to right, rgba(255,50,50,0) 0%, rgba(255,150,150,0.3) 50%, rgba(255,50,50,0) 100%);
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.cancel-button:hover {
+  transform: translateY(-2px);
+  background: rgba(180, 10, 30, 0.5);
+  box-shadow: 
+    0 10px 35px rgba(160, 0, 25, 0.25),
+    0 0 0 1px rgba(255, 200, 200, 0.5);
+}
+
+.cancel-button:hover::after {
+  left: 100%;
+}
+
+.cancel-button:active {
+  transform: translateY(1px);
+  backdrop-filter: blur(8px);
 }

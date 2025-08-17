@@ -41,7 +41,7 @@ const PaymentMethods = () => {
         </div>
         <div className="payment-underline"></div>
         <div className="auth-required-message">
-          <p>Inicia sesión para ver y gestionar tus métodos de pago</p>
+          <p>Esta función será implementada próximamente.</p>
         </div>
       </div>
     );

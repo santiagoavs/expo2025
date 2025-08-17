@@ -1,40 +1,254 @@
 .category-page {
+  width: 100%;
+  min-height: 99.6vh;
+  background: 
+    radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+    radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+    radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, 
+      #FFF6E2 0%,
+      #F5E7C6 20%,
+      #F0DFB8 40%,
+      #EBD7AA 60%,
+      #E6CF9C 80%,
+      #F2E4C1 100%
+    );
+  background-size: 
+    140% 140%, 
+    130% 130%, 
+    160% 160%, 
+    135% 135%, 
+    125% 125%, 
+    180% 180%, 
+    100% 100%;
+  animation: backgroundFlow 25s ease-in-out infinite alternate;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes backgroundFlow {
+  0% {
+    background-position: 
+      25% 15%,
+      85% 25%,
+      15% 70%,
+      70% 85%,
+      90% 60%,
+      45% 35%,
+      0% 0%;
+  }
+  50% {
+    background-position: 
+      30% 20%,
+      80% 30%,
+      20% 65%,
+      65% 80%,
+      85% 65%,
+      50% 40%,
+      0% 0%;
+  }
+  100% {
+    background-position: 
+      35% 25%,
+      75% 35%,
+      25% 60%,
+      60% 75%,
+      80% 70%,
+      55% 45%,
+      0% 0%;
+  }
+}
+
+.category-container {
   display: flex;
-  min-height: 80vh;
   gap: 2rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 1.2rem;
-  flex: 1;
-  margin-top: 90px;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 1.5rem 4rem;
+  width: 90%;
+  max-width: 1200px;
+  margin: 120px auto 30px;
+  padding: 0 20px;
+  box-sizing: border-box;
   justify-items: center;
-  align-items: start;
-  width: 100%;
-  max-width: 1000px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
+.filter-sidebar {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  margin-top: 40px;
+  margin-left: 20px;
+}
 
-@media (max-width: 900px) {
+.category-content-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+/* ------------------------- */
+/* RESPONSIVE COMPLETO */
+/* ------------------------- */
+
+/* Pantallas muy grandes (1600px+) */
+@media (min-width: 1600px) {
+  .category-container {
+    max-width: 1600px;
+  }
+  
   .product-grid {
-    grid-template-columns: repeat(2, minmax(160px, 1fr));
-    max-width: 700px;
-    gap: 3rem
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap: 2.5rem 4rem;
+    max-width: 1400px;
+  }
+  
+  .filter-sidebar {
+    width: 280px;
   }
 }
 
-
-@media (max-width: 600px) {
+/* Laptops grandes (1200px - 1599px) */
+@media (min-width: 1201px) and (max-width: 1599px) {
+  .category-container {
+    max-width: 1300px;
+  }
+  
   .product-grid {
-    grid-template-columns: 1fr;
-    max-width: 350px;
-    margin-top: 40px;
-    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/* Rango crítico mejorado (1061px - 1200px) */
+@media (min-width: 1061px) and (max-width: 1200px) {
+  .category-container {
+    max-width: 1100px;
+    gap: 1.8rem;
+  }
+  
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+    gap: 1.8rem 3.5rem;
+  }
+  
+  .filter-sidebar {
+    width: 220px;
+  }
+}
+
+/* Rango especial 900px-1060px (optimizado) */
+@media (min-width: 900px) and (max-width: 1060px) {
+  .category-container {
+    max-width: 950px;
+    gap: 1.5rem;
+  }
+  
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 100px;
+  }
+  
+  .filter-sidebar {
+    width: 200px;
+    margin-left: 10px;
+    padding: 15px;
+  }
+}
+
+/* Tablets landscape (768px - 899px) */
+@media (min-width: 768px) and (max-width: 899px) {
+  .category-container {
+    flex-direction: column;
+    max-width: 800px;
+    padding: 0 15px;
+  }
+  
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
+    gap: 1.5rem 2rem;
+    width: 100%;
+    margin-top: 0;
+  }
+  
+  .filter-sidebar {
+    width: 100%;
+    max-width: 600px;
+    margin: 30px auto 0;
+    position: static;
+  }
+}
+
+/* Tablets portrait (600px - 767px) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .category-container {
+    flex-direction: column;
+    max-width: 800px;
+    padding: 0 15px;
+  }
+  
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 1.2rem;
+    max-width: 600px;
+    margin: 30px 0;
+  }
+}
+
+/* Móviles grandes (480px - 599px) */
+@media (min-width: 480px) and (max-width: 599px) {
+  .category-container {
+    flex-direction: column;
+    max-width: 600px;
+    padding: 0 15px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    gap: 1rem 1.5rem;
+    padding: 0 10px;
+    margin: 20px 0;
+  }
+}
+
+/* Móviles pequeños (360px - 479px) */
+@media (min-width: 360px) and (max-width: 479px) {
+  .category-container {
+    flex-direction: column;
+    max-width: 400px;
+    padding: 0 15px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.8rem 3.2rem;
+    margin: 30px 0;
+  }
+}
+
+/* Móviles muy pequeños (-359px) */
+@media (max-width: 359px) {
+  .category-container {
+    flex-direction: column;
+    max-width: 400px;
+    padding: 0 15px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.6rem;
+    margin: 30px 0;
   }
 }

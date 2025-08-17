@@ -1,42 +1,255 @@
-.product-card-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 20px;
+.product-card {
+    position: relative;
+  width: 100%;
+  max-width: 280px; /* Ancho máximo más generoso */
+  height: 270px; /* Altura aumentada para mejor proporción */
+  border-radius: 16px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  font-family: 'DiambarsFont', sans-serif;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 246, 226, 0.3), rgba(245, 231, 198, 0.25));
 }
 
-.product-card {
-  background: linear-gradient(135deg, #FFF6E2, #F5E7C6);
-  height: 250px;
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  text-align: center;
-  max-width: 250px;
-  width: 100%;
-  font-family: 'DiambarsFont', sans-serif;
+.product-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 246, 226, 0.1), rgba(255, 246, 226, 0.05));
+  transform: translateY(8px) scale(0.96);
+  filter: blur(12px);
+  opacity: 0.8;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
 .product-image {
-  max-width: 100%;
-  height: 140px;
+  width: 100%;
+  height: 180px; /* Más espacio para la imagen */
   object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.03);
 }
 
 .product-name {
-  font-style: italic;
-  margin-top: 0.75rem;
-  color: #3f2724;
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+  flex-grow: 1; /* Permite que el nombre use espacio disponible */
+  display: flex;
+  align-items: center;
 }
 
 .customize-button {
+  position: relative;
   margin-top: 0.5rem;
-  background: linear-gradient(to right, #2e5c4b, #1c3c33);
+  background: linear-gradient(to right, rgba(46, 92, 75, 0.9), rgba(28, 60, 51, 0.85));
   color: white;
   border: none;
-  padding: 0.4rem 1rem;
+  width: 90%;
+  margin-top: auto; /* Empuja el botón hacia abajo */
+  padding: 0.5rem;
   border-radius: 1.25rem;
   cursor: pointer;
   font-family: inherit;
   font-size: 0.9rem;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.customize-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+  z-index: -1;
+}
+
+.customize-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.customize-button:hover::before {
+  left: 100%;
+}
+
+/* ------------------------- */
+/* RESPONSIVE CARDS COMPLETO */
+/* ------------------------- */
+
+/* Pantallas muy grandes (1600px+) */
+@media (min-width: 1600px) {
+  .product-card {
+    height: 320px;
+    max-width: 300px;
+  }
+  
+  .product-image {
+    height: 180px;
+  }
+  
+  .product-name {
+    font-size: 1.2rem;
+  }
+}
+
+/* Laptops grandes (1200px - 1599px) */
+@media (min-width: 1201px) and (max-width: 1599px) {
+  .product-card {
+    height: 300px;
+    width: 240px;
+    max-width: 280px;
+  }
+  
+  .product-image {
+    height: 170px;
+  }
+}
+
+/* Rango crítico mejorado (1061px - 1200px) */
+@media (min-width: 1061px) and (max-width: 1200px) {
+  .product-card {
+    height: 280px;
+    max-width: 260px;
+  }
+  
+  .product-image {
+    height: 160px;
+  }
+}
+
+/* Rango especial 900px-1060px (optimizado) */
+@media (min-width: 900px) and (max-width: 1060px) {
+  .product-card {
+    height: 260px;
+    width: 190px;
+    max-width: 240px;
+    padding: 1rem;
+  }
+  
+  .product-image {
+    height: 150px;
+  }
+  
+  .product-name {
+    font-size: 1rem;
+  }
+}
+
+/* Tablets landscape (768px - 899px) */
+@media (min-width: 768px) and (max-width: 899px) {
+  .product-card {
+    height: 240px;
+    width: 190px;
+    max-width: 220px;
+  }
+  
+  .product-image {
+    height: 140px;
+  }
+}
+
+/* Tablets portrait (600px - 767px) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .product-card {
+    height: 220px;
+    width: 140px;
+    max-width: 190px;
+  }
+  
+  .product-image {
+    height: 120px;
+  }
+  
+  .customize-button {
+    padding: 0.35rem 0.8rem;
+  }
+}
+
+/* Móviles grandes (480px - 599px) */
+@media (min-width: 480px) and (max-width: 599px) {
+  .product-card {
+    height: 200px;
+    width: 120px;
+    max-width: 160px;
+    border-radius: 14px;
+  }
+  
+  .product-image {
+    height: 110px;
+  }
+  
+  .product-name {
+    font-size: 0.9rem;
+  }
+}
+
+/* Móviles pequeños (360px - 479px) */
+@media (min-width: 360px) and (max-width: 479px) {
+  .product-card {
+    height: 180px;
+    max-width: 130px;
+    padding: 0.8rem;
+  }
+  
+  .product-image {
+    height: 90px;
+  }
+  
+  .customize-button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Móviles muy pequeños (-359px) */
+@media (max-width: 359px) {
+  .product-card {
+    height: 160px;
+    max-width: 110px;
+    padding: 0.6rem;
+  }
+  
+  .product-image {
+    height: 80px;
+  }
+  
+  .product-name {
+    font-size: 0.8rem;
+  }
 }
