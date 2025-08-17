@@ -9,6 +9,13 @@ const productSchema = new mongoose.Schema({
     minlength: [3, 'El nombre debe tener al menos 3 caracteres'],
     maxlength: [100, 'El nombre no puede exceder 100 caracteres']
   },
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true
+  },
   description: {
     type: String,
     trim: true,
@@ -54,7 +61,7 @@ const productSchema = new mongoose.Schema({
       required: [true, 'La imagen principal es obligatoria'],
       validate: {
         validator: function(v) {
-          return /^(https?:\/\/|\/src\/|\/public\/)/.test(v);
+          return /^https?:\/\//.test(v); // Validar que sea una URL válida
         },
         message: 'La URL de la imagen no es válida'
       }
@@ -63,7 +70,7 @@ const productSchema = new mongoose.Schema({
       type: String,
       validate: {
         validator: function(v) {
-          return /^(https?:\/\/|\/src\/|\/public\/)/.test(v);
+          return /^https?:\/\//.test(v);
         },
         message: 'La URL de la imagen adicional no es válida'
       }
@@ -301,11 +308,8 @@ const productSchema = new mongoose.Schema({
       metaDescription: {
         type: String,
         maxlength: 160
-      },
-      slug: {
-        type: String
-        // REMOVIDO: unique: true, sparse: true <- Se define abajo en schema.index()
       }
+      // REMOVIDO el campo slug anidado - ahora está en el nivel raíz
     }
   }
 }, {
@@ -317,8 +321,7 @@ const productSchema = new mongoose.Schema({
 // Agregar el plugin de paginación
 productSchema.plugin(mongoosePaginate);
 
-// ==================== ÍNDICES ÚNICOS (SIN DUPLICADOS) ====================
-// Definir todos los índices aquí para evitar duplicados
+// ==================== ÍNDICES ÚNICOS (CORREGIDOS) ====================
 
 // Índice de texto completo
 productSchema.index({ 
@@ -331,8 +334,8 @@ productSchema.index({
 productSchema.index({ category: 1, isActive: 1 });
 productSchema.index({ 'metadata.featured': 1, isActive: 1 });
 
-// Índices únicos
-productSchema.index({ 'metadata.seo.slug': 1 }, { unique: true, sparse: true });
+// Índice único del slug - CORREGIDO: ahora en el nivel raíz
+productSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 // Índices simples
 productSchema.index({ createdAt: -1 });
@@ -356,13 +359,14 @@ productSchema.virtual('availability').get(function() {
   return 'available';
 });
 
-// Hooks
-productSchema.pre('save', function(next) {
+// HOOKS CORREGIDOS
+productSchema.pre('save', async function(next) {
   console.log('🔧 Product pre-save hook:', {
     isNew: this.isNew,
     name: this.name,
     areas: this.customizationAreas?.length,
-    options: this.options?.length
+    options: this.options?.length,
+    currentSlug: this.slug
   });
   
   // Validar que haya al menos un área de personalización
@@ -377,13 +381,48 @@ productSchema.pre('save', function(next) {
     return next(new Error('Los nombres de las áreas deben ser únicos'));
   }
   
-  // Generar slug si no existe
-  if (!this.metadata.seo.slug && this.name) {
-    this.metadata.seo.slug = this.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      + '-' + Date.now();
+  // Generar slug único si no existe o cambió el nombre
+  if (!this.slug || (this.isModified('name') && this.name)) {
+    try {
+      const baseSlug = this.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Eliminar caracteres especiales
+        .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+        .replace(/-+/g, '-') // Reemplazar múltiples guiones con uno solo
+        .trim('-'); // Eliminar guiones al inicio y final
+
+      let uniqueSlug = baseSlug;
+      let counter = 1;
+
+      // Verificar que el slug sea único
+      while (true) {
+        const existingProduct = await mongoose.model('Product').findOne({ 
+          slug: uniqueSlug,
+          _id: { $ne: this._id } // Excluir el producto actual si es actualización
+        });
+        
+        if (!existingProduct) {
+          break; // Slug único encontrado
+        }
+        
+        // Si existe, agregar contador
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+        
+        // Prevenir bucles infinitos
+        if (counter > 1000) {
+          uniqueSlug = `${baseSlug}-${Date.now()}`;
+          break;
+        }
+      }
+
+      this.slug = uniqueSlug;
+      console.log(`🏷️ Slug generado: ${uniqueSlug}`);
+      
+    } catch (error) {
+      console.error('❌ Error generando slug:', error);
+      return next(new Error('Error generando slug único'));
+    }
   }
   
   next();
