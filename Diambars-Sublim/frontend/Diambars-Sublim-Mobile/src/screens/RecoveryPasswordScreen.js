@@ -1,5 +1,5 @@
-// src/screens/RecoveryPasswordScreen.js - VERSIÓN SIMPLE (SIN ANIMACIONES)
-import React, { useState } from 'react';
+// src/screens/RecoveryPasswordScreen.js - CON ALERTAS BONITAS
+import React from 'react';
 import {
   View,
   Text,
@@ -9,19 +9,33 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+import CustomAlert from '../components/CustomAlert'; // 👈 NUEVA IMPORTACIÓN
+import LoadingOverlay from '../components/LoadingOverlay'; // 👈 NUEVA IMPORTACIÓN
 
 const RecoveryPasswordScreen = () => {
-  console.log('[RecoveryScreen] Renderizando pantalla');
+  console.log('[RecoveryScreen] Renderizando pantalla con alertas bonitas');
   
   const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  
+  // 🔥 HOOK CON ALERTAS BONITAS
+  const { 
+    email, 
+    setEmail, 
+    isSubmitting, 
+    error, 
+    setError,
+    handleRequestCode,
+    // Nuevos estados para alertas bonitas
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert
+  } = usePasswordRecovery();
 
   const validateEmail = (emailValue) => {
     if (!emailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
@@ -30,45 +44,17 @@ const RecoveryPasswordScreen = () => {
     return true;
   };
 
-  const handleRequestCode = async () => {
-    console.log('[RecoveryScreen] Solicitando código para:', email);
+  // 🔥 FUNCIÓN QUE LLAMA AL BACKEND CON ALERTAS BONITAS
+  const handleSubmit = async () => {
+    console.log('[RecoveryScreen] Llamando al backend para:', email);
     
     if (!validateEmail(email)) {
       setError('Ingresa un correo válido');
       return;
     }
 
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('[RecoveryScreen] Código enviado exitosamente');
-      
-      Alert.alert(
-        '¡Correo enviado!', 
-        'Se ha enviado un código de verificación a tu correo electrónico.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('CodeConfirmation', { 
-                email,
-                fromRecovery: true 
-              });
-            }
-          }
-        ]
-      );
-      
-    } catch (err) {
-      console.error('[RecoveryScreen] Error al solicitar código:', err);
-      setError('Error al enviar el correo. Intenta nuevamente.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Llamar a la función del hook que conecta al backend
+    await handleRequestCode(email);
   };
 
   const handleBack = () => {
@@ -106,7 +92,7 @@ const RecoveryPasswordScreen = () => {
               Introduce tu correo electrónico y te enviaremos un código para restablecer tu contraseña
             </Text>
             
-            {/* Error general */}
+            {/* Error general - CONECTADO AL HOOK */}
             {error && (
               <View style={styles.errorMessage}>
                 <Ionicons name="warning" size={20} color="#dc2626" />
@@ -114,7 +100,7 @@ const RecoveryPasswordScreen = () => {
               </View>
             )}
             
-            {/* Email Input */}
+            {/* Email Input - CONECTADO AL HOOK */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo electrónico</Text>
               <View style={styles.inputWrapper}>
@@ -140,26 +126,31 @@ const RecoveryPasswordScreen = () => {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  editable={!isSubmitting}
                 />
               </View>
             </View>
 
-            {/* Submit Button */}
+            {/* Submit Button - CON EFECTOS BONITOS */}
             <TouchableOpacity
               style={[
                 styles.submitButton,
                 (!email || isSubmitting) && styles.submitButtonDisabled
               ]}
-              onPress={handleRequestCode}
+              onPress={handleSubmit}
               disabled={!email || isSubmitting}
+              activeOpacity={0.8}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#ffffff" />
+                  <Text style={styles.submitButtonText}>Enviando...</Text>
+                </View>
               ) : (
-                <>
-                  <Text style={styles.submitButtonText}>Enviar código</Text>
+                <View style={styles.buttonContent}>
                   <Ionicons name="paper-plane-outline" size={18} color="#ffffff" />
-                </>
+                  <Text style={styles.submitButtonText}>Enviar código</Text>
+                </View>
               )}
             </TouchableOpacity>
 
@@ -176,16 +167,34 @@ const RecoveryPasswordScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Debug Info */}
+            {/* Debug Info - CON ALERTAS BONITAS */}
             <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>Debug Info:</Text>
+              <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
               <Text style={styles.debugText}>Email: {email}</Text>
               <Text style={styles.debugText}>Valid: {validateEmail(email) ? 'Sí' : 'No'}</Text>
+              <Text style={styles.debugText}>Status: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
             </View>
 
           </View>
         </View>
       </ScrollView>
+
+      {/* 🎨 ALERTA BONITA */}
+      <CustomAlert
+        visible={showAlert}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        confirmText="Continuar"
+      />
+
+      {/* 🎨 LOADING BONITO */}
+      <LoadingOverlay
+        visible={showLoading}
+        type="sending"
+        message="Enviando código de recuperación..."
+      />
     </SafeAreaView>
   );
 };
@@ -325,7 +334,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 32,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#040DBF',
@@ -338,11 +346,15 @@ const styles = StyleSheet.create({
   submitButtonDisabled: {
     opacity: 0.7,
   },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   submitButtonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
-    marginRight: 12,
   },
   footer: {
     alignItems: 'center',

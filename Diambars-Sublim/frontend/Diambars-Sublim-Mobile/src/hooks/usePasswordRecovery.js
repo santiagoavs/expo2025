@@ -1,26 +1,14 @@
-// src/hooks/usePasswordRecovery.js - VERSION SIN TOAST
+// src/hooks/usePasswordRecovery.js - CON ALERTAS BONITAS
 import { useState, useEffect } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService';
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Funciones de mensaje personalizadas (reemplazan Toast)
-const showSuccess = (title, text = '') => {
-  console.log(`[SUCCESS] ${title}: ${text}`);
-  // Alert.alert(title, text); // Descomenta si quieres alertas nativas
-};
-
-const showError = (title, text = '') => {
-  console.log(`[ERROR] ${title}: ${text}`);
-  Alert.alert(title, text);
-};
 
 export const usePasswordRecovery = () => {
   const navigation = useNavigation();
   const route = useRoute();
   
-  // Estado inicial con token de route.params si existe
+  // Estados básicos
   const [verificationToken, setVerificationToken] = useState(
     route.params?.verificationToken || null
   );
@@ -31,13 +19,46 @@ export const usePasswordRecovery = () => {
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
 
+  // Estados para alertas y loading bonitos
+  const [showAlert, setShowAlert] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  // Función para mostrar alertas bonitas
+  const showCustomAlert = (type, title, message, onConfirm = () => {}) => {
+    setAlertConfig({
+      type,
+      title,
+      message,
+      onConfirm: () => {
+        setShowAlert(false);
+        onConfirm();
+      },
+    });
+    setShowAlert(true);
+  };
+
+  // Función para mostrar loading
+  const showLoadingOverlay = (show = true, type = 'default') => {
+    setShowLoading(show);
+  };
+
   // Persistir token en AsyncStorage
   useEffect(() => {
     const saveToken = async () => {
-      if (verificationToken) {
-        await AsyncStorage.setItem('recoveryToken', verificationToken);
-      } else {
-        await AsyncStorage.removeItem('recoveryToken');
+      try {
+        if (verificationToken) {
+          await AsyncStorage.setItem('recoveryToken', verificationToken);
+        } else {
+          await AsyncStorage.removeItem('recoveryToken');
+        }
+      } catch (error) {
+        console.error('Error saving recovery token:', error);
       }
     };
     saveToken();
@@ -74,7 +95,7 @@ export const usePasswordRecovery = () => {
   };
 
   const handleRequestCode = async (emailValue) => {
-    console.log('[usePasswordRecovery-RN] Solicitando código para:', emailValue);
+    console.log('[usePasswordRecovery] Solicitando código para:', emailValue);
     
     if (!emailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
       setError('Ingresa un correo válido');
@@ -85,120 +106,193 @@ export const usePasswordRecovery = () => {
     setError('');
     setEmail(emailValue);
 
+    // Mostrar loading bonito
+    showLoadingOverlay(true, 'sending');
+
     try {
-      console.log('[usePasswordRecovery-RN] Llamando a requestRecoveryCode...');
+      console.log('[usePasswordRecovery] Llamando a requestRecoveryCode...');
       const response = await requestRecoveryCode(emailValue);
-      console.log('[usePasswordRecovery-RN] Respuesta del servidor:', response);
+      console.log('[usePasswordRecovery] Respuesta del servidor:', response);
       
-      showSuccess('¡Correo enviado!', 'Se ha enviado un código a tu correo');
+      // Ocultar loading
+      showLoadingOverlay(false);
       
-      navigation.navigate('CodeConfirmation', { 
-        email: emailValue,
-        message: 'Ingresa el código que recibiste en tu correo',
-        fromRecovery: true
-      });
+      // Mostrar alerta de éxito bonita
+      showCustomAlert(
+        'success',
+        '¡Correo Enviado!',
+        `Se ha enviado un código de 6 dígitos a ${emailValue}. Revisa tu bandeja de entrada y spam.`,
+        () => {
+          navigation.navigate('CodeConfirmation', { 
+            email: emailValue,
+            message: 'Ingresa el código que recibiste en tu correo',
+            fromRecovery: true
+          });
+          startTimer();
+        }
+      );
       
-      startTimer();
     } catch (err) {
-      console.error('[usePasswordRecovery-RN] Error al solicitar código:', err);
+      console.error('[usePasswordRecovery] Error al solicitar código:', err);
+      
+      // Ocultar loading
+      showLoadingOverlay(false);
+      
       const errorMessage = err.message || 'Error al enviar el correo';
       setError(errorMessage);
-      showError('Error', errorMessage);
+      
+      // Mostrar alerta de error bonita
+      showCustomAlert(
+        'error',
+        'Error al Enviar',
+        `No se pudo enviar el código de recuperación. ${errorMessage}`
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleVerifyCode = async () => {
-    console.log('[usePasswordRecovery-RN] Verificando código:', code);
+    console.log('[usePasswordRecovery] Verificando código:', code);
     
     const completeCode = code.join('');
     if (completeCode.length !== 6) {
-      setError('Ingresa el código completo');
+      setError('Ingresa el código completo de 6 dígitos');
       return;
     }
 
     setIsSubmitting(true);
     setError('');
 
+    // Mostrar loading bonito
+    showLoadingOverlay(true, 'verifying');
+
     try {
-      console.log('[usePasswordRecovery-RN] Llamando a verifyRecoveryCode...');
+      console.log('[usePasswordRecovery] Llamando a verifyRecoveryCode...');
       const response = await verifyRecoveryCode(email, completeCode);
-      console.log('[usePasswordRecovery-RN] Código verificado, token recibido:', response);
+      console.log('[usePasswordRecovery] Código verificado, token recibido:', response);
       
       setVerificationToken(response.token);
       
-      showSuccess('¡Código verificado!', 'Ahora puedes crear una nueva contraseña');
+      // Ocultar loading
+      showLoadingOverlay(false);
       
-      navigation.navigate('NewPassword', {
-        verificationToken: response.token,
-        email,
-        fromCodeConfirmation: true
-      });
+      // Mostrar alerta de éxito bonita
+      showCustomAlert(
+        'success',
+        '¡Código Verificado!',
+        'El código es correcto. Ahora puedes crear una nueva contraseña segura.',
+        () => {
+          navigation.navigate('NewPassword', {
+            verificationToken: response.token,
+            email,
+            fromCodeConfirmation: true
+          });
+        }
+      );
+      
     } catch (err) {
-      console.error('[usePasswordRecovery-RN] Error al verificar código:', err);
+      console.error('[usePasswordRecovery] Error al verificar código:', err);
+      
+      // Ocultar loading
+      showLoadingOverlay(false);
+      
       const errorMessage = err.message || 'Código inválido o expirado';
       setError(errorMessage);
-      showError('Error', errorMessage);
+      
+      // Mostrar alerta de error bonita
+      showCustomAlert(
+        'error',
+        'Código Incorrecto',
+        'El código ingresado es inválido o ha expirado. Verifica los dígitos o solicita un nuevo código.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResetPassword = async (newPassword) => {
-    console.log('[usePasswordRecovery-RN] Iniciando reset de contraseña con token:', verificationToken);
+    console.log('[usePasswordRecovery] Iniciando reset de contraseña');
     
     if (!verificationToken) {
       const errorMsg = 'Token de verificación no encontrado';
-      console.error('[usePasswordRecovery-RN]', errorMsg);
+      console.error('[usePasswordRecovery]', errorMsg);
       setError(errorMsg);
+      
+      showCustomAlert(
+        'error',
+        'Error de Sesión',
+        'Ha ocurrido un error con la sesión de recuperación. Por favor, inicia el proceso nuevamente.'
+      );
       return;
     }
 
     setIsSubmitting(true);
     setError('');
 
+    // Mostrar loading bonito
+    showLoadingOverlay(true, 'updating');
+
     try {
-      console.log('[usePasswordRecovery-RN] Enviando solicitud al servidor...');
+      console.log('[usePasswordRecovery] Enviando solicitud al servidor...');
       const response = await resetPassword({
         newPassword,
         token: verificationToken
       });
       
-      console.log('[usePasswordRecovery-RN] Contraseña actualizada exitosamente:', response);
+      console.log('[usePasswordRecovery] Contraseña actualizada exitosamente:', response);
       setVerificationToken(null);
-      await AsyncStorage.removeItem('recoveryToken');
       
-      showSuccess('¡Contraseña actualizada!', 'Tu contraseña ha sido cambiada exitosamente');
+      try {
+        await AsyncStorage.removeItem('recoveryToken');
+      } catch (storageError) {
+        console.error('Error limpiando token:', storageError);
+      }
       
-      // Navegar al login con mensaje de éxito
-      navigation.reset({
-        index: 0,
-        routes: [{ 
-          name: 'Login', 
-          params: { 
-            message: 'Contraseña actualizada correctamente',
-            type: 'success'
-          }
-        }],
-      });
+      // Ocultar loading
+      showLoadingOverlay(false);
+      
+      // Mostrar alerta de éxito bonita
+      showCustomAlert(
+        'success',
+        '¡Contraseña Actualizada!',
+        'Tu contraseña ha sido cambiada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+        () => {
+          navigation.reset({
+            index: 0,
+            routes: [{ 
+              name: 'Login', 
+              params: { 
+                message: 'Contraseña actualizada correctamente',
+                type: 'success'
+              }
+            }],
+          });
+        }
+      );
+      
     } catch (err) {
-      console.error('[usePasswordRecovery-RN] Error detallado:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      });
+      console.error('[usePasswordRecovery] Error detallado:', err);
+      
+      // Ocultar loading
+      showLoadingOverlay(false);
       
       const errorMessage = err.message || 'Error al actualizar contraseña';
       setError(errorMessage);
-      showError('Error', errorMessage);
+      
+      // Mostrar alerta de error bonita
+      showCustomAlert(
+        'error',
+        'Error al Actualizar',
+        `No se pudo actualizar la contraseña. ${errorMessage}`
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResendCode = async () => {
-    console.log('[usePasswordRecovery-RN] Reenviando código para:', email);
+    console.log('[usePasswordRecovery] Reenviando código para:', email);
     
     if (!email) {
       setError('No se puede reenviar sin email');
@@ -207,16 +301,41 @@ export const usePasswordRecovery = () => {
     
     setIsSubmitting(true);
     setError('');
+
+    // Mostrar loading bonito
+    showLoadingOverlay(true, 'sending');
     
     try {
       await requestRecoveryCode(email);
-      showSuccess('Código reenviado', 'Se ha enviado un nuevo código a tu correo');
-      startTimer();
+      
+      // Ocultar loading
+      showLoadingOverlay(false);
+      
+      // Mostrar alerta de éxito bonita
+      showCustomAlert(
+        'success',
+        'Código Reenviado',
+        `Se ha enviado un nuevo código a ${email}. Revisa tu bandeja de entrada.`,
+        () => {
+          startTimer();
+        }
+      );
+      
     } catch (error) {
-      console.error('[usePasswordRecovery-RN] Error al reenviar código:', error);
+      console.error('[usePasswordRecovery] Error al reenviar código:', error);
+      
+      // Ocultar loading
+      showLoadingOverlay(false);
+      
       const errorMessage = error.message || 'Error al reenviar el correo';
       setError(errorMessage);
-      showError('Error', errorMessage);
+      
+      // Mostrar alerta de error bonita
+      showCustomAlert(
+        'error',
+        'Error al Reenviar',
+        `No se pudo reenviar el código. ${errorMessage}`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +355,6 @@ export const usePasswordRecovery = () => {
     }
   };
 
-  // Función para ir hacia atrás de manera inteligente
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -246,6 +364,7 @@ export const usePasswordRecovery = () => {
   };
 
   return {
+    // Estados básicos
     email,
     setEmail,
     code,
@@ -256,6 +375,8 @@ export const usePasswordRecovery = () => {
     timer,
     canResend,
     verificationToken,
+    
+    // Funciones principales
     handleRequestCode,
     handleVerifyCode,
     handleResetPassword,
@@ -263,6 +384,14 @@ export const usePasswordRecovery = () => {
     startTimer,
     handleInputChange,
     handleKeyPress,
-    handleGoBack
+    handleGoBack,
+    
+    // Alertas y Loading bonitos
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert,
+    showCustomAlert,
+    showLoadingOverlay,
   };
 };

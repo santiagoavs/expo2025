@@ -1,4 +1,4 @@
-// src/screens/LoginScreen.js - CONECTADO AL BACKEND
+// src/screens/LoginScreen.js - CON ALERTAS BONITAS
 import React from 'react';
 import {
   View,
@@ -12,15 +12,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Controller } from 'react-hook-form'; // 👈 NUEVA IMPORTACIÓN
-import { useLogin } from '../hooks/useLogin'; // 👈 NUEVA IMPORTACIÓN
+import { Controller } from 'react-hook-form';
+import { useLogin } from '../hooks/useLogin';
+import CustomAlert from '../components/CustomAlert'; // 👈 NUEVA IMPORTACIÓN
+import LoadingOverlay from '../components/LoadingOverlay'; // 👈 NUEVA IMPORTACIÓN
 
 const LoginScreen = () => {
-  console.log("[LoginScreen] Renderizando pantalla con backend");
+  console.log("[LoginScreen] Renderizando pantalla con alertas bonitas");
   
   const navigation = useNavigation();
   
-  // 🔥 USAR EL HOOK CONECTADO AL BACKEND
+  // 🔥 HOOK CON ALERTAS BONITAS
   const { 
     control, 
     handleSubmit, 
@@ -28,7 +30,12 @@ const LoginScreen = () => {
     errors, 
     isSubmitting, 
     validateEmail, 
-    validatePassword 
+    validatePassword,
+    // Nuevos estados para alertas bonitas
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert
   } = useLogin();
 
   const handleRecoveryPress = () => {
@@ -122,6 +129,7 @@ const LoginScreen = () => {
             {/* Error del formulario */}
             {errors.root && (
               <View style={styles.errorContainer}>
+                <Ionicons name="warning" size={20} color="#ef4444" />
                 <Text style={styles.errorText}>{errors.root.message}</Text>
               </View>
             )}
@@ -133,20 +141,34 @@ const LoginScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            {/* Login Button - CONECTADO AL BACKEND */}
+            {/* Login Button - MEJORADO CON EFECTOS */}
             <TouchableOpacity
-              style={[styles.loginButton, isSubmitting && styles.loginButtonDisabled]}
-              onPress={handleSubmit(onSubmit)} // 👈 USAR FUNCIÓN DEL HOOK
+              style={[
+                styles.loginButton, 
+                isSubmitting && styles.loginButtonDisabled
+              ]}
+              onPress={handleSubmit(onSubmit)}
               disabled={isSubmitting}
+              activeOpacity={0.8}
             >
-              <Text style={styles.loginButtonText}>
-                {isSubmitting ? 'Iniciando...' : 'Iniciar Sesión'}
-              </Text>
+              <View style={styles.buttonContent}>
+                {isSubmitting ? (
+                  <>
+                    <View style={styles.loadingDot} />
+                    <Text style={styles.loginButtonText}>Iniciando...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="log-in-outline" size={20} color="#ffffff" />
+                    <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  </>
+                )}
+              </View>
             </TouchableOpacity>
 
             {/* Debug Info - ACTUALIZADO */}
             <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>Debug Info (Backend conectado):</Text>
+              <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
               <Text style={styles.debugText}>Estado: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
               <Text style={styles.debugText}>Errores: {Object.keys(errors).length}</Text>
             </View>
@@ -154,6 +176,23 @@ const LoginScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* 🎨 ALERTA BONITA */}
+      <CustomAlert
+        visible={showAlert}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        confirmText="Continuar"
+      />
+
+      {/* 🎨 LOADING BONITO */}
+      <LoadingOverlay
+        visible={showLoading}
+        type="login"
+        message="Verificando credenciales..."
+      />
     </SafeAreaView>
   );
 };
@@ -227,8 +266,8 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#ffffff',
+    transition: 'all 0.2s ease',
   },
-  // 👈 NUEVOS ESTILOS PARA ERRORES
   inputError: {
     borderColor: '#ef4444',
     backgroundColor: '#fef2f2',
@@ -240,11 +279,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fef2f2',
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: '#ef4444',
+    gap: 8,
   },
   disabledText: {
     opacity: 0.5,
@@ -262,14 +304,33 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#040DBF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   loginButtonDisabled: {
     opacity: 0.7,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   loginButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderTopColor: 'transparent',
+    // La animación se manejará con Animated API si es necesario
   },
   debugInfo: {
     marginTop: 16,

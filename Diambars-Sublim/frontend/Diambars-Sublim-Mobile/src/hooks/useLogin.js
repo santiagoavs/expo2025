@@ -1,11 +1,19 @@
-// src/hooks/useLogin.js - CONECTADO AL BACKEND
+// src/hooks/useLogin.js - CON ALERTAS BONITAS
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
-import { Alert } from 'react-native';
-import { login as loginService } from '../api/authService'; // 👈 NUEVA IMPORTACIÓN
+import { login as loginService } from '../api/authService';
 
 export const useLogin = () => {
   const navigation = useNavigation();
+  const [showAlert, setShowAlert] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    type: 'success',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const {
     control,
@@ -21,11 +29,33 @@ export const useLogin = () => {
     }
   });
 
+  // Función para mostrar alertas bonitas
+  const showCustomAlert = (type, title, message, onConfirm = () => {}) => {
+    setAlertConfig({
+      type,
+      title,
+      message,
+      onConfirm: () => {
+        setShowAlert(false);
+        onConfirm();
+      },
+    });
+    setShowAlert(true);
+  };
+
+  // Función para mostrar loading
+  const showLoadingOverlay = (show = true) => {
+    setShowLoading(show);
+  };
+
   const onSubmit = async (data) => {
     try {
       console.log('[useLogin] Datos del formulario:', data);
       
-      // 🔥 CONECTAR AL BACKEND - Reemplazar simulación
+      // Mostrar loading
+      showLoadingOverlay(true);
+      
+      // 🔥 CONECTAR AL BACKEND
       const user = await loginService(data);
       
       console.log('[useLogin] Usuario recibido del backend:', user);
@@ -40,21 +70,26 @@ export const useLogin = () => {
       const hasValidType = allowedTypes.includes(userType);
       const hasValidRole = allowedRoles.includes(userRole);
 
+      // Ocultar loading
+      showLoadingOverlay(false);
+
       if (hasValidType || hasValidRole) {
-        // ✅ Usuario autorizado
-        Alert.alert(
-          '¡Bienvenido!', 
-          `Acceso autorizado como ${user.role || user.type}`,
-          [{ text: 'Continuar', onPress: () => {
+        // ✅ Usuario autorizado - Alerta de éxito bonita
+        showCustomAlert(
+          'success',
+          '¡Bienvenido!',
+          `Acceso autorizado como ${user.role || user.type}. Serás redirigido al panel administrativo.`,
+          () => {
             reset(); // Limpiar formulario
             navigation.navigate('CatalogManagement');
-          }}]
+          }
         );
       } else {
-        // ❌ Usuario sin permisos
-        Alert.alert(
-          'Acceso Denegado', 
-          'Se requiere una cuenta de empleado para acceder al panel administrativo'
+        // ❌ Usuario sin permisos - Alerta de advertencia
+        showCustomAlert(
+          'warning',
+          'Acceso Restringido',
+          'Se requiere una cuenta de empleado para acceder al panel administrativo.'
         );
         setError('root', { message: 'Solo personal autorizado puede acceder' });
       }
@@ -62,42 +97,71 @@ export const useLogin = () => {
     } catch (error) {
       console.error('[useLogin] Error en login:', error);
       
-      // 🚨 MANEJO DE ERRORES DEL BACKEND
-      let alertTitle = 'Error de Autenticación';
-      let alertMessage = 'Ha ocurrido un error al iniciar sesión';
+      // Ocultar loading
+      showLoadingOverlay(false);
       
+      // 🚨 MANEJO DE ERRORES CON ALERTAS BONITAS
       if (error.message?.includes('Credenciales incorrectas') || 
           error.message?.includes('credenciales')) {
-        alertTitle = 'Credenciales Incorrectas';
-        alertMessage = 'El correo electrónico o la contraseña son incorrectos.';
+        
+        showCustomAlert(
+          'error',
+          'Credenciales Incorrectas',
+          'El correo electrónico o la contraseña son incorrectos. Por favor, verifica tus datos e intenta nuevamente.'
+        );
         setError('root', { message: 'Email o contraseña incorrectos' });
         
       } else if (error.message?.includes('personal autorizado') || 
                  error.message?.includes('empleado')) {
-        alertTitle = 'Acceso Restringido';
-        alertMessage = 'Se requiere una cuenta de empleado para acceder al panel administrativo.';
+        
+        showCustomAlert(
+          'warning',
+          'Acceso Denegado',
+          'Se requiere una cuenta de empleado para acceder al panel administrativo.'
+        );
         setError('root', { message: 'Se requiere cuenta de empleado' });
         
+      } else if (error.needsVerification) {
+        
+        showCustomAlert(
+          'info',
+          'Verificación Requerida',
+          'Tu cuenta necesita ser verificada por un administrador antes de poder acceder.'
+        );
+        setError('root', { message: 'Cuenta pendiente de verificación' });
+        
       } else if (error.message?.includes('red') || error.code === 'NETWORK_ERROR') {
-        alertTitle = 'Error de Conexión';
-        alertMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+        
+        showCustomAlert(
+          'error',
+          'Error de Conexión',
+          'No se pudo conectar con el servidor. Verifica tu conexión a internet y que el servidor esté funcionando.'
+        );
         setError('root', { message: 'Error de conexión con el servidor' });
         
       } else if (error.message?.includes('servidor') || error.status >= 500) {
-        alertTitle = 'Error del Servidor';
-        alertMessage = 'El servidor está experimentando problemas. Por favor, intenta más tarde.';
+        
+        showCustomAlert(
+          'error',
+          'Error del Servidor',
+          'El servidor está experimentando problemas. Por favor, intenta más tarde.'
+        );
         setError('root', { message: 'Error del servidor, intenta más tarde' });
         
       } else {
-        alertMessage = error.message || 'Error desconocido al iniciar sesión';
-        setError('root', { message: alertMessage });
+        // Error genérico
+        const errorMessage = error.message || 'Error desconocido al iniciar sesión';
+        showCustomAlert(
+          'error',
+          'Error de Autenticación',
+          errorMessage
+        );
+        setError('root', { message: errorMessage });
       }
-      
-      Alert.alert(alertTitle, alertMessage);
     }
   };
 
-  // Validaciones (las mantengo igual)
+  // Validaciones
   const validateEmail = (value) => {
     if (!value?.trim()) return 'Email requerido';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -108,11 +172,12 @@ export const useLogin = () => {
 
   const validatePassword = (value) => {
     if (!value) return 'Contraseña requerida';
-    if (value.length < 3) return 'Mínimo 3 caracteres'; // Cambiaste a 3, lo respeto
+    if (value.length < 3) return 'Mínimo 3 caracteres';
     return true;
   };
 
   return {
+    // React Hook Form
     control,
     handleSubmit,
     errors,
@@ -120,6 +185,14 @@ export const useLogin = () => {
     onSubmit,
     validateEmail,
     validatePassword,
-    reset
+    reset,
+    
+    // Alertas y Loading bonitos
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert,
+    showCustomAlert,
+    showLoadingOverlay,
   };
 };
