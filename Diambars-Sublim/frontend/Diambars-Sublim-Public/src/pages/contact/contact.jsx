@@ -243,7 +243,7 @@ const Contact = () => {
   setStatusMessage('');
 
   try {
-    const response = await fetch('/api/contact/send', {
+    const response = await fetch('http://localhost:4000/api/contact/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -314,8 +314,8 @@ const Contact = () => {
               <div className="contact-info-item">
                 <LocationIcon />
                 <div className="contact-info-content">
-                  <h3>Location</h3>
-                  <p>123 Business Street<br />Ciudad, País 12345</p>
+                  <h3>Ubicación</h3>
+                  <p>Avenida Aguilares 218<br />San Salvador CP, San Salvador 1101</p>
                 </div>
               </div>
               
@@ -330,8 +330,8 @@ const Contact = () => {
               <div className="contact-info-item">
                 <ClockIcon />
                 <div className="contact-info-content">
-                  <h3>Hours</h3>
-                  <p>Lun - Vie: 9:00 AM<br />Sáb: 10:00 AM</p>
+                  <h3>Horarios</h3>
+                  <p>Lun - Vie: 7:00 AM - 3:45 PM</p>
                 </div>
               </div>
               </div>
@@ -353,7 +353,7 @@ const Contact = () => {
               {/* Indicador de cooldown */}
               {cooldownActive && (
                 <div className="cooldown-message">
-                  ⏰ Siguiente mensaje disponible en: {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                  Siguiente mensaje disponible en: {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
                 </div>
               )}
               

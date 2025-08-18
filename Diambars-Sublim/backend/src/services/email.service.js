@@ -197,7 +197,9 @@ export async function sendWelcomeEmail(email, userName) {
 export async function sendContactEmail(contactData) {
   const { fullName, email, message } = contactData;
   
-  console.log('📧 Enviando email de contacto...');
+  console.log(' Enviando email de contacto...');
+  
+  /* <img src="${logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px; filter: brightness(0) invert(1);" /> */
   
   try {
     const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:5173';
@@ -210,8 +212,7 @@ export async function sendContactEmail(contactData) {
         
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: white; padding: 40px 30px 30px; text-align: center;">
-          <img src="${logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px; filter: brightness(0) invert(1);" />
-          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">📩 Nueva Consulta</h1>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">Nueva Consulta</h1>
           <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Formulario de Contacto - Diambars</p>
         </div>
 
@@ -220,7 +221,7 @@ export async function sendContactEmail(contactData) {
           <!-- Información del Cliente -->
           <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #06AED5;">
             <h2 style="color: #593D3B; margin: 0 0 20px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
-              👤 Información del Cliente
+              Información del Cliente
             </h2>
             
             <table style="width: 100%; border-collapse: collapse;">
@@ -253,7 +254,7 @@ export async function sendContactEmail(contactData) {
           <!-- Mensaje -->
           <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; border-left: 4px solid #E5446D;">
             <h2 style="color: #593D3B; margin: 0 0 15px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
-              💬 Mensaje
+              Mensaje
             </h2>
             
             <div style="background: rgba(255, 246, 226, 0.8); padding: 20px; border-radius: 8px; border: 1px solid rgba(230, 207, 156, 0.3); font-size: 16px; line-height: 1.6; color: #593D3B; white-space: pre-wrap;">${message}</div>
@@ -261,11 +262,11 @@ export async function sendContactEmail(contactData) {
 
           <!-- Acciones Rápidas -->
           <div style="text-align: center; margin-top: 30px; padding: 25px; background: linear-gradient(135deg, rgba(6, 174, 213, 0.1), rgba(255, 241, 208, 0.1)); border-radius: 12px;">
-            <h3 style="color: #593D3B; margin: 0 0 20px; font-size: 18px;">🚀 Acciones Rápidas</h3>
+            <h3 style="color: #593D3B; margin: 0 0 20px; font-size: 18px;">Acciones Rápidas</h3>
             
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: center;"> 
               <a href="mailto:${email}?subject=Re: Tu consulta en Diambars&body=Hola ${fullName},%0A%0AGracias por contactarnos. En respuesta a tu consulta:%0A%0A"${message.substring(0, 50)}..."%0A%0A" style="display: inline-block; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(6,174,213,0.3);">
-                📧 Responder por Email
+                Responder por Email
               </a>
             </div>
           </div>
@@ -293,7 +294,7 @@ export async function sendContactEmail(contactData) {
       from: config.email.from,
       to: "diambars.sublim@gmail.com", // Email de destino fijo
       replyTo: email, // Para poder responder directamente al usuario
-      subject: `📩 Nueva consulta de ${fullName} - Diambars`,
+      subject: `Nueva consulta de ${fullName} - Diambars`,
       html,
       text: `
         Nueva consulta de contacto - Diambars
@@ -311,12 +312,12 @@ export async function sendContactEmail(contactData) {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('✅ Email de contacto enviado exitosamente:', result.messageId);
+    console.log('Email de contacto enviado exitosamente:', result.messageId);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Error enviando email de contacto:', error);
+    console.error('Error enviando email de contacto:', error);
     throw new Error(`Error al enviar email de contacto: ${error.message}`);
   }
 }
