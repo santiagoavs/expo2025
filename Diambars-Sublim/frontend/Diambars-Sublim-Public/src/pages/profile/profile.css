@@ -139,6 +139,24 @@ body.modal-open .profile-page * {
   pointer-events: none;
 }
 
+.profile-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-page::-webkit-scrollbar-track {
+  background: rgba(255, 246, 226, 0.3);
+}
+
+.profile-page::-webkit-scrollbar-thumb {
+  background: rgba(63, 39, 36, 0.4);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.profile-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(63, 39, 36, 0.6);
+}
+
 @media (max-width: 768px) {
   .profile-container {
     flex-direction: column;

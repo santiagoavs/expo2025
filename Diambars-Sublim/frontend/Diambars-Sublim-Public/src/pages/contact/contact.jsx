@@ -27,7 +27,6 @@ const Contact = () => {
     <>
       <main className="contact-page">
         <div className="contact-container">
-          <div className="contact-info-section">
             <div className="contact-info-card">
               <div className='contact-info-container'>
               <div className="contact-info-item">
@@ -50,14 +49,12 @@ const Contact = () => {
                 <ClockIcon />
                 <div className="contact-info-content">
                   <h3>Hours</h3>
-                  <p>Lun - Vie: 9:00 AM - 6:00 PM<br />Sáb: 10:00 AM - 4:00 PM</p>
+                  <p>Lun - Vie: 9:00 AM<br />Sáb: 10:00 AM</p>
                 </div>
               </div>
               </div>
             </div>
-          </div>
 
-          <div className="contact-form-section">
             <div className="contact-form-container">
               <div className="form-header">
                 <h1 className="contact-title">¿Dudas o consultas?</h1>
@@ -75,15 +72,7 @@ const Contact = () => {
                 <button type="submit" className="send-button">Enviar</button>
               </form>
             </div>
-          </div>
         </div>
-
-        {/* Imagen de oficina flotante */}
-        <img 
-          src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop&auto=format" 
-          alt="Oficina moderna"
-          className="office-image"
-        />
       </main>
 
       <ContactButton />

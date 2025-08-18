@@ -21,18 +21,20 @@ export default function CategoryView() {
   const { categoria } = useParams();
 
   return (
-    <div className='category-container'>
-      <div className="category-page">
-        <SidebarFilters />
-        <div className="product-grid">
-          {dummyProducts.map((prod, idx) => (
-            <ProductCard
-              key={idx}
-              name={prod.name}
-              image={prod.image}
-              onCustomize={() => alert(`Personalizar ${prod.name}`)}
-            />
-          ))}
+    <div className='category-page'>
+      <div className="category-content-wrapper">
+        <div className="category-container">
+          <SidebarFilters />
+          <div className="product-grid">
+            {dummyProducts.map((prod, idx) => (
+              <ProductCard
+                key={idx}
+                name={prod.name}
+                image={prod.image}
+                onCustomize={() => alert(`Personalizar ${prod.name}`)}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <Footer />

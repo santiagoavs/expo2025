@@ -1,47 +1,37 @@
-// controllers/paymentMethodsController.js
-const PaymentMethod = require('../models/paymentMethod.js');
-const { body, validationResult } = require('express-validator');
+// controllers/paymentMethods.controller.js - SIN ALMACENAR CVC
+import PaymentMethod from '../models/paymentMethod.js';
 
-// Validaciones
-const paymentValidation = [
-  body('number')
-    .isLength({ min: 13, max: 19 })
-    .matches(/^\d+$/)
-    .withMessage('Número de tarjeta debe contener solo dígitos y tener entre 13-19 caracteres'),
-  
-  body('name')
-    .trim()
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Nombre debe tener entre 2 y 100 caracteres'),
-  
-  body('expiry')
-    .matches(/^(0[1-9]|1[0-2])\/\d{2}$/)
-    .withMessage('Fecha de expiración debe tener formato MM/AA')
-    .custom((value) => {
-      const [month, year] = value.split('/');
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear() % 100;
-      const currentMonth = currentDate.getMonth() + 1;
-      
-      if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-        throw new Error('La fecha de expiración no puede ser pasada');
-      }
-      return true;
-    }),
-  
-  body('cvc')
-    .isLength({ min: 3, max: 4 })
-    .matches(/^\d+$/)
-    .withMessage('CVC debe contener solo dígitos y tener entre 3-4 caracteres'),
-  
-  body('issuer')
-    .optional()
-    .isIn(['visa', 'mastercard', 'amex', 'discover', 'unknown'])
-    .withMessage('Tipo de tarjeta inválido')
-];
+// Validación manual simple (sin CVC)
+const validatePaymentData = (data) => {
+  const errors = [];
+  const { number, name, expiry } = data;
+
+  if (!number || number.length < 13 || number.length > 19 || !/^\d+$/.test(number)) {
+    errors.push({ field: 'number', message: 'Número de tarjeta debe contener solo dígitos y tener entre 13-19 caracteres' });
+  }
+
+  if (!name || name.trim().length < 2 || name.trim().length > 100) {
+    errors.push({ field: 'name', message: 'Nombre debe tener entre 2 y 100 caracteres' });
+  }
+
+  if (!expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+    errors.push({ field: 'expiry', message: 'Fecha de expiración debe tener formato MM/AA' });
+  } else {
+    const [month, year] = expiry.split('/');
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
+      errors.push({ field: 'expiry', message: 'La fecha de expiración no puede ser pasada' });
+    }
+  }
+
+  return errors;
+};
 
 // Obtener todos los métodos de pago del usuario
-const getPaymentMethods = async (req, res) => {
+export const getPaymentMethods = async (req, res) => {
   try {
     console.log('🔍 [paymentController] Obteniendo métodos para usuario:', req.user.id);
     
@@ -66,47 +56,51 @@ const getPaymentMethods = async (req, res) => {
   }
 };
 
-// Crear un nuevo método de pago
-const createPaymentMethod = [
-  ...paymentValidation,
-  async (req, res) => {
+// Crear un nuevo método de pago (SIN GUARDAR CVC)
+export const createPaymentMethod = async (req, res) => {
+  try {
+    console.log('🆕 [paymentController] Creando método para usuario:', req.user.id);
+    console.log('📋 [paymentController] Datos recibidos:', { 
+      ...req.body, 
+      number: req.body.number ? `****${req.body.number.slice(-4)}` : 'N/A',
+      // NO logging del CVC por seguridad
+    });
+    
+    // Validar datos de entrada (sin CVC)
+    const validationErrors = validatePaymentData(req.body);
+    if (validationErrors.length > 0) {
+      console.log('❌ [paymentController] Errores de validación:', validationErrors);
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de entrada inválidos',
+        errors: validationErrors
+      });
+    }
+    
+    const { number, name, expiry, nickname, issuer } = req.body;
+    
     try {
-      console.log('🆕 [paymentController] Creando método para usuario:', req.user.id);
-      
-      // Validar datos de entrada
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        console.log('❌ [paymentController] Errores de validación:', errors.array());
-        return res.status(400).json({
-          success: false,
-          message: 'Datos de entrada inválidos',
-          errors: errors.array()
-        });
-      }
-      
-      const { number, name, expiry, cvc, issuer } = req.body;
-      
-      // Generar hash del número y encriptar CVC
+      // Generar hash del número (sin almacenar el número completo)
       const numberHash = PaymentMethod.generateNumberHash(number);
-      const cvcEncrypted = PaymentMethod.encryptCVC(cvc);
       const lastFourDigits = number.slice(-4);
+      const detectedIssuer = issuer || PaymentMethod.detectCardType(number);
       
       console.log('🔧 [paymentController] Datos procesados:', {
         lastFourDigits,
-        issuer: issuer || 'unknown',
+        issuer: detectedIssuer,
         hasHash: !!numberHash,
-        hasEncryptedCVC: !!cvcEncrypted
+        hasNickname: !!nickname
       });
       
-      // Crear nuevo método
+      // Crear nuevo método (SIN CVC)
       const newMethod = new PaymentMethod({
         userId: req.user.id,
         lastFourDigits,
         numberHash,
         name: name.trim().toUpperCase(),
         expiry,
-        cvcEncrypted,
-        issuer: issuer || 'unknown',
+        issuer: detectedIssuer,
+        nickname: nickname?.trim() || '',
         active: false // Los nuevos métodos inician inactivos
       });
       
@@ -119,113 +113,117 @@ const createPaymentMethod = [
         message: 'Método de pago creado exitosamente',
         paymentMethod: newMethod.toSafeObject()
       });
-    } catch (error) {
-      console.error('❌ [paymentController] Error creando método:', error);
-      
-      if (error.code === 'DUPLICATE_CARD') {
-        return res.status(409).json({
-          success: false,
-          message: error.message
-        });
-      }
-      
-      if (error.code === 11000) {
-        return res.status(409).json({
-          success: false,
-          message: 'Ya tienes registrada una tarjeta con estos datos'
-        });
-      }
-      
-      res.status(500).json({
+    } catch (processingError) {
+      console.error('❌ [paymentController] Error procesando datos:', processingError);
+      return res.status(500).json({
         success: false,
-        message: 'Error creando método de pago',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+        message: 'Error procesando datos de la tarjeta',
+        error: process.env.NODE_ENV === 'development' ? processingError.message : 'Error interno'
       });
     }
+  } catch (error) {
+    console.error('❌ [paymentController] Error creando método:', error);
+    
+    if (error.code === 'DUPLICATE_CARD') {
+      return res.status(409).json({
+        success: false,
+        message: error.message
+      });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya tienes registrada una tarjeta con estos datos'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error creando método de pago',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
   }
-];
+};
 
-// Actualizar un método de pago
-const updatePaymentMethod = [
-  ...paymentValidation,
-  async (req, res) => {
-    try {
-      console.log('🔄 [paymentController] Actualizando método:', req.params.id, 'para usuario:', req.user.id);
-      
-      // Validar datos de entrada
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Datos de entrada inválidos',
-          errors: errors.array()
-        });
-      }
-      
-      const { number, name, expiry, cvc, issuer } = req.body;
-      
-      // Buscar el método existente
-      const existingMethod = await PaymentMethod.findOne({
-        _id: req.params.id,
-        userId: req.user.id
-      });
-      
-      if (!existingMethod) {
-        return res.status(404).json({
-          success: false,
-          message: 'Método de pago no encontrado'
-        });
-      }
-      
-      // Preparar datos actualizados
-      const numberHash = PaymentMethod.generateNumberHash(number);
-      const cvcEncrypted = PaymentMethod.encryptCVC(cvc);
-      const lastFourDigits = number.slice(-4);
-      
-      // Verificar duplicados (excluyendo el método actual)
-      const duplicate = await PaymentMethod.findOne({
-        userId: req.user.id,
-        numberHash,
-        _id: { $ne: req.params.id }
-      });
-      
-      if (duplicate) {
-        return res.status(409).json({
-          success: false,
-          message: 'Ya tienes registrada una tarjeta con estos datos'
-        });
-      }
-      
-      // Actualizar método
-      existingMethod.lastFourDigits = lastFourDigits;
-      existingMethod.numberHash = numberHash;
-      existingMethod.name = name.trim().toUpperCase();
-      existingMethod.expiry = expiry;
-      existingMethod.cvcEncrypted = cvcEncrypted;
-      existingMethod.issuer = issuer || existingMethod.issuer;
-      
-      await existingMethod.save();
-      
-      console.log('✅ [paymentController] Método actualizado:', existingMethod._id);
-      
-      res.json({
-        success: true,
-        message: 'Método de pago actualizado exitosamente',
-        paymentMethod: existingMethod.toSafeObject()
-      });
-    } catch (error) {
-      console.error('❌ [paymentController] Error actualizando método:', error);
-      res.status(500).json({
+// Actualizar un método de pago (SIN CVC)
+export const updatePaymentMethod = async (req, res) => {
+  try {
+    console.log('🔄 [paymentController] Actualizando método:', req.params.id, 'para usuario:', req.user.id);
+    
+    // Validar datos de entrada
+    const validationErrors = validatePaymentData(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
         success: false,
-        message: 'Error actualizando método de pago',
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+        message: 'Datos de entrada inválidos',
+        errors: validationErrors
       });
     }
+    
+    const { number, name, expiry, nickname, issuer } = req.body;
+    
+    // Buscar el método existente
+    const existingMethod = await PaymentMethod.findOne({
+      _id: req.params.id,
+      userId: req.user.id
+    });
+    
+    if (!existingMethod) {
+      return res.status(404).json({
+        success: false,
+        message: 'Método de pago no encontrado'
+      });
+    }
+    
+    // Preparar datos actualizados
+    const numberHash = PaymentMethod.generateNumberHash(number);
+    const lastFourDigits = number.slice(-4);
+    const detectedIssuer = issuer || PaymentMethod.detectCardType(number);
+    
+    // Verificar duplicados (excluyendo el método actual)
+    const duplicate = await PaymentMethod.findOne({
+      userId: req.user.id,
+      numberHash,
+      _id: { $ne: req.params.id }
+    });
+    
+    if (duplicate) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya tienes registrada una tarjeta con estos datos'
+      });
+    }
+    
+    // Actualizar método
+    existingMethod.lastFourDigits = lastFourDigits;
+    existingMethod.numberHash = numberHash;
+    existingMethod.name = name.trim().toUpperCase();
+    existingMethod.expiry = expiry;
+    existingMethod.issuer = detectedIssuer;
+    existingMethod.nickname = nickname?.trim() || '';
+    
+    await existingMethod.save();
+    
+    console.log('✅ [paymentController] Método actualizado:', existingMethod._id);
+    
+    res.json({
+      success: true,
+      message: 'Método de pago actualizado exitosamente',
+      paymentMethod: existingMethod.toSafeObject()
+    });
+  } catch (error) {
+    console.error('❌ [paymentController] Error actualizando método:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error actualizando método de pago',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
   }
-];
+};
 
 // Eliminar un método de pago
-const deletePaymentMethod = async (req, res) => {
+export const deletePaymentMethod = async (req, res) => {
   try {
     console.log('🗑️ [paymentController] Eliminando método:', req.params.id, 'para usuario:', req.user.id);
     
@@ -258,7 +256,7 @@ const deletePaymentMethod = async (req, res) => {
 };
 
 // Activar/desactivar un método de pago
-const togglePaymentMethod = async (req, res) => {
+export const togglePaymentMethod = async (req, res) => {
   try {
     console.log('🔄 [paymentController] Cambiando estado del método:', req.params.id, 'para usuario:', req.user.id);
     
@@ -312,7 +310,7 @@ const togglePaymentMethod = async (req, res) => {
 };
 
 // Obtener método activo del usuario
-const getActivePaymentMethod = async (req, res) => {
+export const getActivePaymentMethod = async (req, res) => {
   try {
     console.log('🔍 [paymentController] Obteniendo método activo para usuario:', req.user.id);
     
@@ -339,13 +337,4 @@ const getActivePaymentMethod = async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
     });
   }
-};
-
-module.exports = {
-  getPaymentMethods,
-  createPaymentMethod,
-  updatePaymentMethod,
-  deletePaymentMethod,
-  togglePaymentMethod,
-  getActivePaymentMethod
 };

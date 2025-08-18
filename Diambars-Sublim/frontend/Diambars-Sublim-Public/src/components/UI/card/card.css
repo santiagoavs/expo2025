@@ -62,29 +62,67 @@ body {
   border: 0.5px solid #593D3B; /* Borde muy fino */
 }
 
-.titulo h3{
-  color: #FFF1D0;
-  margin-top: 27px;
-}
-
-.titulo{
-  background: linear-gradient(to right, #2D788E, #283C3E);
+.titulo {
+  background: linear-gradient(
+    135deg, 
+    rgba(45, 120, 142, 0.9), 
+    rgba(40, 60, 62, 0.8)
+  );
   display: grid;
   bottom: 40px;
   height: 70px;
   border-radius: 0px 0px 10px 10px;
-  position: absolute; /*Aqui me quede quiero vr si le puedo poner el padding a la card o quitarselo ya qu etiene un mini margin o paddin al final*/
+  position: absolute;
   left: 0;
   width: 100%;
   align-content: center;
   justify-content: center;
-  font-size: 22px; /* Aumentado */
+  font-family: 'DiambarsFont';
+  font-size: 22px;
   font-weight: 500;
-  color: #333;
-  font-family: 'Poppins', sans-serif; /* Nueva fuente */
-  opacity: 0.9;
-  transition: 0.3s ease, transform 0.3s ease;
-  
+  color: #FFF1D0;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.titulo::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 240%;
+  height: 250%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s ease;
+}
+
+.titulo:hover::after {
+  left: 100%;
+}
+
+.titulo h3 {
+  color: #FFF1D0;
+  margin-top: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.card:hover .titulo {
+  background: linear-gradient(
+    135deg, 
+    rgba(45, 140, 160, 0.9), 
+    rgba(40, 80, 90, 0.8)
+  );
 }
 
 .card:hover .card-content h3 {

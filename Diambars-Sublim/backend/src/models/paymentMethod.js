@@ -1,6 +1,6 @@
-// models/PaymentMethod.js
-const mongoose = require('mongoose');
-const crypto = require('crypto');
+// models/PaymentMethod.js - SIN ALMACENAR CVC (CUMPLE PCI DSS)
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 const paymentMethodSchema = new mongoose.Schema({
   userId: {
@@ -15,7 +15,7 @@ const paymentMethodSchema = new mongoose.Schema({
     required: true,
     length: 4
   },
-  // Hash del número completo para prevenir duplicados (opcional)
+  // Hash del número completo para prevenir duplicados
   numberHash: {
     type: String,
     required: true,
@@ -34,11 +34,6 @@ const paymentMethodSchema = new mongoose.Schema({
     required: true,
     match: /^(0[1-9]|1[0-2])\/\d{2}$/
   },
-  // CVC encriptado (para mayor seguridad)
-  cvcEncrypted: {
-    type: String,
-    required: true
-  },
   // Tipo de tarjeta
   issuer: {
     type: String,
@@ -49,6 +44,13 @@ const paymentMethodSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: false
+  },
+  // Nickname opcional para la tarjeta
+  nickname: {
+    type: String,
+    trim: true,
+    maxlength: 50,
+    default: ''
   },
   // Metadatos adicionales
   createdAt: {
@@ -67,42 +69,29 @@ const paymentMethodSchema = new mongoose.Schema({
 paymentMethodSchema.index({ userId: 1, active: 1 });
 paymentMethodSchema.index({ userId: 1, createdAt: -1 });
 
-// Método para encriptar CVC
-paymentMethodSchema.statics.encryptCVC = function(cvc) {
-  const algorithm = 'aes-256-cbc';
-  const key = process.env.PAYMENT_ENCRYPTION_KEY || crypto.randomBytes(32);
-  const iv = crypto.randomBytes(16);
-  
-  const cipher = crypto.createCipher(algorithm, key);
-  let encrypted = cipher.update(cvc, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  
-  return `${iv.toString('hex')}:${encrypted}`;
-};
-
-// Método para desencriptar CVC
-paymentMethodSchema.statics.decryptCVC = function(encryptedCVC) {
+// Método para generar hash del número de tarjeta
+paymentMethodSchema.statics.generateNumberHash = function(cardNumber) {
   try {
-    const algorithm = 'aes-256-cbc';
-    const key = process.env.PAYMENT_ENCRYPTION_KEY || crypto.randomBytes(32);
-    
-    const textParts = encryptedCVC.split(':');
-    const iv = Buffer.from(textParts.shift(), 'hex');
-    const encryptedText = textParts.join(':');
-    
-    const decipher = crypto.createDecipher(algorithm, key);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    
-    return decrypted;
+    console.log('🔗 [PaymentMethod] Generando hash del número de tarjeta...');
+    const hash = crypto.createHash('sha256').update(cardNumber).digest('hex');
+    console.log('✅ [PaymentMethod] Hash generado exitosamente');
+    return hash;
   } catch (error) {
-    throw new Error('Error desencriptando CVC');
+    console.error('❌ [PaymentMethod] Error generando hash:', error);
+    throw new Error('Error procesando número de tarjeta');
   }
 };
 
-// Método para generar hash del número de tarjeta
-paymentMethodSchema.statics.generateNumberHash = function(cardNumber) {
-  return crypto.createHash('sha256').update(cardNumber).digest('hex');
+// Método para detectar tipo de tarjeta basado en los primeros dígitos
+paymentMethodSchema.statics.detectCardType = function(cardNumber) {
+  const cleanNumber = cardNumber.replace(/\s/g, '');
+  
+  if (/^4/.test(cleanNumber)) return 'visa';
+  if (/^5[1-5]/.test(cleanNumber)) return 'mastercard';
+  if (/^3[47]/.test(cleanNumber)) return 'amex';
+  if (/^6/.test(cleanNumber)) return 'discover';
+  
+  return 'unknown';
 };
 
 // Middleware para actualizar updatedAt
@@ -113,30 +102,42 @@ paymentMethodSchema.pre('save', function(next) {
 
 // Middleware para asegurar que solo un método esté activo por usuario
 paymentMethodSchema.pre('save', async function(next) {
-  if (this.active && this.isModified('active')) {
-    // Desactivar todos los otros métodos del usuario
-    await this.constructor.updateMany(
-      { 
-        userId: this.userId, 
-        _id: { $ne: this._id } 
-      },
-      { active: false }
-    );
+  try {
+    if (this.active && this.isModified('active')) {
+      console.log('🔄 [PaymentMethod] Desactivando otros métodos del usuario:', this.userId);
+      // Desactivar todos los otros métodos del usuario
+      await this.constructor.updateMany(
+        { 
+          userId: this.userId, 
+          _id: { $ne: this._id } 
+        },
+        { active: false }
+      );
+      console.log('✅ [PaymentMethod] Otros métodos desactivados');
+    }
+    next();
+  } catch (error) {
+    console.error('❌ [PaymentMethod] Error en middleware pre-save:', error);
+    next(error);
   }
-  next();
 });
 
 // Método de instancia para verificar si la tarjeta está expirada
 paymentMethodSchema.methods.isExpired = function() {
-  const [month, year] = this.expiry.split('/');
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear() % 100;
-  const currentMonth = currentDate.getMonth() + 1;
-  
-  const cardYear = parseInt(year);
-  const cardMonth = parseInt(month);
-  
-  return cardYear < currentYear || (cardYear === currentYear && cardMonth < currentMonth);
+  try {
+    const [month, year] = this.expiry.split('/');
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    const cardYear = parseInt(year);
+    const cardMonth = parseInt(month);
+    
+    return cardYear < currentYear || (cardYear === currentYear && cardMonth < currentMonth);
+  } catch (error) {
+    console.error('❌ [PaymentMethod] Error verificando expiración:', error);
+    return false;
+  }
 };
 
 // Método de instancia para obtener información segura
@@ -148,10 +149,19 @@ paymentMethodSchema.methods.toSafeObject = function() {
     expiry: this.expiry,
     issuer: this.issuer,
     active: this.active,
+    nickname: this.nickname,
     isExpired: this.isExpired(),
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   };
+};
+
+// Método de instancia para obtener nombre para mostrar
+paymentMethodSchema.methods.getDisplayName = function() {
+  const issuerName = this.issuer.charAt(0).toUpperCase() + this.issuer.slice(1);
+  const baseName = `${issuerName} •••• ${this.lastFourDigits}`;
+  
+  return this.nickname ? `${this.nickname} (${baseName})` : baseName;
 };
 
 // Método estático para encontrar métodos activos de un usuario
@@ -166,20 +176,29 @@ paymentMethodSchema.statics.findByUser = function(userId) {
 
 // Validación personalizada para prevenir duplicados
 paymentMethodSchema.pre('save', async function(next) {
-  if (this.isNew || this.isModified('numberHash')) {
-    const existing = await this.constructor.findOne({
-      userId: this.userId,
-      numberHash: this.numberHash,
-      _id: { $ne: this._id }
-    });
-    
-    if (existing) {
-      const error = new Error('Ya tienes registrada una tarjeta con estos dígitos');
-      error.code = 'DUPLICATE_CARD';
-      return next(error);
+  try {
+    if (this.isNew || this.isModified('numberHash')) {
+      console.log('🔍 [PaymentMethod] Verificando duplicados...');
+      const existing = await this.constructor.findOne({
+        userId: this.userId,
+        numberHash: this.numberHash,
+        _id: { $ne: this._id }
+      });
+      
+      if (existing) {
+        console.log('❌ [PaymentMethod] Tarjeta duplicada encontrada');
+        const error = new Error('Ya tienes registrada una tarjeta con estos dígitos');
+        error.code = 'DUPLICATE_CARD';
+        return next(error);
+      }
+      console.log('✅ [PaymentMethod] No hay duplicados');
     }
+    next();
+  } catch (error) {
+    console.error('❌ [PaymentMethod] Error en validación de duplicados:', error);
+    next(error);
   }
-  next();
 });
 
-module.exports = mongoose.model('PaymentMethod', paymentMethodSchema);
+const PaymentMethod = mongoose.model('PaymentMethod', paymentMethodSchema);
+export default PaymentMethod;

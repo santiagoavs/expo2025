@@ -1,116 +1,258 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva';
 import useImage from 'use-image';
 import Swal from 'sweetalert2';
-import './KonvaAreaEditor.css';
+import {
+  Box,
+  Button,
+  IconButton,
+  TextField,
+  Typography,
+  Slider,
+  Checkbox,
+  FormControlLabel,
+  styled,
+  useTheme
+} from '@mui/material';
+import {
+  X as CloseIcon,
+  FloppyDisk as SaveIcon,
+  Plus as AddIcon,
+  Trash as DeleteIcon,
+  ArrowsOut as MoveIcon,
+  Pencil as EditIcon,
+  Eye as EyeIcon,
+  MagnifyingGlassPlus as ZoomInIcon,
+  MagnifyingGlassMinus as ZoomOutIcon,
+  GridFour as GridIcon,
+  Copy as DuplicateIcon,
+  ArrowsCounterClockwise as ResetIcon
+} from '@phosphor-icons/react';
 
-// Componentes de iconos
-const XIcon = () => <span style={{ fontSize: '20px' }}>✖</span>;
-const SaveIcon = () => <span style={{ fontSize: '16px' }}>💾</span>;
-const PlusIcon = () => <span style={{ fontSize: '16px' }}>+</span>;
-const TrashIcon = () => <span style={{ fontSize: '16px' }}>🗑️</span>;
-const MoveIcon = () => <span style={{ fontSize: '16px' }}>✋</span>;
-const EditIcon = () => <span style={{ fontSize: '16px' }}>✏️</span>;
-const EyeIcon = () => <span style={{ fontSize: '16px' }}>👁️</span>;
-const ZoomInIcon = () => <span style={{ fontSize: '16px' }}>🔍</span>;
-const ZoomOutIcon = () => <span style={{ fontSize: '16px' }}>🔎</span>;
-const GridIcon = () => <span style={{ fontSize: '16px' }}>⊞</span>;
+// Configuración global de SweetAlert2
+Swal.mixin({
+  customClass: {
+    container: 'swal-overlay-custom',
+    popup: 'swal-modal-custom'
+  },
+  didOpen: () => {
+    const container = document.querySelector('.swal-overlay-custom');
+    if (container) {
+      container.style.zIndex = '2100';
+    }
+  }
+});
 
-// Componente para el área individual
-const AreaRect = ({ 
-  area, 
-  isSelected, 
-  onSelect, 
-  onChange, 
-  stageScale 
-}) => {
-  const shapeRef = useRef();
+// Estilos personalizados
+const EditorOverlay = styled(Box)(({ theme }) => ({
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(1, 3, 38, 0.9)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 2000,
+  backdropFilter: 'blur(5px)',
+}));
+
+const EditorContainer = styled(Box)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: '16px',
+  width: '95vw',
+  height: '95vh',
+  maxWidth: '1400px',
+  maxHeight: '900px',
+  overflow: 'hidden',
+  boxShadow: theme.shadows[10],
+  border: `1px solid ${theme.palette.divider}`,
+  display: 'flex',
+  flexDirection: 'column',
+}));
+
+const EditorHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(2, 3),
+  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}0D)`,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const EditorTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  fontWeight: 700,
+}));
+
+const Toolbar = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(1, 3),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  gap: theme.spacing(2),
+  flexWrap: 'wrap',
+}));
+
+const ToolbarGroup = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+}));
+
+const ToolButton = styled(Button)(({ theme }) => ({
+  minWidth: 'auto',
+  padding: theme.spacing(1, 2),
+  borderRadius: '8px',
+  fontSize: '0.8125rem',
+  textTransform: 'none',
+  gap: theme.spacing(1),
+}));
+
+const EditorContent = styled(Box)(({ theme }) => ({
+  flex: 1,
+  display: 'flex',
+  overflow: 'hidden',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+  },
+}));
+
+const CanvasContainer = styled(Box)(({ theme }) => ({
+  flex: 1,
+  backgroundColor: theme.palette.grey[50],
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  overflow: 'hidden',
+  position: 'relative',
+  borderRight: `1px solid ${theme.palette.divider}`,
+  [theme.breakpoints.down('md')]: {
+    borderRight: 'none',
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    minHeight: '60vh',
+  },
+}));
+
+const PropertiesPanel = styled(Box)(({ theme }) => ({
+  width: '320px',
+  backgroundColor: theme.palette.background.paper,
+  display: 'flex',
+  flexDirection: 'column',
+  borderLeft: `1px solid ${theme.palette.divider}`,
+  [theme.breakpoints.down('lg')]: {
+    width: '280px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+    maxHeight: '40vh',
+  },
+}));
+
+const PanelHeader = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}05)`,
+}));
+
+const PropertyGroup = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  paddingBottom: theme.spacing(2),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  '&:last-child': {
+    borderBottom: 'none',
+    marginBottom: 0,
+  },
+}));
+
+const PropertyGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: theme.spacing(1),
+}));
+
+const EditorFooter = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(1, 3),
+  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}05)`,
+  borderTop: `1px solid ${theme.palette.divider}`,
+}));
+
+// Componente AreaRect para representar cada área
+const AreaRect = ({ area, isSelected, onSelect, onChange, stageScale }) => {
+  const rectRef = useRef();
   const transformerRef = useRef();
 
   useEffect(() => {
-    if (isSelected && transformerRef.current && shapeRef.current) {
-      transformerRef.current.nodes([shapeRef.current]);
+    if (isSelected && transformerRef.current && rectRef.current) {
+      transformerRef.current.nodes([rectRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
 
-  const handleDragEnd = (e) => {
-    const node = e.target;
-    onChange({
-      ...area,
-      position: {
-        ...area.position,
-        x: Math.round(node.x()),
-        y: Math.round(node.y())
-      }
-    });
-  };
+  const handleTransformEnd = useCallback(() => {
+    if (!rectRef.current) return;
 
-  const handleTransformEnd = (e) => {
-    const node = shapeRef.current;
+    const node = rectRef.current;
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
 
-    // Reset scale and apply to width/height
+    // Reset scale and update width/height
     node.scaleX(1);
     node.scaleY(1);
 
-    onChange({
+    const newArea = {
       ...area,
       position: {
         ...area.position,
         x: Math.round(node.x()),
         y: Math.round(node.y()),
-        width: Math.round(Math.max(5, node.width() * scaleX)),
-        height: Math.round(Math.max(5, node.height() * scaleY)),
+        width: Math.round(node.width() * scaleX),
+        height: Math.round(node.height() * scaleY),
         rotationDegree: Math.round(node.rotation())
       }
-    });
-  };
+    };
+
+    onChange(newArea);
+  }, [area, onChange]);
 
   return (
     <>
       <Rect
-        ref={shapeRef}
+        ref={rectRef}
         x={area.position.x}
         y={area.position.y}
         width={area.position.width}
         height={area.position.height}
         rotation={area.position.rotationDegree || 0}
-        fill={area.konvaConfig?.strokeColor || '#1F64BF'}
-        opacity={area.konvaConfig?.fillOpacity || 0.2}
         stroke={area.konvaConfig?.strokeColor || '#1F64BF'}
         strokeWidth={(area.konvaConfig?.strokeWidth || 2) / stageScale}
+        fill={area.konvaConfig?.strokeColor || '#1F64BF'}
+        opacity={area.konvaConfig?.fillOpacity || 0.2}
+        cornerRadius={area.konvaConfig?.cornerRadius || 0}
         dash={area.konvaConfig?.dash || [5, 5]}
         draggable
         onClick={onSelect}
         onTap={onSelect}
-        onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
-      />
-      <Text
-        x={area.position.x + 5}
-        y={area.position.y + 5}
-        text={area.displayName || area.name}
-        fontSize={12 / stageScale}
-        fill="#010326"
-        fontStyle="bold"
-        listening={false}
+        onDragEnd={handleTransformEnd}
       />
       {isSelected && (
         <Transformer
           ref={transformerRef}
           boundBoxFunc={(oldBox, newBox) => {
             // Limit resize
-            if (newBox.width < 20 || newBox.height < 20) {
+            if (newBox.width < 10 || newBox.height < 10) {
               return oldBox;
             }
             return newBox;
           }}
-          enabledAnchors={[
-            'top-left', 'top-right', 'bottom-left', 'bottom-right',
-            'top-center', 'bottom-center', 'middle-left', 'middle-right'
-          ]}
         />
       )}
     </>
@@ -125,7 +267,7 @@ const KonvaAreaEditor = ({
   initialAreas = [], 
   onSaveAreas 
 }) => {
-  // Estados principales
+  const theme = useTheme();
   const [areas, setAreas] = useState(initialAreas);
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(null);
   const [stageScale, setStageScale] = useState(1);
@@ -133,16 +275,11 @@ const KonvaAreaEditor = ({
   const [stageDimensions, setStageDimensions] = useState({ width: 800, height: 600 });
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
-  const [mode, setMode] = useState('select'); // select, add, delete
-
-  // Referencias
+  
   const stageRef = useRef();
   const containerRef = useRef();
-  
-  // Cargar imagen
   const [image] = useImage(productImage, 'anonymous');
 
-  // Calcular dimensiones cuando la imagen cargue
   useEffect(() => {
     if (image && containerRef.current) {
       const container = containerRef.current;
@@ -169,17 +306,15 @@ const KonvaAreaEditor = ({
     }
   }, [image]);
 
-  // Handlers para áreas
-  const handleAreaSelect = (index) => {
+  const handleAreaSelect = useCallback((index) => {
     setSelectedAreaIndex(index);
-    setMode('select');
-  };
+  }, []);
 
-  const handleAreaChange = (index, newArea) => {
+  const handleAreaChange = useCallback((index, newArea) => {
     setAreas(prev => prev.map((area, i) => i === index ? newArea : area));
-  };
+  }, []);
 
-  const addNewArea = () => {
+  const addNewArea = useCallback(() => {
     const newArea = {
       name: `Área ${areas.length + 1}`,
       displayName: `Área ${areas.length + 1}`,
@@ -203,36 +338,53 @@ const KonvaAreaEditor = ({
     
     setAreas(prev => [...prev, newArea]);
     setSelectedAreaIndex(areas.length);
-  };
+  }, [areas.length]);
 
-  const deleteSelectedArea = () => {
-    if (selectedAreaIndex !== null && areas.length > 1) {
+  const deleteSelectedArea = useCallback(async () => {
+    if (selectedAreaIndex === null || areas.length <= 1) return;
+
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Eliminar área?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#1F64BF',
+      cancelButtonColor: theme.palette.error.main,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      backdrop: `rgba(0,0,0,0.7)`,
+      customClass: {
+        container: 'swal-overlay-custom',
+        popup: 'swal-modal-custom'
+      }
+    });
+
+    if (isConfirmed) {
       setAreas(prev => prev.filter((_, i) => i !== selectedAreaIndex));
       setSelectedAreaIndex(null);
     }
-  };
+  }, [selectedAreaIndex, areas.length, theme.palette.error.main]);
 
-  const duplicateSelectedArea = () => {
-    if (selectedAreaIndex !== null) {
-      const areaToClone = areas[selectedAreaIndex];
-      const clonedArea = {
-        ...areaToClone,
-        name: `${areaToClone.name} (Copia)`,
-        displayName: `${areaToClone.displayName} (Copia)`,
-        position: {
-          ...areaToClone.position,
-          x: areaToClone.position.x + 20,
-          y: areaToClone.position.y + 20
-        }
-      };
-      
-      setAreas(prev => [...prev, clonedArea]);
-      setSelectedAreaIndex(areas.length);
-    }
-  };
+  const duplicateSelectedArea = useCallback(() => {
+    if (selectedAreaIndex === null) return;
 
-  // Handlers de zoom y pan
-  const handleWheel = (e) => {
+    const areaToClone = areas[selectedAreaIndex];
+    const clonedArea = {
+      ...areaToClone,
+      name: `${areaToClone.name} (Copia)`,
+      displayName: `${areaToClone.displayName} (Copia)`,
+      position: {
+        ...areaToClone.position,
+        x: areaToClone.position.x + 20,
+        y: areaToClone.position.y + 20
+      }
+    };
+    
+    setAreas(prev => [...prev, clonedArea]);
+    setSelectedAreaIndex(areas.length);
+  }, [selectedAreaIndex, areas]);
+
+  const handleWheel = useCallback((e) => {
     e.evt.preventDefault();
     
     const scaleBy = 1.1;
@@ -253,47 +405,43 @@ const KonvaAreaEditor = ({
       x: pointer.x - mousePointTo.x * clampedScale,
       y: pointer.y - mousePointTo.y * clampedScale,
     });
-  };
+  }, []);
 
-  const zoomIn = () => {
-    const newScale = Math.min(3, stageScale * 1.2);
-    setStageScale(newScale);
-  };
+  const zoomIn = useCallback(() => {
+    setStageScale(prev => Math.min(3, prev * 1.2));
+  }, []);
 
-  const zoomOut = () => {
-    const newScale = Math.max(0.1, stageScale / 1.2);
-    setStageScale(newScale);
-  };
+  const zoomOut = useCallback(() => {
+    setStageScale(prev => Math.max(0.1, prev / 1.2));
+  }, []);
 
-  const resetZoom = () => {
+  const resetZoom = useCallback(() => {
     setStageScale(1);
     setStagePosition({ x: 0, y: 0 });
-  };
+  }, []);
 
-  // Handlers del formulario
-  const updateSelectedArea = (field, value) => {
-    if (selectedAreaIndex !== null) {
-      const updatedArea = { ...areas[selectedAreaIndex] };
-      
-      if (field.startsWith('position.')) {
-        const posField = field.replace('position.', '');
-        updatedArea.position[posField] = posField === 'rotationDegree' ? value : Number(value);
-      } else if (field.startsWith('accepts.')) {
-        const acceptField = field.replace('accepts.', '');
-        updatedArea.accepts[acceptField] = value;
-      } else if (field.startsWith('konvaConfig.')) {
-        const configField = field.replace('konvaConfig.', '');
-        updatedArea.konvaConfig[configField] = configField === 'strokeColor' ? value : Number(value);
-      } else {
-        updatedArea[field] = field === 'maxElements' ? Number(value) : value;
-      }
-      
-      handleAreaChange(selectedAreaIndex, updatedArea);
+  const updateSelectedArea = useCallback((field, value) => {
+    if (selectedAreaIndex === null) return;
+
+    const updatedArea = { ...areas[selectedAreaIndex] };
+    
+    if (field.startsWith('position.')) {
+      const posField = field.replace('position.', '');
+      updatedArea.position[posField] = posField === 'rotationDegree' ? value : Number(value);
+    } else if (field.startsWith('accepts.')) {
+      const acceptField = field.replace('accepts.', '');
+      updatedArea.accepts[acceptField] = value;
+    } else if (field.startsWith('konvaConfig.')) {
+      const configField = field.replace('konvaConfig.', '');
+      updatedArea.konvaConfig[configField] = configField === 'strokeColor' ? value : Number(value);
+    } else {
+      updatedArea[field] = field === 'maxElements' ? Number(value) : value;
     }
-  };
+    
+    handleAreaChange(selectedAreaIndex, updatedArea);
+  }, [selectedAreaIndex, areas, handleAreaChange]);
 
-  // Validar y guardar
-  const validateAreas = () => {
+  const validateAreas = useCallback(() => {
     const errors = [];
     
     areas.forEach((area, index) => {
@@ -310,7 +458,6 @@ const KonvaAreaEditor = ({
       }
     });
     
-    // Verificar superposiciones
     for (let i = 0; i < areas.length; i++) {
       for (let j = i + 1; j < areas.length; j++) {
         const a1 = areas[i].position;
@@ -326,123 +473,135 @@ const KonvaAreaEditor = ({
     }
     
     return errors;
-  };
+  }, [areas]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     const errors = validateAreas();
     
     if (errors.length > 0) {
       await Swal.fire({
         title: 'Errores de validación',
-        text: errors.join('\n'),
+        html: errors.join('<br>'),
         icon: 'error',
         confirmButtonText: 'Revisar',
-        confirmButtonColor: '#040DBF'
+        confirmButtonColor: '#1F64BF',
+        backdrop: `rgba(0,0,0,0.7)`,
+        customClass: {
+          container: 'swal-overlay-custom',
+          popup: 'swal-modal-custom'
+        }
       });
       return;
     }
     
     onSaveAreas(areas);
-  };
+  }, [areas, validateAreas, onSaveAreas]);
 
-  const handleStageClick = (e) => {
-    // Deselect when clicking on stage
+  const handleStageClick = useCallback((e) => {
     if (e.target === e.target.getStage()) {
       setSelectedAreaIndex(null);
     }
-  };
+  }, []);
 
   if (!isOpen) return null;
 
   const selectedArea = selectedAreaIndex !== null ? areas[selectedAreaIndex] : null;
 
   return (
-    <div className="konva-editor-overlay">
-      <div className="konva-editor-container">
-        
+    <EditorOverlay>
+      <EditorContainer>
         {/* Header */}
-        <div className="konva-editor-header">
-          <div className="konva-editor-title">
-            <EditIcon />
-            <h2>Editor de Áreas de Personalización</h2>
-          </div>
-          <button onClick={onClose} className="konva-close-btn">
-            <XIcon />
-          </button>
-        </div>
+        <EditorHeader>
+          <EditorTitle variant="h6">
+            <EditIcon size={20} weight="bold" />
+            Editor de Áreas de Personalización
+          </EditorTitle>
+          <IconButton onClick={onClose} color="inherit">
+            <CloseIcon size={20} />
+          </IconButton>
+        </EditorHeader>
 
         {/* Toolbar */}
-        <div className="konva-toolbar">
-          <div className="konva-toolbar-group">
-            <button 
+        <Toolbar>
+          <ToolbarGroup>
+            <ToolButton
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon size={16} />}
               onClick={addNewArea}
-              className="konva-tool-btn primary"
             >
-              <PlusIcon />
-              <span>Nueva Área</span>
-            </button>
+              Nueva Área
+            </ToolButton>
             
-            <button 
+            <ToolButton
+              variant="outlined"
+              startIcon={<DuplicateIcon size={16} />}
               onClick={duplicateSelectedArea}
-              className="konva-tool-btn"
               disabled={selectedAreaIndex === null}
             >
-              <EditIcon />
-              <span>Duplicar</span>
-            </button>
+              Duplicar
+            </ToolButton>
             
-            <button 
+            <ToolButton
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon size={16} />}
               onClick={deleteSelectedArea}
-              className="konva-tool-btn danger"
               disabled={selectedAreaIndex === null || areas.length <= 1}
             >
-              <TrashIcon />
-              <span>Eliminar</span>
-            </button>
-          </div>
+              Eliminar
+            </ToolButton>
+          </ToolbarGroup>
 
-          <div className="konva-toolbar-group">
-            <button 
+          <ToolbarGroup>
+            <ToolButton
+              variant={showGrid ? 'contained' : 'outlined'}
+              startIcon={<GridIcon size={16} />}
               onClick={() => setShowGrid(!showGrid)}
-              className={`konva-tool-btn ${showGrid ? 'active' : ''}`}
             >
-              <GridIcon />
-              <span>Cuadrícula</span>
-            </button>
+              Cuadrícula
+            </ToolButton>
             
-            <button 
+            <ToolButton
+              variant={showLabels ? 'contained' : 'outlined'}
+              startIcon={<EyeIcon size={16} />}
               onClick={() => setShowLabels(!showLabels)}
-              className={`konva-tool-btn ${showLabels ? 'active' : ''}`}
             >
-              <EyeIcon />
-              <span>Etiquetas</span>
-            </button>
-          </div>
+              Etiquetas
+            </ToolButton>
+          </ToolbarGroup>
 
-          <div className="konva-toolbar-group">
-            <button onClick={zoomOut} className="konva-tool-btn">
-              <ZoomOutIcon />
-            </button>
+          <ToolbarGroup>
+            <ToolButton
+              variant="outlined"
+              onClick={zoomOut}
+              startIcon={<ZoomOutIcon size={16} />}
+            />
             
-            <span className="konva-zoom-indicator">
+            <Typography variant="body2" sx={{ px: 1 }}>
               {Math.round(stageScale * 100)}%
-            </span>
+            </Typography>
             
-            <button onClick={zoomIn} className="konva-tool-btn">
-              <ZoomInIcon />
-            </button>
+            <ToolButton
+              variant="outlined"
+              onClick={zoomIn}
+              startIcon={<ZoomInIcon size={16} />}
+            />
             
-            <button onClick={resetZoom} className="konva-tool-btn">
+            <ToolButton
+              variant="outlined"
+              onClick={resetZoom}
+              startIcon={<ResetIcon size={16} />}
+            >
               Ajustar
-            </button>
-          </div>
-        </div>
+            </ToolButton>
+          </ToolbarGroup>
+        </Toolbar>
 
         {/* Main content */}
-        <div className="konva-editor-content">
-          
+        <EditorContent>
           {/* Canvas */}
-          <div className="konva-canvas-container" ref={containerRef}>
+          <CanvasContainer ref={containerRef}>
             <Stage
               ref={stageRef}
               width={stageDimensions.width}
@@ -461,26 +620,24 @@ const KonvaAreaEditor = ({
                 {showGrid && (
                   <>
                     {Array.from({ length: Math.ceil(stageDimensions.width / 20) + 1 }).map((_, i) => (
-                      <React.Fragment key={`v-${i}`}>
-                        <KonvaImage
-                          x={i * 20}
-                          y={0}
-                          width={1}
-                          height={stageDimensions.height}
-                          fill="rgba(31, 100, 191, 0.1)"
-                        />
-                      </React.Fragment>
+                      <Rect
+                        key={`v-${i}`}
+                        x={i * 20}
+                        y={0}
+                        width={1}
+                        height={stageDimensions.height}
+                        fill="rgba(31, 100, 191, 0.1)"
+                      />
                     ))}
                     {Array.from({ length: Math.ceil(stageDimensions.height / 20) + 1 }).map((_, i) => (
-                      <React.Fragment key={`h-${i}`}>
-                        <KonvaImage
-                          x={0}
-                          y={i * 20}
-                          width={stageDimensions.width}
-                          height={1}
-                          fill="rgba(31, 100, 191, 0.1)"
-                        />
-                      </React.Fragment>
+                      <Rect
+                        key={`h-${i}`}
+                        x={0}
+                        y={i * 20}
+                        width={stageDimensions.width}
+                        height={1}
+                        fill="rgba(31, 100, 191, 0.1)"
+                      />
                     ))}
                   </>
                 )}
@@ -506,232 +663,278 @@ const KonvaAreaEditor = ({
                     stageScale={stageScale}
                   />
                 ))}
+
+                {/* Labels */}
+                {showLabels && areas.map((area, index) => (
+                  <Text
+                    key={`label-${index}`}
+                    x={area.position.x}
+                    y={area.position.y - 20}
+                    text={area.displayName || area.name}
+                    fontSize={14 / stageScale}
+                    fill="#1F64BF"
+                    fontStyle="bold"
+                    listening={false}
+                  />
+                ))}
               </Layer>
             </Stage>
-          </div>
+          </CanvasContainer>
 
           {/* Properties panel */}
-          <div className="konva-properties-panel">
-            <div className="konva-panel-header">
-              <h3>Propiedades</h3>
+          <PropertiesPanel>
+            <PanelHeader>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Propiedades
+              </Typography>
               {selectedArea && (
-                <span className="konva-selected-indicator">
+                <Typography variant="caption" color="primary" sx={{ 
+                  bgcolor: 'primary.light', 
+                  px: 1, 
+                  py: 0.5, 
+                  borderRadius: 1,
+                  display: 'inline-block',
+                  mt: 1
+                }}>
                   Área {selectedAreaIndex + 1} seleccionada
-                </span>
+                </Typography>
               )}
-            </div>
+            </PanelHeader>
 
-            {selectedArea ? (
-              <div className="konva-properties-content">
-                
-                {/* Basic properties */}
-                <div className="konva-property-group">
-                  <h4>Información Básica</h4>
-                  
-                  <div className="konva-property">
-                    <label>Nombre</label>
-                    <input
-                      type="text"
+            <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+              {selectedArea ? (
+                <>
+                  {/* Basic properties */}
+                  <PropertyGroup>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Información Básica
+                    </Typography>
+                    
+                    <TextField
+                      label="Nombre"
                       value={selectedArea.name}
                       onChange={(e) => updateSelectedArea('name', e.target.value)}
-                      className="konva-input"
+                      fullWidth
+                      size="small"
+                      margin="dense"
                     />
-                  </div>
-                  
-                  <div className="konva-property">
-                    <label>Nombre Visible</label>
-                    <input
-                      type="text"
+                    
+                    <TextField
+                      label="Nombre Visible"
                       value={selectedArea.displayName}
                       onChange={(e) => updateSelectedArea('displayName', e.target.value)}
-                      className="konva-input"
+                      fullWidth
+                      size="small"
+                      margin="dense"
                     />
-                  </div>
-                </div>
+                  </PropertyGroup>
 
-                {/* Position properties */}
-                <div className="konva-property-group">
-                  <h4>Posición y Tamaño</h4>
-                  
-                  <div className="konva-property-grid">
-                    <div className="konva-property">
-                      <label>X</label>
-                      <input
-                        type="number"
+                  {/* Position properties */}
+                  <PropertyGroup>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Posición y Tamaño
+                    </Typography>
+                    
+                    <PropertyGrid>
+                      <TextField
+                        label="X"
                         value={selectedArea.position.x}
                         onChange={(e) => updateSelectedArea('position.x', e.target.value)}
-                        className="konva-input"
-                      />
-                    </div>
-                    
-                    <div className="konva-property">
-                      <label>Y</label>
-                      <input
                         type="number"
+                        size="small"
+                        margin="dense"
+                      />
+                      
+                      <TextField
+                        label="Y"
                         value={selectedArea.position.y}
                         onChange={(e) => updateSelectedArea('position.y', e.target.value)}
-                        className="konva-input"
-                      />
-                    </div>
-                    
-                    <div className="konva-property">
-                      <label>Ancho</label>
-                      <input
                         type="number"
+                        size="small"
+                        margin="dense"
+                      />
+                      
+                      <TextField
+                        label="Ancho"
                         value={selectedArea.position.width}
                         onChange={(e) => updateSelectedArea('position.width', e.target.value)}
-                        className="konva-input"
-                        min="1"
-                      />
-                    </div>
-                    
-                    <div className="konva-property">
-                      <label>Alto</label>
-                      <input
                         type="number"
+                        size="small"
+                        margin="dense"
+                        inputProps={{ min: 1 }}
+                      />
+                      
+                      <TextField
+                        label="Alto"
                         value={selectedArea.position.height}
                         onChange={(e) => updateSelectedArea('position.height', e.target.value)}
-                        className="konva-input"
-                        min="1"
+                        type="number"
+                        size="small"
+                        margin="dense"
+                        inputProps={{ min: 1 }}
                       />
-                    </div>
-                  </div>
-                  
-                  <div className="konva-property">
-                    <label>Rotación (grados)</label>
-                    <input
-                      type="range"
-                      min="-180"
-                      max="180"
-                      value={selectedArea.position.rotationDegree || 0}
-                      onChange={(e) => updateSelectedArea('position.rotationDegree', e.target.value)}
-                      className="konva-slider"
-                    />
-                    <span className="konva-slider-value">
-                      {selectedArea.position.rotationDegree || 0}°
-                    </span>
-                  </div>
-                </div>
+                    </PropertyGrid>
+                    
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" display="block" gutterBottom>
+                        Rotación: {selectedArea.position.rotationDegree || 0}°
+                      </Typography>
+                      <Slider
+                        value={selectedArea.position.rotationDegree || 0}
+                        onChange={(_, value) => updateSelectedArea('position.rotationDegree', value)}
+                        min={-180}
+                        max={180}
+                        step={1}
+                        valueLabelDisplay="auto"
+                      />
+                    </Box>
+                  </PropertyGroup>
 
-                {/* Element settings */}
-                <div className="konva-property-group">
-                  <h4>Configuración de Elementos</h4>
-                  
-                  <div className="konva-property">
-                    <label>Máximo de Elementos</label>
-                    <input
-                      type="number"
+                  {/* Element settings */}
+                  <PropertyGroup>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Configuración de Elementos
+                    </Typography>
+                    
+                    <TextField
+                      label="Máximo de Elementos"
                       value={selectedArea.maxElements}
                       onChange={(e) => updateSelectedArea('maxElements', e.target.value)}
-                      className="konva-input"
-                      min="1"
-                      max="20"
+                      type="number"
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      inputProps={{ min: 1, max: 20 }}
                     />
-                  </div>
-                  
-                  <div className="konva-property">
-                    <label>Tipos de Elementos Permitidos</label>
-                    <div className="konva-checkbox-group">
-                      <label className="konva-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedArea.accepts.text}
-                          onChange={(e) => updateSelectedArea('accepts.text', e.target.checked)}
-                        />
-                        <span>Texto</span>
-                      </label>
-                      <label className="konva-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedArea.accepts.image}
-                          onChange={(e) => updateSelectedArea('accepts.image', e.target.checked)}
-                        />
-                        <span>Imágenes</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                    
+                    <Typography variant="caption" display="block" gutterBottom>
+                      Tipos de Elementos Permitidos
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedArea.accepts.text}
+                            onChange={(e) => updateSelectedArea('accepts.text', e.target.checked)}
+                            color="primary"
+                          />
+                        }
+                        label="Texto"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedArea.accepts.image}
+                            onChange={(e) => updateSelectedArea('accepts.image', e.target.checked)}
+                            color="primary"
+                          />
+                        }
+                        label="Imágenes"
+                      />
+                    </Box>
+                  </PropertyGroup>
 
-                {/* Visual properties */}
-                <div className="konva-property-group">
-                  <h4>Apariencia</h4>
-                  
-                  <div className="konva-property">
-                    <label>Color del Borde</label>
-                    <input
+                  {/* Visual properties */}
+                  <PropertyGroup>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Apariencia
+                    </Typography>
+                    
+                    <TextField
+                      label="Color del Borde"
                       type="color"
                       value={selectedArea.konvaConfig?.strokeColor || '#1F64BF'}
                       onChange={(e) => updateSelectedArea('konvaConfig.strokeColor', e.target.value)}
-                      className="konva-color-input"
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      InputLabelProps={{ shrink: true }}
                     />
-                  </div>
-                  
-                  <div className="konva-property">
-                    <label>Grosor del Borde</label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="10"
-                      value={selectedArea.konvaConfig?.strokeWidth || 2}
-                      onChange={(e) => updateSelectedArea('konvaConfig.strokeWidth', e.target.value)}
-                      className="konva-slider"
-                    />
-                    <span className="konva-slider-value">
-                      {selectedArea.konvaConfig?.strokeWidth || 2}px
-                    </span>
-                  </div>
-                  
-                  <div className="konva-property">
-                    <label>Opacidad del Relleno</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={selectedArea.konvaConfig?.fillOpacity || 0.2}
-                      onChange={(e) => updateSelectedArea('konvaConfig.fillOpacity', e.target.value)}
-                      className="konva-slider"
-                    />
-                    <span className="konva-slider-value">
-                      {Math.round((selectedArea.konvaConfig?.fillOpacity || 0.2) * 100)}%
-                    </span>
-                  </div>
-                </div>
-
-              </div>
-            ) : (
-              <div className="konva-no-selection">
-                <MoveIcon />
-                <p>Selecciona un área para editar sus propiedades</p>
-                <p className="konva-help-text">
-                  Haz clic en un área del canvas o usa el botón "Nueva Área" para comenzar
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+                    
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" display="block" gutterBottom>
+                        Grosor del Borde: {selectedArea.konvaConfig?.strokeWidth || 2}px
+                      </Typography>
+                      <Slider
+                        value={selectedArea.konvaConfig?.strokeWidth || 2}
+                        onChange={(_, value) => updateSelectedArea('konvaConfig.strokeWidth', value)}
+                        min={1}
+                        max={10}
+                        step={1}
+                        valueLabelDisplay="auto"
+                      />
+                    </Box>
+                    
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" display="block" gutterBottom>
+                        Opacidad del Relleno: {Math.round((selectedArea.konvaConfig?.fillOpacity || 0.2) * 100)}%
+                      </Typography>
+                      <Slider
+                        value={selectedArea.konvaConfig?.fillOpacity || 0.2}
+                        onChange={(_, value) => updateSelectedArea('konvaConfig.fillOpacity', value)}
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        valueLabelDisplay="auto"
+                      />
+                    </Box>
+                  </PropertyGroup>
+                </>
+              ) : (
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  height: '100%',
+                  textAlign: 'center',
+                  color: 'text.secondary'
+                }}>
+                  <MoveIcon size={48} />
+                  <Typography variant="body1" sx={{ mt: 2 }}>
+                    Selecciona un área para editar sus propiedades
+                  </Typography>
+                  <Typography variant="caption" sx={{ mt: 1 }}>
+                    Haz clic en un área del canvas o usa el botón "Nueva Área" para comenzar
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </PropertiesPanel>
+        </EditorContent>
 
         {/* Footer */}
-        <div className="konva-editor-footer">
-          <div className="konva-footer-info">
-            <span>Áreas definidas: {areas.length}</span>
+        <EditorFooter>
+          <Typography variant="caption" color="text.secondary">
+            Áreas definidas: {areas.length}
             {selectedArea && (
-              <span>• Área seleccionada: {selectedArea.name}</span>
+              <>
+                {' • '}
+                Área seleccionada: {selectedArea.name}
+              </>
             )}
-          </div>
+          </Typography>
           
-          <div className="konva-footer-actions">
-            <button onClick={onClose} className="konva-cancel-btn">
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              onClick={onClose}
+              color="inherit"
+            >
               Cancelar
-            </button>
-            <button onClick={handleSave} className="konva-save-btn">
-              <SaveIcon />
-              <span>Guardar Áreas</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon size={16} />}
+              onClick={handleSave}
+            >
+              Guardar Áreas
+            </Button>
+          </Box>
+        </EditorFooter>
+      </EditorContainer>
+    </EditorOverlay>
   );
 };
 

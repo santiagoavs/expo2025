@@ -256,13 +256,15 @@ authController.checkAuth = async (req, res) => {
     return res.status(200).json({
       authenticated: true,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        type: type.toLowerCase(),
-        verified: user.verified || false,
-        active: user.active || true
+      id: user._id,
+      _id: user._id,          // Para compatibilidad
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      type: type.toLowerCase(),
+      verified: user.verified || false,
+      active: user.active || true
       }
     });
   } catch (error) {

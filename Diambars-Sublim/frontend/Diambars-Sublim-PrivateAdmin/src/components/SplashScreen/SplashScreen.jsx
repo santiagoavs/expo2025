@@ -53,7 +53,7 @@ const SplashScreen = ({ onComplete }) => {
           <div className="diambars-logo-wrapper">
             <div className="logo-glow"></div>
             <img
-              src="../../../assets/logo.png"
+              src="/logo.png"
               alt="Logo Diambars"
               className="diambars-logo-img"
               onError={(e) => {

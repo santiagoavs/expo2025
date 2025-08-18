@@ -79,9 +79,13 @@
 
 .contact-container {
   display: flex;
-  min-height: 100vh;
+  margin: 120px auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   position: relative;
   z-index: 1;
+  gap: 1rem;
 }
 
 .contact-info-section {
@@ -103,12 +107,10 @@
   display: flex;
   align-items: center;
   position: relative;
-  left: 300px;
   border-radius: 20px;
-  width: 230px;
+  width: 250px;
   height: 400px;
   padding: 2.5rem;
-  margin: 150px auto;
   text-align: center;
   font-size: 1rem;
   color: #3F2724;
@@ -157,7 +159,7 @@
 .contact-icon {
   width: 24px;
   height: 24px;
-  color: #4285f4;
+  color: rgb(56, 166, 200);
   flex-shrink: 0;
 }
 
@@ -203,7 +205,6 @@
   max-width: 500px;
   width: 100%;
   padding: 2.5rem;
-  margin: 150px auto;
   text-align: center;
   font-size: 1rem;
   color: #3F2724;
@@ -347,6 +348,7 @@ position: relative;
 
 .contact-form textarea {
   position: relative;
+  resize: none;
   width: 420px;
   padding: 12px;
   margin-bottom: 1rem;
