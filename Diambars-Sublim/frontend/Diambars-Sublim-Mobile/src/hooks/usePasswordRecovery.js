@@ -1,31 +1,19 @@
-// hooks/usePasswordRecovery.js - REACT NATIVE VERSION
+// src/hooks/usePasswordRecovery.js - VERSION SIN TOAST
 import { useState, useEffect } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService';
-import Toast from 'react-native-toast-message';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Funciones de Toast personalizadas
-const showSuccess = async (title, text = '') => {
-  Toast.show({
-    type: 'success',
-    text1: title,
-    text2: text,
-    visibilityTime: 3000,
-    autoHide: true,
-    topOffset: 60,
-  });
+// Funciones de mensaje personalizadas (reemplazan Toast)
+const showSuccess = (title, text = '') => {
+  console.log(`[SUCCESS] ${title}: ${text}`);
+  // Alert.alert(title, text); // Descomenta si quieres alertas nativas
 };
 
-const showError = async (title, text = '') => {
-  Toast.show({
-    type: 'error',
-    text1: title,
-    text2: text,
-    visibilityTime: 4000,
-    autoHide: true,
-    topOffset: 60,
-  });
+const showError = (title, text = '') => {
+  console.log(`[ERROR] ${title}: ${text}`);
+  Alert.alert(title, text);
 };
 
 export const usePasswordRecovery = () => {
@@ -102,11 +90,12 @@ export const usePasswordRecovery = () => {
       const response = await requestRecoveryCode(emailValue);
       console.log('[usePasswordRecovery-RN] Respuesta del servidor:', response);
       
-      await showSuccess('¡Correo enviado!', 'Se ha enviado un código a tu correo');
+      showSuccess('¡Correo enviado!', 'Se ha enviado un código a tu correo');
       
       navigation.navigate('CodeConfirmation', { 
         email: emailValue,
-        message: 'Ingresa el código que recibiste en tu correo'
+        message: 'Ingresa el código que recibiste en tu correo',
+        fromRecovery: true
       });
       
       startTimer();
@@ -114,7 +103,7 @@ export const usePasswordRecovery = () => {
       console.error('[usePasswordRecovery-RN] Error al solicitar código:', err);
       const errorMessage = err.message || 'Error al enviar el correo';
       setError(errorMessage);
-      await showError('Error', errorMessage);
+      showError('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -139,7 +128,7 @@ export const usePasswordRecovery = () => {
       
       setVerificationToken(response.token);
       
-      await showSuccess('¡Código verificado!', 'Ahora puedes crear una nueva contraseña');
+      showSuccess('¡Código verificado!', 'Ahora puedes crear una nueva contraseña');
       
       navigation.navigate('NewPassword', {
         verificationToken: response.token,
@@ -150,7 +139,7 @@ export const usePasswordRecovery = () => {
       console.error('[usePasswordRecovery-RN] Error al verificar código:', err);
       const errorMessage = err.message || 'Código inválido o expirado';
       setError(errorMessage);
-      await showError('Error', errorMessage);
+      showError('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +169,7 @@ export const usePasswordRecovery = () => {
       setVerificationToken(null);
       await AsyncStorage.removeItem('recoveryToken');
       
-      await showSuccess('¡Contraseña actualizada!', 'Tu contraseña ha sido cambiada exitosamente');
+      showSuccess('¡Contraseña actualizada!', 'Tu contraseña ha sido cambiada exitosamente');
       
       // Navegar al login con mensaje de éxito
       navigation.reset({
@@ -202,7 +191,7 @@ export const usePasswordRecovery = () => {
       
       const errorMessage = err.message || 'Error al actualizar contraseña';
       setError(errorMessage);
-      await showError('Error', errorMessage);
+      showError('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -221,13 +210,13 @@ export const usePasswordRecovery = () => {
     
     try {
       await requestRecoveryCode(email);
-      await showSuccess('Código reenviado', 'Se ha enviado un nuevo código a tu correo');
+      showSuccess('Código reenviado', 'Se ha enviado un nuevo código a tu correo');
       startTimer();
     } catch (error) {
       console.error('[usePasswordRecovery-RN] Error al reenviar código:', error);
       const errorMessage = error.message || 'Error al reenviar el correo';
       setError(errorMessage);
-      await showError('Error', errorMessage);
+      showError('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -239,13 +228,20 @@ export const usePasswordRecovery = () => {
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
-    
-    // Auto-enfoque al siguiente input se maneja en el componente
   };
 
   const handleKeyPress = (index, key) => {
     if (key === 'Backspace' && !code[index] && index > 0) {
       // Retroceso al input anterior se maneja en el componente
+    }
+  };
+
+  // Función para ir hacia atrás de manera inteligente
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('RecoveryPassword');
     }
   };
 
@@ -266,6 +262,7 @@ export const usePasswordRecovery = () => {
     handleResendCode,
     startTimer,
     handleInputChange,
-    handleKeyPress
+    handleKeyPress,
+    handleGoBack
   };
 };
