@@ -3,24 +3,69 @@ import Review from "../models/reviews.js";
 // Crear una nueva reseña
 export const createReview = async (req, res) => {
   try {
-    const { userId, rating, comment } = req.body;
- 
-    const review = new Review({ userId, rating, comment });
-    await review.save();
- 
-    res.status(201).json({ message: "Reseña creada correctamente", review });
+    const { userId, rating, comment, isActive = true } = req.body;
+
+    // Validaciones del backend
+    if (!userId || !rating || !comment) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Todos los campos son requeridos (userId, rating, comment)" 
+      });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ 
+        success: false,
+        message: "La calificación debe estar entre 1 y 5" 
+      });
+    }
+
+    const review = new Review({ 
+      userId, 
+      rating: Number(rating), 
+      comment: comment.trim(),
+      isActive 
+    });
+    
+    const savedReview = await review.save();
+    
+    // CRÍTICO: Popular el userId antes de enviar la respuesta
+    await savedReview.populate('userId', 'name email');
+
+    res.status(201).json({ 
+      success: true,
+      message: "Reseña creada correctamente", 
+      review: savedReview 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al crear la reseña", error });
+    console.error('Error al crear reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al crear la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
  
 // Obtener todas las reseñas
 export const getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find().populate("userId", "name email");
-    res.status(200).json(reviews);
+    // CRÍTICO: Filtrar solo reviews activas y popular userId
+    const reviews = await Review.find({ isActive: true })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 }); // Más recientes primero
+
+    res.status(200).json({
+      success: true,
+      data: reviews
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener reseñas", error });
+    console.error('Error al obtener reseñas:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener reseñas", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
  
@@ -30,11 +75,24 @@ export const getReviewById = async (req, res) => {
     const { id } = req.params;
     const review = await Review.findById(id).populate("userId", "name email");
  
-    if (!review) return res.status(404).json({ message: "Reseña no encontrada" });
- 
-    res.status(200).json(review);
+    if (!review) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Reseña no encontrada" 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: review
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener la reseña", error });
+    console.error('Error al obtener reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
  
@@ -46,29 +104,61 @@ export const updateReview = async (req, res) => {
  
     const updatedReview = await Review.findByIdAndUpdate(
       id,
-      { rating, comment },
+      { rating: Number(rating), comment: comment?.trim() },
       { new: true, runValidators: true }
-    );
+    ).populate("userId", "name email");
  
-    if (!updatedReview) return res.status(404).json({ message: "Reseña no encontrada" });
- 
-    res.status(200).json({ message: "Reseña actualizada", review: updatedReview });
+    if (!updatedReview) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Reseña no encontrada" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Reseña actualizada", 
+      review: updatedReview 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar la reseña", error });
+    console.error('Error al actualizar reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al actualizar la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
  
-// Eliminar una reseña
+// Eliminar una reseña (soft delete)
 export const deleteReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedReview = await Review.findByIdAndDelete(id);
+    
+    // Soft delete: marcar como inactiva en lugar de eliminar
+    const deletedReview = await Review.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
  
-    if (!deletedReview) return res.status(404).json({ message: "Reseña no encontrada" });
- 
-    res.status(200).json({ message: "Reseña eliminada correctamente" });
+    if (!deletedReview) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Reseña no encontrada" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Reseña eliminada correctamente" 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar la reseña", error });
+    console.error('Error al eliminar reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al eliminar la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
- 

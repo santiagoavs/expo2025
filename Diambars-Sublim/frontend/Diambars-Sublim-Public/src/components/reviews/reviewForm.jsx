@@ -1,72 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import StarRating from './starRating';
 import { motion } from 'framer-motion';
-import btnEnviar from '/images/reviews/btnEnviarReviews.png'
 import './reviewForm.css';
 
+const ReviewForm = ({ 
+  rating,
+  setRating,
+  comment,
+  setComment,
+  isActive,
+  setIsActive,
+  handleSubmit,
+  success,
+  setSuccess,
+  loading = false,
+  error = null
+}) => {
 
-const ReviewForm = ({    rating,
-    setRating,
-    comment,
-    setComment,
-    isActive,
-    setIsActive,
-    handleSubmit,
-    success,
-    setSuccess,}) => {
-  /*
-  const [rating, setRating] = useState(0);
-  const [text, setText] = useState('');
-  const [reviews, setReviews] = useState([]);
-  const [success, setSuccess] = useState(false);
-  */
-
-/*
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('reviews')) || [];
-    setReviews(stored);
-  }, []);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (rating === 0 || text.trim() === '') return;
-
-    const newReview = {
-      rating,
-      text,
-      id: Date.now(),
-    };
-
-    const updated = [...reviews, newReview];
-    localStorage.setItem('reviews', JSON.stringify(updated));
-    setReviews(updated);
-    setText('');
-    setRating(0);
-    setSuccess(true);
-
-    setTimeout(() => setSuccess(false), 2000);
+  const onFormSubmit = (e) => {
+    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+    handleSubmit(e); // Llamar a la función handleSubmit original
   };
-*/
+  const onButtonClick = (e) => {
+    e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+    handleSubmit(e); // Llamar a la función handleSubmit original
+  };
 
   return (
     <div className="review-form">
-      <form >
+      <form onSubmit={onFormSubmit}>
         <motion.textarea
           className="review-textarea"
-          placeholder="¡Dejanos tu reseña!"
+          placeholder="¡Déjanos tu reseña!"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows="4"
+          disabled={loading}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         />
-      <StarRating rating={rating} onRatingChange={setRating} />
-
-        <img src="/images/reviews/btnEnviarReviews.png" alt="Enviar" className="review-button" onClick={handleSubmit}></img>
+        
+        <div className="star-rating-container">
+          <StarRating 
+            rating={rating} 
+            onRatingChange={setRating}
+            disabled={loading}
+          />
+          <button
+            type="button" 
+            className={`review-submit-button ${loading ? 'disabled' : ''}`}
+            onClick={onButtonClick}
+            disabled={loading || !rating || !comment.trim()}
+          >
+            {loading ? (
+              <>
+                <span className="loading-spinner"></span>
+                Enviando...
+              </>
+            ) : (
+              <>
+                <span className="submit-icon"></span>
+                Enviar Reseña
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
+      {/* Mensaje de error */}
+      {error && (
+        <motion.div
+          className="error-message"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginTop: '1rem',
+            color: '#ff6b6b',
+            textAlign: 'center',
+            padding: '0.5rem',
+            backgroundColor: '#ffe6e6',
+            border: '1px solid #ff6b6b',
+            borderRadius: '8px'
+          }}
+        >
+          {error}
+        </motion.div>
+      )}
 
+      {/* Mensaje de éxito */}
       {success && (
         <motion.div
           className="success-message"
@@ -79,28 +101,21 @@ const ReviewForm = ({    rating,
         </motion.div>
       )}
 
-      {process.env.NODE_ENV === 'development' && (
-        <button
-            type="button"
-            onClick={() => {
-            if (confirm('¿Estás seguro de eliminar todas las reseñas?')) {
-                localStorage.removeItem('reviews');
-                setReviews([]);
-            }
-            }}
-            style={{
+      {/* Indicador de carga */}
+      {loading && (
+        <motion.div
+          className="loading-message"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{
             marginTop: '1rem',
-            fontSize: '0.9rem',
-            padding: '0.5rem 1rem',
-            border: 'hidden',
-            backgroundColor: 'rgb(252 241 217)',
-            color: '#6a6a6a2e',
-            cursor: 'pointer',
-            }}
+            color: '#666',
+            textAlign: 'center'
+          }}
         >
-            🗑 Borrar todas las reseñas
-        </button>
-        )}
+          Enviando reseña...
+        </motion.div>
+      )}
     </div>
   );
 };
