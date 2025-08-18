@@ -1,4 +1,4 @@
-// src/screens/LoginScreen.js - CON ALERTAS BONITAS
+// src/screens/LoginScreen.js - CON ALERTAS BONITAS Y SPINNER DE NAVEGACIÓN
 import React from 'react';
 import {
   View,
@@ -14,8 +14,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Controller } from 'react-hook-form';
 import { useLogin } from '../hooks/useLogin';
-import CustomAlert from '../components/CustomAlert'; // 👈 NUEVA IMPORTACIÓN
-import LoadingOverlay from '../components/LoadingOverlay'; // 👈 NUEVA IMPORTACIÓN
+import CustomAlert from '../components/CustomAlert';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 const LoginScreen = () => {
   console.log("[LoginScreen] Renderizando pantalla con alertas bonitas");
@@ -35,12 +35,33 @@ const LoginScreen = () => {
     showAlert,
     showLoading,
     alertConfig,
-    setShowAlert
+    setShowAlert,
+    showLoadingOverlay
   } = useLogin();
 
+  // 🔍 DEBUG LOGS
+  console.log('🔍 [LoginScreen] Estados actuales:', {
+    showAlert,
+    showLoading,
+    isSubmitting,
+    errorsCount: Object.keys(errors).length
+  });
+
+  // 🌀 NAVEGACIÓN CON SPINNER
   const handleRecoveryPress = () => {
-    console.log('[LoginScreen] Navegando a RecoveryPassword');
-    navigation.navigate('RecoveryPassword');
+    console.log('[LoginScreen] Navegando a RecoveryPassword con spinner...');
+    
+    // Mostrar spinner durante navegación
+    showLoadingOverlay(true);
+    
+    setTimeout(() => {
+      navigation.navigate('RecoveryPassword');
+      
+      // Ocultar spinner después de navegar
+      setTimeout(() => {
+        showLoadingOverlay(false);
+      }, 300);
+    }, 1000); // 1 segundo de spinner
   };
 
   console.log("[LoginScreen] Renderizando UI");
@@ -134,9 +155,12 @@ const LoginScreen = () => {
               </View>
             )}
 
-            {/* Recovery Link - IGUAL QUE ANTES */}
-            <TouchableOpacity onPress={handleRecoveryPress} disabled={isSubmitting}>
-              <Text style={[styles.recoveryText, isSubmitting && styles.disabledText]}>
+            {/* Recovery Link - CON SPINNER */}
+            <TouchableOpacity onPress={handleRecoveryPress} disabled={isSubmitting || showLoading}>
+              <Text style={[
+                styles.recoveryText, 
+                (isSubmitting || showLoading) && styles.disabledText
+              ]}>
                 ¿Olvidaste tu contraseña?
               </Text>
             </TouchableOpacity>
@@ -145,10 +169,10 @@ const LoginScreen = () => {
             <TouchableOpacity
               style={[
                 styles.loginButton, 
-                isSubmitting && styles.loginButtonDisabled
+                (isSubmitting || showLoading) && styles.loginButtonDisabled
               ]}
               onPress={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || showLoading}
               activeOpacity={0.8}
             >
               <View style={styles.buttonContent}>
@@ -170,6 +194,8 @@ const LoginScreen = () => {
             <View style={styles.debugInfo}>
               <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
               <Text style={styles.debugText}>Estado: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
+              <Text style={styles.debugText}>showLoading: {showLoading ? 'TRUE' : 'FALSE'}</Text>
+              <Text style={styles.debugText}>showAlert: {showAlert ? 'TRUE' : 'FALSE'}</Text>
               <Text style={styles.debugText}>Errores: {Object.keys(errors).length}</Text>
             </View>
 
@@ -187,11 +213,12 @@ const LoginScreen = () => {
         confirmText="Continuar"
       />
 
-      {/* 🎨 LOADING BONITO */}
+      {/* 🎨 LOADING BONITO - CON DEBUG */}
+      {console.log('🌀 [LoginScreen] Punto antes de LoadingOverlay, showLoading:', showLoading)}
       <LoadingOverlay
         visible={showLoading}
         type="login"
-        message="Verificando credenciales..."
+        message={showLoading ? (isSubmitting ? "Verificando credenciales..." : "Cargando...") : ""}
       />
     </SafeAreaView>
   );
@@ -266,7 +293,6 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    transition: 'all 0.2s ease',
   },
   inputError: {
     borderColor: '#ef4444',
@@ -330,7 +356,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ffffff',
     borderTopColor: 'transparent',
-    // La animación se manejará con Animated API si es necesario
   },
   debugInfo: {
     marginTop: 16,

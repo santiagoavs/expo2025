@@ -1,4 +1,4 @@
-// src/hooks/usePasswordRecovery.js - CON ALERTAS BONITAS
+// src/hooks/usePasswordRecovery.js - CON ALERTAS BONITAS Y DELAYS
 import { useState, useEffect } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService';
@@ -106,15 +106,23 @@ export const usePasswordRecovery = () => {
     setError('');
     setEmail(emailValue);
 
-    // Mostrar loading bonito
+    // 🌀 MOSTRAR LOADING BONITO
+    console.log('🌀 [Recovery] Mostrando spinner de envío...');
     showLoadingOverlay(true, 'sending');
+
+    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
       console.log('[usePasswordRecovery] Llamando a requestRecoveryCode...');
       const response = await requestRecoveryCode(emailValue);
       console.log('[usePasswordRecovery] Respuesta del servidor:', response);
       
-      // Ocultar loading
+      // ⏰ DELAY ANTES DE OCULTAR
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 🌀 OCULTAR LOADING
+      console.log('🌀 [Recovery] Ocultando spinner de envío...');
       showLoadingOverlay(false);
       
       // Mostrar alerta de éxito bonita
@@ -135,7 +143,8 @@ export const usePasswordRecovery = () => {
     } catch (err) {
       console.error('[usePasswordRecovery] Error al solicitar código:', err);
       
-      // Ocultar loading
+      // 🌀 OCULTAR LOADING EN ERROR
+      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
       
       const errorMessage = err.message || 'Error al enviar el correo';
@@ -164,8 +173,12 @@ export const usePasswordRecovery = () => {
     setIsSubmitting(true);
     setError('');
 
-    // Mostrar loading bonito
+    // 🌀 MOSTRAR LOADING BONITO
+    console.log('🌀 [Recovery] Mostrando spinner de verificación...');
     showLoadingOverlay(true, 'verifying');
+
+    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
       console.log('[usePasswordRecovery] Llamando a verifyRecoveryCode...');
@@ -174,7 +187,11 @@ export const usePasswordRecovery = () => {
       
       setVerificationToken(response.token);
       
-      // Ocultar loading
+      // ⏰ DELAY ANTES DE OCULTAR
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 🌀 OCULTAR LOADING
+      console.log('🌀 [Recovery] Ocultando spinner de verificación...');
       showLoadingOverlay(false);
       
       // Mostrar alerta de éxito bonita
@@ -194,7 +211,8 @@ export const usePasswordRecovery = () => {
     } catch (err) {
       console.error('[usePasswordRecovery] Error al verificar código:', err);
       
-      // Ocultar loading
+      // 🌀 OCULTAR LOADING EN ERROR
+      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
       
       const errorMessage = err.message || 'Código inválido o expirado';
@@ -230,8 +248,12 @@ export const usePasswordRecovery = () => {
     setIsSubmitting(true);
     setError('');
 
-    // Mostrar loading bonito
+    // 🌀 MOSTRAR LOADING BONITO
+    console.log('🌀 [Recovery] Mostrando spinner de actualización...');
     showLoadingOverlay(true, 'updating');
+
+    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    await new Promise(resolve => setTimeout(resolve, 1200));
 
     try {
       console.log('[usePasswordRecovery] Enviando solicitud al servidor...');
@@ -249,7 +271,11 @@ export const usePasswordRecovery = () => {
         console.error('Error limpiando token:', storageError);
       }
       
-      // Ocultar loading
+      // ⏰ DELAY ANTES DE OCULTAR
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 🌀 OCULTAR LOADING
+      console.log('🌀 [Recovery] Ocultando spinner de actualización...');
       showLoadingOverlay(false);
       
       // Mostrar alerta de éxito bonita
@@ -274,7 +300,8 @@ export const usePasswordRecovery = () => {
     } catch (err) {
       console.error('[usePasswordRecovery] Error detallado:', err);
       
-      // Ocultar loading
+      // 🌀 OCULTAR LOADING EN ERROR
+      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
       
       const errorMessage = err.message || 'Error al actualizar contraseña';
@@ -302,13 +329,21 @@ export const usePasswordRecovery = () => {
     setIsSubmitting(true);
     setError('');
 
-    // Mostrar loading bonito
+    // 🌀 MOSTRAR LOADING BONITO
+    console.log('🌀 [Recovery] Mostrando spinner de reenvío...');
     showLoadingOverlay(true, 'sending');
+
+    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
       await requestRecoveryCode(email);
       
-      // Ocultar loading
+      // ⏰ DELAY ANTES DE OCULTAR
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      // 🌀 OCULTAR LOADING
+      console.log('🌀 [Recovery] Ocultando spinner de reenvío...');
       showLoadingOverlay(false);
       
       // Mostrar alerta de éxito bonita
@@ -324,7 +359,8 @@ export const usePasswordRecovery = () => {
     } catch (error) {
       console.error('[usePasswordRecovery] Error al reenviar código:', error);
       
-      // Ocultar loading
+      // 🌀 OCULTAR LOADING EN ERROR
+      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
       
       const errorMessage = error.message || 'Error al reenviar el correo';

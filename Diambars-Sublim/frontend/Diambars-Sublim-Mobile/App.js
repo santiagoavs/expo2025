@@ -1,9 +1,10 @@
-// App.js - VERSIÓN COMPLETA FINAL
+// App.js - VERSIÓN SIMPLE SIN ERRORES
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Importar pantallas
+import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RecoveryPasswordScreen from './src/screens/RecoveryPasswordScreen';
 import CodeConfirmationScreen from './src/screens/CodeConfirmationScreen';
@@ -13,12 +14,12 @@ import CatalogManagementScreen from './src/screens/CatalogManagementScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
-  console.log('[App] Inicializando aplicación completa');
+  console.log('[App] Inicializando aplicación con SplashScreen simple');
   
   return (
     <NavigationContainer>
       <Stack.Navigator 
-        initialRouteName="Login"
+        initialRouteName="Splash"
         screenOptions={{ 
           headerShown: false,
           gestureEnabled: true,
@@ -53,6 +54,20 @@ export default function App() {
           },
         }}
       >
+        {/* SPLASH SCREEN SIMPLE */}
+        <Stack.Screen 
+          name="Splash" 
+          component={SplashScreen}
+          options={{
+            title: 'Cargando',
+            cardStyleInterpolator: ({ current }) => ({
+              cardStyle: {
+                opacity: current.progress,
+              },
+            }),
+          }}
+        />
+
         <Stack.Screen 
           name="Login" 
           component={LoginScreen}
