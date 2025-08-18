@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuración de la API URL (puedes usar react-native-config o hardcodearlo)
 // 🔥 CONFIGURADO PARA TU IP
-const API_URL = __DEV__ ? 'http://192.168.0.20:4000/api' : 'https://tu-api-produccion.com/api';
+const API_URL = __DEV__ ? 'http://192.168.56.1:4000/api' : 'https://tu-api-produccion.com/api';
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({

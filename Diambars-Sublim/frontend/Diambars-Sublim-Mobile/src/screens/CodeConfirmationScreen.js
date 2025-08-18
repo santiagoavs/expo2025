@@ -1,5 +1,5 @@
-// src/screens/CodeConfirmationScreen.js - VERSIÓN SIMPLE (4 DÍGITOS)
-import React, { useState, useRef, useEffect } from 'react';
+// src/screens/CodeConfirmationScreen.js - 6 DÍGITOS RESPONSIVE
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,307 +9,258 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  Alert
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+import CustomAlert from '../components/CustomAlert';
+import LoadingOverlay from '../components/LoadingOverlay';
+
+const { width, height } = Dimensions.get('window');
 
 const CodeConfirmationScreen = () => {
-  console.log('[CodeConfirmation] Renderizando pantalla');
+  console.log('[CodeConfirmation] Renderizando pantalla de verificación');
   
-  const route = useRoute();
   const navigation = useNavigation();
+  const route = useRoute();
+  const { email } = route.params || {};
   
-  // Obtener el email del estado de navegación
-  const email = route.params?.email || '';
-  const fromRecovery = route.params?.fromRecovery;
-
-  const [code, setCode] = useState(['', '', '', '']); // 4 dígitos
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [timer, setTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
-
   // Referencias para los inputs
   const inputRefs = useRef([]);
+  
+  // 🔥 HOOK CON ALERTAS BONITAS
+  const { 
+    code,
+    setCode,
+    isSubmitting, 
+    error, 
+    setError,
+    timer,
+    canResend,
+    handleVerifyCode,
+    handleResendCode,
+    handleGoBack,
+    // Nuevos estados para alertas bonitas
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert
+  } = usePasswordRecovery();
 
+  // Auto-enfoque al primer input
   useEffect(() => {
-    startTimer();
+    if (inputRefs.current[0]) {
+      setTimeout(() => inputRefs.current[0].focus(), 300);
+    }
   }, []);
 
-  const startTimer = () => {
-    setCanResend(false);
-    setTimer(30);
-    const interval = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleVerifyCode = async () => {
-    console.log('[CodeConfirmation] Verificando código:', code);
-    
-    const completeCode = code.join('');
-    if (completeCode.length !== 4) {
-      setError('Ingresa el código completo de 4 dígitos');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      // Simular verificación de código
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('[CodeConfirmation] Código verificado exitosamente');
-      
-      Alert.alert(
-        '¡Código verificado!', 
-        'Ahora puedes crear una nueva contraseña',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('NewPassword', {
-                email,
-                verificationToken: 'fake-token-123',
-                fromCodeConfirmation: true
-              });
-            }
-          }
-        ]
-      );
-      
-    } catch (err) {
-      console.error('[CodeConfirmation] Error al verificar código:', err);
-      setError('Código inválido o expirado');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    console.log('[CodeConfirmation] Reenviando código para:', email);
-    
-    if (!email) {
-      setError('No se puede reenviar sin email');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setError('');
-    
-    try {
-      // Simular reenvío
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      Alert.alert('Código reenviado', 'Se ha enviado un nuevo código a tu correo');
-      startTimer();
-      // Limpiar código actual
-      setCode(['', '', '', '']);
-      inputRefs.current[0]?.focus();
-    } catch (error) {
-      console.error('[CodeConfirmation] Error al reenviar código:', error);
-      setError('Error al reenviar el correo');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
-  // Manejar cambio en los inputs de código
-  const onCodeChange = (index, value) => {
-    console.log(`[CodeConfirmation] Input ${index} cambió a:`, value);
-    
-    // Solo permitir números
-    if (!/^\d*$/.test(value)) return;
+  // Manejo de cambio de input
+  const handleInputChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return; // Solo números
     
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
+    setError(''); // Limpiar error al escribir
     
-    console.log('[CodeConfirmation] Nuevo código:', newCode);
-    
-    // Limpiar error si existe
-    if (error) setError('');
-    
-    // Auto enfoque al siguiente input
-    if (value && index < 3) {
+    // Auto-enfoque al siguiente input
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // Manejar tecla presionada (para backspace)
-  const onKeyPress = (index, key) => {
-    console.log(`[CodeConfirmation] Tecla presionada en input ${index}:`, key);
-    
-    if (key === 'Backspace') {
-      if (!code[index] && index > 0) {
-        // Si el campo actual está vacío y presiona backspace, ir al anterior
-        inputRefs.current[index - 1]?.focus();
-      } else {
-        // Si el campo tiene contenido, borrarlo
-        const newCode = [...code];
-        newCode[index] = '';
-        setCode(newCode);
-      }
+  // Manejo de tecla backspace
+  const handleKeyPress = (index, { nativeEvent }) => {
+    if (nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
-  // Función para borrar todo el código
-  const clearCode = () => {
-    setCode(['', '', '', '']);
+  // Verificar código
+  const handleSubmit = async () => {
+    const completeCode = code.join('');
+    if (completeCode.length !== 6) {
+      setError('Ingresa los 6 dígitos del código');
+      return;
+    }
+    
+    await handleVerifyCode();
+  };
+
+  // Limpiar código
+  const handleClearCode = () => {
+    setCode(['', '', '', '', '', '']);
     setError('');
     inputRefs.current[0]?.focus();
   };
 
-  const isCodeComplete = code.every(digit => digit !== '');
+  const isCodeComplete = code.join('').length === 6;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          
-          {/* Botón de volver */}
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={handleBack}
-          >
-            <Ionicons name="arrow-back" size={20} color="#1F64BF" />
-          </TouchableOpacity>
-
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.logoPlaceholder}>
-              <Ionicons name="key" size={60} color="#040DBF" />
-            </View>
-            <Text style={styles.title}>DIAMBARS</Text>
-            <Text style={styles.subtitle}>sublimado</Text>
-          </View>
-
-          {/* Form */}
-          <View style={styles.form}>
-            <Text style={styles.formTitle}>Verifica tu código</Text>
-            <Text style={styles.formDescription}>
-              Ingresa el código de 4 dígitos enviado a tu correo
-            </Text>
+      <KeyboardAvoidingView 
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
             
-            {email && (
-              <View style={styles.emailDisplay}>
-                <Text style={styles.emailText}>{email}</Text>
-              </View>
-            )}
-            
-            {/* Error general */}
-            {error && (
-              <View style={styles.errorMessage}>
-                <Ionicons name="warning" size={20} color="#dc2626" />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-            
-            {/* Code Inputs */}
-            <View style={styles.codeInputGroup}>
-              {[...Array(4)].map((_, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => inputRefs.current[index] = ref}
-                  style={[
-                    styles.codeInput,
-                    code[index] && styles.codeInputFilled,
-                    error && !isCodeComplete && styles.codeInputError
-                  ]}
-                  value={code[index] || ''}
-                  onChangeText={(value) => onCodeChange(index, value)}
-                  onKeyPress={({ nativeEvent }) => onKeyPress(index, nativeEvent.key)}
-                  maxLength={1}
-                  keyboardType="numeric"
-                  textAlign="center"
-                  autoFocus={index === 0}
-                  selectTextOnFocus
-                  placeholder="•"
-                  placeholderTextColor="#94a3b8"
-                />
-              ))}
-            </View>
-
-            {/* Botón para limpiar código */}
+            {/* Botón de volver */}
             <TouchableOpacity 
-              style={styles.clearButton}
-              onPress={clearCode}
+              style={styles.backButton}
+              onPress={handleGoBack}
+              disabled={isSubmitting}
             >
-              <Ionicons name="refresh" size={16} color="#64748b" />
-              <Text style={styles.clearButtonText}>Limpiar código</Text>
+              <Ionicons name="arrow-back" size={20} color="#1F64BF" />
             </TouchableOpacity>
 
-            {/* Verify Button */}
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                (!isCodeComplete || isSubmitting) && styles.submitButtonDisabled
-              ]}
-              onPress={handleVerifyCode}
-              disabled={!isCodeComplete || isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Text style={styles.submitButtonText}>Verificar código</Text>
-                  <Ionicons name="checkmark-circle-outline" size={18} color="#ffffff" />
-                </>
+            {/* Header compacto */}
+            <View style={styles.header}>
+              <View style={styles.logoPlaceholder}>
+                <Ionicons name="key" size={48} color="#040DBF" />
+              </View>
+              <Text style={styles.title}>DIAMBARS</Text>
+              <Text style={styles.subtitle}>sublimado</Text>
+            </View>
+
+            {/* Form */}
+            <View style={styles.form}>
+              <Text style={styles.formTitle}>Verifica tu código</Text>
+              <Text style={styles.formDescription}>
+                Ingresa el código de 6 dígitos enviado a tu correo
+              </Text>
+              
+              {/* Email display */}
+              {email && (
+                <View style={styles.emailContainer}>
+                  <Ionicons name="mail" size={16} color="#040DBF" />
+                  <Text style={styles.emailText}>{email}</Text>
+                </View>
               )}
-            </TouchableOpacity>
+              
+              {/* Error message */}
+              {error && (
+                <View style={styles.errorMessage}>
+                  <Ionicons name="warning" size={18} color="#dc2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+              
+              {/* Code inputs - 6 dígitos */}
+              <View style={styles.codeContainer}>
+                {code.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(ref) => inputRefs.current[index] = ref}
+                    style={[
+                      styles.codeInput,
+                      digit && styles.codeInputFilled,
+                      error && styles.codeInputError
+                    ]}
+                    value={digit}
+                    onChangeText={(value) => handleInputChange(index, value)}
+                    onKeyPress={(e) => handleKeyPress(index, e)}
+                    keyboardType="numeric"
+                    maxLength={1}
+                    textAlign="center"
+                    selectionColor="#040DBF"
+                    editable={!isSubmitting}
+                  />
+                ))}
+              </View>
 
-            {/* Resend Section */}
-            <View style={styles.resendSection}>
-              <Text style={styles.resendText}>¿No recibiste el código?</Text>
-              <TouchableOpacity 
+              {/* Botón limpiar código */}
+              {code.some(digit => digit) && (
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={handleClearCode}
+                  disabled={isSubmitting}
+                >
+                  <Ionicons name="refresh" size={16} color="#64748b" />
+                  <Text style={styles.clearButtonText}>Limpiar código</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Verify Button */}
+              <TouchableOpacity
                 style={[
-                  styles.resendButton,
-                  !canResend && styles.resendButtonDisabled
+                  styles.verifyButton,
+                  (!isCodeComplete || isSubmitting) && styles.verifyButtonDisabled
                 ]}
-                onPress={handleResendCode}
-                disabled={!canResend || isSubmitting}
+                onPress={handleSubmit}
+                disabled={!isCodeComplete || isSubmitting}
+                activeOpacity={0.8}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#1F64BF" />
+                  <View style={styles.buttonContent}>
+                    <ActivityIndicator size="small" color="#ffffff" />
+                    <Text style={styles.verifyButtonText}>Verificando...</Text>
+                  </View>
                 ) : (
-                  <Ionicons name="paper-plane-outline" size={16} color={canResend ? "#1F64BF" : "#94a3b8"} />
+                  <View style={styles.buttonContent}>
+                    <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
+                    <Text style={styles.verifyButtonText}>Verificar código</Text>
+                  </View>
                 )}
-                <Text style={[
-                  styles.resendButtonText,
-                  !canResend && styles.resendButtonTextDisabled
-                ]}>
-                  {canResend ? 'Reenviar código' : `Reenviar en ${timer}s`}
-                </Text>
               </TouchableOpacity>
-            </View>
 
-            {/* Debug Info */}
-            <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>Debug Info:</Text>
-              <Text style={styles.debugText}>Código: [{code.join(', ')}]</Text>
-              <Text style={styles.debugText}>Completo: {isCodeComplete ? 'Sí' : 'No'}</Text>
-              <Text style={styles.debugText}>Email: {email}</Text>
-            </View>
+              {/* Timer y reenvío */}
+              <View style={styles.resendContainer}>
+                {timer > 0 ? (
+                  <Text style={styles.timerText}>
+                    Reenviar código en {timer}s
+                  </Text>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.resendButton}
+                    onPress={handleResendCode}
+                    disabled={isSubmitting}
+                  >
+                    <Ionicons name="paper-plane" size={16} color="#040DBF" />
+                    <Text style={styles.resendButtonText}>Reenviar código</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
+              {/* Debug Info */}
+              <View style={styles.debugInfo}>
+                <Text style={styles.debugText}>🔑 Verificación de código</Text>
+                <Text style={styles.debugText}>Código: {code.join('')}</Text>
+                <Text style={styles.debugText}>Completo: {isCodeComplete ? 'Sí' : 'No'}</Text>
+                <Text style={styles.debugText}>Timer: {timer}s</Text>
+              </View>
+
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* 🎨 ALERTA BONITA */}
+      <CustomAlert
+        visible={showAlert}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        confirmText="Continuar"
+      />
+
+      {/* 🎨 LOADING BONITO */}
+      <LoadingOverlay
+        visible={showLoading}
+        type="verifying"
+        message="Verificando código..."
+      />
     </SafeAreaView>
   );
 };
@@ -319,207 +270,205 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
+  keyboardContainer: {
+    flex: 1,
+  },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 16,
+    minHeight: height - 100,
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
+    padding: 20,
     shadowColor: '#040DBF',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
-    shadowRadius: 30,
-    elevation: 10,
+    shadowRadius: 20,
+    elevation: 8,
     position: 'relative',
+    maxWidth: 400,
+    alignSelf: 'center',
+    width: '100%',
   },
   backButton: {
     position: 'absolute',
-    top: 24,
-    left: 24,
-    width: 44,
-    height: 44,
+    top: 20,
+    left: 20,
+    width: 40,
+    height: 40,
     backgroundColor: 'rgba(31, 100, 191, 0.1)',
     borderWidth: 2,
     borderColor: 'rgba(31, 100, 191, 0.2)',
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
-    paddingTop: 40,
+    marginBottom: 24,
+    paddingTop: 30,
   },
   logoPlaceholder: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     backgroundColor: 'rgba(4, 13, 191, 0.1)',
-    borderRadius: 50,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#040DBF',
-    marginBottom: 4,
-    letterSpacing: 1.5,
+    marginBottom: 2,
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#64748b',
     fontWeight: '300',
-    letterSpacing: 4,
+    letterSpacing: 3,
     fontStyle: 'italic',
   },
   form: {
-    gap: 20,
+    gap: 16,
   },
   formTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#010326',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   formDescription: {
     fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 16,
-  },
-  emailDisplay: {
-    backgroundColor: 'rgba(31, 100, 191, 0.05)',
-    borderWidth: 2,
-    borderColor: 'rgba(31, 100, 191, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
     marginBottom: 8,
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(4, 13, 191, 0.05)',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    gap: 8,
   },
   emailText: {
     fontSize: 14,
-    fontWeight: '600',
     color: '#040DBF',
-    textAlign: 'center',
+    fontWeight: '500',
   },
   errorMessage: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(220, 38, 38, 0.05)',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#f87171',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    gap: 8,
   },
   errorText: {
-    marginLeft: 8,
     color: '#dc2626',
     fontWeight: '500',
-    fontSize: 14,
+    fontSize: 13,
+    flex: 1,
   },
-  codeInputGroup: {
+  codeContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginVertical: 20,
+    justifyContent: 'space-between',
+    marginVertical: 16,
+    paddingHorizontal: 4,
   },
   codeInput: {
-    width: 60,
-    height: 60,
+    width: (width - 120) / 6, // Responsive width
+    maxWidth: 50,
+    height: 56,
     borderWidth: 2,
-    borderColor: '#F2F2F2',
-    borderRadius: 16,
-    fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    fontSize: 20,
+    fontWeight: '600',
     backgroundColor: '#ffffff',
     color: '#010326',
+    textAlign: 'center',
   },
   codeInputFilled: {
     borderColor: '#040DBF',
     backgroundColor: 'rgba(4, 13, 191, 0.05)',
   },
   codeInputError: {
-    borderColor: '#f87171',
-    backgroundColor: 'rgba(220, 38, 38, 0.02)',
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
   },
   clearButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
     gap: 6,
+    paddingVertical: 8,
   },
   clearButtonText: {
     color: '#64748b',
     fontSize: 14,
     fontWeight: '500',
   },
-  submitButton: {
+  verifyButton: {
     backgroundColor: '#040DBF',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#040DBF',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 8,
+    shadowRadius: 12,
+    elevation: 6,
     marginTop: 8,
   },
-  submitButtonDisabled: {
-    opacity: 0.7,
+  verifyButtonDisabled: {
+    opacity: 0.6,
   },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 12,
-  },
-  resendSection: {
+  buttonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 24,
-    gap: 12,
+    gap: 8,
   },
-  resendText: {
+  verifyButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resendContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  timerText: {
     color: '#64748b',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
   resendButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(31, 100, 191, 0.05)',
-    borderWidth: 2,
-    borderColor: 'rgba(31, 100, 191, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    gap: 8,
-  },
-  resendButtonDisabled: {
-    backgroundColor: 'rgba(148, 163, 184, 0.05)',
-    borderColor: 'rgba(148, 163, 184, 0.1)',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   resendButtonText: {
+    color: '#040DBF',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F64BF',
-  },
-  resendButtonTextDisabled: {
-    color: '#94a3b8',
   },
   debugInfo: {
     marginTop: 16,
@@ -528,7 +477,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   debugText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#475569',
     fontFamily: 'monospace',
   },

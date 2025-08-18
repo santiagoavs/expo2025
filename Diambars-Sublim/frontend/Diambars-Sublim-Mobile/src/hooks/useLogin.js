@@ -1,4 +1,4 @@
-// src/hooks/useLogin.js - CON ALERTAS BONITAS
+// src/hooks/useLogin.js - CON ALERTAS BONITAS Y DELAYS
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
@@ -52,8 +52,12 @@ export const useLogin = () => {
     try {
       console.log('[useLogin] Datos del formulario:', data);
       
-      // Mostrar loading
+      // 🌀 MOSTRAR LOADING
+      console.log('🌀 [useLogin] Mostrando spinner...');
       showLoadingOverlay(true);
+      
+      // ⏰ DELAY MÍNIMO para que se vea el spinner (1 segundo)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 🔥 CONECTAR AL BACKEND
       const user = await loginService(data);
@@ -70,7 +74,11 @@ export const useLogin = () => {
       const hasValidType = allowedTypes.includes(userType);
       const hasValidRole = allowedRoles.includes(userRole);
 
-      // Ocultar loading
+      // ⏰ DELAY ANTES DE OCULTAR (medio segundo más)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 🌀 OCULTAR LOADING
+      console.log('🌀 [useLogin] Ocultando spinner...');
       showLoadingOverlay(false);
 
       if (hasValidType || hasValidRole) {
@@ -97,7 +105,8 @@ export const useLogin = () => {
     } catch (error) {
       console.error('[useLogin] Error en login:', error);
       
-      // Ocultar loading
+      // 🌀 OCULTAR LOADING EN CASO DE ERROR
+      console.log('🌀 [useLogin] Ocultando spinner por error...');
       showLoadingOverlay(false);
       
       // 🚨 MANEJO DE ERRORES CON ALERTAS BONITAS
