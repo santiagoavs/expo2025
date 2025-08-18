@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import './contact.css';
 import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
@@ -22,7 +23,288 @@ const ClockIcon = () => (
   </svg>
 );
 
+// Lista de palabras spam comunes (expandible)
+const SPAM_KEYWORDS = [
+  'viagra', 'casino', 'lottery', 'winner', 'congratulations', 'click here',
+  'buy now', 'free money', 'make money', 'work from home', 'investment',
+  'bitcoin', 'crypto', 'loan', 'debt', 'mortgage', 'insurance',
+  'sex', 'dating', 'singles', 'porn', 'xxx'
+];
+
+// URLs sospechosas (patrones)
+const SUSPICIOUS_URL_PATTERNS = [
+  /https?:\/\/[^\s]+/gi,
+  /www\.[^\s]+/gi,
+  /[a-zA-Z0-9-]+\.(com|net|org|info|biz)/gi
+];
+
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('');
+  
+  // Estados para protección anti-spam
+  const [formStartTime, setFormStartTime] = useState(null);
+  const [isHoneypotFilled, setIsHoneypotFilled] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState({ message: [], email: [], fullName: [] });
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  
+  const lastSubmissionRef = useRef(null);
+  const typingStartRef = useRef({});
+
+  // Inicializar tiempo cuando se monta el componente
+  useEffect(() => {
+    setFormStartTime(Date.now());
+    
+    // Verificar si hay un cooldown activo en localStorage
+    const lastSubmission = localStorage.getItem('lastContactSubmission');
+    if (lastSubmission) {
+      const timeDiff = Date.now() - parseInt(lastSubmission);
+      const cooldownPeriod = 5 * 60 * 1000; // 5 minutos
+      
+      if (timeDiff < cooldownPeriod) {
+        setCooldownActive(true);
+        setCooldownTime(Math.ceil((cooldownPeriod - timeDiff) / 1000));
+        
+        // Contador regresivo
+        const interval = setInterval(() => {
+          setCooldownTime(prev => {
+            if (prev <= 1) {
+              setCooldownActive(false);
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
+        return () => clearInterval(interval);
+      }
+    }
+  }, []);
+
+  // Detectar spam por contenido
+  const detectSpamContent = (text) => {
+    const lowerText = text.toLowerCase();
+    
+    // Verificar palabras spam
+    const spamWordsFound = SPAM_KEYWORDS.filter(keyword => 
+      lowerText.includes(keyword)
+    );
+    
+    // Verificar URLs sospechosas
+    const urlsFound = SUSPICIOUS_URL_PATTERNS.some(pattern => 
+      pattern.test(text)
+    );
+    
+    // Verificar texto repetitivo (más del 50% de caracteres repetidos)
+    const repetitivePattern = /(.)\1{3,}/g;
+    const isRepetitive = repetitivePattern.test(text);
+    
+    // Verificar exceso de mayúsculas (más del 70%)
+    const upperCaseCount = (text.match(/[A-Z]/g) || []).length;
+    const isExcessiveCaps = upperCaseCount > text.length * 0.7;
+    
+    return {
+      isSpam: spamWordsFound.length > 0 || urlsFound || isRepetitive || isExcessiveCaps,
+      reasons: [
+        ...(spamWordsFound.length > 0 ? [`Palabras sospechosas: ${spamWordsFound.join(', ')}`] : []),
+        ...(urlsFound ? ['Contiene URLs'] : []),
+        ...(isRepetitive ? ['Texto repetitivo'] : []),
+        ...(isExcessiveCaps ? ['Exceso de mayúsculas'] : [])
+      ]
+    };
+  };
+
+  // Detectar velocidad de escritura sospechosa
+  const detectSuspiciousTyping = () => {
+    // Si escribió muy rápido (más de 10 caracteres por segundo en promedio)
+    const avgSpeed = Object.values(typingSpeed).flat().reduce((acc, speed) => acc + speed, 0) / 
+                    Object.values(typingSpeed).flat().length;
+    
+    return avgSpeed > 10; // más de 10 caracteres por segundo es sospechoso
+  };
+
+  // Manejar cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    const now = Date.now();
+    
+    // Calcular velocidad de escritura
+    if (!typingStartRef.current[name]) {
+      typingStartRef.current[name] = now;
+    } else {
+      const timeDiff = (now - typingStartRef.current[name]) / 1000; // segundos
+      const charDiff = value.length - formData[name].length;
+      
+      if (timeDiff > 0 && charDiff > 0) {
+        const speed = charDiff / timeDiff;
+        setTypingSpeed(prev => ({
+          ...prev,
+          [name]: [...prev[name].slice(-9), speed] // mantener últimas 10 mediciones
+        }));
+      }
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Limpiar el estado de envío si el usuario está editando
+    if (submitStatus) {
+      setSubmitStatus(null);
+      setStatusMessage('');
+    }
+  };
+
+  // Manejar campo honeypot (invisible para usuarios, visible para bots)
+  const handleHoneypotChange = (e) => {
+    if (e.target.value.trim() !== '') {
+      setIsHoneypotFilled(true);
+    }
+  };
+
+  // Validaciones anti-spam
+  const validateAntiSpam = () => {
+    const now = Date.now();
+    
+    // 1. Verificar honeypot
+    if (isHoneypotFilled) {
+      return { isValid: false, message: 'Actividad sospechosa detectada.' };
+    }
+    
+    // 2. Verificar tiempo mínimo (al menos 10 segundos para llenar el formulario)
+    const timeTaken = (now - formStartTime) / 1000;
+    if (timeTaken < 10) {
+      return { isValid: false, message: 'Por favor, tómate tu tiempo para completar el formulario.' };
+    }
+    
+    // 3. Verificar contenido spam
+    const messageSpamCheck = detectSpamContent(formData.message);
+    const nameSpamCheck = detectSpamContent(formData.fullName);
+    
+    if (messageSpamCheck.isSpam || nameSpamCheck.isSpam) {
+      return { 
+        isValid: false, 
+        message: 'El contenido del mensaje no cumple con nuestras políticas. Por favor, revisa tu mensaje.' 
+      };
+    }
+    
+    // 4. Verificar velocidad de escritura
+    if (detectSuspiciousTyping()) {
+      return { isValid: false, message: 'Velocidad de escritura sospechosa detectada.' };
+    }
+    
+    // 5. Verificar cooldown
+    if (cooldownActive) {
+      return { 
+        isValid: false, 
+        message: `Debes esperar ${Math.floor(cooldownTime / 60)}:${(cooldownTime % 60).toString().padStart(2, '0')} antes de enviar otro mensaje.` 
+      };
+    }
+    
+    return { isValid: true };
+  };
+
+  // Manejar envío del formulario
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Validaciones básicas del frontend
+  if (!formData.fullName.trim() || !formData.email.trim() || !formData.message.trim()) {
+    setSubmitStatus('error');
+    setStatusMessage('Todos los campos son obligatorios.');
+    return;
+  }
+
+  if (formData.message.trim().length < 10) {
+    setSubmitStatus('error');
+    setStatusMessage('El mensaje debe tener al menos 10 caracteres.');
+    return;
+  }
+
+  // Validaciones anti-spam
+  const spamValidation = validateAntiSpam();
+  if (!spamValidation.isValid) {
+    setSubmitStatus('error');
+    setStatusMessage(spamValidation.message);
+    return;
+  }
+
+  setIsSubmitting(true);
+  setSubmitStatus(null);
+  setStatusMessage('');
+
+  try {
+    const response = await fetch('http://localhost:4000/api/contact/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json' // Asegura que esperas JSON
+      },
+      body: JSON.stringify({
+        ...formData,
+        _metadata: {
+          formStartTime,
+          submitTime: Date.now(),
+          userAgent: navigator.userAgent,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        }
+      })
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Respuesta no es JSON');
+    }
+
+    // Verificar si la respuesta es OK (status 200-299)
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    // Intentar parsear JSON solo si hay contenido
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+
+    if (data.success) {
+      setSubmitStatus('success');
+      setStatusMessage(data.message || 'Mensaje enviado con éxito');
+      
+      localStorage.setItem('lastContactSubmission', Date.now().toString());
+      setCooldownActive(true);
+      setCooldownTime(300);
+      
+      setFormData({
+        fullName: '',
+        email: '',
+        message: ''
+      });
+      
+      setFormStartTime(Date.now());
+      setTypingSpeed({ message: [], email: [], fullName: [] });
+      typingStartRef.current = {};
+      
+    } else {
+      setSubmitStatus('error');
+      setStatusMessage(data.message || 'Error al enviar el mensaje.');
+    }
+  } catch (error) {
+    console.error('Error al enviar formulario:', error);
+    setSubmitStatus('error');
+    setStatusMessage('Error al enviar el formulario. Por favor, intenta nuevamente.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   return (
     <>
       <main className="contact-page">
@@ -32,8 +314,8 @@ const Contact = () => {
               <div className="contact-info-item">
                 <LocationIcon />
                 <div className="contact-info-content">
-                  <h3>Location</h3>
-                  <p>123 Business Street<br />Ciudad, País 12345</p>
+                  <h3>Ubicación</h3>
+                  <p>Avenida Aguilares 218<br />San Salvador CP, San Salvador 1101</p>
                 </div>
               </div>
               
@@ -48,8 +330,8 @@ const Contact = () => {
               <div className="contact-info-item">
                 <ClockIcon />
                 <div className="contact-info-content">
-                  <h3>Hours</h3>
-                  <p>Lun - Vie: 9:00 AM<br />Sáb: 10:00 AM</p>
+                  <h3>Horarios</h3>
+                  <p>Lun - Vie: 7:00 AM - 3:45 PM</p>
                 </div>
               </div>
               </div>
@@ -61,15 +343,71 @@ const Contact = () => {
                 <h4 className="contact-subtitle">¡Contáctanos!</h4>
               </div>
               
-              <form className="contact-form">
+              {/* Mensaje de estado */}
+              {submitStatus && (
+                <div className={`status-message ${submitStatus}`}>
+                  {statusMessage}
+                </div>
+              )}
+              
+              {/* Indicador de cooldown */}
+              {cooldownActive && (
+                <div className="cooldown-message">
+                  Siguiente mensaje disponible en: {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+                </div>
+              )}
+              
+              <form className="contact-form" onSubmit={handleSubmit}>
+                {/* Campo honeypot - invisible para usuarios, visible para bots */}
+                <input
+                  type="text"
+                  name="website"
+                  style={{ display: 'none' }}
+                  onChange={handleHoneypotChange}
+                  tabIndex="-1"
+                  autoComplete="off"
+                />
+                
                 <h2 className='contact-label'>Nombre completo</h2>
-                  <input type="text" name="fullName" required />
+                <input 
+                  type="text" 
+                  name="fullName" 
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required 
+                  disabled={isSubmitting || cooldownActive}
+                  placeholder="Ingresa tu nombre completo"
+                />
+                
                 <h2 className='contact-label'>Correo electrónico</h2>
-                  <input type="email" name="email" required />
+                <input 
+                  type="email" 
+                  name="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required 
+                  disabled={isSubmitting || cooldownActive}
+                  placeholder="tu.email@ejemplo.com"
+                />
+                
                 <h2 className='contact-label'>Comentario o mensaje</h2>
-                  <textarea name="message" rows="4" required />
+                <textarea 
+                  name="message" 
+                  rows="4" 
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  required 
+                  disabled={isSubmitting || cooldownActive}
+                  placeholder="Cuéntanos en qué podemos ayudarte..."
+                />
 
-                <button type="submit" className="send-button">Enviar</button>
+                <button 
+                  type="submit" 
+                  className="send-button"
+                  disabled={isSubmitting || cooldownActive}
+                >
+                  {isSubmitting ? 'Enviando...' : cooldownActive ? 'En espera...' : 'Enviar'}
+                </button>
               </form>
             </div>
         </div>

@@ -193,7 +193,137 @@ export async function sendWelcomeEmail(email, userName) {
   }
 }
 
+// NUEVA FUNCIÓN: Enviar correo de contacto
+export async function sendContactEmail(contactData) {
+  const { fullName, email, message } = contactData;
+  
+  console.log(' Enviando email de contacto...');
+  
+  /* <img src="${logoUrl}" alt="Diambars" style="height: 60px; margin-bottom: 20px; filter: brightness(0) invert(1);" /> */
+  
+  try {
+    const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:5173';
+    const logoUrl = `${baseUrl}/logo.png`;
+    const currentYear = new Date().getFullYear();
+    
+    const html = `
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: white; padding: 40px 30px 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">Nueva Consulta</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Formulario de Contacto - Diambars</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+          <!-- Información del Cliente -->
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #06AED5;">
+            <h2 style="color: #593D3B; margin: 0 0 20px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
+              Información del Cliente
+            </h2>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #593D3B; width: 120px;">Nombre:</td>
+                <td style="padding: 8px 0; color: #495057;">${fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #593D3B;">Email:</td>
+                <td style="padding: 8px 0;">
+                  <a href="mailto:${email}" style="color: #06AED5; text-decoration: none; font-weight: 500;">${email}</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #593D3B;">Fecha:</td>
+                <td style="padding: 8px 0; color: #495057;">
+                  ${new Date().toLocaleString('es-ES', {
+                    timeZone: 'America/El_Salvador',
+                    year: 'numeric',
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Mensaje -->
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; border-left: 4px solid #E5446D;">
+            <h2 style="color: #593D3B; margin: 0 0 15px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
+              Mensaje
+            </h2>
+            
+            <div style="background: rgba(255, 246, 226, 0.8); padding: 20px; border-radius: 8px; border: 1px solid rgba(230, 207, 156, 0.3); font-size: 16px; line-height: 1.6; color: #593D3B; white-space: pre-wrap;">${message}</div>
+          </div>
+
+          <!-- Acciones Rápidas -->
+          <div style="text-align: center; margin-top: 30px; padding: 25px; background: linear-gradient(135deg, rgba(6, 174, 213, 0.1), rgba(255, 241, 208, 0.1)); border-radius: 12px;">
+            <h3 style="color: #593D3B; margin: 0 0 20px; font-size: 18px;">Acciones Rápidas</h3>
+            
+            <div style="display: flex; justify-content: center;"> 
+              <a href="mailto:${email}?subject=Re: Tu consulta en Diambars&body=Hola ${fullName},%0A%0AGracias por contactarnos. En respuesta a tu consulta:%0A%0A"${message.substring(0, 50)}..."%0A%0A" style="display: inline-block; background: linear-gradient(135deg, #06AED5 0%, #086788 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(6,174,213,0.3);">
+                Responder por Email
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0 0 10px; color: #6c757d; font-size: 13px;">
+            Este correo fue generado automáticamente desde el formulario de contacto de <strong>Diambars</strong>
+          </p>
+          <p style="margin: 0; color: #6c757d; font-size: 13px; opacity: 0.8;">
+            Para responder, usa el botón "Responder por Email" o contesta directamente a este correo
+          </p>
+          <div style="margin-top: 15px;">
+            <p style="font-size: 13px; color: #6c757d; margin: 0;">
+              &copy; ${currentYear} Diambars. Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+
+    const mailOptions = {
+      from: config.email.from,
+      to: "diambars.sublim@gmail.com", // Email de destino fijo
+      replyTo: email, // Para poder responder directamente al usuario
+      subject: `Nueva consulta de ${fullName} - Diambars`,
+      html,
+      text: `
+        Nueva consulta de contacto - Diambars
+        
+        Información del Cliente:
+        - Nombre: ${fullName}
+        - Email: ${email}
+        - Fecha: ${new Date().toLocaleString('es-ES', { timeZone: 'America/El_Salvador' })}
+        
+        Mensaje:
+        ${message}
+        
+        Responde directamente a este email para contactar al cliente.
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Email de contacto enviado exitosamente:', result.messageId);
+    
+    return result;
+    
+  } catch (error) {
+    console.error('Error enviando email de contacto:', error);
+    throw new Error(`Error al enviar email de contacto: ${error.message}`);
+  }
+}
+
 export default {
   sendVerificationEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendContactEmail
 };
