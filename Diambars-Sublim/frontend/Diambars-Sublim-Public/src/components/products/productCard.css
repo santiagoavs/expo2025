@@ -1,8 +1,8 @@
 .product-card {
-    position: relative;
+  position: relative;
   width: 100%;
-  max-width: 280px; /* Ancho máximo más generoso */
-  height: 270px; /* Altura aumentada para mejor proporción */
+  max-width: 280px;
+  height: 270px;
   border-radius: 16px;
   padding: 1.2rem;
   display: flex;
@@ -145,7 +145,7 @@
 @media (min-width: 1061px) and (max-width: 1200px) {
   .product-card {
     height: 280px;
-    max-width: 260px;
+    width: 210px;
   }
   
   .product-image {
@@ -205,7 +205,7 @@
 @media (min-width: 480px) and (max-width: 599px) {
   .product-card {
     height: 200px;
-    width: 120px;
+    width: 150px;
     max-width: 160px;
     border-radius: 14px;
   }
@@ -241,7 +241,7 @@
 @media (max-width: 359px) {
   .product-card {
     height: 160px;
-    max-width: 110px;
+    width: 130px;
     padding: 0.6rem;
   }
   

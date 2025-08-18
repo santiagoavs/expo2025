@@ -1,5 +1,7 @@
+// src/pages/catalogue/categoryView.jsx
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import SidebarFilters from '../../components/filters/SidebarFilters';
+import SidebarFilters from '../../components/filters/sidebarFilters';
 import ProductCard from '../../components/products/ProductCard';
 import Footer from '../../components/UI/footer/footer';
 import './categoryView.css';
@@ -14,17 +16,26 @@ const dummyProducts = [
   { name: 'Polo', image: '/images/products/polo.png' },
   { name: 'Deportiva', image: '/images/products/deportiva.png' },
   { name: 'Cuello Mao', image: '/images/products/cuello-mao.png' },
-
 ];
 
 export default function CategoryView() {
   const { categoria } = useParams();
+  const [activeFilters, setActiveFilters] = useState({});
+
+  const handleFiltersChange = (newFilters) => {
+    console.log('Filtros actualizados:', newFilters);
+    setActiveFilters(newFilters);
+    // Aquí puedes agregar lógica para filtrar los productos
+  };
 
   return (
     <div className='category-page'>
       <div className="category-content-wrapper">
         <div className="category-container">
-          <SidebarFilters />
+          <SidebarFilters 
+            onFiltersChange={handleFiltersChange}
+            activeFilters={activeFilters}
+          />
           <div className="product-grid">
             {dummyProducts.map((prod, idx) => (
               <ProductCard
