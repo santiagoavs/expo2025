@@ -1,313 +1,225 @@
-// screens/LoginScreen.js - REACT NATIVE VERSION
-import React, { useEffect } from 'react';
+// src/screens/LoginScreen.js - CON ALERTAS BONITAS Y SPINNER DE NAVEGACIÓN
+import React from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
-  StatusBar,
-  Image,
-  ActivityIndicator,
-  Dimensions
+  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Controller } from 'react-hook-form';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming,
-  interpolate,
-  Easing 
-} from 'react-native-reanimated';
+import { Controller } from 'react-hook-form';
 import { useLogin } from '../hooks/useLogin';
-
-const { width, height } = Dimensions.get('window');
+import CustomAlert from '../components/CustomAlert';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 const LoginScreen = () => {
-  console.log("[LoginScreen-RN] Rendering login screen");
+  console.log("[LoginScreen] Renderizando pantalla con alertas bonitas");
   
-  const route = useRoute();
   const navigation = useNavigation();
   
-  const {
-    control,
-    handleSubmit,
-    errors,
-    isSubmitting,
-    onSubmit,
-    validateEmail,
-    validatePassword
+  // 🔥 HOOK CON ALERTAS BONITAS
+  const { 
+    control, 
+    handleSubmit, 
+    onSubmit, 
+    errors, 
+    isSubmitting, 
+    validateEmail, 
+    validatePassword,
+    // Nuevos estados para alertas bonitas
+    showAlert,
+    showLoading,
+    alertConfig,
+    setShowAlert,
+    showLoadingOverlay
   } = useLogin();
 
-  // Animaciones
-  const logoAnimation = useSharedValue(0);
-  const particleAnimation = useSharedValue(0);
-
-  useEffect(() => {
-    // Animación del logo
-    logoAnimation.value = withRepeat(
-      withTiming(1, {
-        duration: 3000,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true
-    );
-
-    // Animación de partículas
-    particleAnimation.value = withRepeat(
-      withTiming(1, {
-        duration: 8000,
-        easing: Easing.linear,
-      }),
-      -1,
-      false
-    );
-  }, []);
-
-  const logoAnimatedStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(logoAnimation.value, [0, 1], [0, -8]);
-    const rotate = interpolate(logoAnimation.value, [0, 1], [0, 3]);
-    
-    return {
-      transform: [
-        { translateY },
-        { rotate: `${rotate}deg` }
-      ],
-    };
+  // 🔍 DEBUG LOGS
+  console.log('🔍 [LoginScreen] Estados actuales:', {
+    showAlert,
+    showLoading,
+    isSubmitting,
+    errorsCount: Object.keys(errors).length
   });
 
-  // Obtener mensaje de éxito si viene de recuperación
-  const successMessage = route.params?.message;
-  const messageType = route.params?.type;
-
-  const handleFormSubmit = async (data) => {
-    await onSubmit(data);
+  // 🌀 NAVEGACIÓN CON SPINNER
+  const handleRecoveryPress = () => {
+    console.log('[LoginScreen] Navegando a RecoveryPassword con spinner...');
+    
+    // Mostrar spinner durante navegación
+    showLoadingOverlay(true);
+    
+    setTimeout(() => {
+      navigation.navigate('RecoveryPassword');
+      
+      // Ocultar spinner después de navegar
+      setTimeout(() => {
+        showLoadingOverlay(false);
+      }, 300);
+    }, 1000); // 1 segundo de spinner
   };
 
-  const navigateToRecovery = () => {
-    navigation.navigate('RecoveryPassword');
-  };
+  console.log("[LoginScreen] Renderizando UI");
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      {/* Partículas de fondo animadas */}
-      <View style={styles.particlesContainer}>
-        {[...Array(12)].map((_, i) => (
-          <Animated.View
-            key={i}
-            style={[
-              styles.particle,
-              {
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                opacity: 0.06 + Math.random() * 0.04,
-              }
-            ]}
-          />
-        ))}
-      </View>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Card principal */}
-          <View style={styles.card}>
-            
-            {/* Sección de branding */}
-            <View style={styles.brandSection}>
-              <Animated.View style={[styles.logoWrapper, logoAnimatedStyle]}>
-                <View style={styles.logoGlow} />
-                <Image 
-                  source={require('../assets/logo.png')} // Ajusta la ruta
-                  style={styles.logo}
-                  resizeMode="contain"
-                  onError={() => console.log('Logo no encontrado')}
-                />
-              </Animated.View>
-              
-              <View style={styles.brandText}>
-                <Text style={styles.brandTitle}>DIAMBARS</Text>
-                <Text style={styles.brandSubtitle}>sublimado</Text>
-                <Text style={styles.brandTagline}>Acceso Administrativo</Text>
-              </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          
+          {/* Header - IGUAL QUE ANTES */}
+          <View style={styles.header}>
+            <View style={styles.logoPlaceholder}>
+              <Ionicons name="diamond" size={60} color="#040DBF" />
             </View>
-
-            {/* Sección del formulario */}
-            <View style={styles.formSection}>
-              <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>Iniciar Sesión</Text>
-                <Text style={styles.formDescription}>
-                  Accede a tu panel administrativo
-                </Text>
-              </View>
-              
-              {/* Mensaje de éxito de recuperación */}
-              {successMessage && messageType === 'success' && (
-                <View style={styles.successMessage}>
-                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                  <Text style={styles.successText}>{successMessage}</Text>
-                </View>
-              )}
-              
-              {/* Error general */}
-              {errors.root && (
-                <View style={styles.errorMessage}>
-                  <Ionicons name="warning" size={20} color="#dc2626" />
-                  <Text style={styles.errorText}>{errors.root.message}</Text>
-                </View>
-              )}
-              
-              {/* Formulario */}
-              <View style={styles.form}>
-                {/* Campo Email */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Correo electrónico</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons 
-                      name="mail-outline" 
-                      size={20} 
-                      color="#94a3b8" 
-                      style={styles.inputIcon} 
-                    />
-                    <Controller
-                      control={control}
-                      name="email"
-                      rules={{
-                        required: 'Este campo es requerido',
-                        validate: validateEmail
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                          style={[
-                            styles.input,
-                            errors.email && styles.inputError
-                          ]}
-                          placeholder="admin@diambars.com"
-                          placeholderTextColor="#94a3b8"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          keyboardType="email-address"
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                        />
-                      )}
-                    />
-                  </View>
-                  {errors.email && (
-                    <View style={styles.fieldError}>
-                      <Ionicons name="warning" size={16} color="#dc2626" />
-                      <Text style={styles.fieldErrorText}>
-                        {errors.email.message}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                
-                {/* Campo Contraseña */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Contraseña</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons 
-                      name="lock-closed-outline" 
-                      size={20} 
-                      color="#94a3b8" 
-                      style={styles.inputIcon} 
-                    />
-                    <Controller
-                      control={control}
-                      name="password"
-                      rules={{
-                        required: 'Este campo es requerido',
-                        validate: validatePassword
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                          style={[
-                            styles.input,
-                            errors.password && styles.inputError
-                          ]}
-                          placeholder="••••••••"
-                          placeholderTextColor="#94a3b8"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          secureTextEntry
-                        />
-                      )}
-                    />
-                  </View>
-                  {errors.password && (
-                    <View style={styles.fieldError}>
-                      <Ionicons name="warning" size={16} color="#dc2626" />
-                      <Text style={styles.fieldErrorText}>
-                        {errors.password.message}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                
-                {/* Link de recuperación */}
-                <TouchableOpacity 
-                  style={styles.recoveryLink}
-                  onPress={navigateToRecovery}
-                >
-                  <Text style={styles.recoveryText}>
-                    ¿Olvidaste tu contraseña?
-                  </Text>
-                </TouchableOpacity>
-                
-                {/* Botón de envío */}
-                <TouchableOpacity
-                  style={[
-                    styles.submitButton,
-                    isSubmitting && styles.submitButtonDisabled
-                  ]}
-                  onPress={handleSubmit(handleFormSubmit)}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Text style={styles.submitButtonText}>Iniciar sesión</Text>
-                      <Ionicons name="arrow-forward" size={18} color="#ffffff" />
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Footer */}
-              <View style={styles.formFooter}>
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>Seguro y confiable</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-                <Text style={styles.footerText}>
-                  Sistema protegido con encriptación de última generación
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.title}>DIAMBARS</Text>
+            <Text style={styles.subtitle}>Acceso Administrativo</Text>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+          {/* Form - CONECTADO AL HOOK */}
+          <View style={styles.form}>
+            <Text style={styles.formTitle}>Iniciar Sesión</Text>
+            
+            {/* Email Input - CON REACT HOOK FORM */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Correo electrónico</Text>
+              <Controller
+                control={control}
+                name="email"
+                rules={{ validate: validateEmail }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input, 
+                      errors.email && styles.inputError
+                    ]}
+                    placeholder="admin@diambars.com"
+                    value={value}
+                    onChangeText={(text) => {
+                      console.log('[LoginScreen] Email cambiado:', text);
+                      onChange(text);
+                    }}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isSubmitting}
+                  />
+                )}
+              />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
+            </View>
+
+            {/* Password Input - CON REACT HOOK FORM */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Contraseña</Text>
+              <Controller
+                control={control}
+                name="password"
+                rules={{ validate: validatePassword }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input, 
+                      errors.password && styles.inputError
+                    ]}
+                    placeholder="••••••••"
+                    value={value}
+                    onChangeText={(text) => {
+                      console.log('[LoginScreen] Password cambiado');
+                      onChange(text);
+                    }}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    editable={!isSubmitting}
+                  />
+                )}
+              />
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password.message}</Text>
+              )}
+            </View>
+
+            {/* Error del formulario */}
+            {errors.root && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="warning" size={20} color="#ef4444" />
+                <Text style={styles.errorText}>{errors.root.message}</Text>
+              </View>
+            )}
+
+            {/* Recovery Link - CON SPINNER */}
+            <TouchableOpacity onPress={handleRecoveryPress} disabled={isSubmitting || showLoading}>
+              <Text style={[
+                styles.recoveryText, 
+                (isSubmitting || showLoading) && styles.disabledText
+              ]}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </TouchableOpacity>
+
+            {/* Login Button - MEJORADO CON EFECTOS */}
+            <TouchableOpacity
+              style={[
+                styles.loginButton, 
+                (isSubmitting || showLoading) && styles.loginButtonDisabled
+              ]}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isSubmitting || showLoading}
+              activeOpacity={0.8}
+            >
+              <View style={styles.buttonContent}>
+                {isSubmitting ? (
+                  <>
+                    <View style={styles.loadingDot} />
+                    <Text style={styles.loginButtonText}>Iniciando...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="log-in-outline" size={20} color="#ffffff" />
+                    <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Debug Info - ACTUALIZADO */}
+            <View style={styles.debugInfo}>
+              <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
+              <Text style={styles.debugText}>Estado: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
+              <Text style={styles.debugText}>showLoading: {showLoading ? 'TRUE' : 'FALSE'}</Text>
+              <Text style={styles.debugText}>showAlert: {showAlert ? 'TRUE' : 'FALSE'}</Text>
+              <Text style={styles.debugText}>Errores: {Object.keys(errors).length}</Text>
+            </View>
+
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* 🎨 ALERTA BONITA */}
+      <CustomAlert
+        visible={showAlert}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onConfirm={alertConfig.onConfirm}
+        confirmText="Continuar"
+      />
+
+      {/* 🎨 LOADING BONITO - CON DEBUG */}
+      {console.log('🌀 [LoginScreen] Punto antes de LoadingOverlay, showLoading:', showLoading)}
+      <LoadingOverlay
+        visible={showLoading}
+        type="login"
+        message={showLoading ? (isSubmitting ? "Verificando credenciales..." : "Cargando...") : ""}
+      />
     </SafeAreaView>
   );
 };
@@ -315,252 +227,146 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
   },
-  particlesContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  particle: {
-    position: 'absolute',
-    width: 4,
-    height: 4,
-    backgroundColor: '#1F64BF',
-    borderRadius: 2,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  content: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 24,
-    shadowColor: '#040DBF',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 30,
-    elevation: 10,
-    overflow: 'hidden',
-    zIndex: 2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  brandSection: {
+  header: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-    backgroundColor: 'rgba(4, 13, 191, 0.02)',
+    marginBottom: 32,
   },
-  logoWrapper: {
-    position: 'relative',
-    marginBottom: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoGlow: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    backgroundColor: 'rgba(4, 13, 191, 0.1)',
-    borderRadius: 60,
-    zIndex: -1,
-  },
-  logo: {
+  logoPlaceholder: {
     width: 100,
     height: 100,
-  },
-  brandText: {
+    backgroundColor: 'rgba(4, 13, 191, 0.1)',
+    borderRadius: 50,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
-  brandTitle: {
-    fontSize: 32,
+  title: {
+    fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 2,
     color: '#040DBF',
-    marginBottom: 5,
+    marginBottom: 4,
   },
-  brandSubtitle: {
-    fontSize: 16,
-    fontWeight: '300',
-    color: '#64748b',
-    letterSpacing: 4,
-    fontStyle: 'italic',
-    marginBottom: 10,
-  },
-  brandTagline: {
+  subtitle: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#010326',
-    opacity: 0.8,
-  },
-  formSection: {
-    padding: 40,
-  },
-  formHeader: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  formTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#010326',
-    marginBottom: 8,
-  },
-  formDescription: {
-    fontSize: 16,
     color: '#64748b',
-    textAlign: 'center',
-  },
-  successMessage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-    borderWidth: 2,
-    borderColor: '#34d399',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-  },
-  successText: {
-    marginLeft: 8,
-    color: '#10b981',
-    fontWeight: '500',
-  },
-  errorMessage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(220, 38, 38, 0.05)',
-    borderWidth: 2,
-    borderColor: '#f87171',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-  },
-  errorText: {
-    marginLeft: 8,
-    color: '#dc2626',
     fontWeight: '500',
   },
   form: {
-    gap: 20,
+    gap: 16,
   },
-  formGroup: {
-    marginBottom: 4,
+  formTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#010326',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  inputGroup: {
+    gap: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: '#010326',
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
   },
   input: {
-    flex: 1,
-    height: 56,
     borderWidth: 2,
-    borderColor: '#F2F2F2',
-    borderRadius: 16,
-    paddingLeft: 50,
-    paddingRight: 16,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    color: '#010326',
   },
   inputError: {
-    borderColor: '#f87171',
-    backgroundColor: 'rgba(220, 38, 38, 0.02)',
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
   },
-  fieldError: {
+  errorText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    backgroundColor: '#fef2f2',
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
+    gap: 8,
   },
-  fieldErrorText: {
-    marginLeft: 8,
-    color: '#dc2626',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  recoveryLink: {
-    alignSelf: 'center',
-    paddingVertical: 8,
-    marginVertical: 8,
+  disabledText: {
+    opacity: 0.5,
   },
   recoveryText: {
-    color: '#1F64BF',
+    color: '#040DBF',
     fontSize: 14,
     fontWeight: '500',
+    textAlign: 'center',
+    marginVertical: 8,
   },
-  submitButton: {
+  loginButton: {
     backgroundColor: '#040DBF',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#040DBF',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 8,
     marginTop: 8,
+    shadowColor: '#040DBF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  submitButtonDisabled: {
+  loginButtonDisabled: {
     opacity: 0.7,
   },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 12,
-  },
-  formFooter: {
-    marginTop: 32,
-  },
-  divider: {
+  buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    gap: 8,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#F2F2F2',
+  loginButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  dividerText: {
-    color: '#64748b',
+  loadingDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderTopColor: 'transparent',
+  },
+  debugInfo: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+  },
+  debugText: {
     fontSize: 12,
-    fontWeight: '500',
-    paddingHorizontal: 20,
-  },
-  footerText: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#94a3b8',
-    lineHeight: 16,
+    color: '#475569',
+    fontFamily: 'monospace',
   },
 });
 

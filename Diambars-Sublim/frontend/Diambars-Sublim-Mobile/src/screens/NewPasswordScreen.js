@@ -1,445 +1,289 @@
-// screens/NewPasswordScreen.js - REACT NATIVE VERSION
-import React, { useState, useEffect } from 'react';
+// src/screens/NewPasswordScreen.js - VERSIÓN SIMPLE
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StatusBar,
-  Image,
   ActivityIndicator,
-  Dimensions
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Controller, useForm } from 'react-hook-form';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming,
-  interpolate,
-  Easing 
-} from 'react-native-reanimated';
-import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
-
-const { width, height } = Dimensions.get('window');
 
 const NewPasswordScreen = () => {
+  console.log('[NewPassword] Renderizando pantalla');
+  
   const route = useRoute();
   const navigation = useNavigation();
-  const { 
-    handleResetPassword,
-    isSubmitting,
-    error,
-    verificationToken
-  } = usePasswordRecovery();
-  
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   
   // Obtener datos del estado de navegación
-  const stateEmail = route.params?.email;
-  const stateToken = route.params?.verificationToken;
+  const email = route.params?.email;
+  const verificationToken = route.params?.verificationToken;
   const fromCodeConfirmation = route.params?.fromCodeConfirmation;
   
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors }
-  } = useForm();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  // Animaciones
-  const logoAnimation = useSharedValue(0);
-
-  useEffect(() => {
-    logoAnimation.value = withRepeat(
-      withTiming(1, {
-        duration: 6000,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true
-    );
-  }, []);
-
-  const logoAnimatedStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(logoAnimation.value, [0, 1], [0, -10]);
-    const rotate = interpolate(logoAnimation.value, [0, 1], [0, 4]);
-    
-    return {
-      transform: [
-        { translateY },
-        { rotate: `${rotate}deg` }
-      ],
-    };
-  });
-
-  const requirements = [
-    { id: 'length', label: 'Al menos 8 caracteres', regex: /.{8,}/ },
-    { id: 'lowercase', label: 'Al menos una minúscula', regex: /[a-z]/ },
-    { id: 'uppercase', label: 'Al menos una mayúscula', regex: /[A-Z]/ },
-    { id: 'number', label: 'Al menos un número', regex: /[0-9]/ },
-    { id: 'special', label: 'Al menos un carácter especial', regex: /[!@#$%^&*]/ }
-  ];
-
-  const password = watch("password");
-  
-  // Verificar que tenemos el token de verificación
-  useEffect(() => {
-    const currentToken = stateToken || verificationToken;
-    
-    if (!currentToken) {
-      console.error('No se encontró token de verificación - Redirigiendo...');
-      navigation.navigate('CodeConfirmation', {
-        error: 'Debes verificar el código primero',
-        email: stateEmail 
-      });
-      return;
-    }
-
-    // Verificar que venimos del flujo correcto
-    if (!fromCodeConfirmation && !verificationToken) {
-      console.warn('Acceso directo a nueva contraseña sin verificación');
-      navigation.navigate('RecoveryPassword', {
-        error: 'Debes completar el proceso de verificación' 
-      });
-      return;
-    }
-  }, [stateToken, verificationToken, fromCodeConfirmation, stateEmail, navigation]);
-
-  useEffect(() => {
+  const validateForm = () => {
     if (!password) {
-      setPasswordStrength(0);
-      return;
+      setError('La contraseña es requerida');
+      return false;
     }
     
-    const metRequirements = requirements.filter(req => 
-      req.regex.test(password)
-    ).length;
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return false;
+    }
     
-    setPasswordStrength((metRequirements / requirements.length) * 100);
-  }, [password, requirements]);
-
-  const getStrengthColor = () => {
-    if (passwordStrength <= 25) return '#dc2626';
-    if (passwordStrength <= 50) return '#f59e0b';
-    if (passwordStrength <= 75) return '#eab308';
-    return '#10b981';
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return false;
+    }
+    
+    return true;
   };
 
-  const getStrengthText = () => {
-    if (passwordStrength <= 25) return 'Muy débil';
-    if (passwordStrength <= 50) return 'Débil';
-    if (passwordStrength <= 75) return 'Media';
-    return 'Fuerte';
-  };
-
-  const onSubmit = async (data) => {
-    const currentToken = stateToken || verificationToken;
+  const handleResetPassword = async () => {
+    console.log('[NewPassword] Iniciando reset de contraseña');
     
-    if (!currentToken) {
-      console.error('No hay token de verificación');
-      navigation.navigate('CodeConfirmation', {
-        error: 'Token de verificación expirado',
-        email: stateEmail 
-      });
+    if (!validateForm()) {
       return;
     }
 
-    // El hook ya maneja la navegación internamente
-    await handleResetPassword(data.password);
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      // Simular actualización de contraseña
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('[NewPassword] Contraseña actualizada exitosamente');
+      
+      Alert.alert(
+        '¡Contraseña actualizada!', 
+        'Tu contraseña ha sido cambiada exitosamente',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navegar al login con mensaje de éxito
+              navigation.reset({
+                index: 0,
+                routes: [{ 
+                  name: 'Login', 
+                  params: { 
+                    message: 'Contraseña actualizada correctamente',
+                    type: 'success'
+                  }
+                }],
+              });
+            }
+          }
+        ]
+      );
+      
+    } catch (err) {
+      console.error('[NewPassword] Error al actualizar contraseña:', err);
+      setError('Error al actualizar contraseña');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
-    navigation.navigate('CodeConfirmation', {
-      email: stateEmail,
-      fromRecovery: true 
-    });
+    navigation.goBack();
   };
+
+  const isFormValid = password && confirmPassword && password === confirmPassword && password.length >= 6;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
-      {/* Partículas de fondo animadas */}
-      <View style={styles.particlesContainer}>
-        {[...Array(10)].map((_, i) => (
-          <Animated.View
-            key={i}
-            style={[
-              styles.particle,
-              {
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                opacity: 0.05 + Math.random() * 0.03,
-              }
-            ]}
-          />
-        ))}
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          
+          {/* Botón de volver */}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={handleBack}
+          >
+            <Ionicons name="arrow-back" size={20} color="#1F64BF" />
+          </TouchableOpacity>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Card principal */}
-          <View style={styles.card}>
-            
-            {/* Botón de volver */}
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={handleBack}
-            >
-              <Ionicons name="arrow-back" size={20} color="#1F64BF" />
-            </TouchableOpacity>
-
-            {/* Sección de branding */}
-            <View style={styles.brandSection}>
-              <Animated.View style={[styles.logoWrapper, logoAnimatedStyle]}>
-                <View style={styles.logoGlow} />
-                <Image 
-                  source={require('../assets/logo.png')} // Ajusta la ruta
-                  style={styles.logo}
-                  resizeMode="contain"
-                  onError={() => console.log('Logo no encontrado')}
-                />
-              </Animated.View>
-              
-              <View style={styles.brandText}>
-                <Text style={styles.brandTitle}>DIAMBARS</Text>
-                <Text style={styles.brandSubtitle}>sublimado</Text>
-              </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoPlaceholder}>
+              <Ionicons name="shield-checkmark" size={60} color="#040DBF" />
             </View>
+            <Text style={styles.title}>DIAMBARS</Text>
+            <Text style={styles.subtitle}>sublimado</Text>
+          </View>
 
-            {/* Sección del formulario */}
-            <View style={styles.formSection}>
-              <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>Crea tu nueva contraseña</Text>
-                <Text style={styles.formDescription}>
-                  Tu nueva contraseña debe ser diferente a las anteriores
-                </Text>
+          {/* Form */}
+          <View style={styles.form}>
+            <Text style={styles.formTitle}>Crea tu nueva contraseña</Text>
+            <Text style={styles.formDescription}>
+              Tu nueva contraseña debe ser diferente a las anteriores
+            </Text>
+            
+            {/* Error general */}
+            {error && (
+              <View style={styles.errorMessage}>
+                <Ionicons name="warning" size={20} color="#dc2626" />
+                <Text style={styles.errorText}>{error}</Text>
               </View>
-              
-              {/* Error general */}
-              {error && (
-                <View style={styles.errorMessage}>
-                  <Ionicons name="warning" size={20} color="#dc2626" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-              
-              {/* Formulario */}
-              <View style={styles.form}>
-                {/* Campo Nueva Contraseña */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Nueva contraseña</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons 
-                      name="lock-closed-outline" 
-                      size={20} 
-                      color="#94a3b8" 
-                      style={styles.inputIcon} 
-                    />
-                    <Controller
-                      control={control}
-                      name="password"
-                      rules={{
-                        required: 'Este campo es requerido',
-                        minLength: {
-                          value: 8,
-                          message: 'Mínimo 8 caracteres'
-                        },
-                        pattern: {
-                          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
-                          message: 'Debe incluir mayúscula, minúscula, número y carácter especial'
-                        }
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                          style={[
-                            styles.input,
-                            errors.password && styles.inputError
-                          ]}
-                          placeholder="••••••••"
-                          placeholderTextColor="#94a3b8"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          secureTextEntry={!showPassword}
-                        />
-                      )}
-                    />
-                    <TouchableOpacity
-                      style={styles.togglePassword}
-                      onPress={() => setShowPassword(!showPassword)}
-                    >
-                      <Ionicons 
-                        name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                        size={20} 
-                        color="#94a3b8" 
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  {errors.password && (
-                    <View style={styles.fieldError}>
-                      <Ionicons name="warning" size={16} color="#dc2626" />
-                      <Text style={styles.fieldErrorText}>
-                        {errors.password.message}
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Indicador de fuerza de contraseña */}
-                  {password && (
-                    <View style={styles.strengthIndicator}>
-                      <View style={styles.strengthBar}>
-                        <View 
-                          style={[
-                            styles.strengthFill,
-                            {
-                              width: `${passwordStrength}%`,
-                              backgroundColor: getStrengthColor()
-                            }
-                          ]}
-                        />
-                      </View>
-                      <Text style={[styles.strengthText, { color: getStrengthColor() }]}>
-                        {getStrengthText()}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                
-                {/* Campo Confirmar Contraseña */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Confirmar contraseña</Text>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons 
-                      name="lock-closed-outline" 
-                      size={20} 
-                      color="#94a3b8" 
-                      style={styles.inputIcon} 
-                    />
-                    <Controller
-                      control={control}
-                      name="confirmPassword"
-                      rules={{
-                        required: 'Este campo es requerido',
-                        validate: value => 
-                          value === password || 'Las contraseñas no coinciden'
-                      }}
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                          style={[
-                            styles.input,
-                            errors.confirmPassword && styles.inputError
-                          ]}
-                          placeholder="••••••••"
-                          placeholderTextColor="#94a3b8"
-                          value={value}
-                          onChangeText={onChange}
-                          onBlur={onBlur}
-                          secureTextEntry={!showConfirmPassword}
-                        />
-                      )}
-                    />
-                    <TouchableOpacity
-                      style={styles.togglePassword}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      <Ionicons 
-                        name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} 
-                        size={20} 
-                        color="#94a3b8" 
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  {errors.confirmPassword && (
-                    <View style={styles.fieldError}>
-                      <Ionicons name="warning" size={16} color="#dc2626" />
-                      <Text style={styles.fieldErrorText}>
-                        {errors.confirmPassword.message}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Requisitos de contraseña */}
-                <View style={styles.requirements}>
-                  <Text style={styles.requirementsTitle}>Requisitos de la contraseña:</Text>
-                  <View style={styles.requirementsList}>
-                    {requirements.map((req) => (
-                      <View 
-                        key={req.id} 
-                        style={[
-                          styles.requirement,
-                          password && req.regex.test(password) && styles.requirementMet
-                        ]}
-                      >
-                        <Ionicons 
-                          name="checkmark-circle-outline" 
-                          size={18} 
-                          color={password && req.regex.test(password) ? "#10b981" : "#94a3b8"}
-                        />
-                        <Text style={[
-                          styles.requirementText,
-                          password && req.regex.test(password) && styles.requirementTextMet
-                        ]}>
-                          {req.label}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-                
-                {/* Botón de guardar */}
+            )}
+            
+            {/* Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Nueva contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons 
+                  name="lock-closed-outline" 
+                  size={20} 
+                  color="#94a3b8" 
+                  style={styles.inputIcon} 
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#94a3b8"
+                  value={password}
+                  onChangeText={(text) => {
+                    console.log('[NewPassword] Password cambiado');
+                    setPassword(text);
+                    if (error) setError('');
+                  }}
+                  secureTextEntry={!showPassword}
+                />
                 <TouchableOpacity
-                  style={[
-                    styles.submitButton,
-                    isSubmitting && styles.submitButtonDisabled
-                  ]}
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={isSubmitting}
+                  style={styles.togglePassword}
+                  onPress={() => setShowPassword(!showPassword)}
                 >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <>
-                      <Text style={styles.submitButtonText}>Guardar nueva contraseña</Text>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#ffffff" />
-                    </>
-                  )}
+                  <Ionicons 
+                    name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                    size={20} 
+                    color="#94a3b8" 
+                  />
                 </TouchableOpacity>
               </View>
+            </View>
 
-              {/* Footer */}
-              <View style={styles.formFooter}>
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>Protección avanzada</Text>
-                  <View style={styles.dividerLine} />
+            {/* Confirm Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirmar contraseña</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons 
+                  name="lock-closed-outline" 
+                  size={20} 
+                  color="#94a3b8" 
+                  style={styles.inputIcon} 
+                />
+                <TextInput
+                  style={[
+                    styles.input,
+                    confirmPassword && password !== confirmPassword && styles.inputError
+                  ]}
+                  placeholder="••••••••"
+                  placeholderTextColor="#94a3b8"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    console.log('[NewPassword] Confirm password cambiado');
+                    setConfirmPassword(text);
+                    if (error) setError('');
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity
+                  style={styles.togglePassword}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Ionicons 
+                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} 
+                    size={20} 
+                    color="#94a3b8" 
+                  />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Match indicator */}
+              {confirmPassword && (
+                <View style={styles.matchIndicator}>
+                  <Ionicons 
+                    name={password === confirmPassword ? "checkmark-circle" : "close-circle"} 
+                    size={16} 
+                    color={password === confirmPassword ? "#10b981" : "#dc2626"} 
+                  />
+                  <Text style={[
+                    styles.matchText,
+                    { color: password === confirmPassword ? "#10b981" : "#dc2626" }
+                  ]}>
+                    {password === confirmPassword ? "Las contraseñas coinciden" : "Las contraseñas no coinciden"}
+                  </Text>
                 </View>
-                <Text style={styles.footerText}>
-                  Tu contraseña será encriptada con los más altos estándares de seguridad
+              )}
+            </View>
+
+            {/* Requirements */}
+            <View style={styles.requirements}>
+              <Text style={styles.requirementsTitle}>Requisitos:</Text>
+              <View style={styles.requirement}>
+                <Ionicons 
+                  name="checkmark-circle-outline" 
+                  size={16} 
+                  color={password.length >= 6 ? "#10b981" : "#94a3b8"}
+                />
+                <Text style={[
+                  styles.requirementText,
+                  password.length >= 6 && styles.requirementTextMet
+                ]}>
+                  Al menos 6 caracteres
                 </Text>
               </View>
             </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                (!isFormValid || isSubmitting) && styles.submitButtonDisabled
+              ]}
+              onPress={handleResetPassword}
+              disabled={!isFormValid || isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Text style={styles.submitButtonText}>Guardar nueva contraseña</Text>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#ffffff" />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Debug Info */}
+            <View style={styles.debugInfo}>
+              <Text style={styles.debugText}>Debug Info:</Text>
+              <Text style={styles.debugText}>Password: {password ? '***' : 'vacío'}</Text>
+              <Text style={styles.debugText}>Confirm: {confirmPassword ? '***' : 'vacío'}</Text>
+              <Text style={styles.debugText}>Match: {password === confirmPassword ? 'Sí' : 'No'}</Text>
+              <Text style={styles.debugText}>Valid: {isFormValid ? 'Sí' : 'No'}</Text>
+              <Text style={styles.debugText}>Email: {email}</Text>
+            </View>
+
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -447,27 +291,9 @@ const NewPasswordScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
   },
-  particlesContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  particle: {
-    position: 'absolute',
-    width: 4,
-    height: 4,
-    backgroundColor: '#1F64BF',
-    borderRadius: 2,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  content: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
@@ -475,18 +301,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 24,
+    padding: 24,
     shadowColor: '#040DBF',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 30,
     elevation: 10,
-    overflow: 'hidden',
-    zIndex: 2,
     position: 'relative',
-    minHeight: 700,
   },
   backButton: {
     position: 'absolute',
@@ -502,68 +323,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
-  brandSection: {
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingTop: 40,
+  },
+  logoPlaceholder: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(4, 13, 191, 0.1)',
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 80,
-    paddingBottom: 40,
-    paddingHorizontal: 40,
-    backgroundColor: 'rgba(4, 13, 191, 0.02)',
+    marginBottom: 16,
   },
-  logoWrapper: {
-    position: 'relative',
-    marginBottom: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoGlow: {
-    position: 'absolute',
-    width: 130,
-    height: 130,
-    backgroundColor: 'rgba(4, 13, 191, 0.12)',
-    borderRadius: 65,
-    zIndex: -1,
-  },
-  logo: {
-    width: 110,
-    height: 110,
-  },
-  brandText: {
-    alignItems: 'center',
-  },
-  brandTitle: {
-    fontSize: 32,
+  title: {
+    fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 1.8,
     color: '#040DBF',
-    marginBottom: 5,
+    marginBottom: 4,
+    letterSpacing: 1.5,
   },
-  brandSubtitle: {
-    fontSize: 16,
-    fontWeight: '300',
+  subtitle: {
+    fontSize: 14,
     color: '#64748b',
-    letterSpacing: 5,
+    fontWeight: '300',
+    letterSpacing: 4,
     fontStyle: 'italic',
   },
-  formSection: {
-    padding: 40,
-  },
-  formHeader: {
-    marginBottom: 32,
-    alignItems: 'center',
+  form: {
+    gap: 20,
   },
   formTitle: {
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '700',
     color: '#010326',
-    marginBottom: 12,
     textAlign: 'center',
+    marginBottom: 8,
   },
   formDescription: {
     fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 20,
+    marginBottom: 16,
   },
   errorMessage: {
     flexDirection: 'row',
@@ -573,7 +376,7 @@ const styles = StyleSheet.create({
     borderColor: '#f87171',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   errorText: {
     marginLeft: 8,
@@ -581,17 +384,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 14,
   },
-  form: {
-    gap: 24,
-  },
-  formGroup: {
-    marginBottom: 4,
+  inputGroup: {
+    gap: 8,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: '#010326',
-    marginBottom: 8,
   },
   inputWrapper: {
     position: 'relative',
@@ -624,64 +423,33 @@ const styles = StyleSheet.create({
     right: 16,
     padding: 4,
   },
-  fieldError: {
+  matchIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    gap: 6,
   },
-  fieldErrorText: {
-    marginLeft: 8,
-    color: '#dc2626',
-    fontSize: 14,
+  matchText: {
+    fontSize: 12,
     fontWeight: '500',
   },
-  strengthIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 12,
-  },
-  strengthBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#F2F2F2',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  strengthFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  strengthText: {
-    fontSize: 12,
-    fontWeight: '600',
-    minWidth: 60,
-    textAlign: 'right',
-  },
   requirements: {
-    marginVertical: 20,
-    padding: 20,
+    padding: 16,
     backgroundColor: 'rgba(31, 100, 191, 0.02)',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'rgba(31, 100, 191, 0.1)',
-    borderRadius: 16,
+    borderRadius: 12,
   },
   requirementsTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#010326',
-    marginBottom: 16,
-  },
-  requirementsList: {
-    gap: 10,
+    marginBottom: 12,
   },
   requirement: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  requirementMet: {
-    // Estilos adicionales cuando se cumple el requisito
+    gap: 8,
   },
   requirementText: {
     fontSize: 13,
@@ -701,10 +469,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#040DBF',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 25,
     elevation: 8,
@@ -719,30 +484,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 12,
   },
-  formFooter: {
-    marginTop: 32,
+  debugInfo: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#F2F2F2',
-  },
-  dividerText: {
-    color: '#64748b',
+  debugText: {
     fontSize: 12,
-    fontWeight: '500',
-    paddingHorizontal: 20,
-  },
-  footerText: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#94a3b8',
-    lineHeight: 16,
+    color: '#475569',
+    fontFamily: 'monospace',
   },
 });
 

@@ -13,6 +13,7 @@ import ChangePassword from './pages/passwordEdit/changePassword';
 import ForgotPassword from './pages/passwordEdit/forgotPassword';
 import VerifyRecoveryCode from './pages/passwordEdit/verifyRecoveryCode';
 import PasswordReset from './pages/passwordEdit/passwordReset';
+import NotFoundPage from './pages/notFound/notFound';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/passwordRecovery" element={<ForgotPassword />} />
           <Route path="/verifyRecoveryCode" element={<VerifyRecoveryCode />} />
           <Route path="/passwordReset" element={<PasswordReset />} />
+          <Route path="/notFound404" element={<NotFoundPage />} />
         </Routes>
     </>
   );

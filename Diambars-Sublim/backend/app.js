@@ -24,6 +24,7 @@ import addressRoutes from "./src/routes/address.routes.js";
 import reviewsRoutes from "./src/routes/reviews.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js"; // NUEVA RUTA AGREGADA
 import paymentMethodsRoutes from "./src/routes/paymentMethods.routes.js";
+import contactRoutes from "./src/routes/contact.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
@@ -178,8 +179,9 @@ app.get("/api/health", (req, res) => {
       designs: '/api/designs',
       orders: '/api/orders',
       addresses: '/api/addresses',
-      payments: '/api/payments', // NUEVO ENDPOINT
+      payments: '/api/payments',
       paymentMethods: '/api/payment-methods',
+      contact: '/api/contact',
       config: '/api/config'
     }
   });
@@ -195,6 +197,9 @@ app.use("/api/users/register", jsonMiddleware, debugEmailValidation, registerUse
 // ========== RUTAS DE VERIFICACIÓN Y RECUPERACIÓN ==========
 app.use("/api/verify-email", jsonMiddleware, verifyEmailRoutes);
 app.use("/api/password-recovery", authLimiter, jsonMiddleware, passwordRecoveryRoutes);
+
+// ========== RUTA DE CONTACTO ==========
+app.use("/api/contact", contactRoutes);
 
 // ========== RUTAS DE DIRECCIONES ==========
 app.use("/api/addresses", jsonMiddleware, addressRoutes);

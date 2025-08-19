@@ -1,8 +1,8 @@
 .product-card {
-    position: relative;
+  position: relative;
   width: 100%;
-  max-width: 280px; /* Ancho máximo más generoso */
-  height: 270px; /* Altura aumentada para mejor proporción */
+  max-width: 280px;
+  height: 350px;
   border-radius: 16px;
   padding: 1.2rem;
   display: flex;
@@ -108,6 +108,40 @@
   left: 100%;
 }
 
+/* Precio del producto */
+.product-price {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #3F2724;
+  margin: 0.5rem 0;
+  font-family: 'DiambarsFont', sans-serif;
+}
+
+/* Categoría del producto */
+.product-category {
+  display: inline-block;
+  background: rgba(245, 231, 198, 0.8);
+  color: #3F2724;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Ajustes responsive para los nuevos elementos */
+@media (max-width: 600px) {
+  .product-price {
+    font-size: 1rem;
+  }
+  
+  .product-category {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
 /* ------------------------- */
 /* RESPONSIVE CARDS COMPLETO */
 /* ------------------------- */
@@ -115,7 +149,6 @@
 /* Pantallas muy grandes (1600px+) */
 @media (min-width: 1600px) {
   .product-card {
-    height: 320px;
     max-width: 300px;
   }
   
@@ -131,7 +164,7 @@
 /* Laptops grandes (1200px - 1599px) */
 @media (min-width: 1201px) and (max-width: 1599px) {
   .product-card {
-    height: 300px;
+
     width: 240px;
     max-width: 280px;
   }
@@ -144,8 +177,8 @@
 /* Rango crítico mejorado (1061px - 1200px) */
 @media (min-width: 1061px) and (max-width: 1200px) {
   .product-card {
-    height: 280px;
-    max-width: 260px;
+
+    width: 210px;
   }
   
   .product-image {
@@ -156,7 +189,7 @@
 /* Rango especial 900px-1060px (optimizado) */
 @media (min-width: 900px) and (max-width: 1060px) {
   .product-card {
-    height: 260px;
+
     width: 190px;
     max-width: 240px;
     padding: 1rem;
@@ -174,7 +207,7 @@
 /* Tablets landscape (768px - 899px) */
 @media (min-width: 768px) and (max-width: 899px) {
   .product-card {
-    height: 240px;
+    height: 300px;
     width: 190px;
     max-width: 220px;
   }
@@ -187,7 +220,7 @@
 /* Tablets portrait (600px - 767px) */
 @media (min-width: 600px) and (max-width: 767px) {
   .product-card {
-    height: 220px;
+    height: 300px;
     width: 140px;
     max-width: 190px;
   }
@@ -204,8 +237,8 @@
 /* Móviles grandes (480px - 599px) */
 @media (min-width: 480px) and (max-width: 599px) {
   .product-card {
-    height: 200px;
-    width: 120px;
+    height: 280px;
+    width: 150px;
     max-width: 160px;
     border-radius: 14px;
   }
@@ -222,7 +255,7 @@
 /* Móviles pequeños (360px - 479px) */
 @media (min-width: 360px) and (max-width: 479px) {
   .product-card {
-    height: 180px;
+    height: 265px;
     max-width: 130px;
     padding: 0.8rem;
   }
@@ -240,8 +273,8 @@
 /* Móviles muy pequeños (-359px) */
 @media (max-width: 359px) {
   .product-card {
-    height: 160px;
-    max-width: 110px;
+    height: 245px;
+    width: 130px;
     padding: 0.6rem;
   }
   
