@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useSearchParams, Navigate } from 'react-router-dom';
 import Navbar from './components/UI/navBar/navBar';
 import Home from './pages/home/home'
 import Catalogue from './pages/catalogue/catalogue'
@@ -15,11 +15,24 @@ import VerifyRecoveryCode from './pages/passwordEdit/verifyRecoveryCode';
 import PasswordReset from './pages/passwordEdit/passwordReset';
 import NotFoundPage from './pages/notFound/notFound';
 
+// Nuevos componentes del sistema de diseños
+import DesignHub from '../src/pages/designs/designHub';
+import ProtectedRoute from '../src/components/auth/protectedRoute';
+
+// Componente para manejar productos desde URL
+const DesignHubWithProduct = () => {
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('product');
+  
+  return <DesignHub initialProductId={productId} />;
+};
+
 function App() {
   return (
     <>
       <Navbar />
         <Routes>
+          {/* Rutas existentes - SIN CAMBIOS */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<AboutUs/>} />
           <Route path="/catalogue" element={<Catalogue/>} />
@@ -35,6 +48,42 @@ function App() {
           <Route path="/verifyRecoveryCode" element={<VerifyRecoveryCode />} />
           <Route path="/passwordReset" element={<PasswordReset />} />
           <Route path="/notFound404" element={<NotFoundPage />} />
+
+          {/* Redirección para rutas obsoletas o mal escritas */}
+          <Route path="/notFound404" element={<Navigate to="*" />} />
+          
+          {/* Ruta predefinida para todas las rutas no definidas */}
+          <Route path="*" element={<NotFoundPage />} />
+
+          {/* NUEVAS rutas del sistema de diseños */}
+          <Route 
+            path="/design-hub" 
+            element={
+              <ProtectedRoute>
+                <DesignHubWithProduct />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Ruta para personalizar producto específico */}
+          <Route 
+            path="/customize/:productId" 
+            element={
+              <ProtectedRoute>
+                <DesignHub />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Alias para diseños */}
+          <Route 
+            path="/designs" 
+            element={
+              <ProtectedRoute>
+                <DesignHubWithProduct />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
     </>
   );

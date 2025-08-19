@@ -1,6 +1,7 @@
-// src/pages/catalogue/categoryView.jsx
+// src/pages/catalogue/categoryView.jsx - INTEGRADO CON SISTEMA DE DISEÑOS
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/authContext';
 import SidebarFilters from '../../components/filters/sidebarFilters';
 import ProductCard from '../../components/products/ProductCard';
 import Footer from '../../components/UI/footer/footer';
@@ -8,6 +9,8 @@ import './categoryView.css';
 
 export default function CategoryView() {
   const { categoria } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [activeFilters, setActiveFilters] = useState({});
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,8 +105,22 @@ export default function CategoryView() {
   // Manejar personalización de producto
   const handleCustomizeProduct = (product) => {
     console.log('Personalizar producto:', product);
-    alert(`Personalizar ${product.name}`);
-    // Aquí redirigirías al editor de personalización
+    
+    if (!isAuthenticated) {
+      // Redirigir al perfil con información del producto
+      navigate('/profile', { 
+        state: { 
+          from: `/design-hub?product=${product._id || product.id}`,
+          message: `Inicia sesión para personalizar "${product.name}"`,
+          productId: product._id || product.id,
+          productName: product.name
+        } 
+      });
+      return;
+    }
+
+    // Redirigir al hub de diseños con el producto seleccionado
+    navigate(`/design-hub?product=${product._id || product.id}`);
   };
 
   // Renderizar productos o estados especiales
@@ -156,11 +173,12 @@ export default function CategoryView() {
     // Renderizar productos reales
     return products.map((product) => (
       <ProductCard
-        key={product._id}
+        key={product._id || product.id}
         name={product.name}
         image={product.images?.main || '/placeholder-product.jpg'}
         price={product.formattedPrice}
         category={product.category?.name}
+        product={product} // Pasar el objeto completo
         onCustomize={() => handleCustomizeProduct(product)}
       />
     ));

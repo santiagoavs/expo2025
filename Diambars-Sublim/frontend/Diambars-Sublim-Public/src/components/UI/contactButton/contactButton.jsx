@@ -3,7 +3,7 @@ import './ContactButton.css';
 export default function ContactButton() {
   return (
     <a
-      href="https://wa.me/XXXXXXXXXXX" // Reemplaza con tu número
+      href="https://wa.me/70164304" // Reemplaza con tu número
       className="contact-button"
       target="_blank"
       rel="noopener noreferrer"
