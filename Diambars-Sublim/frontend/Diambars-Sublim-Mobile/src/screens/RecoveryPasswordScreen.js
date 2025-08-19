@@ -1,5 +1,8 @@
 // src/screens/RecoveryPasswordScreen.js - CON ALERTAS BONITAS
+
 import React from 'react';
+// Importa React, necesario para crear componentes funcionales
+
 import {
   View,
   Text,
@@ -10,65 +13,105 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
-import CustomAlert from '../components/CustomAlert'; // 👈 NUEVA IMPORTACIÓN
-import LoadingOverlay from '../components/LoadingOverlay'; // 👈 NUEVA IMPORTACIÓN
+// Importa componentes de React Native:
+// View → contenedor principal
+// Text → para mostrar texto
+// TextInput → campo de entrada editable
+// TouchableOpacity → botón táctil con efecto de opacidad
+// StyleSheet → para definir estilos de manera organizada
+// ScrollView → contenedor scrollable, útil para pantallas con mucho contenido
+// StatusBar → controlar la barra superior del dispositivo
+// ActivityIndicator → spinner para mostrar carga
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView ajusta el contenido para evitar notch y barras del sistema
+
+import { useNavigation } from '@react-navigation/native';
+// Hook para controlar navegación entre pantallas
+
+import { Ionicons } from '@expo/vector-icons';
+// Librería de iconos Ionicons para botones y decoraciones
+
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+// Hook personalizado que maneja la lógica de recuperación de contraseña
+
+import CustomAlert from '../components/CustomAlert'; // 👈 NUEVA IMPORTACIÓN
+// Componente de alerta “bonita” personalizada
+
+import LoadingOverlay from '../components/LoadingOverlay'; // 👈 NUEVA IMPORTACIÓN
+// Componente que muestra un overlay de carga bonito
+
+// ------------------------------
+// Componente principal RecoveryPasswordScreen
+// ------------------------------
 const RecoveryPasswordScreen = () => {
   console.log('[RecoveryScreen] Renderizando pantalla con alertas bonitas');
   
   const navigation = useNavigation();
-  
+  // Hook de navegación para poder ir a otras pantallas
+
   // 🔥 HOOK CON ALERTAS BONITAS
   const { 
-    email, 
-    setEmail, 
-    isSubmitting, 
-    error, 
-    setError,
-    handleRequestCode,
-    // Nuevos estados para alertas bonitas
-    showAlert,
-    showLoading,
-    alertConfig,
-    setShowAlert
+    email,             // Estado del correo electrónico
+    setEmail,          // Función para actualizar el correo
+    isSubmitting,      // Estado de envío de formulario
+    error,             // Mensaje de error general
+    setError,          // Función para actualizar error
+    handleRequestCode, // Función que solicita el código al backend
+    showAlert,         // Estado para mostrar alerta bonita
+    showLoading,       // Estado para mostrar overlay de carga
+    alertConfig,       // Configuración de la alerta (tipo, mensaje, acción)
+    setShowAlert       // Función para mostrar/ocultar alerta
   } = usePasswordRecovery();
+  // Extrae estados y funciones desde el hook personalizado
 
+  // ------------------------------
+  // Función para validar correo electrónico
+  // ------------------------------
   const validateEmail = (emailValue) => {
     if (!emailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-      return false;
+      return false; // No válido si está vacío o no tiene formato correcto
     }
-    return true;
+    return true; // Válido
   };
 
-  // 🔥 FUNCIÓN QUE LLAMA AL BACKEND CON ALERTAS BONITAS
+  // ------------------------------
+  // Función que envía solicitud al backend
+  // ------------------------------
   const handleSubmit = async () => {
     console.log('[RecoveryScreen] Llamando al backend para:', email);
-    
+
     if (!validateEmail(email)) {
-      setError('Ingresa un correo válido');
-      return;
+      setError('Ingresa un correo válido'); // Mensaje de error si email no es válido
+      return; // Detiene ejecución
     }
 
     // Llamar a la función del hook que conecta al backend
     await handleRequestCode(email);
+    // Esta función controla internamente el overlay de carga y alerta
   };
 
+  // ------------------------------
+  // Función para volver a la pantalla anterior
+  // ------------------------------
   const handleBack = () => {
     navigation.goBack();
   };
 
+  // ------------------------------
+  // Renderizado del componente
+  // ------------------------------
   return (
     <SafeAreaView style={styles.container}>
+      {/* Barra de estado */}
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
           
+          {/* -------------------- */}
           {/* Botón de volver */}
+          {/* -------------------- */}
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBack}
@@ -76,7 +119,9 @@ const RecoveryPasswordScreen = () => {
             <Ionicons name="arrow-back" size={20} color="#1F64BF" />
           </TouchableOpacity>
 
-          {/* Header */}
+          {/* -------------------- */}
+          {/* Header con logo y título */}
+          {/* -------------------- */}
           <View style={styles.header}>
             <View style={styles.logoPlaceholder}>
               <Ionicons name="diamond" size={60} color="#040DBF" />
@@ -85,14 +130,18 @@ const RecoveryPasswordScreen = () => {
             <Text style={styles.subtitle}>sublimado</Text>
           </View>
 
-          {/* Form */}
+          {/* -------------------- */}
+          {/* Formulario */}
+          {/* -------------------- */}
           <View style={styles.form}>
             <Text style={styles.formTitle}>Recupera tu contraseña</Text>
             <Text style={styles.formDescription}>
               Introduce tu correo electrónico y te enviaremos un código para restablecer tu contraseña
             </Text>
             
-            {/* Error general - CONECTADO AL HOOK */}
+            {/* -------------------- */}
+            {/* Error general */}
+            {/* -------------------- */}
             {error && (
               <View style={styles.errorMessage}>
                 <Ionicons name="warning" size={20} color="#dc2626" />
@@ -100,7 +149,9 @@ const RecoveryPasswordScreen = () => {
               </View>
             )}
             
-            {/* Email Input - CONECTADO AL HOOK */}
+            {/* -------------------- */}
+            {/* Input de correo electrónico */}
+            {/* -------------------- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo electrónico</Text>
               <View style={styles.inputWrapper}>
@@ -120,18 +171,20 @@ const RecoveryPasswordScreen = () => {
                   value={email}
                   onChangeText={(text) => {
                     console.log('[RecoveryScreen] Email cambiado:', text);
-                    setEmail(text);
-                    if (error) setError('');
+                    setEmail(text);   // Actualiza estado email
+                    if (error) setError(''); // Limpia errores al escribir
                   }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  editable={!isSubmitting}
+                  editable={!isSubmitting} // Bloquea input mientras se envía
                 />
               </View>
             </View>
 
-            {/* Submit Button - CON EFECTOS BONITOS */}
+            {/* -------------------- */}
+            {/* Botón enviar código */}
+            {/* -------------------- */}
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -154,7 +207,9 @@ const RecoveryPasswordScreen = () => {
               )}
             </TouchableOpacity>
 
-            {/* Back to Login */}
+            {/* -------------------- */}
+            {/* Footer - volver al login */}
+            {/* -------------------- */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>¿Recordaste tu contraseña?</Text>
               <TouchableOpacity 
@@ -167,42 +222,41 @@ const RecoveryPasswordScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Debug Info - CON ALERTAS BONITAS */}
-            <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
-              <Text style={styles.debugText}>Email: {email}</Text>
-              <Text style={styles.debugText}>Valid: {validateEmail(email) ? 'Sí' : 'No'}</Text>
-              <Text style={styles.debugText}>Status: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
-            </View>
-
           </View>
         </View>
       </ScrollView>
 
-      {/* 🎨 ALERTA BONITA */}
+      {/* -------------------- */}
+      {/* ALERTA BONITA */}
+      {/* -------------------- */}
       <CustomAlert
-        visible={showAlert}
-        type={alertConfig.type}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        onConfirm={alertConfig.onConfirm}
-        confirmText="Continuar"
+        visible={showAlert}             // Muestra u oculta alerta
+        type={alertConfig.type}         // Tipo: éxito, error, info
+        title={alertConfig.title}       // Título de alerta
+        message={alertConfig.message}   // Mensaje de alerta
+        onConfirm={alertConfig.onConfirm} // Acción al confirmar
+        confirmText="Continuar"         // Texto botón
       />
 
-      {/* 🎨 LOADING BONITO */}
+      {/* -------------------- */}
+      {/* LOADING BONITO */}
+      {/* -------------------- */}
       <LoadingOverlay
-        visible={showLoading}
-        type="sending"
-        message="Enviando código de recuperación..."
+        visible={showLoading}           // Muestra u oculta overlay de carga
+        type="sending"                  // Tipo de animación (ej. spinner de envío)
+        message="Enviando código de recuperación..." // Texto mostrado
       />
     </SafeAreaView>
   );
 };
 
+// ------------------------------
+// Estilos del componente
+// ------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f8fafc', // Color de fondo principal
   },
   content: {
     flexGrow: 1,
@@ -388,4 +442,5 @@ const styles = StyleSheet.create({
   },
 });
 
+// Exporta el componente para usarlo en la navegación de la app
 export default RecoveryPasswordScreen;

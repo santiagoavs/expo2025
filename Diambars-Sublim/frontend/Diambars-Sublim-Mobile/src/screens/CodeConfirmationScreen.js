@@ -1,4 +1,7 @@
-// src/screens/CodeConfirmationScreen.js - 6 DÍGITOS RESPONSIVE
+// src/screens/CodeConfirmationScreen.js
+// Pantalla de verificación de código de 6 dígitos para recuperación de contraseña
+// Incluye inputs responsivos, manejo de teclado, alertas bonitas y loading
+
 import React, { useRef, useEffect } from 'react';
 import {
   View,
@@ -13,74 +16,84 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
-import CustomAlert from '../components/CustomAlert';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { SafeAreaView } from 'react-native-safe-area-context'; // Para respetar áreas seguras en iOS/Android
+import { useNavigation, useRoute } from '@react-navigation/native'; // Para navegación y parámetros de ruta
+import { Ionicons } from '@expo/vector-icons'; // Íconos vectoriales
+import { usePasswordRecovery } from '../hooks/usePasswordRecovery'; // Hook personalizado con alertas y lógica
+import CustomAlert from '../components/CustomAlert'; // Componente de alerta personalizada
+import LoadingOverlay from '../components/LoadingOverlay'; // Componente de loading bonito
 
+// Obtener dimensiones de pantalla para inputs responsivos
 const { width, height } = Dimensions.get('window');
 
 const CodeConfirmationScreen = () => {
   console.log('[CodeConfirmation] Renderizando pantalla de verificación');
   
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { email } = route.params || {};
+  const navigation = useNavigation(); // Hook para navegar entre pantallas
+  const route = useRoute();           // Hook para acceder a params de la ruta
+  const { email } = route.params || {}; // Obtener email pasado desde pantalla anterior
   
-  // Referencias para los inputs
+  // Referencias para los inputs, para poder enfocar automáticamente
   const inputRefs = useRef([]);
-  
-  // 🔥 HOOK CON ALERTAS BONITAS
-  const { 
-    code,
-    setCode,
-    isSubmitting, 
-    error, 
-    setError,
-    timer,
-    canResend,
-    handleVerifyCode,
-    handleResendCode,
-    handleGoBack,
-    // Nuevos estados para alertas bonitas
-    showAlert,
-    showLoading,
-    alertConfig,
-    setShowAlert
-  } = usePasswordRecovery();
 
-  // Auto-enfoque al primer input
+  // 🔥 Uso del hook con alertas bonitas y lógica de verificación
+const { 
+  code,             // Array de 6 elementos que representa cada dígito ingresado en los inputs de código.
+  setCode,          // Función para actualizar el array 'code' cuando el usuario escribe o borra un dígito.
+  isSubmitting,     // Booleano que indica si se está enviando/verificando el código; se usa para deshabilitar botones y inputs.
+  error,            // String que contiene un mensaje de error de validación o de verificación del código.
+  setError,         // Función para actualizar el mensaje de error.
+  timer,            // Número que representa los segundos restantes antes de poder reenviar el código.
+  canResend,        // Booleano que indica si el usuario puede reenviar el código (true si timer llegó a 0).
+  handleVerifyCode, // Función asíncrona que valida el código ingresado con el backend o lógica de recuperación.
+  handleResendCode, // Función que solicita el reenvío del código al correo del usuario.
+  handleGoBack,     // Función que permite volver a la pantalla anterior.
+  showAlert,        // Booleano que indica si se debe mostrar una alerta personalizada.
+  showLoading,      // Booleano que indica si se debe mostrar un overlay de carga (loading bonito).
+  alertConfig,      // Objeto que contiene la configuración de la alerta: { type, title, message, onConfirm }.
+  setShowAlert      // Función para mostrar u ocultar la alerta personalizada.
+} = usePasswordRecovery();
+
+
+  // -----------------------
+  // Auto-enfoque al primer input al renderizar
+  // -----------------------
   useEffect(() => {
     if (inputRefs.current[0]) {
-      setTimeout(() => inputRefs.current[0].focus(), 300);
+      setTimeout(() => inputRefs.current[0].focus(), 300); // Delay de 300ms para evitar conflictos con animaciones
     }
   }, []);
 
-  // Manejo de cambio de input
+  // -----------------------
+  // Manejo de cambio en los inputs del código
+  // -----------------------
   const handleInputChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return; // Solo números
+    if (!/^\d*$/.test(value)) return; // Solo permite números
     
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
-    setError(''); // Limpiar error al escribir
+    setError(''); // Limpiar error cuando se escribe
     
-    // Auto-enfoque al siguiente input
+    // Auto-enfocar al siguiente input si hay valor y no es el último
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // Manejo de tecla backspace
+  // -----------------------
+  // Manejo de tecla Backspace
+  // -----------------------
   const handleKeyPress = (index, { nativeEvent }) => {
     if (nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
+      // Si no hay valor y no es el primer input, enfoca el anterior
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  // Verificar código
+  // -----------------------
+  // Verificar código completo
+  // -----------------------
   const handleSubmit = async () => {
     const completeCode = code.join('');
     if (completeCode.length !== 6) {
@@ -88,30 +101,38 @@ const CodeConfirmationScreen = () => {
       return;
     }
     
-    await handleVerifyCode();
+    await handleVerifyCode(); // Llama al hook para verificar código
   };
 
-  // Limpiar código
+  // -----------------------
+  // Limpiar todos los inputs del código
+  // -----------------------
   const handleClearCode = () => {
-    setCode(['', '', '', '', '', '']);
+    setCode(['', '', '', '', '', '']); // Reset de inputs
     setError('');
-    inputRefs.current[0]?.focus();
+    inputRefs.current[0]?.focus(); // Enfocar el primer input
   };
 
+  // -----------------------
+  // Verificar si el código está completo
+  // -----------------------
   const isCodeComplete = code.join('').length === 6;
 
+  // -----------------------
+  // Renderizado principal
+  // -----------------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       <KeyboardAvoidingView 
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // Ajuste de teclado según plataforma
       >
         <ScrollView 
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="handled" // Permite tocar botones mientras el teclado está abierto
         >
           <View style={styles.card}>
             
@@ -119,12 +140,12 @@ const CodeConfirmationScreen = () => {
             <TouchableOpacity 
               style={styles.backButton}
               onPress={handleGoBack}
-              disabled={isSubmitting}
+              disabled={isSubmitting} // Deshabilitado si hay envío en proceso
             >
               <Ionicons name="arrow-back" size={20} color="#1F64BF" />
             </TouchableOpacity>
 
-            {/* Header compacto */}
+            {/* Header con logo y título */}
             <View style={styles.header}>
               <View style={styles.logoPlaceholder}>
                 <Ionicons name="key" size={48} color="#040DBF" />
@@ -133,14 +154,14 @@ const CodeConfirmationScreen = () => {
               <Text style={styles.subtitle}>sublimado</Text>
             </View>
 
-            {/* Form */}
+            {/* Formulario de verificación */}
             <View style={styles.form}>
               <Text style={styles.formTitle}>Verifica tu código</Text>
               <Text style={styles.formDescription}>
                 Ingresa el código de 6 dígitos enviado a tu correo
               </Text>
               
-              {/* Email display */}
+              {/* Mostrar email si existe */}
               {email && (
                 <View style={styles.emailContainer}>
                   <Ionicons name="mail" size={16} color="#040DBF" />
@@ -148,7 +169,7 @@ const CodeConfirmationScreen = () => {
                 </View>
               )}
               
-              {/* Error message */}
+              {/* Mensaje de error */}
               {error && (
                 <View style={styles.errorMessage}>
                   <Ionicons name="warning" size={18} color="#dc2626" />
@@ -156,16 +177,16 @@ const CodeConfirmationScreen = () => {
                 </View>
               )}
               
-              {/* Code inputs - 6 dígitos */}
+              {/* Inputs para los 6 dígitos */}
               <View style={styles.codeContainer}>
                 {code.map((digit, index) => (
                   <TextInput
                     key={index}
-                    ref={(ref) => inputRefs.current[index] = ref}
+                    ref={(ref) => inputRefs.current[index] = ref} // Guardar referencia
                     style={[
                       styles.codeInput,
-                      digit && styles.codeInputFilled,
-                      error && styles.codeInputError
+                      digit && styles.codeInputFilled, // Estilo si hay valor
+                      error && styles.codeInputError, // Estilo si hay error
                     ]}
                     value={digit}
                     onChangeText={(value) => handleInputChange(index, value)}
@@ -174,12 +195,12 @@ const CodeConfirmationScreen = () => {
                     maxLength={1}
                     textAlign="center"
                     selectionColor="#040DBF"
-                    editable={!isSubmitting}
+                    editable={!isSubmitting} // No editable mientras se envía
                   />
                 ))}
               </View>
 
-              {/* Botón limpiar código */}
+              {/* Botón para limpiar código */}
               {code.some(digit => digit) && (
                 <TouchableOpacity 
                   style={styles.clearButton}
@@ -191,7 +212,7 @@ const CodeConfirmationScreen = () => {
                 </TouchableOpacity>
               )}
 
-              {/* Verify Button */}
+              {/* Botón de verificación */}
               <TouchableOpacity
                 style={[
                   styles.verifyButton,
@@ -214,7 +235,7 @@ const CodeConfirmationScreen = () => {
                 )}
               </TouchableOpacity>
 
-              {/* Timer y reenvío */}
+              {/* Timer para reenvío de código */}
               <View style={styles.resendContainer}>
                 {timer > 0 ? (
                   <Text style={styles.timerText}>
@@ -232,20 +253,12 @@ const CodeConfirmationScreen = () => {
                 )}
               </View>
 
-              {/* Debug Info */}
-              <View style={styles.debugInfo}>
-                <Text style={styles.debugText}>🔑 Verificación de código</Text>
-                <Text style={styles.debugText}>Código: {code.join('')}</Text>
-                <Text style={styles.debugText}>Completo: {isCodeComplete ? 'Sí' : 'No'}</Text>
-                <Text style={styles.debugText}>Timer: {timer}s</Text>
-              </View>
-
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* 🎨 ALERTA BONITA */}
+      {/* 🎨 Alerta bonita */}
       <CustomAlert
         visible={showAlert}
         type={alertConfig.type}
@@ -255,7 +268,7 @@ const CodeConfirmationScreen = () => {
         confirmText="Continuar"
       />
 
-      {/* 🎨 LOADING BONITO */}
+      {/* 🎨 Loading bonito */}
       <LoadingOverlay
         visible={showLoading}
         type="verifying"
@@ -265,6 +278,9 @@ const CodeConfirmationScreen = () => {
   );
 };
 
+// -----------------------
+// Estilos de la pantalla
+// -----------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -391,7 +407,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   codeInput: {
-    width: (width - 120) / 6, // Responsive width
+    width: (width - 120) / 6,
     maxWidth: 50,
     height: 56,
     borderWidth: 2,
@@ -469,17 +485,6 @@ const styles = StyleSheet.create({
     color: '#040DBF',
     fontSize: 14,
     fontWeight: '600',
-  },
-  debugInfo: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-  },
-  debugText: {
-    fontSize: 11,
-    color: '#475569',
-    fontFamily: 'monospace',
   },
 });
 

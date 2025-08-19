@@ -1,5 +1,8 @@
 // src/screens/LoginScreen.js - CON ALERTAS BONITAS Y SPINNER DE NAVEGACIÓN
+
 import React from 'react';
+// Importa React para definir componentes funcionales
+
 import {
   View,
   Text,
@@ -9,37 +12,62 @@ import {
   ScrollView,
   StatusBar
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { Controller } from 'react-hook-form';
-import { useLogin } from '../hooks/useLogin';
-import CustomAlert from '../components/CustomAlert';
-import LoadingOverlay from '../components/LoadingOverlay';
+// Importa componentes básicos de React Native:
+// View → contenedor de UI
+// Text → para mostrar texto
+// TextInput → campo de entrada de texto
+// TouchableOpacity → botón táctil con opacidad
+// StyleSheet → para estilos
+// ScrollView → contenedor scrollable
+// StatusBar → para controlar la barra de estado del dispositivo
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView asegura que el contenido no se sobreponga con notch o barra superior
+
+import { useNavigation } from '@react-navigation/native';
+// Hook para navegación entre pantallas
+
+import { Ionicons } from '@expo/vector-icons';
+// Librería de iconos Ionicons
+
+import { Controller } from 'react-hook-form';
+// Controller permite conectar inputs de React Native con react-hook-form
+
+import { useLogin } from '../hooks/useLogin';
+// Hook personalizado que maneja la lógica de login, validaciones y estados
+
+import CustomAlert from '../components/CustomAlert';
+// Componente de alerta personalizada
+
+import LoadingOverlay from '../components/LoadingOverlay';
+// Componente de overlay de carga (spinner/overlay)
+
+// ------------------------------
+// Componente principal LoginScreen
+// ------------------------------
 const LoginScreen = () => {
   console.log("[LoginScreen] Renderizando pantalla con alertas bonitas");
-  
+
   const navigation = useNavigation();
-  
-  // 🔥 HOOK CON ALERTAS BONITAS
+  // Hook de navegación para cambiar de pantalla
+
+  // 🔥 Hook useLogin
   const { 
-    control, 
-    handleSubmit, 
-    onSubmit, 
-    errors, 
-    isSubmitting, 
-    validateEmail, 
-    validatePassword,
-    // Nuevos estados para alertas bonitas
-    showAlert,
-    showLoading,
-    alertConfig,
-    setShowAlert,
-    showLoadingOverlay
+    control,             // Controlador de react-hook-form para inputs
+    handleSubmit,        // Función para enviar formulario
+    onSubmit,            // Función personalizada que maneja el envío
+    errors,              // Objeto que contiene errores de validación
+    isSubmitting,        // Booleano, indica si el formulario está enviando
+    validateEmail,       // Función para validar correo electrónico
+    validatePassword,    // Función para validar contraseña
+    showAlert,           // Booleano, indica si mostrar alerta bonita
+    showLoading,         // Booleano, indica si mostrar overlay de carga
+    alertConfig,         // Configuración de alerta: type, title, message, onConfirm
+    setShowAlert,        // Función para controlar visibilidad de alerta
+    showLoadingOverlay   // Función para mostrar u ocultar overlay de carga manualmente
   } = useLogin();
 
-  // 🔍 DEBUG LOGS
+  // 🔍 Logs de depuración
   console.log('🔍 [LoginScreen] Estados actuales:', {
     showAlert,
     showLoading,
@@ -47,33 +75,39 @@ const LoginScreen = () => {
     errorsCount: Object.keys(errors).length
   });
 
-  // 🌀 NAVEGACIÓN CON SPINNER
+  // ------------------------------
+  // Función para navegar a RecoveryPassword con spinner
+  // ------------------------------
   const handleRecoveryPress = () => {
     console.log('[LoginScreen] Navegando a RecoveryPassword con spinner...');
     
-    // Mostrar spinner durante navegación
+    // Muestra overlay de carga
     showLoadingOverlay(true);
     
+    // Espera 1 segundo antes de navegar
     setTimeout(() => {
       navigation.navigate('RecoveryPassword');
       
-      // Ocultar spinner después de navegar
+      // Oculta overlay después de 300ms
       setTimeout(() => {
         showLoadingOverlay(false);
       }, 300);
-    }, 1000); // 1 segundo de spinner
+    }, 1000);
   };
 
   console.log("[LoginScreen] Renderizando UI");
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Barra de estado */}
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
+
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
           
-          {/* Header - IGUAL QUE ANTES */}
+          {/* -------------------- */}
+          {/* Header - Logo y título */}
+          {/* -------------------- */}
           <View style={styles.header}>
             <View style={styles.logoPlaceholder}>
               <Ionicons name="diamond" size={60} color="#040DBF" />
@@ -82,17 +116,21 @@ const LoginScreen = () => {
             <Text style={styles.subtitle}>Acceso Administrativo</Text>
           </View>
 
-          {/* Form - CONECTADO AL HOOK */}
+          {/* -------------------- */}
+          {/* Formulario */}
+          {/* -------------------- */}
           <View style={styles.form}>
             <Text style={styles.formTitle}>Iniciar Sesión</Text>
             
-            {/* Email Input - CON REACT HOOK FORM */}
+            {/* -------------------- */}
+            {/* Input de Email */}
+            {/* -------------------- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo electrónico</Text>
               <Controller
-                control={control}
-                name="email"
-                rules={{ validate: validateEmail }}
+                control={control}  // Conecta input con react-hook-form
+                name="email"       // Nombre del campo
+                rules={{ validate: validateEmail }} // Validación personalizada
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={[
@@ -100,24 +138,27 @@ const LoginScreen = () => {
                       errors.email && styles.inputError
                     ]}
                     placeholder="admin@diambars.com"
-                    value={value}
+                    value={value}              // Valor actual del input
                     onChangeText={(text) => {
                       console.log('[LoginScreen] Email cambiado:', text);
-                      onChange(text);
+                      onChange(text);          // Actualiza el valor en react-hook-form
                     }}
-                    onBlur={onBlur}
+                    onBlur={onBlur}            // Maneja pérdida de foco
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    editable={!isSubmitting}
+                    editable={!isSubmitting}   // Deshabilita input mientras envía
                   />
                 )}
               />
+              {/* Mensaje de error */}
               {errors.email && (
                 <Text style={styles.errorText}>{errors.email.message}</Text>
               )}
             </View>
 
-            {/* Password Input - CON REACT HOOK FORM */}
+            {/* -------------------- */}
+            {/* Input de Contraseña */}
+            {/* -------------------- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Contraseña</Text>
               <Controller
@@ -137,7 +178,7 @@ const LoginScreen = () => {
                       onChange(text);
                     }}
                     onBlur={onBlur}
-                    secureTextEntry
+                    secureTextEntry  // Oculta el texto ingresado
                     editable={!isSubmitting}
                   />
                 )}
@@ -147,7 +188,9 @@ const LoginScreen = () => {
               )}
             </View>
 
-            {/* Error del formulario */}
+            {/* -------------------- */}
+            {/* Error global del formulario */}
+            {/* -------------------- */}
             {errors.root && (
               <View style={styles.errorContainer}>
                 <Ionicons name="warning" size={20} color="#ef4444" />
@@ -155,7 +198,9 @@ const LoginScreen = () => {
               </View>
             )}
 
-            {/* Recovery Link - CON SPINNER */}
+            {/* -------------------- */}
+            {/* Link de recuperación de contraseña */}
+            {/* -------------------- */}
             <TouchableOpacity onPress={handleRecoveryPress} disabled={isSubmitting || showLoading}>
               <Text style={[
                 styles.recoveryText, 
@@ -165,19 +210,22 @@ const LoginScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            {/* Login Button - MEJORADO CON EFECTOS */}
+            {/* -------------------- */}
+            {/* Botón de Login */}
+            {/* -------------------- */}
             <TouchableOpacity
               style={[
                 styles.loginButton, 
                 (isSubmitting || showLoading) && styles.loginButtonDisabled
               ]}
-              onPress={handleSubmit(onSubmit)}
+              onPress={handleSubmit(onSubmit)}  // Envía formulario
               disabled={isSubmitting || showLoading}
               activeOpacity={0.8}
             >
               <View style={styles.buttonContent}>
                 {isSubmitting ? (
                   <>
+                    {/* Spinner pequeño mientras se envía */}
                     <View style={styles.loadingDot} />
                     <Text style={styles.loginButtonText}>Iniciando...</Text>
                   </>
@@ -189,41 +237,38 @@ const LoginScreen = () => {
                 )}
               </View>
             </TouchableOpacity>
-
-            {/* Debug Info - ACTUALIZADO */}
-            <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>🚀 Backend conectado con alertas bonitas</Text>
-              <Text style={styles.debugText}>Estado: {isSubmitting ? 'Enviando...' : 'Listo'}</Text>
-              <Text style={styles.debugText}>showLoading: {showLoading ? 'TRUE' : 'FALSE'}</Text>
-              <Text style={styles.debugText}>showAlert: {showAlert ? 'TRUE' : 'FALSE'}</Text>
-              <Text style={styles.debugText}>Errores: {Object.keys(errors).length}</Text>
-            </View>
-
           </View>
         </View>
       </ScrollView>
 
-      {/* 🎨 ALERTA BONITA */}
+      {/* -------------------- */}
+      {/* ALERTA BONITA */}
+      {/* -------------------- */}
       <CustomAlert
         visible={showAlert}
-        type={alertConfig.type}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        onConfirm={alertConfig.onConfirm}
+        type={alertConfig.type}         // Tipo de alerta (error, success)
+        title={alertConfig.title}       // Título de alerta
+        message={alertConfig.message}   // Mensaje de alerta
+        onConfirm={alertConfig.onConfirm} // Acción al confirmar
         confirmText="Continuar"
       />
 
-      {/* 🎨 LOADING BONITO - CON DEBUG */}
+      {/* -------------------- */}
+      {/* LOADING OVERLAY */}
+      {/* -------------------- */}
       {console.log('🌀 [LoginScreen] Punto antes de LoadingOverlay, showLoading:', showLoading)}
       <LoadingOverlay
-        visible={showLoading}
-        type="login"
+        visible={showLoading}            // Muestra/oculta overlay
+        type="login"                     // Tipo de loading (login, general)
         message={showLoading ? (isSubmitting ? "Verificando credenciales..." : "Cargando...") : ""}
       />
     </SafeAreaView>
   );
 };
 
+// --------------------
+// Estilos del componente
+// --------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -371,3 +416,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+// Exporta el componente para que pueda ser usado en la app

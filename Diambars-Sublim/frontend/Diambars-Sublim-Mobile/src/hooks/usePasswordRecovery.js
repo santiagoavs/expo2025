@@ -1,61 +1,74 @@
-// src/hooks/usePasswordRecovery.js - CON ALERTAS BONITAS Y DELAYS
+// src/hooks/usePasswordRecovery.js
+// Hook personalizado para la recuperación de contraseña en React Native
+// Incluye manejo de alertas personalizadas, loading bonitos y delays para mejor UX
+
 import { useState, useEffect } from 'react';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRoute, useNavigation } from '@react-navigation/native'; // Para navegación y obtener params
+import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService'; // Funciones de API
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Para persistir token localmente
 
 export const usePasswordRecovery = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation = useNavigation(); // Hook para navegar entre pantallas
+  const route = useRoute();           // Hook para obtener parámetros de la ruta actual
   
+  // -----------------------
   // Estados básicos
+  // -----------------------
   const [verificationToken, setVerificationToken] = useState(
-    route.params?.verificationToken || null
+    route.params?.verificationToken || null // Inicializa token desde params o null
   );
-  const [email, setEmail] = useState(route.params?.email || '');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [timer, setTimer] = useState(30);
-  const [canResend, setCanResend] = useState(false);
+  const [email, setEmail] = useState(route.params?.email || ''); // Email del usuario
+  const [code, setCode] = useState(['', '', '', '', '', '']);    // Código de verificación de 6 dígitos
+  const [isSubmitting, setIsSubmitting] = useState(false);       // Indica si hay un envío en proceso
+  const [error, setError] = useState('');                        // Mensaje de error general
+  const [timer, setTimer] = useState(30);                        // Contador para permitir reenvío de código
+  const [canResend, setCanResend] = useState(false);             // Indica si se puede reenviar el código
 
-  // Estados para alertas y loading bonitos
-  const [showAlert, setShowAlert] = useState(false);
-  const [showLoading, setShowLoading] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    type: 'success',
-    title: '',
-    message: '',
-    onConfirm: () => {},
+  // -----------------------
+  // Estados para UI bonita
+  // -----------------------
+  const [showAlert, setShowAlert] = useState(false);            // Controla la visibilidad de alertas
+  const [showLoading, setShowLoading] = useState(false);        // Controla la visibilidad del loading
+  const [alertConfig, setAlertConfig] = useState({              // Configuración de alertas personalizadas
+    type: 'success',    // Tipo de alerta: success | error | info
+    title: '',          // Título de la alerta
+    message: '',        // Mensaje de la alerta
+    onConfirm: () => {},// Función a ejecutar al confirmar
   });
 
+  // -----------------------
   // Función para mostrar alertas bonitas
+  // -----------------------
   const showCustomAlert = (type, title, message, onConfirm = () => {}) => {
     setAlertConfig({
       type,
       title,
       message,
       onConfirm: () => {
-        setShowAlert(false);
-        onConfirm();
+        setShowAlert(false); // Cierra la alerta al confirmar
+        onConfirm();          // Ejecuta función extra si se pasa
       },
     });
-    setShowAlert(true);
+    setShowAlert(true); // Muestra la alerta
   };
 
-  // Función para mostrar loading
+  // -----------------------
+  // Función para mostrar/ocultar loading
+  // -----------------------
   const showLoadingOverlay = (show = true, type = 'default') => {
-    setShowLoading(show);
+    setShowLoading(show); // Solo controla visibilidad, type se podría usar para estilos
   };
 
+  // -----------------------
   // Persistir token en AsyncStorage
+  // -----------------------
   useEffect(() => {
     const saveToken = async () => {
       try {
         if (verificationToken) {
-          await AsyncStorage.setItem('recoveryToken', verificationToken);
+          await AsyncStorage.setItem('recoveryToken', verificationToken); // Guarda token
         } else {
-          await AsyncStorage.removeItem('recoveryToken');
+          await AsyncStorage.removeItem('recoveryToken'); // Elimina token si es null
         }
       } catch (error) {
         console.error('Error saving recovery token:', error);
@@ -64,13 +77,15 @@ export const usePasswordRecovery = () => {
     saveToken();
   }, [verificationToken]);
 
-  // Recuperar token al inicializar
+  // -----------------------
+  // Recuperar token desde AsyncStorage al inicializar
+  // -----------------------
   useEffect(() => {
     const loadToken = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('recoveryToken');
+        const storedToken = await AsyncStorage.getItem('recoveryToken'); // Lee token
         if (storedToken && !verificationToken) {
-          setVerificationToken(storedToken);
+          setVerificationToken(storedToken); // Si existe y no hay token en estado, lo setea
         }
       } catch (error) {
         console.error('Error loading recovery token:', error);
@@ -79,24 +94,31 @@ export const usePasswordRecovery = () => {
     loadToken();
   }, []);
 
+  // -----------------------
+  // Timer para habilitar reenvío de código
+  // -----------------------
   const startTimer = () => {
     setCanResend(false);
-    setTimer(30);
+    setTimer(30); // Reinicia contador
     const interval = setInterval(() => {
       setTimer(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
+          clearInterval(interval); // Para timer al llegar a 0
+          setCanResend(true);      // Permite reenvío
           return 0;
         }
-        return prev - 1;
+        return prev - 1; // Decrementa cada segundo
       });
     }, 1000);
   };
 
+  // -----------------------
+  // Solicitar código de recuperación
+  // -----------------------
   const handleRequestCode = async (emailValue) => {
     console.log('[usePasswordRecovery] Solicitando código para:', emailValue);
     
+    // Validación básica del email
     if (!emailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
       setError('Ingresa un correo válido');
       return;
@@ -106,26 +128,16 @@ export const usePasswordRecovery = () => {
     setError('');
     setEmail(emailValue);
 
-    // 🌀 MOSTRAR LOADING BONITO
-    console.log('🌀 [Recovery] Mostrando spinner de envío...');
+    // Mostrar loading bonito
     showLoadingOverlay(true, 'sending');
-
-    // ⏰ DELAY MÍNIMO para que se vea el spinner
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay mínimo
 
     try {
-      console.log('[usePasswordRecovery] Llamando a requestRecoveryCode...');
-      const response = await requestRecoveryCode(emailValue);
-      console.log('[usePasswordRecovery] Respuesta del servidor:', response);
-      
-      // ⏰ DELAY ANTES DE OCULTAR
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 🌀 OCULTAR LOADING
-      console.log('🌀 [Recovery] Ocultando spinner de envío...');
+      const response = await requestRecoveryCode(emailValue); // Llamada a API
+      await new Promise(resolve => setTimeout(resolve, 500));  // Delay antes de ocultar loading
       showLoadingOverlay(false);
-      
-      // Mostrar alerta de éxito bonita
+
+      // Alerta de éxito
       showCustomAlert(
         'success',
         '¡Correo Enviado!',
@@ -139,18 +151,13 @@ export const usePasswordRecovery = () => {
           startTimer();
         }
       );
-      
+
     } catch (err) {
-      console.error('[usePasswordRecovery] Error al solicitar código:', err);
-      
-      // 🌀 OCULTAR LOADING EN ERROR
-      console.log('🌀 [Recovery] Ocultando spinner por error...');
-      showLoadingOverlay(false);
-      
+      showLoadingOverlay(false); // Ocultar loading en error
       const errorMessage = err.message || 'Error al enviar el correo';
       setError(errorMessage);
-      
-      // Mostrar alerta de error bonita
+
+      // Alerta de error
       showCustomAlert(
         'error',
         'Error al Enviar',
@@ -161,9 +168,10 @@ export const usePasswordRecovery = () => {
     }
   };
 
+  // -----------------------
+  // Verificar código ingresado
+  // -----------------------
   const handleVerifyCode = async () => {
-    console.log('[usePasswordRecovery] Verificando código:', code);
-    
     const completeCode = code.join('');
     if (completeCode.length !== 6) {
       setError('Ingresa el código completo de 6 dígitos');
@@ -172,29 +180,16 @@ export const usePasswordRecovery = () => {
 
     setIsSubmitting(true);
     setError('');
-
-    // 🌀 MOSTRAR LOADING BONITO
-    console.log('🌀 [Recovery] Mostrando spinner de verificación...');
-    showLoadingOverlay(true, 'verifying');
-
-    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    showLoadingOverlay(true, 'verifying'); // Mostrar loading
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      console.log('[usePasswordRecovery] Llamando a verifyRecoveryCode...');
-      const response = await verifyRecoveryCode(email, completeCode);
-      console.log('[usePasswordRecovery] Código verificado, token recibido:', response);
-      
-      setVerificationToken(response.token);
-      
-      // ⏰ DELAY ANTES DE OCULTAR
+      const response = await verifyRecoveryCode(email, completeCode); // Llamada a API
+      setVerificationToken(response.token); // Guarda token recibido
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 🌀 OCULTAR LOADING
-      console.log('🌀 [Recovery] Ocultando spinner de verificación...');
       showLoadingOverlay(false);
-      
-      // Mostrar alerta de éxito bonita
+
+      // Alerta de éxito
       showCustomAlert(
         'success',
         '¡Código Verificado!',
@@ -207,18 +202,12 @@ export const usePasswordRecovery = () => {
           });
         }
       );
-      
+
     } catch (err) {
-      console.error('[usePasswordRecovery] Error al verificar código:', err);
-      
-      // 🌀 OCULTAR LOADING EN ERROR
-      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
-      
       const errorMessage = err.message || 'Código inválido o expirado';
       setError(errorMessage);
-      
-      // Mostrar alerta de error bonita
+
       showCustomAlert(
         'error',
         'Código Incorrecto',
@@ -229,14 +218,14 @@ export const usePasswordRecovery = () => {
     }
   };
 
+  // -----------------------
+  // Restablecer contraseña
+  // -----------------------
   const handleResetPassword = async (newPassword) => {
-    console.log('[usePasswordRecovery] Iniciando reset de contraseña');
-    
     if (!verificationToken) {
       const errorMsg = 'Token de verificación no encontrado';
-      console.error('[usePasswordRecovery]', errorMsg);
       setError(errorMsg);
-      
+
       showCustomAlert(
         'error',
         'Error de Sesión',
@@ -247,38 +236,17 @@ export const usePasswordRecovery = () => {
 
     setIsSubmitting(true);
     setError('');
-
-    // 🌀 MOSTRAR LOADING BONITO
-    console.log('🌀 [Recovery] Mostrando spinner de actualización...');
-    showLoadingOverlay(true, 'updating');
-
-    // ⏰ DELAY MÍNIMO para que se vea el spinner
+    showLoadingOverlay(true, 'updating'); // Loading
     await new Promise(resolve => setTimeout(resolve, 1200));
 
     try {
-      console.log('[usePasswordRecovery] Enviando solicitud al servidor...');
-      const response = await resetPassword({
-        newPassword,
-        token: verificationToken
-      });
-      
-      console.log('[usePasswordRecovery] Contraseña actualizada exitosamente:', response);
+      const response = await resetPassword({ newPassword, token: verificationToken });
       setVerificationToken(null);
-      
-      try {
-        await AsyncStorage.removeItem('recoveryToken');
-      } catch (storageError) {
-        console.error('Error limpiando token:', storageError);
-      }
-      
-      // ⏰ DELAY ANTES DE OCULTAR
+      await AsyncStorage.removeItem('recoveryToken'); // Limpiar token
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 🌀 OCULTAR LOADING
-      console.log('🌀 [Recovery] Ocultando spinner de actualización...');
       showLoadingOverlay(false);
-      
-      // Mostrar alerta de éxito bonita
+
+      // Alerta de éxito y redirección
       showCustomAlert(
         'success',
         '¡Contraseña Actualizada!',
@@ -286,28 +254,16 @@ export const usePasswordRecovery = () => {
         () => {
           navigation.reset({
             index: 0,
-            routes: [{ 
-              name: 'Login', 
-              params: { 
-                message: 'Contraseña actualizada correctamente',
-                type: 'success'
-              }
-            }],
+            routes: [{ name: 'Login', params: { message: 'Contraseña actualizada correctamente', type: 'success' } }],
           });
         }
       );
-      
+
     } catch (err) {
-      console.error('[usePasswordRecovery] Error detallado:', err);
-      
-      // 🌀 OCULTAR LOADING EN ERROR
-      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
-      
       const errorMessage = err.message || 'Error al actualizar contraseña';
       setError(errorMessage);
-      
-      // Mostrar alerta de error bonita
+
       showCustomAlert(
         'error',
         'Error al Actualizar',
@@ -318,55 +274,37 @@ export const usePasswordRecovery = () => {
     }
   };
 
+  // -----------------------
+  // Reenviar código
+  // -----------------------
   const handleResendCode = async () => {
-    console.log('[usePasswordRecovery] Reenviando código para:', email);
-    
     if (!email) {
       setError('No se puede reenviar sin email');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError('');
-
-    // 🌀 MOSTRAR LOADING BONITO
-    console.log('🌀 [Recovery] Mostrando spinner de reenvío...');
     showLoadingOverlay(true, 'sending');
-
-    // ⏰ DELAY MÍNIMO para que se vea el spinner
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     try {
       await requestRecoveryCode(email);
-      
-      // ⏰ DELAY ANTES DE OCULTAR
       await new Promise(resolve => setTimeout(resolve, 400));
-      
-      // 🌀 OCULTAR LOADING
-      console.log('🌀 [Recovery] Ocultando spinner de reenvío...');
       showLoadingOverlay(false);
-      
-      // Mostrar alerta de éxito bonita
+
       showCustomAlert(
         'success',
         'Código Reenviado',
         `Se ha enviado un nuevo código a ${email}. Revisa tu bandeja de entrada.`,
-        () => {
-          startTimer();
-        }
+        () => startTimer()
       );
-      
+
     } catch (error) {
-      console.error('[usePasswordRecovery] Error al reenviar código:', error);
-      
-      // 🌀 OCULTAR LOADING EN ERROR
-      console.log('🌀 [Recovery] Ocultando spinner por error...');
       showLoadingOverlay(false);
-      
       const errorMessage = error.message || 'Error al reenviar el correo';
       setError(errorMessage);
-      
-      // Mostrar alerta de error bonita
+
       showCustomAlert(
         'error',
         'Error al Reenviar',
@@ -377,9 +315,12 @@ export const usePasswordRecovery = () => {
     }
   };
 
+  // -----------------------
+  // Manejo de cambios en inputs de código
+  // -----------------------
   const handleInputChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return;
-    
+    if (!/^\d*$/.test(value)) return; // Solo números
+
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
@@ -387,10 +328,13 @@ export const usePasswordRecovery = () => {
 
   const handleKeyPress = (index, key) => {
     if (key === 'Backspace' && !code[index] && index > 0) {
-      // Retroceso al input anterior se maneja en el componente
+      // Retroceso al input anterior se maneja en componente externo
     }
   };
 
+  // -----------------------
+  // Función para volver atrás
+  // -----------------------
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -399,6 +343,9 @@ export const usePasswordRecovery = () => {
     }
   };
 
+  // -----------------------
+  // Retorno de hook
+  // -----------------------
   return {
     // Estados básicos
     email,
@@ -411,7 +358,7 @@ export const usePasswordRecovery = () => {
     timer,
     canResend,
     verificationToken,
-    
+
     // Funciones principales
     handleRequestCode,
     handleVerifyCode,
@@ -421,7 +368,7 @@ export const usePasswordRecovery = () => {
     handleInputChange,
     handleKeyPress,
     handleGoBack,
-    
+
     // Alertas y Loading bonitos
     showAlert,
     showLoading,

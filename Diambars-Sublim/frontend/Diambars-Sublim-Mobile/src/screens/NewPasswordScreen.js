@@ -1,5 +1,8 @@
 // src/screens/NewPasswordScreen.js - VERSIÓN SIMPLE
+
 import React, { useState } from 'react';
+// Importa React y useState para manejar estados locales del componente
+
 import {
   View,
   Text,
@@ -11,28 +14,55 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+// Importa componentes de React Native:
+// View → contenedor de UI
+// Text → para mostrar texto
+// TextInput → campo de entrada
+// TouchableOpacity → botón táctil con opacidad
+// StyleSheet → para definir estilos
+// ScrollView → contenedor scrollable
+// StatusBar → para controlar la barra de estado
+// ActivityIndicator → spinner de carga
+// Alert → para mostrar alertas nativas
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView evita que el contenido se superponga al notch o barra superior
+
+import { useRoute, useNavigation } from '@react-navigation/native';
+// Hooks para navegación y acceso a parámetros de la ruta
+
+import { Ionicons } from '@expo/vector-icons';
+// Librería de iconos Ionicons
+
+// ------------------------------
+// Componente principal NewPasswordScreen
+// ------------------------------
 const NewPasswordScreen = () => {
   console.log('[NewPassword] Renderizando pantalla');
   
   const route = useRoute();
   const navigation = useNavigation();
   
-  // Obtener datos del estado de navegación
+  // ------------------------------
+  // Obtener datos enviados desde pantalla anterior
+  // ------------------------------
   const email = route.params?.email;
   const verificationToken = route.params?.verificationToken;
   const fromCodeConfirmation = route.params?.fromCodeConfirmation;
   
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  // ------------------------------
+  // Estados locales
+  // ------------------------------
+  const [password, setPassword] = useState('');                 // Nuevo password
+  const [confirmPassword, setConfirmPassword] = useState('');   // Confirmación de password
+  const [showPassword, setShowPassword] = useState(false);      // Mostrar/ocultar password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Mostrar/ocultar confirm
+  const [isSubmitting, setIsSubmitting] = useState(false);      // Estado de envío
+  const [error, setError] = useState('');                       // Mensaje de error
 
+  // ------------------------------
+  // Función para validar el formulario
+  // ------------------------------
   const validateForm = () => {
     if (!password) {
       setError('La contraseña es requerida');
@@ -52,22 +82,26 @@ const NewPasswordScreen = () => {
     return true;
   };
 
+  // ------------------------------
+  // Función para resetear la contraseña
+  // ------------------------------
   const handleResetPassword = async () => {
     console.log('[NewPassword] Iniciando reset de contraseña');
     
     if (!validateForm()) {
-      return;
+      return; // Si el formulario no es válido, no continuar
     }
 
-    setIsSubmitting(true);
-    setError('');
+    setIsSubmitting(true); // Activar spinner
+    setError('');          // Limpiar errores previos
 
     try {
-      // Simular actualización de contraseña
+      // Simulación de petición de actualización de contraseña (2 segundos)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       console.log('[NewPassword] Contraseña actualizada exitosamente');
       
+      // Mostrar alerta nativa de éxito
       Alert.alert(
         '¡Contraseña actualizada!', 
         'Tu contraseña ha sido cambiada exitosamente',
@@ -75,7 +109,7 @@ const NewPasswordScreen = () => {
           {
             text: 'OK',
             onPress: () => {
-              // Navegar al login con mensaje de éxito
+              // Reinicia la navegación y va a Login
               navigation.reset({
                 index: 0,
                 routes: [{ 
@@ -93,26 +127,35 @@ const NewPasswordScreen = () => {
       
     } catch (err) {
       console.error('[NewPassword] Error al actualizar contraseña:', err);
-      setError('Error al actualizar contraseña');
+      setError('Error al actualizar contraseña'); // Mostrar error
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Ocultar spinner
     }
   };
 
+  // ------------------------------
+  // Función para volver a la pantalla anterior
+  // ------------------------------
   const handleBack = () => {
     navigation.goBack();
   };
 
+  // ------------------------------
+  // Validación rápida para habilitar botón
+  // ------------------------------
   const isFormValid = password && confirmPassword && password === confirmPassword && password.length >= 6;
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Configura la barra de estado */}
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
           
+          {/* -------------------- */}
           {/* Botón de volver */}
+          {/* -------------------- */}
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBack}
@@ -120,7 +163,9 @@ const NewPasswordScreen = () => {
             <Ionicons name="arrow-back" size={20} color="#1F64BF" />
           </TouchableOpacity>
 
-          {/* Header */}
+          {/* -------------------- */}
+          {/* Header con logo y título */}
+          {/* -------------------- */}
           <View style={styles.header}>
             <View style={styles.logoPlaceholder}>
               <Ionicons name="shield-checkmark" size={60} color="#040DBF" />
@@ -129,14 +174,18 @@ const NewPasswordScreen = () => {
             <Text style={styles.subtitle}>sublimado</Text>
           </View>
 
-          {/* Form */}
+          {/* -------------------- */}
+          {/* Formulario */}
+          {/* -------------------- */}
           <View style={styles.form}>
             <Text style={styles.formTitle}>Crea tu nueva contraseña</Text>
             <Text style={styles.formDescription}>
               Tu nueva contraseña debe ser diferente a las anteriores
             </Text>
             
-            {/* Error general */}
+            {/* -------------------- */}
+            {/* Mensaje de error */}
+            {/* -------------------- */}
             {error && (
               <View style={styles.errorMessage}>
                 <Ionicons name="warning" size={20} color="#dc2626" />
@@ -144,7 +193,9 @@ const NewPasswordScreen = () => {
               </View>
             )}
             
-            {/* Password Input */}
+            {/* -------------------- */}
+            {/* Input de nueva contraseña */}
+            {/* -------------------- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nueva contraseña</Text>
               <View style={styles.inputWrapper}>
@@ -164,8 +215,9 @@ const NewPasswordScreen = () => {
                     setPassword(text);
                     if (error) setError('');
                   }}
-                  secureTextEntry={!showPassword}
+                  secureTextEntry={!showPassword} // Oculta o muestra contraseña
                 />
+                {/* Botón para mostrar/ocultar password */}
                 <TouchableOpacity
                   style={styles.togglePassword}
                   onPress={() => setShowPassword(!showPassword)}
@@ -179,7 +231,9 @@ const NewPasswordScreen = () => {
               </View>
             </View>
 
-            {/* Confirm Password Input */}
+            {/* -------------------- */}
+            {/* Input de confirmación de contraseña */}
+            {/* -------------------- */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirmar contraseña</Text>
               <View style={styles.inputWrapper}>
@@ -216,7 +270,9 @@ const NewPasswordScreen = () => {
                 </TouchableOpacity>
               </View>
               
-              {/* Match indicator */}
+              {/* -------------------- */}
+              {/* Indicador de coincidencia */}
+              {/* -------------------- */}
               {confirmPassword && (
                 <View style={styles.matchIndicator}>
                   <Ionicons 
@@ -234,7 +290,9 @@ const NewPasswordScreen = () => {
               )}
             </View>
 
-            {/* Requirements */}
+            {/* -------------------- */}
+            {/* Requisitos de contraseña */}
+            {/* -------------------- */}
             <View style={styles.requirements}>
               <Text style={styles.requirementsTitle}>Requisitos:</Text>
               <View style={styles.requirement}>
@@ -252,7 +310,9 @@ const NewPasswordScreen = () => {
               </View>
             </View>
 
-            {/* Submit Button */}
+            {/* -------------------- */}
+            {/* Botón de submit */}
+            {/* -------------------- */}
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -271,16 +331,6 @@ const NewPasswordScreen = () => {
               )}
             </TouchableOpacity>
 
-            {/* Debug Info */}
-            <View style={styles.debugInfo}>
-              <Text style={styles.debugText}>Debug Info:</Text>
-              <Text style={styles.debugText}>Password: {password ? '***' : 'vacío'}</Text>
-              <Text style={styles.debugText}>Confirm: {confirmPassword ? '***' : 'vacío'}</Text>
-              <Text style={styles.debugText}>Match: {password === confirmPassword ? 'Sí' : 'No'}</Text>
-              <Text style={styles.debugText}>Valid: {isFormValid ? 'Sí' : 'No'}</Text>
-              <Text style={styles.debugText}>Email: {email}</Text>
-            </View>
-
           </View>
         </View>
       </ScrollView>
@@ -288,6 +338,9 @@ const NewPasswordScreen = () => {
   );
 };
 
+// --------------------
+// Estilos
+// --------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -498,3 +551,4 @@ const styles = StyleSheet.create({
 });
 
 export default NewPasswordScreen;
+// Exporta el componente para ser utilizado en la app
