@@ -314,6 +314,17 @@ const designSchema = new mongoose.Schema({
   konvaJSON: { 
     type: String // Almacenar el stage completo serializado para recuperación rápida
   },
+  productColorFilter: {
+  type: String,
+  validate: {
+    validator: function(v) {
+      if (!v) return true;
+      return /^#[0-9A-F]{6}$/i.test(v);
+    },
+    message: 'El filtro de color debe estar en formato hexadecimal (#RRGGBB)'
+  },
+  default: null
+},
   price: { 
     type: Number,
     min: [0, 'El precio no puede ser negativo'],

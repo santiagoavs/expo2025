@@ -1,236 +1,652 @@
-// src/api/DesignService.js
+// src/api/DesignService.js - SERVICIO COMPLETO PARA DISEÑOS ADMIN CORREGIDO
 import apiClient from './ApiClient';
 
 const BASE_URL = '/designs';
 
-export default {
+const DesignService = {
   // ==================== OBTENER DISEÑOS ====================
   
-  // Obtener todos los diseños con filtros avanzados
+  /**
+   * Obtener todos los diseños con filtros avanzados (Admin)
+   * @param {Object} params - Parámetros de filtrado y paginación
+   * @returns {Promise} Respuesta con diseños paginados
+   */
   getAll: async (params = {}) => {
-    const {
-      page = 1,
-      limit = 12,
-      status,
-      product,
-      user,
-      search,
-      sort = 'createdAt',
-      order = 'desc'
-    } = params;
+    try {
+      const {
+        page = 1,
+        limit = 12,
+        status,      // 'pending', 'quoted', 'approved', 'rejected', 'draft'
+        product,     // ID del producto
+        user,        // ID del usuario/cliente
+        search,      // Búsqueda por nombre
+        sort = 'createdAt',
+        order = 'desc'
+      } = params;
 
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    if (status) queryParams.append('status', status);
-    if (product) queryParams.append('product', product);
-    if (user) queryParams.append('user', user);
-    if (search) queryParams.append('search', search);
-    if (sort) queryParams.append('sort', sort);
-    if (order) queryParams.append('order', order);
+      console.log('🎨 [DesignService] Obteniendo diseños con params:', params);
 
-    const response = await apiClient.get(`${BASE_URL}?${queryParams}`);
-    return response;
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page.toString());
+      queryParams.append('limit', limit.toString());
+      queryParams.append('sort', sort);
+      queryParams.append('order', order);
+      
+      if (status && status.trim() !== '') queryParams.append('status', status);
+      if (product && product.trim() !== '') queryParams.append('product', product);
+      if (user && user.trim() !== '') queryParams.append('user', user);
+      if (search && search.trim() !== '') queryParams.append('search', search.trim());
+
+      const url = `${BASE_URL}?${queryParams.toString()}`;
+      console.log('📡 [DesignService] URL final:', url);
+
+      const response = await apiClient.get(url);
+      
+      console.log('✅ [DesignService] Diseños obtenidos:', {
+        total: response.data?.designs?.length || 0,
+        pagination: response.data?.pagination
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error obteniendo diseños:', error);
+      throw error;
+    }
   },
 
-  // Obtener diseño por ID con configuración completa
+  /**
+   * Obtener diseño específico por ID
+   * @param {string} id - ID del diseño
+   * @returns {Promise} Respuesta con datos del diseño
+   */
   getById: async (id) => {
-    const response = await apiClient.get(`${BASE_URL}/${id}`);
-    return response;
-  },
+    try {
+      console.log('🔍 [DesignService] Obteniendo diseño por ID:', id);
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
 
-  // Obtener historial de diseños del usuario
-  getUserDesignHistory: async (includeDetails = false) => {
-    const queryParams = new URLSearchParams();
-    if (includeDetails) queryParams.append('includeDetails', 'true');
-    
-    const response = await apiClient.get(`${BASE_URL}/my-designs?${queryParams}`);
-    return response;
-  },
-
-  // ==================== CREAR Y ACTUALIZAR DISEÑOS ====================
-  
-  // Crear nuevo diseño personalizado
-  create: async (designData) => {
-    const payload = {
-      productId: designData.productId,
-      elements: designData.elements || [],
-      productOptions: designData.productOptions || [],
-      clientNotes: designData.clientNotes || "",
-      mode: designData.mode || 'simple'
-    };
-
-    // Validar elementos antes de enviar
-    const validation = validateDesignElements(payload.elements);
-    if (!validation.isValid) {
-      throw new Error(`Elementos inválidos: ${validation.errors.join(', ')}`);
+      const response = await apiClient.get(`${BASE_URL}/${id}`);
+      console.log('✅ [DesignService] Diseño obtenido:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error obteniendo diseño:', error);
+      throw error;
     }
-
-    const response = await apiClient.post(BASE_URL, payload);
-    return response;
   },
 
-  // Actualizar diseño existente (solo en estado draft)
+  /**
+   * Obtener historial de diseños de un usuario específico
+   * @param {string} userId - ID del usuario
+   * @param {Object} options - Opciones adicionales
+   * @returns {Promise} Respuesta con diseños del usuario
+   */
+  getUserDesigns: async (userId, options = {}) => {
+    try {
+      console.log('👤 [DesignService] Obteniendo diseños del usuario:', userId);
+      
+      if (!userId) {
+        throw new Error('ID de usuario requerido');
+      }
+
+      const { includeDetails = false, limit = 20 } = options;
+      
+      const queryParams = new URLSearchParams();
+      if (includeDetails) queryParams.append('includeDetails', 'true');
+      queryParams.append('limit', limit.toString());
+
+      const url = queryParams.toString() 
+        ? `${BASE_URL}/my-designs?${queryParams}&user=${userId}`
+        : `${BASE_URL}/my-designs?user=${userId}`;
+
+      const response = await apiClient.get(url);
+      console.log('✅ [DesignService] Diseños del usuario obtenidos:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error obteniendo diseños del usuario:', error);
+      throw error;
+    }
+  },
+
+  // ==================== CREAR Y GESTIONAR DISEÑOS ====================
+
+  /**
+   * Crear diseño para un cliente (Admin) - CORREGIDO
+   * @param {Object} designData - Datos del diseño
+   * @returns {Promise} Respuesta con diseño creado
+   */
+  createForClient: async (designData) => {
+    try {
+      console.log('🆕 [DesignService] Creando diseño para cliente:', designData);
+
+      // Validación básica
+      if (!designData.productId) {
+        throw new Error('ID del producto es requerido');
+      }
+      
+      if (!designData.userId) {
+        throw new Error('ID del cliente es requerido');
+      }
+      
+      if (!designData.elements || !Array.isArray(designData.elements) || designData.elements.length === 0) {
+        throw new Error('Debe incluir al menos un elemento en el diseño');
+      }
+
+      // Validar formato de elementos
+      const validationResult = DesignService.validateElementsForSubmission(designData.elements);
+      if (!validationResult.isValid) {
+        throw new Error(`Elementos inválidos: ${validationResult.errors.join('; ')}`);
+      }
+
+      // Preparar datos para envío - FORMATO CORREGIDO
+      const payload = {
+        userId: designData.userId, // Campo específico para admin
+        productId: designData.productId,
+        name: designData.name || `Diseño personalizado - ${new Date().toLocaleDateString()}`,
+        elements: designData.elements,
+        productOptions: designData.productOptions || [],
+        clientNotes: designData.clientNotes || '',
+        mode: designData.mode || 'simple'
+      };
+
+      console.log('📤 [DesignService] Payload preparado:', payload);
+
+      // Usar el endpoint específico para admin
+      const response = await apiClient.post(`${BASE_URL}/admin/create-for-client`, payload);
+      
+      console.log('✅ [DesignService] Diseño creado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error creando diseño:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Actualizar diseño existente (solo en estado draft)
+   * @param {string} id - ID del diseño
+   * @param {Object} designData - Datos actualizados
+   * @returns {Promise} Respuesta con diseño actualizado
+   */
   update: async (id, designData) => {
-    const payload = {};
-    
-    if (designData.elements) payload.elements = designData.elements;
-    if (designData.productOptions) payload.productOptions = designData.productOptions;
-    if (designData.name) payload.name = designData.name;
-    if (designData.clientNotes !== undefined) payload.clientNotes = designData.clientNotes;
+    try {
+      console.log('✏️ [DesignService] Actualizando diseño:', { id, designData });
 
-    const response = await apiClient.put(`${BASE_URL}/${id}`, payload);
-    return response;
+      if (!id) {
+        throw new Error('ID de diseño requerido para actualización');
+      }
+
+      // Filtrar solo campos permitidos para actualización
+      const allowedFields = ['elements', 'productOptions', 'clientNotes', 'name'];
+      const payload = {};
+      
+      allowedFields.forEach(field => {
+        if (designData[field] !== undefined) {
+          payload[field] = designData[field];
+        }
+      });
+
+      console.log('📤 [DesignService] Payload para actualización:', payload);
+
+      const response = await apiClient.put(`${BASE_URL}/${id}`, payload);
+      console.log('✅ [DesignService] Diseño actualizado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error actualizando diseño:', error);
+      throw error;
+    }
   },
 
-  // Guardar diseño como borrador
+  /**
+ * Actualizar color del producto en un diseño
+ * @param {string} id - ID del diseño
+ * @param {string} color - Color en formato hexadecimal
+ * @returns {Promise} Respuesta con diseño actualizado
+ */
+updateProductColor: async (id, color) => {
+  try {
+    console.log('🎨 [DesignService] Actualizando color del producto:', { id, color });
+    
+    if (!id) {
+      throw new Error('ID de diseño requerido');
+    }
+
+    if (color && !/^#[0-9A-F]{6}$/i.test(color)) {
+      throw new Error('El color debe estar en formato hexadecimal (#RRGGBB)');
+    }
+
+    const payload = {
+      color: color || null
+    };
+
+    const response = await apiClient.patch(`${BASE_URL}/${id}/product-color`, payload);
+    console.log('✅ [DesignService] Color del producto actualizado:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [DesignService] Error actualizando color del producto:', error);
+    throw error;
+  }
+},
+
+  /**
+   * Clonar diseño existente
+   * @param {string} id - ID del diseño a clonar
+   * @param {Object} options - Opciones de clonación
+   * @returns {Promise} Respuesta con diseño clonado
+   */
+  clone: async (id, options = {}) => {
+    try {
+      console.log('📋 [DesignService] Clonando diseño:', { id, options });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido para clonar');
+      }
+
+      const payload = {
+        name: options.name || undefined
+      };
+
+      const response = await apiClient.post(`${BASE_URL}/${id}/clone`, payload);
+      console.log('✅ [DesignService] Diseño clonado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error clonando diseño:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Guardar diseño como borrador
+   * @param {Object} designData - Datos del borrador
+   * @returns {Promise} Respuesta con borrador guardado
+   */
   saveDraft: async (designData) => {
-    const payload = {
-      productId: designData.productId,
-      elements: designData.elements || [],
-      productOptions: designData.productOptions || [],
-      name: designData.name || `Borrador - ${new Date().toLocaleDateString()}`,
-      clientNotes: designData.clientNotes || ""
+    try {
+      console.log('💾 [DesignService] Guardando borrador:', designData);
+
+      if (!designData.productId) {
+        throw new Error('ID del producto es requerido');
+      }
+
+      const payload = {
+        productId: designData.productId,
+        elements: designData.elements || [],
+        productOptions: designData.productOptions || [],
+        name: designData.name || 'Borrador de diseño',
+        clientNotes: designData.clientNotes || '',
+        userId: designData.userId || undefined // Para diseños admin
+      };
+
+      const response = await apiClient.post(`${BASE_URL}/draft`, payload);
+      console.log('✅ [DesignService] Borrador guardado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error guardando borrador:', error);
+      throw error;
+    }
+  },
+
+  // ==================== SISTEMA DE COTIZACIONES ====================
+
+  /**
+   * Enviar cotización para un diseño (Admin)
+   * @param {string} id - ID del diseño
+   * @param {Object} quoteData - Datos de la cotización
+   * @returns {Promise} Respuesta con cotización enviada
+   */
+  submitQuote: async (id, quoteData) => {
+    try {
+      console.log('💰 [DesignService] Enviando cotización:', { id, quoteData });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+
+      // Validar datos de cotización
+      if (!quoteData.price || quoteData.price <= 0) {
+        throw new Error('El precio debe ser mayor que 0');
+      }
+      
+      if (!quoteData.productionDays || quoteData.productionDays < 1) {
+        throw new Error('Los días de producción deben ser al menos 1');
+      }
+
+      const payload = {
+        price: parseFloat(quoteData.price),
+        productionDays: parseInt(quoteData.productionDays),
+        adminNotes: quoteData.adminNotes || ''
+      };
+
+      console.log('📤 [DesignService] Payload de cotización:', payload);
+
+      const response = await apiClient.post(`${BASE_URL}/${id}/quote`, payload);
+      console.log('✅ [DesignService] Cotización enviada exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error enviando cotización:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Responder a cotización como cliente (Solo para testing admin)
+   * @param {string} id - ID del diseño
+   * @param {Object} responseData - Respuesta del cliente
+   * @returns {Promise} Respuesta procesada
+   */
+  respondToQuote: async (id, responseData) => {
+    try {
+      console.log('📝 [DesignService] Respondiendo a cotización:', { id, responseData });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+
+      if (typeof responseData.accept !== 'boolean') {
+        throw new Error('Debe especificar si acepta o rechaza la cotización');
+      }
+
+      const payload = {
+        accept: responseData.accept,
+        clientNotes: responseData.clientNotes || ''
+      };
+
+      const response = await apiClient.post(`${BASE_URL}/${id}/respond`, payload);
+      console.log('✅ [DesignService] Respuesta a cotización procesada:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error respondiendo a cotización:', error);
+      throw error;
+    }
+  },
+
+  // ==================== GESTIÓN DE ESTADOS ====================
+
+  /**
+   * Cambiar estado de un diseño (Admin)
+   * @param {string} id - ID del diseño
+   * @param {string} newStatus - Nuevo estado
+   * @param {string} notes - Notas del cambio
+   * @returns {Promise} Respuesta con estado actualizado
+   */
+  changeStatus: async (id, newStatus, notes = '') => {
+    try {
+      console.log('🔄 [DesignService] Cambiando estado:', { id, newStatus, notes });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+
+      const validStatuses = ['draft', 'pending', 'quoted', 'approved', 'rejected', 'completed', 'archived'];
+      if (!validStatuses.includes(newStatus)) {
+        throw new Error(`Estado inválido. Estados válidos: ${validStatuses.join(', ')}`);
+      }
+
+      const payload = {
+        status: newStatus,
+        notes: notes
+      };
+
+      const response = await apiClient.patch(`${BASE_URL}/${id}/status`, payload);
+      console.log('✅ [DesignService] Estado cambiado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error cambiando estado:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Cancelar diseño
+   * @param {string} id - ID del diseño
+   * @param {string} reason - Razón de cancelación
+   * @returns {Promise} Respuesta con diseño cancelado
+   */
+  cancel: async (id, reason = '') => {
+    try {
+      console.log('❌ [DesignService] Cancelando diseño:', { id, reason });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+
+      const payload = {
+        reason: reason
+      };
+
+      const response = await apiClient.post(`${BASE_URL}/${id}/cancel`, payload);
+      console.log('✅ [DesignService] Diseño cancelado exitosamente:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error cancelando diseño:', error);
+      throw error;
+    }
+  },
+
+  // ==================== UTILIDADES ====================
+
+  /**
+   * Formatear diseño para mostrar en UI
+   * @param {Object} design - Datos del diseño
+   * @returns {Object} Diseño formateado
+   */
+  formatDesign: (design) => {
+    if (!design || typeof design !== 'object') {
+      return null;
+    }
+
+    const safeDesign = {
+      ...design,
+      id: design._id || design.id,
+      name: design.name || 'Diseño sin nombre',
+      status: design.status || 'draft',
+      price: design.price || 0,
+      productionDays: design.productionDays || 0,
+      elementsCount: Array.isArray(design.elements) ? design.elements.length : 0,
+      hasPreview: !!design.previewImage,
+      canEdit: ['draft', 'pending'].includes(design.status),
+      canQuote: design.status === 'pending',
+      canApprove: design.status === 'quoted',
+      
+      // Información del cliente
+      clientName: design.user?.name || 'Cliente desconocido',
+      clientEmail: design.user?.email || '',
+      
+      // Información del producto
+      productName: design.product?.name || 'Producto desconocido',
+      productImage: design.product?.images?.main || null,
+      basePrice: design.product?.basePrice || 0,
+      
+      // Fechas formateadas
+      createdDate: design.createdAt ? new Date(design.createdAt).toLocaleDateString() : null,
+      updatedDate: design.updatedAt ? new Date(design.updatedAt).toLocaleDateString() : null,
+      quotedDate: design.quotedAt ? new Date(design.quotedAt).toLocaleDateString() : null,
+      approvedDate: design.approvedAt ? new Date(design.approvedAt).toLocaleDateString() : null,
+      
+      // Estado formateado
+      statusText: DesignService.getStatusText(design.status),
+      statusColor: DesignService.getStatusColor(design.status),
+      
+      // Precio formateado
+      formattedPrice: design.price ? new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(design.price) : '$0.00',
+      
+      // Tiempo desde creación
+      daysAgo: design.createdAt ? DesignService.calculateDaysAgo(design.createdAt) : 0,
+      
+      // Complejidad del diseño
+      complexity: DesignService.calculateComplexity(design.elements || [])
     };
 
-    const response = await apiClient.post(`${BASE_URL}/draft`, payload);
-    return response;
+    return safeDesign;
   },
 
-  // Clonar/duplicar diseño existente
-  clone: async (designId, newName) => {
-    const payload = {};
-    if (newName) payload.name = newName;
-
-    const response = await apiClient.post(`${BASE_URL}/${designId}/clone`, payload);
-    return response;
-  },
-
-  // ==================== GESTIÓN DE COTIZACIONES ====================
-  
-  // Cotizar diseño (admin/manager)
-  submitQuote: async (designId, quoteData) => {
-    const { price, productionDays, adminNotes } = quoteData;
-    
-    if (!price || price <= 0) {
-      throw new Error('El precio debe ser mayor que cero');
-    }
-    
-    if (!productionDays || productionDays <= 0) {
-      throw new Error('Los días de producción deben ser mayor que cero');
-    }
-
-    const payload = {
-      price: parseFloat(price),
-      productionDays: parseInt(productionDays),
-      adminNotes: adminNotes || ""
+  /**
+   * Obtener texto del estado
+   * @param {string} status - Estado del diseño
+   * @returns {string} Texto legible del estado
+   */
+  getStatusText: (status) => {
+    const statusMap = {
+      'draft': 'Borrador',
+      'pending': 'Pendiente',
+      'quoted': 'Cotizado',
+      'approved': 'Aprobado',
+      'rejected': 'Rechazado',
+      'completed': 'Completado',
+      'archived': 'Archivado',
+      'cancelled': 'Cancelado'
     };
-
-    const response = await apiClient.post(`${BASE_URL}/${designId}/quote`, payload);
-    return response;
+    
+    return statusMap[status] || 'Desconocido';
   },
 
-  // Responder a cotización (cliente)
-  respondToQuote: async (designId, response) => {
-    const { accept, clientNotes } = response;
-    
-    if (typeof accept !== 'boolean') {
-      throw new Error('Debe especificar si acepta o rechaza la cotización');
-    }
-
-    const payload = {
-      accept,
-      clientNotes: clientNotes || ""
+  /**
+   * Obtener color del estado
+   * @param {string} status - Estado del diseño
+   * @returns {string} Color para el estado
+   */
+  getStatusColor: (status) => {
+    const colorMap = {
+      'draft': '#6B7280',      // Gris
+      'pending': '#F59E0B',     // Amarillo
+      'quoted': '#3B82F6',      // Azul
+      'approved': '#10B981',    // Verde
+      'rejected': '#EF4444',    // Rojo
+      'completed': '#059669',   // Verde oscuro
+      'archived': '#9CA3AF',    // Gris claro
+      'cancelled': '#DC2626'    // Rojo oscuro
     };
-
-    const responseData = await apiClient.post(`${BASE_URL}/${designId}/respond`, payload);
-    return responseData;
-  },
-
-  // ==================== EDITOR KONVA ====================
-  
-  // Obtener configuración Konva para editar diseño
-  getKonvaConfig: async (designId) => {
-    const response = await apiClient.get(`${BASE_URL}/${designId}/konva-config`);
-    return response;
-  },
-
-  // Guardar elementos de Konva
-  saveKonvaElements: async (designId, konvaData) => {
-    const elements = convertKonvaToElements(konvaData);
     
-    const payload = {
-      elements,
-      konvaJSON: JSON.stringify(konvaData)
-    };
-
-    const response = await apiClient.put(`${BASE_URL}/${designId}/elements`, payload);
-    return response;
+    return colorMap[status] || '#6B7280';
   },
 
-  // Generar vista previa del diseño
-  generatePreview: async (designId) => {
-    const response = await apiClient.post(`${BASE_URL}/${designId}/generate-preview`);
-    return response;
-  },
-
-  // ==================== BÚSQUEDA Y FILTROS ====================
-  
-  // Buscar diseños
-  search: async (query, filters = {}) => {
-    if (!query || query.trim().length < 2) {
-      return { success: true, data: { designs: [] } };
+  /**
+   * Calcular días desde una fecha
+   * @param {string} date - Fecha en formato ISO
+   * @returns {number} Días transcurridos
+   */
+  calculateDaysAgo: (date) => {
+    if (!date) return 0;
+    try {
+      const now = new Date();
+      const createdDate = new Date(date);
+      const diffTime = Math.abs(now - createdDate);
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    } catch (error) {
+      console.error('Error calculando días:', error);
+      return 0;
     }
-
-    const queryParams = new URLSearchParams({
-      q: query.trim(),
-      ...filters
-    });
-
-    const response = await apiClient.get(`${BASE_URL}/search?${queryParams}`);
-    return response;
   },
 
-  // Filtrar diseños por estado
-  getByStatus: async (status, params = {}) => {
-    const validStatuses = ['draft', 'pending', 'quoted', 'approved', 'rejected', 'completed', 'archived'];
+  /**
+   * Calcular complejidad del diseño
+   * @param {Array} elements - Elementos del diseño
+   * @returns {string} Nivel de complejidad
+   */
+  calculateComplexity: (elements) => {
+    if (!Array.isArray(elements) || elements.length === 0) {
+      return 'low';
+    }
     
-    if (!validStatuses.includes(status)) {
-      throw new Error(`Estado inválido. Estados válidos: ${validStatuses.join(', ')}`);
-    }
-
-    return await this.getAll({ ...params, status });
+    const totalElements = elements.length;
+    const imageElements = elements.filter(el => el.type === 'image').length;
+    const textElements = elements.filter(el => el.type === 'text').length;
+    
+    // Lógica de complejidad
+    let score = 0;
+    score += totalElements * 1;
+    score += imageElements * 2; // Las imágenes son más complejas
+    score += textElements * 1;
+    
+    // Verificar efectos especiales
+    const hasEffects = elements.some(el => 
+      el.konvaAttrs && (
+        el.konvaAttrs.rotation !== 0 ||
+        el.konvaAttrs.opacity < 1 ||
+        el.konvaAttrs.shadowEnabled ||
+        el.konvaAttrs.filters?.length > 0
+      )
+    );
+    
+    if (hasEffects) score += 2;
+    
+    if (score <= 3) return 'low';
+    if (score <= 8) return 'medium';
+    return 'high';
   },
 
-  // ==================== VALIDACIONES Y UTILIDADES ====================
-  
-  // Validar datos del diseño
+  /**
+   * Validar datos de diseño
+   * @param {Object} designData - Datos del diseño
+   * @returns {Object} Resultado de validación
+   */
   validateDesignData: (designData) => {
     const errors = [];
 
+    // Validaciones básicas
     if (!designData.productId) {
-      errors.push('ID de producto requerido');
+      errors.push('Debe seleccionar un producto');
     }
 
     if (!designData.elements || !Array.isArray(designData.elements) || designData.elements.length === 0) {
-      errors.push('Debe incluir al menos un elemento de diseño');
+      errors.push('Debe incluir al menos un elemento en el diseño');
     }
 
-    // Validar elementos individuales
-    if (designData.elements) {
+    // Validar elementos
+    if (designData.elements && Array.isArray(designData.elements)) {
       designData.elements.forEach((element, index) => {
         if (!element.type) {
-          errors.push(`Elemento ${index + 1}: Tipo requerido`);
+          errors.push(`Elemento ${index + 1}: Tipo de elemento requerido`);
         }
         
         if (!element.areaId) {
-          errors.push(`Elemento ${index + 1}: ID de área requerido`);
+          errors.push(`Elemento ${index + 1}: Área de personalización requerida`);
         }
         
         if (!element.konvaAttrs) {
-          errors.push(`Elemento ${index + 1}: Atributos Konva requeridos`);
+          errors.push(`Elemento ${index + 1}: Configuración de posición requerida`);
+        }
+        
+        // Validaciones específicas por tipo
+        if (element.type === 'text' && (!element.konvaAttrs?.text || element.konvaAttrs.text.trim() === '')) {
+          errors.push(`Elemento ${index + 1}: El texto no puede estar vacío`);
+        }
+        
+        if (element.type === 'image' && !element.konvaAttrs?.image) {
+          errors.push(`Elemento ${index + 1}: Imagen requerida`);
+        }
+        if (designData.productColorFilter) {
+        if (!/^#[0-9A-F]{6}$/i.test(designData.productColorFilter)) {
+         errors.push('El color del producto debe estar en formato hexadecimal (#RRGGBB)');
+         }
         }
       });
+    }
+
+    // Validar opciones del producto
+    if (designData.productOptions && Array.isArray(designData.productOptions)) {
+      designData.productOptions.forEach((option, index) => {
+        if (!option.name || !option.value) {
+          errors.push(`Opción ${index + 1}: Nombre y valor requeridos`);
+        }
+      });
+    }
+
+    // Validar cotización si está presente
+    if (designData.price !== undefined) {
+      if (isNaN(designData.price) || parseFloat(designData.price) <= 0) {
+        errors.push('El precio debe ser un número mayor que 0');
+      }
+    }
+
+    if (designData.productionDays !== undefined) {
+      if (isNaN(designData.productionDays) || parseInt(designData.productionDays) < 1) {
+        errors.push('Los días de producción deben ser al menos 1');
+      }
     }
 
     return {
@@ -239,341 +655,219 @@ export default {
     };
   },
 
-  // Formatear diseño para mostrar en UI
-  formatDesign: (design) => {
-    return {
-      ...design,
-      id: design._id || design.id,
-      statusText: getStatusText(design.status),
-      statusColor: getStatusColor(design.status),
-      formattedPrice: design.price ? `${design.price.toFixed(2)}` : 'Sin cotizar',
-      elementCount: design.elements?.length || 0,
-      canEdit: ['draft', 'pending'].includes(design.status),
-      canRespond: design.status === 'quoted',
-      productName: design.product?.name || 'Producto eliminado',
-      productImage: design.product?.images?.main || null,
-      createdDate: design.createdAt ? new Date(design.createdAt).toLocaleDateString() : null,
-      lastUpdated: design.updatedAt ? new Date(design.updatedAt).toLocaleDateString() : null,
-      estimatedCompletion: design.productionDays ? `${design.productionDays} días` : null
-    };
-  },
-
-  // ==================== FUNCIONES KONVA ESPECÍFICAS ====================
-  
-  // Convertir elementos a formato Konva
-  prepareForKonvaEditor: (design) => {
-    if (!design.elements) return null;
-
-    return {
-      designId: design._id,
-      productId: design.product._id,
-      productName: design.product.name,
-      backgroundImage: design.product.images?.main,
-      stageConfig: {
-        width: 800,
-        height: 600,
-        container: 'design-editor-container'
-      },
-      elements: design.elements.map(element => ({
-        id: element._id || `element-${Date.now()}-${Math.random()}`,
-        type: element.type,
-        areaId: element.areaId,
-        ...element.konvaAttrs,
-        // Asegurar propiedades específicas por tipo
-        ...(element.type === 'text' && {
-          text: element.konvaAttrs.text || 'Texto',
-          fontFamily: element.konvaAttrs.fontFamily || 'Arial',
-          fontSize: element.konvaAttrs.fontSize || 16,
-          fill: element.konvaAttrs.fill || '#000000'
-        }),
-        ...(element.type === 'image' && {
-          image: element.konvaAttrs.image,
-          crop: element.konvaAttrs.crop
-        })
-      })),
-      areas: design.product.customizationAreas?.map(area => ({
-        id: area._id,
-        name: area.name,
-        displayName: area.displayName,
-        x: area.position.x,
-        y: area.position.y,
-        width: area.position.width,
-        height: area.position.height,
-        rotation: area.position.rotationDegree || 0,
-        accepts: area.accepts,
-        maxElements: area.maxElements || 10,
-        stroke: area.konvaConfig?.strokeColor || '#06AED5',
-        strokeWidth: area.konvaConfig?.strokeWidth || 2,
-        fillOpacity: area.konvaConfig?.fillOpacity || 0.1
-      })) || []
-    };
-  },
-
-  // Convertir datos de Konva a elementos de diseño
-  prepareFromKonvaEditor: (konvaData) => {
-    if (!konvaData.elements) return [];
-
-    return konvaData.elements.map(element => ({
-      type: element.type,
-      areaId: element.areaId,
-      konvaAttrs: {
-        // Propiedades básicas de transformación
-        x: element.x || 0,
-        y: element.y || 0,
-        width: element.width,
-        height: element.height,
-        rotation: element.rotation || 0,
-        scaleX: element.scaleX || 1,
-        scaleY: element.scaleY || 1,
-        skewX: element.skewX || 0,
-        skewY: element.skewY || 0,
-        offsetX: element.offsetX || 0,
-        offsetY: element.offsetY || 0,
-        
-        // Propiedades visuales
-        opacity: element.opacity || 1,
-        visible: element.visible !== false,
-        draggable: false,
-        listening: true,
-        
-        // Propiedades específicas por tipo
-        ...(element.type === 'text' && {
-          text: element.text || '',
-          fontFamily: element.fontFamily || 'Arial',
-          fontSize: element.fontSize || 16,
-          fontStyle: element.fontStyle || 'normal',
-          textDecoration: element.textDecoration || '',
-          align: element.align || 'left',
-          verticalAlign: element.verticalAlign || 'top',
-          padding: element.padding || 0,
-          lineHeight: element.lineHeight || 1,
-          letterSpacing: element.letterSpacing || 0,
-          wrap: element.wrap || 'word',
-          ellipsis: element.ellipsis || false
-        }),
-        
-        ...(element.type === 'image' && {
-          image: element.image,
-          crop: element.crop
-        }),
-        
-        // Colores y bordes
-        fill: element.fill,
-        stroke: element.stroke,
-        strokeWidth: element.strokeWidth || 0,
-        strokeScaleEnabled: element.strokeScaleEnabled !== false,
-        dash: element.dash,
-        dashOffset: element.dashOffset || 0,
-        lineJoin: element.lineJoin || 'miter',
-        lineCap: element.lineCap || 'butt',
-        
-        // Sombras
-        shadowColor: element.shadowColor,
-        shadowBlur: element.shadowBlur || 0,
-        shadowOffset: element.shadowOffset || { x: 0, y: 0 },
-        shadowOpacity: element.shadowOpacity || 1,
-        shadowEnabled: element.shadowEnabled || false,
-        
-        // Filtros
-        filters: element.filters || [],
-        blurRadius: element.blurRadius || 10,
-        brightness: element.brightness || 0,
-        contrast: element.contrast || 0,
-        
-        // Otros
-        cornerRadius: element.cornerRadius || 0,
-        perfectDrawEnabled: element.perfectDrawEnabled !== false,
-        globalCompositeOperation: element.globalCompositeOperation || 'source-over'
-      },
-      
-      // Metadata adicional
-      metadata: {
-        originalFileName: element.originalFileName,
-        fileSize: element.fileSize,
-        mimeType: element.mimeType,
-        uploadedAt: element.uploadedAt,
-        source: element.source || 'editor',
-        tags: element.tags || [],
-        userNotes: element.userNotes || ''
-      },
-      
-      isLocked: element.isLocked || false,
-      zIndex: element.zIndex || 1
-    }));
-  },
-
-  // ==================== ESTADÍSTICAS ====================
-  
-  // Obtener estadísticas de diseños
-  getStats: async (params = {}) => {
-    const queryParams = new URLSearchParams(params);
-    const response = await apiClient.get(`${BASE_URL}/stats?${queryParams}`);
-    return response;
-  },
-
-  // Obtener diseños más populares
-  getPopular: async (limit = 10) => {
-    const response = await apiClient.get(`${BASE_URL}/popular?limit=${limit}`);
-    return response;
-  },
-
-  // ==================== EXPORTACIÓN E IMPORTACIÓN ====================
-  
-  // Exportar diseño en diferentes formatos
-  exportDesign: async (designId, format = 'json') => {
-    const validFormats = ['json', 'pdf', 'png', 'svg'];
-    
-    if (!validFormats.includes(format)) {
-      throw new Error(`Formato inválido. Formatos válidos: ${validFormats.join(', ')}`);
+  /**
+   * Validar elementos del diseño para envío al backend - CORREGIDO
+   * @param {Array} elements - Elementos del diseño
+   * @returns {Object} Resultado de validación
+   */
+  validateElementsForSubmission: (elements) => {
+    if (!elements || !Array.isArray(elements)) {
+      return {
+        isValid: false,
+        errors: ['Los elementos del diseño deben ser un array']
+      };
     }
 
-    const response = await apiClient.get(`${BASE_URL}/${designId}/export?format=${format}`, {
-      responseType: format === 'json' ? 'json' : 'blob'
-    });
-    return response;
-  },
+    if (elements.length === 0) {
+      return {
+        isValid: false,
+        errors: ['Debe incluir al menos un elemento en el diseño']
+      };
+    }
 
-  // Importar elementos desde archivo
-  importElements: async (designId, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
+    const errors = [];
 
-    const response = await apiClient.post(`${BASE_URL}/${designId}/import`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    elements.forEach((element, index) => {
+      // Validar estructura básica
+      if (!element.type) {
+        errors.push(`Elemento ${index + 1}: Tipo de elemento requerido`);
+      }
+      
+      if (!element.konvaAttrs) {
+        errors.push(`Elemento ${index + 1}: Configuración de posición requerida`);
+      } else {
+        // Validar posición básica
+        if (typeof element.konvaAttrs.x !== 'number') {
+          errors.push(`Elemento ${index + 1}: Posición X requerida`);
+        }
+        
+        if (typeof element.konvaAttrs.y !== 'number') {
+          errors.push(`Elemento ${index + 1}: Posición Y requerida`);
+        }
+      }
+      
+      // Validaciones específicas por tipo
+      if (element.type === 'text') {
+        if (!element.konvaAttrs?.text || element.konvaAttrs.text.trim() === '') {
+          errors.push(`Elemento ${index + 1}: El texto no puede estar vacío`);
+        }
+      }
+      
+      if (element.type === 'image') {
+        if (!element.konvaAttrs?.image) {
+          errors.push(`Elemento ${index + 1}: Imagen requerida`);
+        }
+      }
+      
+      // Validar área (opcional para compatibilidad)
+      if (!element.areaId) {
+        console.warn(`Elemento ${index + 1}: Sin área de personalización asignada, se usará la primera disponible`);
       }
     });
-    return response;
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   },
 
-  // ==================== COLABORACIÓN ====================
   
-  // Compartir diseño con otro usuario
-  shareDesign: async (designId, shareData) => {
-    const payload = {
-      email: shareData.email,
-      permissions: shareData.permissions || 'view', // view, edit, comment
-      message: shareData.message || ""
+
+  /**
+   * Preparar datos de Konva para el editor
+   * @param {Object} design - Diseño con elementos
+   * @returns {Object} Configuración para Konva
+   */
+  prepareForKonvaEditor: (design) => {
+    try {
+      if (!design || !design.elements) {
+        return {
+          stage: { width: 800, height: 600 },
+          elements: []
+        };
+      }
+
+      const konvaElements = design.elements.map((element, index) => ({
+        ...element.konvaAttrs,
+        id: element._id || `element-${index}`,
+        name: `${element.type}-${index}`,
+        draggable: true,
+        elementType: element.type,
+        areaId: element.areaId
+      }));
+
+      return {
+        stage: {
+          width: design.product?.editorConfig?.stageWidth || 800,
+          height: design.product?.editorConfig?.stageHeight || 600
+        },
+        elements: konvaElements,
+        product: design.product,
+        areas: design.product?.customizationAreas || []
+      };
+    } catch (error) {
+      console.error('Error preparando para Konva:', error);
+      return {
+        stage: { width: 800, height: 600 },
+        elements: []
+      };
+    }
+  },
+
+  /**
+   * Convertir datos de Konva a formato del backend - CORREGIDO
+   * @param {Array} konvaElements - Elementos del editor Konva
+   * @returns {Array} Elementos formateados para backend
+   */
+  prepareFromKonvaEditor: (konvaElements) => {
+    try {
+      if (!Array.isArray(konvaElements)) {
+        return [];
+      }
+
+      return konvaElements.map(element => {
+        const { elementType, areaId, id, name, draggable, ...konvaAttrs } = element;
+        
+        return {
+          type: elementType || element.type || 'text',
+          areaId: areaId || '',
+          konvaAttrs: {
+            ...konvaAttrs,
+            // Limpiar propiedades específicas de Konva que no necesitamos
+            id: undefined,
+            name: undefined,
+            draggable: undefined
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Error convirtiendo desde Konva:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Obtener estadísticas de diseños (Admin)
+   * @returns {Promise} Respuesta con estadísticas
+   */
+  getStats: async () => {
+    try {
+      console.log('📊 [DesignService] Obteniendo estadísticas');
+      
+      const response = await apiClient.get(`${BASE_URL}/admin/stats`);
+      console.log('✅ [DesignService] Estadísticas obtenidas:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ [DesignService] Error obteniendo estadísticas:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Normalizar elemento para compatibilidad con backend
+   * @param {Object} element - Elemento del diseño
+   * @returns {Object} Elemento normalizado
+   */
+  normalizeElement: (element) => {
+    if (!element || !element.konvaAttrs) {
+      console.warn('Elemento sin konvaAttrs:', element);
+      return null;
+    }
+
+    // Estructura básica esperada por el backend
+    const normalized = {
+      type: element.type || 'text',
+      areaId: element.areaId || '',
+      konvaAttrs: {
+        x: element.konvaAttrs.x || 0,
+        y: element.konvaAttrs.y || 0,
+        width: element.konvaAttrs.width,
+        height: element.konvaAttrs.height,
+        ...element.konvaAttrs
+      }
     };
 
-    const response = await apiClient.post(`${BASE_URL}/${designId}/share`, payload);
-    return response;
-  },
+    // Validaciones específicas por tipo
+    if (normalized.type === 'text') {
+      if (!normalized.konvaAttrs.text) {
+        normalized.konvaAttrs.text = 'Texto vacío';
+      }
+      if (!normalized.konvaAttrs.fontSize) {
+        normalized.konvaAttrs.fontSize = 24;
+      }
+      if (!normalized.konvaAttrs.fontFamily) {
+        normalized.konvaAttrs.fontFamily = 'Arial';
+      }
+      if (!normalized.konvaAttrs.fill) {
+        normalized.konvaAttrs.fill = '#000000';
+      }
+    }
 
-  // Obtener colaboradores de un diseño
-  getCollaborators: async (designId) => {
-    const response = await apiClient.get(`${BASE_URL}/${designId}/collaborators`);
-    return response;
-  },
+    if (normalized.type === 'image') {
+      if (!normalized.konvaAttrs.image) {
+        console.warn('Elemento de imagen sin URL');
+        return null;
+      }
+      if (!normalized.konvaAttrs.width) {
+        normalized.konvaAttrs.width = 200;
+      }
+      if (!normalized.konvaAttrs.height) {
+        normalized.konvaAttrs.height = 150;
+      }
+    }
 
-  // ==================== COMENTARIOS ====================
-  
-  // Agregar comentario a un diseño
-  addComment: async (designId, comment) => {
-    const payload = {
-      comment: comment.text,
-      elementId: comment.elementId, // Si el comentario es sobre un elemento específico
-      position: comment.position // Posición en el canvas si aplica
-    };
-
-    const response = await apiClient.post(`${BASE_URL}/${designId}/comments`, payload);
-    return response;
-  },
-
-  // Obtener comentarios de un diseño
-  getComments: async (designId) => {
-    const response = await apiClient.get(`${BASE_URL}/${designId}/comments`);
-    return response;
-  },
-
-  // ==================== VERSIONES ====================
-  
-  // Obtener historial de versiones
-  getVersionHistory: async (designId) => {
-    const response = await apiClient.get(`${BASE_URL}/${designId}/versions`);
-    return response;
-  },
-
-  // Restaurar versión específica
-  restoreVersion: async (designId, versionId) => {
-    const response = await apiClient.post(`${BASE_URL}/${designId}/versions/${versionId}/restore`);
-    return response;
+    return normalized;
   }
 };
 
-// ==================== FUNCIONES AUXILIARES ====================
-
-// Obtener texto del estado
-function getStatusText(status) {
-  const statusMap = {
-    'draft': 'Borrador',
-    'pending': 'Pendiente',
-    'quoted': 'Cotizado',
-    'approved': 'Aprobado',
-    'rejected': 'Rechazado',
-    'completed': 'Completado',
-    'archived': 'Archivado'
-  };
-  return statusMap[status] || status;
-}
-
-// Obtener color del estado
-function getStatusColor(status) {
-  const colorMap = {
-    'draft': 'gray',
-    'pending': 'yellow',
-    'quoted': 'blue',
-    'approved': 'green',
-    'rejected': 'red',
-    'completed': 'purple',
-    'archived': 'gray'
-  };
-  return colorMap[status] || 'gray';
-}
-
-// Validar elementos de diseño
-function validateDesignElements(elements) {
-  const errors = [];
-  
-  if (!Array.isArray(elements) || elements.length === 0) {
-    return {
-      isValid: false,
-      errors: ['Debe incluir al menos un elemento de diseño']
-    };
-  }
-  
-  elements.forEach((element, index) => {
-    if (!element.type) {
-      errors.push(`Elemento ${index + 1}: Tipo requerido`);
-    }
-    
-    if (!element.areaId) {
-      errors.push(`Elemento ${index + 1}: ID de área requerido`);
-    }
-    
-    if (!element.konvaAttrs) {
-      errors.push(`Elemento ${index + 1}: Atributos Konva requeridos`);
-    } else {
-      // Validaciones específicas por tipo
-      if (element.type === 'text' && !element.konvaAttrs.text) {
-        errors.push(`Elemento ${index + 1}: Texto requerido`);
-      }
-      
-      if (element.type === 'image' && !element.konvaAttrs.image) {
-        errors.push(`Elemento ${index + 1}: Imagen requerida`);
-      }
-    }
-  });
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-// Convertir datos de Konva a elementos (función auxiliar)
-function convertKonvaToElements(konvaData) {
-  // Esta función se implementaría según la estructura específica de Konva
-  // Por ahora retornamos los elementos tal como vienen
-  return konvaData.elements || [];
-}
+export default DesignService;

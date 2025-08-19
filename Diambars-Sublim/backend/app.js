@@ -69,7 +69,7 @@ app.options('*', cors(corsOptions));
 // ==================== RATE LIMITING ====================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // límite de requests
+  max: 3000, // límite de requests
   message: 'Demasiadas solicitudes desde esta IP, intente más tarde',
   standardHeaders: true,
   legacyHeaders: false,
@@ -78,7 +78,7 @@ const limiter = rateLimit({
 // Rate limit más estricto para auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 15,
   message: 'Demasiados intentos de autenticación, intente más tarde',
   skipSuccessfulRequests: true
 });

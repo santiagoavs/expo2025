@@ -891,7 +891,7 @@ const KonvaAreaEditor = ({
                   color: 'text.secondary'
                 }}>
                   <MoveIcon size={48} />
-                  <Typography variant="body1" sx={{ mt: 2 }}>
+                  <Typography component="div" variant="body1" sx={{ mt: 2 }}>
                     Selecciona un área para editar sus propiedades
                   </Typography>
                   <Typography variant="caption" sx={{ mt: 1 }}>

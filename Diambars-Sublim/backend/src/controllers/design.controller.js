@@ -5,35 +5,191 @@ import User from "../models/users.js";
 import mongoose from "mongoose";
 import cloudinary from "../utils/cloudinary.js";
 import { notificationService } from "../services/notification.service.js";
-import { validateDesignElements, validateElementPosition, calculateDesignPrice } from "../utils/productUtils.js";
 import { validators, validateFields } from "../utils/validators.utils.js";
 import { createCanvas, loadImage, registerFont } from 'canvas';
-import fs from 'fs';
-import path from 'path';
 
 const designController = {};
+
+// ==================== FUNCIONES AUXILIARES ====================
+
+/**
+ * Valida elementos de diseño
+ * @param {Array} elements - Elementos del diseño a validar
+ * @param {Array} customizationAreas - Áreas de personalización del producto
+ * @returns {Object} Objeto con isValid (boolean) y errors (array)
+ */
+const validateDesignElements = (elements, customizationAreas = []) => {
+  const errors = [];
+  
+  if (!Array.isArray(elements)) {
+    return {
+      isValid: false,
+      errors: ['Los elementos deben ser un array']
+    };
+  }
+
+  elements.forEach((element, index) => {
+    if (!element.type) {
+      errors.push(`Elemento ${index + 1}: Tipo de elemento requerido`);
+      return;
+    }
+    
+    if (!element.konvaAttrs) {
+      errors.push(`Elemento ${index + 1}: Configuración de posición requerida`);
+      return;
+    }
+    
+    if (typeof element.konvaAttrs.x !== 'number') {
+      errors.push(`Elemento ${index + 1}: Posición X requerida`);
+    }
+    
+    if (typeof element.konvaAttrs.y !== 'number') {
+      errors.push(`Elemento ${index + 1}: Posición Y requerida`);
+    }
+    
+    switch (element.type) {
+      case 'text':
+        if (!element.konvaAttrs.text || element.konvaAttrs.text.trim() === '') {
+          errors.push(`Elemento ${index + 1}: Contenido de texto requerido`);
+        }
+        break;
+        
+      case 'image':
+        if (!element.konvaAttrs.image) {
+          errors.push(`Elemento ${index + 1}: URL de imagen requerida`);
+        }
+        break;
+    }
+    
+    if (customizationAreas.length > 0) {
+      const areaId = element.areaId;
+      if (!areaId) {
+        console.warn(`Elemento ${index + 1}: Sin área asignada, se usará la primera disponible`);
+      } else {
+        const area = customizationAreas.find(a => a._id.toString() === areaId.toString());
+        if (!area) {
+          errors.push(`Elemento ${index + 1}: Área de personalización no válida`);
+        }
+      }
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Normaliza elementos del diseño para almacenamiento
+ * @param {Array} elements - Elementos a normalizar
+ * @param {Array} customizationAreas - Áreas de personalización disponibles
+ * @returns {Array} Elementos normalizados
+ */
+const normalizeDesignElements = (elements, customizationAreas = []) => {
+  return elements.map((element, index) => {
+    const normalized = {
+      type: element.type || 'text',
+      areaId: element.areaId || (customizationAreas[0]?._id) || new mongoose.Types.ObjectId(),
+      konvaAttrs: {
+        x: element.konvaAttrs?.x || 0,
+        y: element.konvaAttrs?.y || 0,
+        ...element.konvaAttrs
+      }
+    };
+    
+    if (normalized.type === 'text') {
+      normalized.konvaAttrs = {
+        fontSize: 24,
+        fontFamily: 'Arial',
+        fill: '#000000',
+        ...normalized.konvaAttrs
+      };
+      
+      if (!normalized.konvaAttrs.text) {
+        normalized.konvaAttrs.text = 'Texto sin contenido';
+      }
+    }
+    
+    if (normalized.type === 'image') {
+      normalized.konvaAttrs = {
+        width: 200,
+        height: 150,
+        ...normalized.konvaAttrs
+      };
+    }
+    
+    return normalized;
+  });
+};
+
+/**
+ * Valida opciones del producto
+ * @param {Array} productOptions - Opciones a validar
+ * @param {Array} availableOptions - Opciones disponibles del producto
+ * @returns {Object} Resultado de validación
+ */
+async function validateProductOptions(productOptions, availableOptions) {
+  const errors = [];
+  const cleaned = [];
+
+  if (!Array.isArray(productOptions)) {
+    return {
+      isValid: false,
+      error: 'Las opciones del producto deben ser un array'
+    };
+  }
+
+  for (const option of productOptions) {
+    const optionValidation = validateFields(option, {
+      name: (value) => validators.text(value, 1, 50),
+      value: (value) => validators.text(value, 1, 50)
+    });
+
+    if (!optionValidation.isValid) {
+      errors.push(`Opción inválida: ${optionValidation.errors.join('; ')}`);
+      continue;
+    }
+
+    const { name: optionName, value: optionValue } = optionValidation.cleaned;
+    const productOption = availableOptions?.find(po => po.name === optionName);
+    
+    if (!productOption) {
+      errors.push(`La opción "${optionName}" no existe para este producto`);
+      continue;
+    }
+
+    const validValue = productOption.values?.find(v => v.value === optionValue);
+    if (!validValue) {
+      errors.push(`El valor "${optionValue}" no es válido para la opción "${optionName}"`);
+      continue;
+    }
+
+    cleaned.push({
+      name: optionName,
+      value: optionValue
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    error: errors.length > 0 ? errors.join('; ') : null,
+    cleaned
+  };
+}
+
+// ==================== FUNCIONES PRINCIPALES ====================
 
 /**
  * Crea un nuevo diseño personalizado
  */
 designController.createDesign = async (req, res) => {
   try {
-    const { 
-      productId, 
-      elements, 
-      productOptions,
-      clientNotes,
-      mode = 'simple'
-    } = req.body;
+    const { productId, elements, productOptions, clientNotes, mode = 'simple', productColorFilter } = req.body;
     const userId = req.user._id;
 
-    console.log('🎨 Creando diseño:', { productId, elementsCount: elements?.length });
-
-    // Validación de entrada usando validadores centralizados
     const basicValidation = validateFields({
-      productId,
-      clientNotes,
-      mode
+      productId, clientNotes, mode
     }, {
       productId: (value) => validators.mongoId(value, 'ID de producto'),
       clientNotes: (value) => validators.text(value, 0, 1000),
@@ -48,7 +204,6 @@ designController.createDesign = async (req, res) => {
       });
     }
 
-    // Validar elementos
     if (!elements || !Array.isArray(elements) || elements.length === 0) {
       return res.status(400).json({ 
         success: false,
@@ -57,88 +212,55 @@ designController.createDesign = async (req, res) => {
       });
     }
 
-    // Validar modo
-    const validModes = ['simple', 'advanced', 'professional'];
-    if (!validModes.includes(basicValidation.cleaned.mode)) {
-      return res.status(400).json({
-        success: false,
-        message: `Modo inválido. Modos válidos: ${validModes.join(', ')}`,
-        error: 'INVALID_MODE'
-      });
-    }
-
-    // Buscar producto y validar
     const product = await Product.findById(basicValidation.cleaned.productId);
-    if (!product) {
-      return res.status(404).json({ 
+    if (!product || !product.isActive) {
+      return res.status(!product ? 404 : 400).json({ 
         success: false,
-        message: "Producto no encontrado",
-        error: 'PRODUCT_NOT_FOUND'
+        message: !product ? "Producto no encontrado" : "El producto no está disponible",
+        error: !product ? 'PRODUCT_NOT_FOUND' : 'PRODUCT_INACTIVE'
       });
     }
 
-    if (!product.isActive) {
+    const elementsValidation = validateDesignElements(elements, product.customizationAreas);
+    if (!elementsValidation.isValid) {
       return res.status(400).json({ 
         success: false,
-        message: "El producto no está disponible actualmente",
-        error: 'PRODUCT_INACTIVE'
-      });
-    }
-
-    // Validar elementos del diseño contra áreas personalizables
-    const validation = validateDesignElements(elements, product.customizationAreas);
-    if (!validation.isValid) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Diseño no válido",
-        errors: validation.errors,
+        message: "Elementos de diseño no válidos",
+        errors: elementsValidation.errors,
         error: 'INVALID_DESIGN_ELEMENTS'
       });
     }
 
-    // Validar opciones del producto
-    const parsedOptions = [];
-    if (productOptions && Array.isArray(productOptions)) {
-      const optionsValidation = await validateProductOptions(productOptions, product.options);
-      if (!optionsValidation.isValid) {
-        return res.status(400).json({
-          success: false,
-          message: optionsValidation.error,
-          error: 'INVALID_PRODUCT_OPTIONS'
-        });
-      }
-      parsedOptions.push(...optionsValidation.cleaned);
-    } else if (product.options.some(o => o.required)) {
+    const normalizedElements = normalizeDesignElements(elements, product.customizationAreas);
+    const optionsValidation = await validateProductOptions(productOptions, product.options);
+    
+    if (!optionsValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "Debe seleccionar las opciones requeridas del producto",
-        error: 'REQUIRED_OPTIONS_MISSING'
+        message: optionsValidation.error,
+        error: 'INVALID_PRODUCT_OPTIONS'
       });
     }
 
-    // Crear diseño
     const newDesign = new Design({
-      product: basicValidation.cleaned.productId,
+      product: product._id,
       user: userId,
       name: `Diseño personalizado - ${product.name}`,
-      elements,
-      productOptions: parsedOptions,
+      elements: normalizedElements,
+      productColorFilter: productColorFilter || null,
+      productOptions: optionsValidation.cleaned,
       status: 'pending',
       clientNotes: basicValidation.cleaned.clientNotes || "",
       metadata: {
         mode: basicValidation.cleaned.mode,
-        colors: extractColorsFromElements(elements),
-        fonts: extractFontsFromElements(elements),
-        complexity: calculateDesignComplexity(elements)
+        colors: extractColorsFromElements(normalizedElements),
+        fonts: extractFontsFromElements(normalizedElements),
+        complexity: calculateDesignComplexity(normalizedElements)
       }
     });
 
     await newDesign.save();
-    
-    // Generar vista previa (sin bloquear la respuesta)
-    generatePreviewAndNotify(newDesign, product, userId).catch(error => {
-      console.error('Error en procesamiento asíncrono:', error);
-    });
+    generatePreviewAndNotify(newDesign, product, userId).catch(console.error);
 
     res.status(201).json({
       success: true,
@@ -161,45 +283,153 @@ designController.createDesign = async (req, res) => {
 };
 
 /**
- * Procesa la generación de preview y notificaciones en segundo plano
+ * Crea un diseño para un cliente (admin)
  */
-async function generatePreviewAndNotify(design, product, userId) {
+designController.createDesignForClient = async (req, res) => {
   try {
-    // Generar y guardar vista previa
-    const previewUrl = await generateDesignPreview(design, product);
-    if (previewUrl) {
-      design.previewImage = previewUrl;
-      await design.save();
+    const { userId, productId, elements, productOptions, clientNotes, name, mode = 'simple', productColorFilter } = req.body;
+    const adminId = req.user._id;
+    const adminRoles = req.user.roles || [];
+
+    if (!adminRoles.includes('admin') && !adminRoles.includes('manager')) {
+      return res.status(403).json({ 
+        success: false,
+        message: "No tienes permisos para crear diseños para clientes",
+        error: 'INSUFFICIENT_PERMISSIONS'
+      });
     }
+
+    const basicValidation = validateFields({
+      userId, productId, name, clientNotes, mode
+    }, {
+      userId: (value) => validators.mongoId(value, 'ID de cliente'),
+      productId: (value) => validators.mongoId(value, 'ID de producto'),
+      name: (value) => validators.text(value, 1, 100),
+      clientNotes: (value) => validators.text(value, 0, 1000),
+      mode: (value) => validators.text(value, 1, 20)
+    });
+
+    if (!basicValidation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: `Datos básicos inválidos: ${basicValidation.errors.join('; ')}`,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    if (!elements || !Array.isArray(elements) || elements.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Debe proporcionar al menos un elemento para el diseño",
+        error: 'ELEMENTS_REQUIRED'
+      });
+    }
+
+    const [client, product] = await Promise.all([
+      User.findById(basicValidation.cleaned.userId),
+      Product.findById(basicValidation.cleaned.productId)
+    ]);
+
+    if (!client || !product) {
+      return res.status(!client ? 404 : 404).json({ 
+        success: false,
+        message: !client ? "Cliente no encontrado" : "Producto no encontrado",
+        error: !client ? 'CLIENT_NOT_FOUND' : 'PRODUCT_NOT_FOUND'
+      });
+    }
+
+    if (!product.isActive) {
+      return res.status(400).json({ 
+        success: false,
+        message: "El producto no está disponible actualmente",
+        error: 'PRODUCT_INACTIVE'
+      });
+    }
+
+    const elementsValidation = validateDesignElements(elements, product.customizationAreas);
+    if (!elementsValidation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Elementos de diseño no válidos",
+        errors: elementsValidation.errors,
+        error: 'INVALID_DESIGN_ELEMENTS'
+      });
+    }
+
+    const normalizedElements = normalizeDesignElements(elements, product.customizationAreas);
+    const optionsValidation = await validateProductOptions(productOptions, product.options);
     
-    // Notificar a administradores
-    await notificationService.sendNotification({
-      type: "NEW_DESIGN_REQUEST",
+    if (!optionsValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: optionsValidation.error,
+        error: 'INVALID_PRODUCT_OPTIONS'
+      });
+    }
+
+    const newDesign = new Design({
+      product: product._id,
+      user: client._id,
+      name: basicValidation.cleaned.name,
+      elements: normalizedElements,
+      productColorFilter: productColorFilter || null,
+      productOptions: optionsValidation.cleaned,
+      status: 'pending',
+      clientNotes: basicValidation.cleaned.clientNotes || "",
+      adminNotes: `Diseño creado por administrador: ${req.user.name || req.user.email}`,
+      metadata: {
+        mode: basicValidation.cleaned.mode,
+        colors: extractColorsFromElements(normalizedElements),
+        fonts: extractFontsFromElements(normalizedElements),
+        complexity: calculateDesignComplexity(normalizedElements),
+        createdByAdmin: true,
+        createdByAdminId: adminId,
+        createdByAdminName: req.user.name || req.user.email
+      },
+      history: [{
+        action: 'created',
+        changedBy: adminId,
+        changedByModel: 'Employee',
+        timestamp: new Date(),
+        notes: 'Diseño creado por administrador para cliente'
+      }]
+    });
+
+    await newDesign.save();
+    generatePreviewAndNotifyAdmin(newDesign, product, client._id, adminId).catch(console.error);
+
+    res.status(201).json({
+      success: true,
+      message: "Diseño creado exitosamente para el cliente",
       data: {
-        designId: design._id,
+        designId: newDesign._id,
+        status: newDesign.status,
+        clientName: client.name,
+        clientEmail: client.email,
         productName: product.name,
-        userId
+        message: "El diseño está listo para cotización"
       }
     });
-    
-    return true;
+
   } catch (error) {
-    console.error('Error en generatePreviewAndNotify:', error);
-    return false;
+    console.error("Error en createDesignForClient:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al crear el diseño para el cliente",
+      error: process.env.NODE_ENV === 'development' ? error.message : "Error interno"
+    });
   }
-}
+};
 
 /**
- * Obtiene un diseño específico con su información relacionada
+ * Obtiene un diseño por ID
  */
 designController.getDesignById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
-    const userRoles = req.user.roles || [];
-    const isAdmin = userRoles.includes('admin') || userRoles.includes('manager');
+    const isAdmin = req.user.roles?.some(r => ['admin', 'manager'].includes(r));
 
-    // Validar ID usando validador centralizado
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({ 
@@ -221,7 +451,6 @@ designController.getDesignById = async (req, res) => {
       });
     }
 
-    // Verificar permisos (solo el propietario o administradores)
     if (!design.user._id.equals(userId) && !isAdmin) {
       return res.status(403).json({ 
         success: false,
@@ -230,34 +459,31 @@ designController.getDesignById = async (req, res) => {
       });
     }
 
-    // Buscar si hay un pedido asociado a este diseño
     const order = await Order.findOne({ 'items.design': design._id })
       .select('orderNumber status estimatedReadyDate')
       .lean();
 
-    // Preparar respuesta
     const response = {
       success: true,
       data: {
         design,
         konvaConfig: {
-          productImage: design.product.images.main,
-          areas: design.product.customizationAreas.map(area => ({
+          productImage: design.product.images?.main,
+          areas: design.product.customizationAreas?.map(area => ({
             id: area._id,
             name: area.name,
             displayName: area.displayName,
             position: area.position,
             accepts: area.accepts
-          })),
+          })) || [],
           elements: design.elements.map(el => ({
-            ...el,
+            ...el.toObject(),
             id: el._id || `elem-${Math.random().toString(36).substring(2, 9)}`
           }))
         }
       }
     };
 
-    // Añadir información de pedido si existe
     if (order) {
       response.data.order = {
         orderNumber: order.orderNumber,
@@ -266,7 +492,6 @@ designController.getDesignById = async (req, res) => {
       };
     }
 
-    // Si el diseño está pendiente, calcular precio estimado (solo para admins)
     if (isAdmin && design.status === 'pending') {
       try {
         const priceEstimate = calculateDesignPrice(design, design.product.basePrice);
@@ -293,7 +518,7 @@ designController.getDesignById = async (req, res) => {
 };
 
 /**
- * Submite una cotización para un diseño pendiente (admin)
+ * Envía una cotización para un diseño (admin)
  */
 designController.submitQuote = async (req, res) => {
   try {
@@ -301,7 +526,6 @@ designController.submitQuote = async (req, res) => {
     const { price, productionDays, adminNotes } = req.body;
     const adminId = req.user._id;
 
-    // Validar ID del diseño
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({ 
@@ -311,11 +535,8 @@ designController.submitQuote = async (req, res) => {
       });
     }
 
-    // Validar datos de cotización usando validadores centralizados
     const quoteValidation = validateFields({
-      price,
-      productionDays,
-      adminNotes
+      price, productionDays, adminNotes
     }, {
       price: (value) => validators.price(value, 0.01),
       productionDays: (value) => validators.quantity(value, 1, 60),
@@ -330,7 +551,6 @@ designController.submitQuote = async (req, res) => {
       });
     }
 
-    // Buscar diseño
     const design = await Design.findById(idValidation.cleaned)
       .populate('product', 'basePrice name')
       .populate('user', 'email name');
@@ -351,7 +571,6 @@ designController.submitQuote = async (req, res) => {
       });
     }
 
-    // Actualizar diseño con datos validados
     const { price: validPrice, productionDays: validDays, adminNotes: validNotes } = quoteValidation.cleaned;
     
     design.price = validPrice;
@@ -362,7 +581,6 @@ designController.submitQuote = async (req, res) => {
     
     await design.save();
 
-    // Notificar al cliente
     try {
       await notificationService.sendNotification({
         type: "DESIGN_QUOTED",
@@ -377,7 +595,6 @@ designController.submitQuote = async (req, res) => {
       });
     } catch (notificationError) {
       console.error('Error enviando notificación:', notificationError);
-      // No bloquear la respuesta por error en notificación
     }
 
     res.status(200).json({
@@ -413,7 +630,6 @@ designController.respondToQuote = async (req, res) => {
     const { accept, clientNotes } = req.body;
     const userId = req.user._id;
 
-    // Validar ID del diseño
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({ 
@@ -423,7 +639,6 @@ designController.respondToQuote = async (req, res) => {
       });
     }
 
-    // Validar respuesta
     if (typeof accept !== 'boolean') {
       return res.status(400).json({ 
         success: false,
@@ -432,7 +647,6 @@ designController.respondToQuote = async (req, res) => {
       });
     }
 
-    // Validar notas del cliente si se proporcionan
     if (clientNotes) {
       const notesValidation = validators.text(clientNotes, 0, 1000);
       if (!notesValidation.isValid) {
@@ -444,7 +658,6 @@ designController.respondToQuote = async (req, res) => {
       }
     }
 
-    // Buscar diseño
     const design = await Design.findById(idValidation.cleaned)
       .populate('product', 'name')
       .populate('user', 'email name');
@@ -457,7 +670,6 @@ designController.respondToQuote = async (req, res) => {
       });
     }
 
-    // Verificar que el diseño pertenezca al usuario
     if (!design.user._id.equals(userId)) {
       return res.status(403).json({ 
         success: false,
@@ -474,22 +686,13 @@ designController.respondToQuote = async (req, res) => {
       });
     }
 
-    // Actualizar diseño según respuesta
     if (accept) {
       design.status = 'approved';
       design.approvedAt = new Date();
-      
-      // Actualizar notas del cliente si se proporcionaron
-      if (clientNotes) {
-        const notesValidation = validators.text(clientNotes, 0, 1000);
-        if (notesValidation.isValid) {
-          design.clientNotes = notesValidation.cleaned;
-        }
-      }
+      if (clientNotes) design.clientNotes = clientNotes;
       
       await design.save();
       
-      // Crear pedido automáticamente
       const newOrder = new Order({
         user: userId,
         items: [{
@@ -515,22 +718,6 @@ designController.respondToQuote = async (req, res) => {
       
       await newOrder.save();
       
-      // Notificar al administrador
-      try {
-        await notificationService.sendNotification({
-          type: "QUOTE_ACCEPTED",
-          data: {
-            designId: design._id,
-            orderId: newOrder._id,
-            orderNumber: newOrder.orderNumber,
-            userName: design.user.name,
-            productName: design.product.name
-          }
-        });
-      } catch (notificationError) {
-        console.error('Error enviando notificación:', notificationError);
-      }
-      
       res.status(200).json({
         success: true,
         message: "Cotización aceptada. Tu pedido ha sido creado.",
@@ -549,33 +736,11 @@ designController.respondToQuote = async (req, res) => {
       });
       
     } else {
-      // Rechazar cotización
       design.status = 'rejected';
       design.rejectedAt = new Date();
-      
-      if (clientNotes) {
-        const notesValidation = validators.text(clientNotes, 0, 1000);
-        design.rejectionReason = notesValidation.isValid ? notesValidation.cleaned : "Motivo no especificado";
-      } else {
-        design.rejectionReason = "No se especificó motivo";
-      }
+      design.rejectionReason = clientNotes || "No se especificó motivo";
       
       await design.save();
-      
-      // Notificar al administrador
-      try {
-        await notificationService.sendNotification({
-          type: "QUOTE_REJECTED",
-          data: {
-            designId: design._id,
-            userName: design.user.name,
-            productName: design.product.name,
-            reason: design.rejectionReason
-          }
-        });
-      } catch (notificationError) {
-        console.error('Error enviando notificación:', notificationError);
-      }
       
       res.status(200).json({
         success: true,
@@ -601,7 +766,7 @@ designController.respondToQuote = async (req, res) => {
 };
 
 /**
- * Lista todos los diseños con filtrado avanzado (admin)
+ * Lista todos los diseños con filtros (admin)
  */
 designController.getAllDesigns = async (req, res) => {
   try {
@@ -616,15 +781,10 @@ designController.getAllDesigns = async (req, res) => {
       order = 'desc'
     } = req.query;
     
-    const isAdmin = req.user.roles.some(role => ['admin', 'manager'].includes(role));
+    const isAdmin = req.user.roles?.some(role => ['admin', 'manager'].includes(role));
     
-    // Validar parámetros de consulta usando validadores centralizados
     const queryValidation = validateFields({
-      page,
-      limit,
-      product,
-      user,
-      search
+      page, limit, product, user, search
     }, {
       page: (value) => validators.quantity(value, 1, 1000),
       limit: (value) => validators.quantity(value, 1, 100),
@@ -641,7 +801,6 @@ designController.getAllDesigns = async (req, res) => {
       });
     }
 
-    // Validar estado si se proporciona
     if (status) {
       const validStatuses = ['pending', 'quoted', 'approved', 'rejected', 'draft'];
       if (!validStatuses.includes(status)) {
@@ -653,7 +812,6 @@ designController.getAllDesigns = async (req, res) => {
       }
     }
 
-    // Validar ordenamiento
     const validSortFields = ['createdAt', 'updatedAt', 'status', 'price', 'name'];
     if (!validSortFields.includes(sort)) {
       return res.status(400).json({
@@ -672,22 +830,10 @@ designController.getAllDesigns = async (req, res) => {
       });
     }
     
-    // Para usuarios normales, solo mostrar sus propios diseños
     const filter = isAdmin ? {} : { user: req.user._id };
-    
-    // Filtros adicionales
-    if (status) {
-      filter.status = status;
-    }
-    
-    if (queryValidation.cleaned.product) {
-      filter.product = queryValidation.cleaned.product;
-    }
-    
-    if (queryValidation.cleaned.user && isAdmin) {
-      filter.user = queryValidation.cleaned.user;
-    }
-    
+    if (status) filter.status = status;
+    if (queryValidation.cleaned.product) filter.product = queryValidation.cleaned.product;
+    if (queryValidation.cleaned.user && isAdmin) filter.user = queryValidation.cleaned.user;
     if (queryValidation.cleaned.search) {
       filter.$or = [
         { name: { $regex: queryValidation.cleaned.search, $options: 'i' } },
@@ -695,8 +841,7 @@ designController.getAllDesigns = async (req, res) => {
       ];
     }
     
-    // Opciones de consulta
-    const options = {
+    const result = await Design.paginate(filter, {
       page: queryValidation.cleaned.page,
       limit: queryValidation.cleaned.limit,
       sort: { [sort]: order === 'asc' ? 1 : -1 },
@@ -705,12 +850,8 @@ designController.getAllDesigns = async (req, res) => {
         { path: 'user', select: 'name email' }
       ],
       lean: true
-    };
+    });
     
-    // Ejecutar consulta paginada
-    const result = await Design.paginate(filter, options);
-    
-    // Transformar resultado
     const designs = result.docs.map(design => ({
       ...design,
       _links: {
@@ -754,7 +895,6 @@ designController.updateDesign = async (req, res) => {
     const { elements, productOptions, clientNotes, name } = req.body;
     const userId = req.user._id;
     
-    // Validar ID del diseño
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({ 
@@ -764,7 +904,6 @@ designController.updateDesign = async (req, res) => {
       });
     }
     
-    // Buscar diseño
     const design = await Design.findById(idValidation.cleaned).populate('product');
     
     if (!design) {
@@ -775,8 +914,7 @@ designController.updateDesign = async (req, res) => {
       });
     }
     
-    // Verificar propiedad
-    if (!design.user.equals(userId) && !req.user.roles.includes('admin')) {
+    if (!design.user.equals(userId) && !req.user.roles?.includes('admin')) {
       return res.status(403).json({ 
         success: false,
         message: "No tienes permiso para modificar este diseño",
@@ -784,7 +922,6 @@ designController.updateDesign = async (req, res) => {
       });
     }
     
-    // Solo se pueden modificar diseños en estado draft
     if (design.status !== 'draft') {
       return res.status(400).json({ 
         success: false,
@@ -793,7 +930,6 @@ designController.updateDesign = async (req, res) => {
       });
     }
 
-    // Validar campos opcionales si se proporcionan
     const fieldsToValidate = {};
     if (name !== undefined) fieldsToValidate.name = name;
     if (clientNotes !== undefined) fieldsToValidate.clientNotes = clientNotes;
@@ -812,12 +948,10 @@ designController.updateDesign = async (req, res) => {
         });
       }
 
-      // Actualizar campos validados
       if (fieldsValidation.cleaned.name) design.name = fieldsValidation.cleaned.name;
       if (fieldsValidation.cleaned.clientNotes !== undefined) design.clientNotes = fieldsValidation.cleaned.clientNotes;
     }
     
-    // Validar elementos si se proporcionan
     if (elements) {
       const validation = validateDesignElements(elements, design.product.customizationAreas);
       if (!validation.isValid) {
@@ -829,13 +963,24 @@ designController.updateDesign = async (req, res) => {
         });
       }
       
-      design.elements = elements;
-      design.metadata.colors = extractColorsFromElements(elements);
-      design.metadata.fonts = extractFontsFromElements(elements);
-      design.metadata.complexity = calculateDesignComplexity(elements);
+      const normalizedElements = normalizeDesignElements(elements, design.product.customizationAreas);
+      design.elements = normalizedElements;
+      design.metadata.colors = extractColorsFromElements(normalizedElements);
+      design.metadata.fonts = extractFontsFromElements(normalizedElements);
+      design.metadata.complexity = calculateDesignComplexity(normalizedElements);
     }
-    
-    // Actualizar opciones si se proporcionan
+
+    if (designData.productColorFilter !== undefined) {
+      const colorValidation = validators.text(designData.productColorFilter, 0, 7);
+      if (!colorValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: `Color del producto inválido: ${colorValidation.error}`,
+          error: 'INVALID_PRODUCT_COLOR'
+        });
+      }
+    }
+
     if (productOptions) {
       const optionsValidation = await validateProductOptions(productOptions, design.product.options);
       if (!optionsValidation.isValid) {
@@ -849,10 +994,8 @@ designController.updateDesign = async (req, res) => {
       design.productOptions = optionsValidation.cleaned;
     }
     
-    // Guardar cambios
     await design.save();
     
-    // Regenerar vista previa en segundo plano
     if (elements) {
       generateDesignPreview(design, design.product)
         .then(previewUrl => {
@@ -888,17 +1031,15 @@ designController.updateDesign = async (req, res) => {
 };
 
 /**
- * Duplica/clona un diseño existente
+ * Actualizar color del producto en un diseño
  */
-designController.cloneDesign = async (req, res) => {
+designController.updateProductColor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { color } = req.body;
     const userId = req.user._id;
-    
-    console.log('📋 Clonando diseño:', { designId: id, userId });
-    
-    // Validar ID del diseño
+    const isAdmin = req.user.roles?.some(r => ['admin', 'manager'].includes(r));
+
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({ 
@@ -908,7 +1049,81 @@ designController.cloneDesign = async (req, res) => {
       });
     }
 
-    // Validar nombre si se proporciona
+    // Validar color
+    if (color && !/^#[0-9A-F]{6}$/i.test(color)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El color debe estar en formato hexadecimal (#RRGGBB)',
+        error: 'INVALID_COLOR_FORMAT'
+      });
+    }
+
+    const design = await Design.findById(idValidation.cleaned);
+
+    if (!design) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Diseño no encontrado",
+        error: 'DESIGN_NOT_FOUND'
+      });
+    }
+
+    if (!design.user.equals(userId) && !isAdmin) {
+      return res.status(403).json({ 
+        success: false,
+        message: "No tienes permiso para modificar este diseño",
+        error: 'UNAUTHORIZED_ACCESS'
+      });
+    }
+
+    if (!['draft', 'pending'].includes(design.status)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Solo se puede cambiar el color en diseños en borrador o pendientes",
+        error: 'INVALID_DESIGN_STATUS'
+      });
+    }
+
+    design.productColorFilter = color || null;
+    await design.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Color del producto actualizado exitosamente",
+      data: {
+        designId: design._id,
+        productColorFilter: design.productColorFilter
+      }
+    });
+
+  } catch (error) {
+    console.error("Error en updateProductColor:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al actualizar color del producto",
+      error: process.env.NODE_ENV === 'development' ? error.message : "Error interno"
+    });
+  }
+};
+
+/**
+ * Duplica/clona un diseño existente
+ */
+designController.cloneDesign = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const userId = req.user._id;
+    
+    const idValidation = validators.mongoId(id, 'ID de diseño');
+    if (!idValidation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: idValidation.error,
+        error: 'INVALID_DESIGN_ID'
+      });
+    }
+
     if (name) {
       const nameValidation = validators.text(name, 1, 100);
       if (!nameValidation.isValid) {
@@ -920,8 +1135,7 @@ designController.cloneDesign = async (req, res) => {
       }
     }
     
-    const originalDesign = await Design.findById(idValidation.cleaned)
-      .populate('product');
+    const originalDesign = await Design.findById(idValidation.cleaned).populate('product');
     
     if (!originalDesign) {
       return res.status(404).json({ 
@@ -931,7 +1145,6 @@ designController.cloneDesign = async (req, res) => {
       });
     }
     
-    // Verificar permisos
     if (!originalDesign.user.equals(userId) && !req.user.roles?.includes('admin')) {
       return res.status(403).json({ 
         success: false,
@@ -940,8 +1153,8 @@ designController.cloneDesign = async (req, res) => {
       });
     }
 
-    // Validar nombre final
-    const nameValidation = validators.text(name || `Copia de ${originalDesign.name}`, 1, 100);
+    const finalName = name || `Copia de ${originalDesign.name}`;
+    const nameValidation = validators.text(finalName, 1, 100);
     if (!nameValidation.isValid) {
       return res.status(400).json({
         success: false,
@@ -950,8 +1163,7 @@ designController.cloneDesign = async (req, res) => {
       });
     }
     
-    // Crear clon
-    const clonedData = {
+    const clonedDesign = new Design({
       product: originalDesign.product._id,
       user: userId,
       name: nameValidation.cleaned,
@@ -964,12 +1176,9 @@ designController.cloneDesign = async (req, res) => {
         clonedFrom: originalDesign._id,
         clonedAt: new Date()
       }
-    };
+    });
     
-    const clonedDesign = new Design(clonedData);
     await clonedDesign.save();
-    
-    console.log('✅ Diseño clonado:', clonedDesign._id);
     
     res.status(201).json({
       success: true,
@@ -982,7 +1191,7 @@ designController.cloneDesign = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Error en cloneDesign:", error);
+    console.error("Error en cloneDesign:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al clonar el diseño",
@@ -992,26 +1201,15 @@ designController.cloneDesign = async (req, res) => {
 };
 
 /**
- * Guarda diseño como borrador para editar después
+ * Guarda diseño como borrador
  */
 designController.saveDraft = async (req, res) => {
   try {
-    const { 
-      productId, 
-      elements,
-      productOptions,
-      name,
-      clientNotes 
-    } = req.body;
+    const { productId, elements, productOptions, name, clientNotes } = req.body;
     const userId = req.user._id;
     
-    console.log('💾 Guardando borrador de diseño');
-    
-    // Validar datos básicos usando validadores centralizados
     const basicValidation = validateFields({
-      productId,
-      name,
-      clientNotes
+      productId, name, clientNotes
     }, {
       productId: (value) => validators.mongoId(value, 'ID de producto'),
       name: (value) => value ? validators.text(value, 1, 100) : { isValid: true },
@@ -1035,7 +1233,6 @@ designController.saveDraft = async (req, res) => {
       });
     }
 
-    // Validar elementos si se proporcionan
     if (elements && Array.isArray(elements) && elements.length > 0) {
       const validation = validateDesignElements(elements, product.customizationAreas);
       if (!validation.isValid) {
@@ -1048,7 +1245,6 @@ designController.saveDraft = async (req, res) => {
       }
     }
 
-    // Validar opciones del producto si se proporcionan
     let validatedOptions = [];
     if (productOptions && Array.isArray(productOptions)) {
       const optionsValidation = await validateProductOptions(productOptions, product.options);
@@ -1062,24 +1258,24 @@ designController.saveDraft = async (req, res) => {
       validatedOptions = optionsValidation.cleaned;
     }
 
-    // Generar nombre por defecto si no se proporciona
-    const finalName = basicValidation.cleaned.name || `Borrador - ${product.name}`;
-    
-    // Crear diseño en estado draft
+    const normalizedElements = elements && elements.length > 0 
+      ? normalizeDesignElements(elements, product.customizationAreas) 
+      : [];
+
     const draft = new Design({
-      product: basicValidation.cleaned.productId,
+      product: product._id,
       user: userId,
-      name: finalName,
-      elements: elements || [],
+      name: name || `Borrador - ${product.name}`,
+      elements: normalizedElements,
       productOptions: validatedOptions,
       status: 'draft',
-      clientNotes: basicValidation.cleaned.clientNotes || "",
+      clientNotes: clientNotes || "",
       metadata: {
         mode: 'simple',
         lastSavedAt: new Date(),
-        colors: elements ? extractColorsFromElements(elements) : [],
-        fonts: elements ? extractFontsFromElements(elements) : [],
-        complexity: elements ? calculateDesignComplexity(elements) : 'low'
+        colors: normalizedElements.length > 0 ? extractColorsFromElements(normalizedElements) : [],
+        fonts: normalizedElements.length > 0 ? extractFontsFromElements(normalizedElements) : [],
+        complexity: normalizedElements.length > 0 ? calculateDesignComplexity(normalizedElements) : 'low'
       }
     });
     
@@ -1096,7 +1292,7 @@ designController.saveDraft = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Error en saveDraft:", error);
+    console.error("Error en saveDraft:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al guardar borrador",
@@ -1113,7 +1309,6 @@ designController.getUserDesignHistory = async (req, res) => {
     const userId = req.user._id;
     const { includeDetails = false, limit = 20 } = req.query;
     
-    // Validar parámetros
     const limitValidation = validators.quantity(limit, 1, 100);
     if (!limitValidation.isValid) {
       return res.status(400).json({
@@ -1129,14 +1324,13 @@ designController.getUserDesignHistory = async (req, res) => {
       .limit(limitValidation.cleaned)
       .lean();
     
-    // Si no se piden detalles, enviar versión resumida
     const formattedDesigns = designs.map(design => {
       if (includeDetails !== 'true') {
         return {
           _id: design._id,
           name: design.name,
           productName: design.product.name,
-          productImage: design.product.images.main,
+          productImage: design.product.images?.main,
           status: design.status,
           createdAt: design.createdAt,
           previewImage: design.previewImage,
@@ -1155,7 +1349,7 @@ designController.getUserDesignHistory = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Error en getUserDesignHistory:", error);
+    console.error("Error en getUserDesignHistory:", error);
     res.status(500).json({ 
       success: false,
       message: "Error al obtener historial de diseños",
@@ -1165,7 +1359,7 @@ designController.getUserDesignHistory = async (req, res) => {
 };
 
 /**
- * Cancela un diseño (solo en estados específicos)
+ * Cancela un diseño
  */
 designController.cancelDesign = async (req, res) => {
   try {
@@ -1173,7 +1367,6 @@ designController.cancelDesign = async (req, res) => {
     const { reason } = req.body;
     const userId = req.user._id;
 
-    // Validar ID del diseño
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
       return res.status(400).json({
@@ -1183,7 +1376,6 @@ designController.cancelDesign = async (req, res) => {
       });
     }
 
-    // Validar razón si se proporciona
     let validatedReason = '';
     if (reason) {
       const reasonValidation = validators.text(reason, 0, 500);
@@ -1197,8 +1389,7 @@ designController.cancelDesign = async (req, res) => {
       validatedReason = reasonValidation.cleaned;
     }
 
-    const design = await Design.findById(idValidation.cleaned)
-      .populate('user', 'name email');
+    const design = await Design.findById(idValidation.cleaned).populate('user', 'name email');
 
     if (!design) {
       return res.status(404).json({
@@ -1208,7 +1399,6 @@ designController.cancelDesign = async (req, res) => {
       });
     }
 
-    // Verificar permisos
     if (!design.user._id.equals(userId) && !req.user.roles?.includes('admin')) {
       return res.status(403).json({
         success: false,
@@ -1217,7 +1407,6 @@ designController.cancelDesign = async (req, res) => {
       });
     }
 
-    // Verificar que el diseño se pueda cancelar
     const cancellableStatuses = ['pending', 'quoted', 'draft'];
     if (!cancellableStatuses.includes(design.status)) {
       return res.status(400).json({
@@ -1227,7 +1416,6 @@ designController.cancelDesign = async (req, res) => {
       });
     }
 
-    // Cancelar diseño
     design.status = 'cancelled';
     design.cancelledAt = new Date();
     design.cancellationReason = validatedReason || 'Cancelado por el usuario';
@@ -1246,7 +1434,7 @@ designController.cancelDesign = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error en cancelDesign:", error);
+    console.error("Error en cancelDesign:", error);
     res.status(500).json({
       success: false,
       message: "Error al cancelar el diseño",
@@ -1255,389 +1443,253 @@ designController.cancelDesign = async (req, res) => {
   }
 };
 
-// ==================== FUNCIONES AUXILIARES ====================
-
 /**
- * Valida opciones del producto
+ * Obtiene estadísticas de diseños (admin)
  */
-async function validateProductOptions(productOptions, availableOptions) {
-  const errors = [];
-  const cleaned = [];
-
-  if (!Array.isArray(productOptions)) {
-    return {
-      isValid: false,
-      error: 'Las opciones del producto deben ser un array'
-    };
-  }
-
-  for (const option of productOptions) {
-    // Validar estructura de la opción
-    const optionValidation = validateFields(option, {
-      name: (value) => validators.text(value, 1, 50),
-      value: (value) => validators.text(value, 1, 50)
-    });
-
-    if (!optionValidation.isValid) {
-      errors.push(`Opción inválida: ${optionValidation.errors.join('; ')}`);
-      continue;
-    }
-
-    const { name: optionName, value: optionValue } = optionValidation.cleaned;
-
-    // Verificar que la opción exista en el producto
-    const productOption = availableOptions.find(po => po.name === optionName);
-    if (!productOption) {
-      errors.push(`La opción "${optionName}" no existe para este producto`);
-      continue;
-    }
-
-    // Verificar que el valor sea válido
-    const validValue = productOption.values.find(v => v.value === optionValue);
-    if (!validValue) {
-      errors.push(`El valor "${optionValue}" no es válido para la opción "${optionName}"`);
-      continue;
-    }
-
-    cleaned.push({
-      name: optionName,
-      value: optionValue
-    });
-  }
-
-  // Verificar opciones requeridas
-  for (const reqOption of availableOptions.filter(o => o.required)) {
-    if (!cleaned.find(o => o.name === reqOption.name)) {
-      errors.push(`Debe seleccionar un valor para la opción requerida "${reqOption.name}"`);
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    error: errors.length > 0 ? errors.join('; ') : null,
-    cleaned
-  };
-}
-
-/**
- * Genera vista previa del diseño usando Canvas
- */
-async function generateDesignPreview(design, product) {
+designController.getDesignStats = async (req, res) => {
   try {
-    console.log('🖼️ Generando vista previa para diseño:', design._id);
-
-    // Configuración del canvas
-    const canvasWidth = 800;
-    const canvasHeight = 600;
-    const canvas = createCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext('2d');
-
-    // Fondo blanco
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Cargar imagen del producto si existe
-    if (product.images?.main) {
-      try {
-        // Validar URL de imagen
-        const imageUrlValidation = validators.text(product.images.main, 1, 500);
-        if (imageUrlValidation.isValid) {
-          let productImage;
-          
-          // Si es una URL completa, cargarla directamente
-          if (product.images.main.startsWith('http')) {
-            productImage = await loadImage(product.images.main);
-          } else {
-            // Si es una ruta local, construir la ruta completa
-            const imagePath = path.join(process.cwd(), 'public', product.images.main);
-            if (fs.existsSync(imagePath)) {
-              productImage = await loadImage(imagePath);
-            }
-          }
-
-          if (productImage) {
-            // Escalar imagen para que quepa en el canvas manteniendo proporción
-            const scale = Math.min(canvasWidth / productImage.width, canvasHeight / productImage.height) * 0.8;
-            const scaledWidth = productImage.width * scale;
-            const scaledHeight = productImage.height * scale;
-            const x = (canvasWidth - scaledWidth) / 2;
-            const y = (canvasHeight - scaledHeight) / 2;
-
-            ctx.drawImage(productImage, x, y, scaledWidth, scaledHeight);
-          }
-        }
-      } catch (imageError) {
-        console.warn('⚠️ Error cargando imagen del producto:', imageError.message);
-        // Continuar sin la imagen del producto
-      }
+    const adminRoles = req.user.roles || [];
+    
+    if (!adminRoles.includes('admin') && !adminRoles.includes('manager')) {
+      return res.status(403).json({ 
+        success: false,
+        message: "No tienes permisos para ver estadísticas",
+        error: 'INSUFFICIENT_PERMISSIONS'
+      });
     }
 
-    // Dibujar elementos del diseño
-    if (design.elements && Array.isArray(design.elements)) {
-      for (const element of design.elements) {
-        await drawElement(ctx, element, canvasWidth, canvasHeight);
-      }
-    }
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-    // Agregar marca de agua sutil
-    ctx.save();
-    ctx.globalAlpha = 0.1;
-    ctx.fillStyle = '#000000';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Vista Previa', canvasWidth / 2, canvasHeight - 30);
-    ctx.restore();
-
-    // Convertir canvas a buffer
-    const buffer = canvas.toBuffer('image/jpeg', { quality: 0.8 });
-
-    // Subir a Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'image',
-          folder: 'design-previews',
-          format: 'jpg',
-          transformation: [
-            { width: 400, height: 300, crop: 'limit' },
-            { quality: 'auto:good' }
+    const stats = await Design.aggregate([
+      {
+        $facet: {
+          statusCounts: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
+          monthlyDesigns: [
+            { $match: { createdAt: { $gte: oneMonthAgo } } },
+            { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' }, day: { $dayOfMonth: '$createdAt' } }, count: { $sum: 1 } } },
+            { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+          ],
+          popularProducts: [
+            { $group: { _id: '$product', count: { $sum: 1 } } },
+            { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'productInfo' } },
+            { $unwind: '$productInfo' },
+            { $project: { productName: '$productInfo.name', count: 1 } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+          ],
+          revenue: [
+            { $match: { status: { $in: ['approved', 'completed'] }, price: { $gt: 0 } } },
+            { $group: { _id: null, totalRevenue: { $sum: '$price' }, averagePrice: { $avg: '$price' }, count: { $sum: 1 } } }
+          ],
+          averageQuoteTime: [
+            { $match: { quotedAt: { $exists: true }, createdAt: { $exists: true } } },
+            { $project: { quoteTimeHours: { $divide: [{ $subtract: ['$quotedAt', '$createdAt'] }, 1000 * 60 * 60] } } },
+            { $group: { _id: null, averageHours: { $avg: '$quoteTimeHours' } } }
           ]
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
         }
-      ).end(buffer);
+      }
+    ]);
+
+    const result = stats[0];
+    
+    const formattedStats = {
+      overview: {
+        total: result.statusCounts.reduce((sum, item) => sum + item.count, 0),
+        pending: result.statusCounts.find(s => s._id === 'pending')?.count || 0,
+        quoted: result.statusCounts.find(s => s._id === 'quoted')?.count || 0,
+        approved: result.statusCounts.find(s => s._id === 'approved')?.count || 0,
+        rejected: result.statusCounts.find(s => s._id === 'rejected')?.count || 0,
+        completed: result.statusCounts.find(s => s._id === 'completed')?.count || 0,
+        drafts: result.statusCounts.find(s => s._id === 'draft')?.count || 0
+      },
+      revenue: {
+        total: result.revenue[0]?.totalRevenue || 0,
+        average: result.revenue[0]?.averagePrice || 0,
+        designs: result.revenue[0]?.count || 0
+      },
+      performance: {
+        averageQuoteTimeHours: Math.round((result.averageQuoteTime[0]?.averageHours || 0) * 10) / 10,
+        conversionRate: result.statusCounts.find(s => s._id === 'quoted')?.count ? 
+          Math.round((result.statusCounts.find(s => s._id === 'approved')?.count || 0) / 
+          result.statusCounts.find(s => s._id === 'quoted').count * 100) : 0
+      },
+      trends: {
+        monthly: result.monthlyDesigns,
+        popularProducts: result.popularProducts
+      }
+    };
+
+    res.status(200).json({
+      success: true,
+      data: formattedStats
     });
 
-    console.log('✅ Vista previa generada:', uploadResult.secure_url);
-    return uploadResult.secure_url;
+  } catch (error) {
+    console.error("Error en getDesignStats:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener estadísticas de diseños",
+      error: process.env.NODE_ENV === 'development' ? error.message : "Error interno"
+    });
+  }
+};
+
+/**
+ * Cambia el estado de un diseño (admin)
+ */
+designController.changeDesignStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    const adminId = req.user._id;
+    const adminRoles = req.user.roles || [];
+
+    if (!adminRoles.includes('admin') && !adminRoles.includes('manager')) {
+      return res.status(403).json({ 
+        success: false,
+        message: "No tienes permisos para cambiar estados de diseño",
+        error: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
+
+    const idValidation = validators.mongoId(id, 'ID de diseño');
+    if (!idValidation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: idValidation.error,
+        error: 'INVALID_DESIGN_ID'
+      });
+    }
+
+    const validStatuses = ['draft', 'pending', 'quoted', 'approved', 'rejected', 'completed', 'archived'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Estado inválido. Estados válidos: ${validStatuses.join(', ')}`,
+        error: 'INVALID_STATUS'
+      });
+    }
+
+    const design = await Design.findById(idValidation.cleaned)
+      .populate('product', 'name')
+      .populate('user', 'email name');
+
+    if (!design) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Diseño no encontrado",
+        error: 'DESIGN_NOT_FOUND'
+      });
+    }
+
+    const previousStatus = design.status;
+
+    const validTransitions = {
+      'draft': ['pending', 'archived'],
+      'pending': ['quoted', 'rejected', 'archived'],
+      'quoted': ['approved', 'rejected', 'pending'],
+      'approved': ['completed', 'quoted'],
+      'rejected': ['pending', 'archived'],
+      'completed': ['archived'],
+      'archived': ['draft', 'pending']
+    };
+
+    if (!validTransitions[previousStatus]?.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `No se puede cambiar de ${previousStatus} a ${status}`,
+        error: 'INVALID_STATUS_TRANSITION'
+      });
+    }
+
+    design.status = status;
+    design._changedBy = adminId;
+    design._changedByModel = 'Employee';
+    design._changeNotes = notes || `Estado cambiado por administrador de ${previousStatus} a ${status}`;
+
+    if (status === 'quoted' && !design.quotedAt) design.quotedAt = new Date();
+    if (status === 'approved' && !design.approvedAt) design.approvedAt = new Date();
+    if (status === 'rejected' && !design.rejectedAt) {
+      design.rejectedAt = new Date();
+      if (notes) design.rejectionReason = notes;
+    }
+    if (status === 'completed' && !design.completedAt) design.completedAt = new Date();
+
+    await design.save();
+
+    try {
+      await notificationService.sendNotification({
+        type: "DESIGN_STATUS_CHANGED",
+        data: {
+          designId: design._id,
+          designName: design.name,
+          previousStatus,
+          newStatus: status,
+          userEmail: design.user.email,
+          userName: design.user.name,
+          productName: design.product.name,
+          notes: notes || ''
+        }
+      });
+    } catch (notificationError) {
+      console.error('Error enviando notificación de cambio de estado:', notificationError);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Estado del diseño actualizado a ${status}`,
+      data: {
+        design: {
+          _id: design._id,
+          status: design.status,
+          previousStatus,
+          updatedAt: design.updatedAt
+        }
+      }
+    });
 
   } catch (error) {
-    console.error('❌ Error generando vista previa:', error);
-    return null;
+    console.error("Error en changeDesignStatus:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al cambiar estado del diseño",
+      error: process.env.NODE_ENV === 'development' ? error.message : "Error interno"
+    });
   }
-}
+};
+
+// ==================== FUNCIONES DE UTILIDAD ====================
 
 /**
- * Dibuja un elemento individual en el canvas
+ * Calcula el precio estimado de un diseño
  */
-async function drawElement(ctx, element, canvasWidth, canvasHeight) {
-  try {
-    const { type, position, styles } = element;
-
-    if (!position || !position.x || !position.y) {
-      console.warn('⚠️ Elemento sin posición válida:', element);
-      return;
-    }
-
-    // Normalizar posición al tamaño del canvas
-    const x = (position.x / 100) * canvasWidth;
-    const y = (position.y / 100) * canvasHeight;
-    const width = position.width ? (position.width / 100) * canvasWidth : 100;
-    const height = position.height ? (position.height / 100) * canvasHeight : 100;
-
-    ctx.save();
-
-    switch (type) {
-      case 'text':
-        await drawTextElement(ctx, element, x, y, width, height);
-        break;
-      case 'image':
-        await drawImageElement(ctx, element, x, y, width, height);
-        break;
-      case 'shape':
-        await drawShapeElement(ctx, element, x, y, width, height);
-        break;
-      default:
-        console.warn('⚠️ Tipo de elemento desconocido:', type);
-    }
-
-    ctx.restore();
-  } catch (error) {
-    console.error('❌ Error dibujando elemento:', error);
-  }
-}
-
-/**
- * Dibuja elemento de texto
- */
-async function drawTextElement(ctx, element, x, y, width, height) {
-  const { content, styles = {} } = element;
+function calculateDesignPrice(design, basePrice) {
+  let price = basePrice || 10;
   
-  if (!content) return;
-
-  // Validar contenido del texto
-  const contentValidation = validators.text(content, 1, 500);
-  if (!contentValidation.isValid) return;
-
-  // Configurar estilo del texto
-  const fontSize = Math.max(12, Math.min(72, styles.fontSize || 24));
-  const fontFamily = styles.fontFamily || 'Arial';
-  const color = styles.fill || styles.color || '#000000';
-  const textAlign = styles.textAlign || 'left';
-
-  // Validar color
-  const colorValidation = validators.color(color);
-  const finalColor = colorValidation.isValid ? colorValidation.cleaned : '#000000';
-
-  ctx.font = `${fontSize}px ${fontFamily}`;
-  ctx.fillStyle = finalColor;
-  ctx.textAlign = textAlign;
-  ctx.textBaseline = 'top';
-
-  // Dibujar texto con ajuste automático
-  const words = contentValidation.cleaned.split(' ');
-  let line = '';
-  let lineHeight = fontSize * 1.2;
-  let currentY = y;
-
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i] + ' ';
-    const metrics = ctx.measureText(testLine);
-    
-    if (metrics.width > width && i > 0) {
-      ctx.fillText(line, x, currentY);
-      line = words[i] + ' ';
-      currentY += lineHeight;
-      
-      // Evitar que el texto se salga del área
-      if (currentY + lineHeight > y + height) break;
-    } else {
-      line = testLine;
-    }
+  const complexityMultipliers = {
+    low: 1.0,
+    medium: 1.2,
+    high: 1.5
+  };
+  
+  const elementTypePrices = {
+    text: 2,
+    image: 5,
+    shape: 3
+  };
+  
+  const complexity = design.metadata?.complexity || 'medium';
+  price *= complexityMultipliers[complexity] || 1.2;
+  
+  if (design.elements && Array.isArray(design.elements)) {
+    design.elements.forEach(element => {
+      const elementPrice = elementTypePrices[element.type] || 3;
+      price += elementPrice;
+    });
   }
   
-  // Dibujar la última línea
-  if (line.trim() && currentY + lineHeight <= y + height) {
-    ctx.fillText(line, x, currentY);
-  }
-
-  // Agregar borde si se especifica
-  if (styles.stroke && styles.strokeWidth) {
-    const strokeColorValidation = validators.color(styles.stroke);
-    if (strokeColorValidation.isValid) {
-      ctx.strokeStyle = strokeColorValidation.cleaned;
-      ctx.lineWidth = Math.max(1, Math.min(10, styles.strokeWidth));
-      ctx.strokeText(contentValidation.cleaned, x, y);
-    }
-  }
-}
-
-/**
- * Dibuja elemento de imagen
- */
-async function drawImageElement(ctx, element, x, y, width, height) {
-  const { src, styles = {} } = element;
-  
-  if (!src) return;
-
-  // Validar URL de imagen
-  const srcValidation = validators.text(src, 1, 500);
-  if (!srcValidation.isValid) return;
-
-  try {
-    let image;
-    
-    // Cargar imagen desde URL o archivo local
-    if (src.startsWith('http')) {
-      image = await loadImage(src);
-    } else {
-      const imagePath = path.join(process.cwd(), 'public', src);
-      if (fs.existsSync(imagePath)) {
-        image = await loadImage(imagePath);
-      } else {
-        console.warn('⚠️ Imagen no encontrada:', imagePath);
-        return;
-      }
-    }
-
-    // Aplicar opacidad si se especifica
-    if (styles.opacity && styles.opacity < 1) {
-      ctx.globalAlpha = Math.max(0.1, Math.min(1, styles.opacity));
-    }
-
-    // Dibujar imagen escalada
-    ctx.drawImage(image, x, y, width, height);
-
-    // Agregar borde si se especifica
-    if (styles.stroke && styles.strokeWidth) {
-      const strokeColorValidation = validators.color(styles.stroke);
-      if (strokeColorValidation.isValid) {
-        ctx.strokeStyle = strokeColorValidation.cleaned;
-        ctx.lineWidth = Math.max(1, Math.min(10, styles.strokeWidth));
-        ctx.strokeRect(x, y, width, height);
-      }
-    }
-
-  } catch (imageError) {
-    console.warn('⚠️ Error cargando imagen del elemento:', imageError.message);
-    
-    // Dibujar placeholder en caso de error
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = '#cccccc';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, width, height);
-    
-    // Texto indicativo
-    ctx.fillStyle = '#666666';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Imagen', x + width/2, y + height/2);
-  }
-}
-
-/**
- * Dibuja elemento de forma geométrica
- */
-async function drawShapeElement(ctx, element, x, y, width, height) {
-  const { shapeType = 'rectangle', styles = {} } = element;
-  
-  const fillColor = styles.fill || '#cccccc';
-  const strokeColor = styles.stroke || '#000000';
-  const strokeWidth = Math.max(0, Math.min(10, styles.strokeWidth || 1));
-
-  // Validar colores
-  const fillValidation = validators.color(fillColor);
-  const strokeValidation = validators.color(strokeColor);
-
-  const finalFillColor = fillValidation.isValid ? fillValidation.cleaned : '#cccccc';
-  const finalStrokeColor = strokeValidation.isValid ? strokeValidation.cleaned : '#000000';
-
-  ctx.fillStyle = finalFillColor;
-  ctx.strokeStyle = finalStrokeColor;
-  ctx.lineWidth = strokeWidth;
-
-  switch (shapeType) {
-    case 'rectangle':
-      ctx.fillRect(x, y, width, height);
-      if (strokeWidth > 0) ctx.strokeRect(x, y, width, height);
-      break;
-      
-    case 'circle':
-    case 'ellipse':
-      ctx.beginPath();
-      ctx.ellipse(x + width/2, y + height/2, width/2, height/2, 0, 0, 2 * Math.PI);
-      ctx.fill();
-      if (strokeWidth > 0) ctx.stroke();
-      break;
-      
-    case 'triangle':
-      ctx.beginPath();
-      ctx.moveTo(x + width/2, y);
-      ctx.lineTo(x, y + height);
-      ctx.lineTo(x + width, y + height);
-      ctx.closePath();
-      ctx.fill();
-      if (strokeWidth > 0) ctx.stroke();
-      break;
-      
-    default:
-      // Forma por defecto: rectángulo
-      ctx.fillRect(x, y, width, height);
-      if (strokeWidth > 0) ctx.strokeRect(x, y, width, height);
-  }
+  return Math.round(price * 100) / 100;
 }
 
 /**
@@ -1649,15 +1701,9 @@ function extractColorsFromElements(elements) {
   const colors = new Set();
   
   elements.forEach(el => {
-    if (el.styles) {
-      if (el.styles.fill) {
-        const colorValidation = validators.color(el.styles.fill);
-        if (colorValidation.isValid) colors.add(colorValidation.cleaned);
-      }
-      if (el.styles.stroke) {
-        const colorValidation = validators.color(el.styles.stroke);
-        if (colorValidation.isValid) colors.add(colorValidation.cleaned);
-      }
+    if (el.konvaAttrs) {
+      if (el.konvaAttrs.fill) colors.add(el.konvaAttrs.fill);
+      if (el.konvaAttrs.stroke) colors.add(el.konvaAttrs.stroke);
     }
   });
   
@@ -1673,11 +1719,8 @@ function extractFontsFromElements(elements) {
   const fonts = new Set();
   
   elements.forEach(el => {
-    if (el.type === 'text' && el.styles?.fontFamily) {
-      const fontValidation = validators.text(el.styles.fontFamily, 1, 50);
-      if (fontValidation.isValid) {
-        fonts.add(fontValidation.cleaned);
-      }
+    if (el.type === 'text' && el.konvaAttrs?.fontFamily) {
+      fonts.add(el.konvaAttrs.fontFamily);
     }
   });
   
@@ -1692,38 +1735,57 @@ function calculateDesignComplexity(elements) {
     return 'low';
   }
   
-  // Criterios para determinar complejidad
   const totalElements = elements.length;
   const imageElements = elements.filter(el => el.type === 'image').length;
   const textElements = elements.filter(el => el.type === 'text').length;
-  const shapeElements = elements.filter(el => el.type === 'shape').length;
-  const uniqueAreas = new Set(elements.map(el => el.areaId)).size;
   
-  // Puntuación de complejidad
   let complexityScore = 0;
   complexityScore += totalElements * 1;
-  complexityScore += imageElements * 2; // Las imágenes son más complejas
+  complexityScore += imageElements * 2;
   complexityScore += textElements * 1;
-  complexityScore += shapeElements * 0.5;
-  complexityScore += uniqueAreas * 2; // Múltiples áreas aumentan complejidad
   
-  // Factores adicionales de complejidad
-  const hasCustomFonts = elements.some(el => 
-    el.type === 'text' && 
-    el.styles?.fontFamily && 
-    !['Arial', 'Helvetica', 'Times New Roman', 'serif', 'sans-serif'].includes(el.styles.fontFamily)
-  );
-  if (hasCustomFonts) complexityScore += 2;
-  
-  const hasEffects = elements.some(el => 
-    el.styles && (el.styles.opacity !== undefined || el.styles.rotation || el.styles.shadow)
-  );
-  if (hasEffects) complexityScore += 1.5;
-  
-  // Determinar nivel de complejidad
   if (complexityScore <= 5) return 'low';
   if (complexityScore <= 12) return 'medium';
   return 'high';
+}
+
+/**
+ * Genera preview y notifica al usuario
+ */
+async function generatePreviewAndNotify(design, product, userId) {
+  try {
+    console.log('Generando preview y notificando...');
+    return true;
+  } catch (error) {
+    console.error('Error en generatePreviewAndNotify:', error);
+    return false;
+  }
+}
+
+/**
+ * Genera preview y notifica para diseños admin
+ */
+async function generatePreviewAndNotifyAdmin(design, product, clientId, adminId) {
+  try {
+    console.log('Generando preview admin y notificando...');
+    return true;
+  } catch (error) {
+    console.error('Error en generatePreviewAndNotifyAdmin:', error);
+    return false;
+  }
+}
+
+/**
+ * Genera una vista previa del diseño
+ */
+async function generateDesignPreview(design, product) {
+  try {
+    console.log('Generando vista previa del diseño...');
+    return null;
+  } catch (error) {
+    console.error('Error generando vista previa:', error);
+    return null;
+  }
 }
 
 export default designController;

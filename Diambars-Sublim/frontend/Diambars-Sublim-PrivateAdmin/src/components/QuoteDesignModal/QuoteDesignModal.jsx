@@ -1,153 +1,423 @@
-// src/components/QuoteDesignModal/QuoteDesignModal.jsx
+// src/components/QuoteDesignModal/QuoteDesignModal.jsx - MODAL COTIZACIÓN DE DISEÑOS
 import React, { useState, useEffect } from 'react';
-import './QuoteDesignModal.css';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Typography,
+  Box,
+  Paper,
+  Divider,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Chip,
+  CircularProgress,
+  styled,
+  alpha,
+  useTheme
+} from '@mui/material';
+import {
+  X,
+  Money,
+  Calendar,
+  User,
+  Package,
+  Calculator,
+  CheckCircle,
+  Warning,
+  Palette
+} from '@phosphor-icons/react';
 
-// Iconos simples
-const CloseIcon = () => <span style={{ fontSize: 'inherit' }}>✕</span>;
-const MoneyIcon = () => <span style={{ fontSize: 'inherit' }}>💰</span>;
-const ClockIcon = () => <span style={{ fontSize: 'inherit' }}>⏰</span>;
-const NoteIcon = () => <span style={{ fontSize: 'inherit' }}>📝</span>;
-const CalculatorIcon = () => <span style={{ fontSize: 'inherit' }}>🧮</span>;
-const CheckIcon = () => <span style={{ fontSize: 'inherit' }}>✅</span>;
+// ================ ESTILOS MODERNOS ================
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    borderRadius: '24px',
+    background: 'white',
+    boxShadow: '0 24px 64px rgba(1, 3, 38, 0.16)',
+    border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+    maxWidth: '700px',
+    width: '95vw',
+    maxHeight: '90vh',
+    margin: '16px',
+    overflow: 'hidden'
+  }
+}));
 
+const ModalHeader = styled(DialogTitle)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+  color: 'white',
+  padding: '24px 32px',
+  margin: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '120px',
+    height: '120px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '50%',
+    transform: 'translate(40px, -40px)'
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '20px 24px',
+  }
+}));
+
+const HeaderTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.5rem',
+  fontWeight: 700,
+  color: 'white',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  zIndex: 1,
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.25rem',
+  }
+}));
+
+const CloseButton = styled(IconButton)({
+  color: 'white',
+  background: 'rgba(255, 255, 255, 0.1)',
+  width: '40px',
+  height: '40px',
+  zIndex: 1,
+  '&:hover': {
+    background: 'rgba(255, 255, 255, 0.2)',
+  }
+});
+
+const ModalContent = styled(DialogContent)(({ theme }) => ({
+  padding: '32px',
+  background: 'white',
+  [theme.breakpoints.down('sm')]: {
+    padding: '24px',
+  }
+}));
+
+const SectionCard = styled(Paper)(({ theme }) => ({
+  padding: '24px',
+  borderRadius: '16px',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  background: 'white',
+  marginBottom: '24px',
+  [theme.breakpoints.down('sm')]: {
+    padding: '20px',
+    marginBottom: '20px',
+  }
+}));
+
+const SectionTitle = styled(Typography)({
+  fontSize: '1.125rem',
+  fontWeight: 600,
+  color: '#010326',
+  marginBottom: '16px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px'
+});
+
+const InfoGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+  gap: '16px',
+  marginBottom: '20px'
+}));
+
+const InfoItem = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px'
+});
+
+const InfoLabel = styled(Typography)({
+  fontSize: '0.75rem',
+  fontWeight: 500,
+  color: '#032CA6',
+  opacity: 0.7,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px'
+});
+
+const InfoValue = styled(Typography)({
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  color: '#010326',
+  lineHeight: 1.3
+});
+
+const ModernTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    background: '#F8F9FA',
+    transition: 'all 0.3s ease',
+    '& fieldset': {
+      borderColor: alpha('#10B981', 0.2),
+    },
+    '&:hover fieldset': {
+      borderColor: alpha('#10B981', 0.4),
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#10B981',
+      borderWidth: '2px',
+    }
+  }
+}));
+
+const PriceDisplay = styled(Box)(({ theme }) => ({
+  padding: '20px',
+  borderRadius: '16px',
+  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+  color: 'white',
+  textAlign: 'center',
+  marginBottom: '24px',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: '-50%',
+    right: '-20%',
+    width: '100px',
+    height: '100px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '50%',
+  }
+}));
+
+const PriceValue = styled(Typography)({
+  fontSize: '2.5rem',
+  fontWeight: 700,
+  marginBottom: '8px',
+  zIndex: 1,
+  position: 'relative'
+});
+
+const PriceLabel = styled(Typography)({
+  fontSize: '1rem',
+  opacity: 0.9,
+  zIndex: 1,
+  position: 'relative'
+});
+
+const ComplexityChip = styled(Chip)(({ complexity }) => {
+  const colors = {
+    'low': { color: '#10B981', bg: alpha('#10B981', 0.1) },
+    'medium': { color: '#F59E0B', bg: alpha('#F59E0B', 0.1) },
+    'high': { color: '#EF4444', bg: alpha('#EF4444', 0.1) }
+  };
+  
+  const config = colors[complexity] || colors['medium'];
+  
+  return {
+    height: '28px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: config.color,
+    backgroundColor: config.bg,
+    border: `1px solid ${alpha(config.color, 0.2)}`
+  };
+});
+
+const CalculatorSection = styled(Box)(({ theme }) => ({
+  padding: '20px',
+  borderRadius: '12px',
+  background: alpha('#10B981', 0.05),
+  border: `1px solid ${alpha('#10B981', 0.15)}`,
+  marginBottom: '20px'
+}));
+
+const ModalActions = styled(DialogActions)(({ theme }) => ({
+  padding: '24px 32px',
+  background: alpha('#10B981', 0.02),
+  borderTop: `1px solid ${alpha('#10B981', 0.08)}`,
+  gap: '12px',
+  [theme.breakpoints.down('sm')]: {
+    padding: '20px 24px',
+    flexDirection: 'column-reverse',
+    '& > *': {
+      width: '100%'
+    }
+  }
+}));
+
+const PrimaryButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+  color: 'white',
+  borderRadius: '12px',
+  padding: '12px 32px',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  textTransform: 'none',
+  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.24)',
+  minWidth: '120px',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+    boxShadow: '0 6px 24px rgba(16, 185, 129, 0.32)',
+  },
+  '&:disabled': {
+    background: alpha('#10B981', 0.3),
+    color: alpha('#ffffff', 0.7),
+    boxShadow: 'none'
+  }
+}));
+
+const SecondaryButton = styled(Button)(({ theme }) => ({
+  borderRadius: '12px',
+  padding: '12px 24px',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  textTransform: 'none',
+  borderColor: alpha('#10B981', 0.3),
+  color: '#10B981',
+  minWidth: '100px',
+  '&:hover': {
+    borderColor: '#10B981',
+    background: alpha('#10B981', 0.05),
+  }
+}));
+
+// ================ COMPONENTE PRINCIPAL ================
 const QuoteDesignModal = ({
   isOpen,
   onClose,
   onSubmitQuote,
-  design,
-  loading = false
+  design
 }) => {
-  const [formData, setFormData] = useState({
+  const theme = useTheme();
+  
+  // ==================== ESTADOS ====================
+  const [loading, setLoading] = useState(false);
+  const [quoteData, setQuoteData] = useState({
     price: '',
-    productionDays: '',
-    adminNotes: ''
+    productionDays: '3',
+    adminNotes: '',
+    complexity: 'medium'
   });
   const [errors, setErrors] = useState({});
-  const [suggestions, setSuggestions] = useState({});
+  const [priceBreakdown, setPriceBreakdown] = useState({
+    basePrice: 0,
+    designComplexity: 0,
+    materials: 0,
+    labor: 0,
+    total: 0
+  });
 
-  // Reiniciar formulario cuando se abre el modal
+  // ==================== EFECTOS ====================
   useEffect(() => {
-    if (isOpen && design) {
-      // Calcular sugerencias basadas en el diseño
-      const suggestedPrice = calculateSuggestedPrice(design);
-      const suggestedDays = calculateSuggestedDays(design);
+    if (design && isOpen) {
+      // Calcular precio base sugerido
+      const basePrice = design.basePrice || design.product?.basePrice || 0;
+      const complexityMultiplier = {
+        'low': 1.2,
+        'medium': 1.5,
+        'high': 2.0
+      }[design.complexity] || 1.5;
       
-      setSuggestions({
-        price: suggestedPrice,
-        days: suggestedDays
-      });
-
-      setFormData({
+      const elementsCount = design.elementsCount || 0;
+      const elementsCost = elementsCount * 5; // $5 por elemento adicional
+      
+      const suggestedPrice = Math.round((basePrice * complexityMultiplier + elementsCost) * 100) / 100;
+      
+      setQuoteData({
         price: suggestedPrice.toString(),
-        productionDays: suggestedDays.toString(),
-        adminNotes: ''
+        productionDays: design.complexity === 'high' ? '5' : design.complexity === 'medium' ? '3' : '2',
+        adminNotes: '',
+        complexity: design.complexity || 'medium'
       });
-      setErrors({});
+
+      setPriceBreakdown({
+        basePrice: basePrice,
+        designComplexity: Math.round((basePrice * (complexityMultiplier - 1)) * 100) / 100,
+        materials: elementsCost,
+        labor: Math.round((basePrice * 0.3) * 100) / 100,
+        total: suggestedPrice
+      });
     }
-  }, [isOpen, design]);
+  }, [design, isOpen]);
 
-  // Calcular precio sugerido basado en complejidad y elementos
-  const calculateSuggestedPrice = (design) => {
-    if (!design) return 25;
-
-    let basePrice = design.product?.basePrice || 20;
-    const elements = design.totalElements || 1;
-    const complexity = design.complexity || 'medium';
-
-    // Multiplicadores por complejidad
-    const complexityMultiplier = {
-      low: 1.2,
-      medium: 1.5,
-      high: 2.0
-    };
-
-    // Costo adicional por elementos
-    const elementCost = Math.max(0, elements - 1) * 3;
-
-    const suggestedPrice = (basePrice * complexityMultiplier[complexity]) + elementCost;
-    return Math.round(suggestedPrice * 100) / 100;
-  };
-
-  // Calcular días sugeridos basado en complejidad
-  const calculateSuggestedDays = (design) => {
-    if (!design) return 3;
-
-    const complexity = design.complexity || 'medium';
-    const elements = design.totalElements || 1;
-
-    const baseDays = {
-      low: 2,
-      medium: 3,
-      high: 5
-    };
-
-    const extraDays = Math.floor(elements / 3);
-    return baseDays[complexity] + extraDays;
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Limpiar error cuando el usuario empiece a escribir
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+  // Recalcular cuando cambie el precio
+  useEffect(() => {
+    const price = parseFloat(quoteData.price) || 0;
+    if (price > 0 && design) {
+      const basePrice = design.basePrice || design.product?.basePrice || 0;
+      const remaining = price - basePrice;
+      
+      setPriceBreakdown({
+        basePrice: basePrice,
+        designComplexity: Math.round((remaining * 0.4) * 100) / 100,
+        materials: Math.round((remaining * 0.3) * 100) / 100,
+        labor: Math.round((remaining * 0.3) * 100) / 100,
+        total: price
+      });
     }
-  };
+  }, [quoteData.price, design]);
 
+  // ==================== VALIDACIONES ====================
   const validateForm = () => {
     const newErrors = {};
-
-    // Validar precio
-    if (!formData.price) {
-      newErrors.price = 'El precio es obligatorio';
-    } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'El precio debe ser un número válido mayor que 0';
-    } else if (parseFloat(formData.price) > 1000) {
-      newErrors.price = 'El precio parece demasiado alto. ¿Estás seguro?';
+    
+    if (!quoteData.price || parseFloat(quoteData.price) <= 0) {
+      newErrors.price = 'El precio debe ser mayor que 0';
     }
-
-    // Validar días de producción
-    if (!formData.productionDays) {
-      newErrors.productionDays = 'Los días de producción son obligatorios';
-    } else if (isNaN(formData.productionDays) || parseInt(formData.productionDays) <= 0) {
-      newErrors.productionDays = 'Debe ser un número válido mayor que 0';
-    } else if (parseInt(formData.productionDays) > 30) {
-      newErrors.productionDays = 'El tiempo máximo es 30 días';
+    
+    if (!quoteData.productionDays || parseInt(quoteData.productionDays) < 1) {
+      newErrors.productionDays = 'Los días de producción deben ser al menos 1';
     }
-
-    // Validar notas (opcional pero con límite)
-    if (formData.adminNotes && formData.adminNotes.length > 500) {
-      newErrors.adminNotes = 'Las notas no pueden exceder 500 caracteres';
+    
+    if (parseInt(quoteData.productionDays) > 30) {
+      newErrors.productionDays = 'Los días de producción no pueden exceder 30';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ==================== MANEJADORES ====================
+  const handleInputChange = (field, value) => {
+    setQuoteData(prev => ({
+      ...prev,
+      [field]: value
+    }));
     
-    if (!validateForm()) {
-      return;
+    // Limpiar error del campo
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
     }
+  };
 
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
     try {
-      await onSubmitQuote({
-        price: parseFloat(formData.price),
-        productionDays: parseInt(formData.productionDays),
-        adminNotes: formData.adminNotes.trim()
-      });
+      setLoading(true);
       
-      // El modal se cerrará desde el componente padre tras el éxito
+      const finalQuoteData = {
+        price: parseFloat(quoteData.price),
+        productionDays: parseInt(quoteData.productionDays),
+        adminNotes: quoteData.adminNotes.trim()
+      };
+      
+      await onSubmitQuote(finalQuoteData);
     } catch (error) {
-      console.error('Error al enviar cotización:', error);
+      console.error('Error submitting quote:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,245 +427,268 @@ const QuoteDesignModal = ({
     }
   };
 
-  const handleUseSuggestion = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value.toString()
-    }));
-    
-    // Limpiar error si existe
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
+  const addToPrice = (amount) => {
+    const currentPrice = parseFloat(quoteData.price) || 0;
+    const newPrice = currentPrice + amount;
+    handleInputChange('price', newPrice.toFixed(2));
   };
 
-  if (!isOpen) return null;
+  // ==================== DATOS CALCULADOS ====================
+  const formattedPrice = quoteData.price ? 
+    new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(parseFloat(quoteData.price)) : '$0.00';
+
+  // ==================== RENDER ====================
+  if (!design) return null;
 
   return (
-    <div className="quote-modal-overlay" onClick={handleClose}>
-      <div className="quote-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header del modal */}
-        <div className="quote-modal__header">
-          <div className="quote-modal__header-info">
-            <div className="quote-modal__icon">
-              <MoneyIcon />
-            </div>
-            <div>
-              <h2 className="quote-modal__title">Cotizar Diseño</h2>
-              <p className="quote-modal__subtitle">
-                {design?.name || 'Nuevo diseño'}
-              </p>
-            </div>
-          </div>
-          <button 
-            className="quote-modal__close-btn"
-            onClick={handleClose}
-            disabled={loading}
-            type="button"
-          >
-            <CloseIcon />
-          </button>
-        </div>
+    <StyledDialog
+      open={isOpen}
+      onClose={handleClose}
+      maxWidth={false}
+      fullWidth
+    >
+      <ModalHeader>
+        <HeaderTitle>
+          <Money size={24} weight="duotone" />
+          Cotizar Diseño
+        </HeaderTitle>
+        <CloseButton onClick={handleClose} disabled={loading}>
+          <X size={20} weight="bold" />
+        </CloseButton>
+      </ModalHeader>
 
+      <ModalContent>
         {/* Información del diseño */}
-        {design && (
-          <div className="quote-modal__design-info">
-            <div className="quote-modal__design-preview">
-              {design.previewImage || design.productImage ? (
-                <img 
-                  src={design.previewImage || design.productImage} 
-                  alt={design.name}
-                  className="quote-modal__design-image"
-                />
-              ) : (
-                <div className="quote-modal__design-placeholder">
-                  Sin vista previa
-                </div>
-              )}
-            </div>
+        <SectionCard>
+          <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>Informacion del diseño</span>
+  </Box>
+</SectionTitle>
+          
+          <InfoGrid>
+            <InfoItem>
+              <InfoLabel>Nombre</InfoLabel>
+              <InfoValue>{design.name}</InfoValue>
+            </InfoItem>
             
-            <div className="quote-modal__design-details">
-              <div className="quote-modal__detail-item">
-                <span className="quote-modal__detail-label">Producto:</span>
-                <span className="quote-modal__detail-value">{design.productName}</span>
-              </div>
-              <div className="quote-modal__detail-item">
-                <span className="quote-modal__detail-label">Cliente:</span>
-                <span className="quote-modal__detail-value">{design.userName}</span>
-              </div>
-              <div className="quote-modal__detail-item">
-                <span className="quote-modal__detail-label">Complejidad:</span>
-                <span className={`quote-modal__complexity quote-modal__complexity--${design.complexity}`}>
-                  {design.complexity === 'low' ? 'Básica' : 
-                   design.complexity === 'medium' ? 'Intermedia' : 'Compleja'}
-                </span>
-              </div>
-              <div className="quote-modal__detail-item">
-                <span className="quote-modal__detail-label">Elementos:</span>
-                <span className="quote-modal__detail-value">{design.totalElements}</span>
-              </div>
-            </div>
-          </div>
-        )}
+            <InfoItem>
+              <InfoLabel>Cliente</InfoLabel>
+              <InfoValue>{design.clientName}</InfoValue>
+            </InfoItem>
+            
+            <InfoItem>
+              <InfoLabel>Producto</InfoLabel>
+              <InfoValue>{design.productName}</InfoValue>
+            </InfoItem>
+            
+            <InfoItem>
+              <InfoLabel>Elementos</InfoLabel>
+              <InfoValue>{design.elementsCount} elemento{design.elementsCount !== 1 ? 's' : ''}</InfoValue>
+            </InfoItem>
+          </InfoGrid>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="quote-modal__form">
-          {/* Campo de precio */}
-          <div className="quote-modal__field-group">
-            <label className="quote-modal__label">
-              <MoneyIcon />
-              <span>Precio (USD)</span>
-            </label>
-            <div className="quote-modal__input-wrapper">
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className={`quote-modal__input ${errors.price ? 'quote-modal__input--error' : ''}`}
-                placeholder="25.00"
-                step="0.01"
-                min="0.01"
-                max="1000"
-                disabled={loading}
-              />
-              {suggestions.price && (
-                <button
-                  type="button"
-                  className="quote-modal__suggestion-btn"
-                  onClick={() => handleUseSuggestion('price', suggestions.price)}
-                  disabled={loading}
-                  title={`Precio sugerido: $${suggestions.price}`}
-                >
-                  <CalculatorIcon />
-                  <span>Sugerido: ${suggestions.price}</span>
-                </button>
-              )}
-            </div>
-            {errors.price && (
-              <span className="quote-modal__error">{errors.price}</span>
-            )}
-          </div>
-
-          {/* Campo de días de producción */}
-          <div className="quote-modal__field-group">
-            <label className="quote-modal__label">
-              <ClockIcon />
-              <span>Días de producción</span>
-            </label>
-            <div className="quote-modal__input-wrapper">
-              <input
-                type="number"
-                name="productionDays"
-                value={formData.productionDays}
-                onChange={handleInputChange}
-                className={`quote-modal__input ${errors.productionDays ? 'quote-modal__input--error' : ''}`}
-                placeholder="3"
-                min="1"
-                max="30"
-                disabled={loading}
-              />
-              {suggestions.days && (
-                <button
-                  type="button"
-                  className="quote-modal__suggestion-btn"
-                  onClick={() => handleUseSuggestion('productionDays', suggestions.days)}
-                  disabled={loading}
-                  title={`Días sugeridos: ${suggestions.days}`}
-                >
-                  <CalculatorIcon />
-                  <span>Sugerido: {suggestions.days} días</span>
-                </button>
-              )}
-            </div>
-            {errors.productionDays && (
-              <span className="quote-modal__error">{errors.productionDays}</span>
-            )}
-          </div>
-
-          {/* Campo de notas */}
-          <div className="quote-modal__field-group">
-            <label className="quote-modal__label">
-              <NoteIcon />
-              <span>Notas para el cliente (opcional)</span>
-            </label>
-            <textarea
-              name="adminNotes"
-              value={formData.adminNotes}
-              onChange={handleInputChange}
-              className={`quote-modal__textarea ${errors.adminNotes ? 'quote-modal__input--error' : ''}`}
-              placeholder="Detalles adicionales sobre el trabajo, materiales especiales, etc..."
-              rows="4"
-              maxLength="500"
-              disabled={loading}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', mb: 2 }}>
+            <InfoLabel sx={{ mb: 0 }}>Complejidad:</InfoLabel>
+            <ComplexityChip 
+              complexity={design.complexity}
+              label={`${design.complexity} complexity`}
+              size="small"
             />
-            <div className="quote-modal__char-count">
-              {formData.adminNotes.length}/500 caracteres
-            </div>
-            {errors.adminNotes && (
-              <span className="quote-modal__error">{errors.adminNotes}</span>
-            )}
-          </div>
+          </Box>
 
-          {/* Resumen de la cotización */}
-          <div className="quote-modal__summary">
-            <h3 className="quote-modal__summary-title">Resumen de la cotización</h3>
-            <div className="quote-modal__summary-content">
-              <div className="quote-modal__summary-item">
-                <span>Precio total:</span>
-                <span className="quote-modal__summary-value">
-                  ${formData.price || '0.00'}
-                </span>
-              </div>
-              <div className="quote-modal__summary-item">
-                <span>Tiempo de entrega:</span>
-                <span className="quote-modal__summary-value">
-                  {formData.productionDays || '0'} días
-                </span>
-              </div>
-              {formData.price && formData.productionDays && (
-                <div className="quote-modal__summary-item quote-modal__summary-item--highlight">
-                  <span>Precio por día:</span>
-                  <span className="quote-modal__summary-value">
-                    ${(parseFloat(formData.price) / parseInt(formData.productionDays)).toFixed(2)}/día
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          {design.clientNotes && (
+            <Box>
+              <InfoLabel sx={{ mb: 1 }}>Notas del cliente:</InfoLabel>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#666', 
+                  fontStyle: 'italic',
+                  p: 2,
+                  borderRadius: '8px',
+                  background: alpha('#1F64BF', 0.05),
+                  border: `1px solid ${alpha('#1F64BF', 0.1)}`
+                }}
+              >
+                "{design.clientNotes}"
+              </Typography>
+            </Box>
+          )}
+        </SectionCard>
 
-          {/* Botones de acción */}
-          <div className="quote-modal__actions">
-            <button
-              type="button"
-              className="quote-modal__btn quote-modal__btn--secondary"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="quote-modal__btn quote-modal__btn--primary"
-              disabled={loading || !formData.price || !formData.productionDays}
-            >
-              {loading ? (
-                <div className="quote-modal__loading-spinner"></div>
-              ) : (
-                <>
-                  <CheckIcon />
-                  <span>Enviar Cotización</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Calculadora de precio */}
+        <SectionCard>
+          <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>Cotizacion</span>
+  </Box>
+</SectionTitle>
+
+          <CalculatorSection>
+            <Typography variant="body2" fontWeight={600} sx={{ mb: 2, color: '#059669' }}>
+              💡 Calculadora rápida de precios
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', mb: 2 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => addToPrice(5)}
+                sx={{ 
+                  color: '#059669', 
+                  borderColor: alpha('#059669', 0.3),
+                  '&:hover': { borderColor: '#059669', background: alpha('#059669', 0.05) }
+                }}
+              >
+                +$5
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => addToPrice(10)}
+                sx={{ 
+                  color: '#059669', 
+                  borderColor: alpha('#059669', 0.3),
+                  '&:hover': { borderColor: '#059669', background: alpha('#059669', 0.05) }
+                }}
+              >
+                +$10
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => addToPrice(25)}
+                sx={{ 
+                  color: '#059669', 
+                  borderColor: alpha('#059669', 0.3),
+                  '&:hover': { borderColor: '#059669', background: alpha('#059669', 0.05) }
+                }}
+              >
+                +$25
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => addToPrice(50)}
+                sx={{ 
+                  color: '#059669', 
+                  borderColor: alpha('#059669', 0.3),
+                  '&:hover': { borderColor: '#059669', background: alpha('#059669', 0.05) }
+                }}
+              >
+                +$50
+              </Button>
+            </Box>
+
+            <Typography variant="caption" color="text.secondary">
+              Desglose estimado: Base ${priceBreakdown.basePrice} + Diseño ${priceBreakdown.designComplexity} + Materiales ${priceBreakdown.materials} + Mano de obra ${priceBreakdown.labor}
+            </Typography>
+          </CalculatorSection>
+
+          <Box sx={{ display: 'flex', gap: '20px', flexDirection: { xs: 'column', md: 'row' } }}>
+            <ModernTextField
+              label="Precio total"
+              type="number"
+              value={quoteData.price}
+              onChange={(e) => handleInputChange('price', e.target.value)}
+              error={!!errors.price}
+              helperText={errors.price || 'Precio final a cobrar al cliente'}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              }}
+              sx={{ flex: 1 }}
+            />
+
+            <ModernTextField
+              label="Días de producción"
+              type="number"
+              value={quoteData.productionDays}
+              onChange={(e) => handleInputChange('productionDays', e.target.value)}
+              error={!!errors.productionDays}
+              helperText={errors.productionDays || 'Tiempo estimado para completar'}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">días</InputAdornment>,
+              }}
+              sx={{ flex: 1 }}
+            />
+          </Box>
+
+          <ModernTextField
+            label="Notas para el cliente (opcional)"
+            value={quoteData.adminNotes}
+            onChange={(e) => handleInputChange('adminNotes', e.target.value)}
+            multiline
+            rows={3}
+            fullWidth
+            placeholder="Detalles sobre materiales, proceso, o instrucciones especiales..."
+            sx={{ mt: 2 }}
+          />
+        </SectionCard>
+
+        {/* Preview de la cotización */}
+        <PriceDisplay>
+          <PriceValue>{formattedPrice}</PriceValue>
+          <PriceLabel>
+            {quoteData.productionDays} día{parseInt(quoteData.productionDays) !== 1 ? 's' : ''} de producción
+          </PriceLabel>
+        </PriceDisplay>
+
+        {parseFloat(quoteData.price) > 0 && (
+          <Box sx={{ 
+            p: 2, 
+            borderRadius: '12px', 
+            background: alpha('#F59E0B', 0.1),
+            border: `1px solid ${alpha('#F59E0B', 0.2)}`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px'
+          }}>
+            <Warning size={20} color="#F59E0B" weight="fill" />
+            <Box>
+              <Typography variant="body2" fontWeight={600} sx={{ color: '#92400E' }}>
+                Confirmar antes de enviar
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#92400E' }}>
+                Una vez enviada, la cotización será notificada al cliente por email. 
+                Asegúrate de que el precio y tiempo sean correctos.
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </ModalContent>
+
+      <ModalActions>
+        <SecondaryButton
+          onClick={handleClose}
+          disabled={loading}
+        >
+          Cancelar
+        </SecondaryButton>
+
+        <PrimaryButton
+          onClick={handleSubmit}
+          disabled={loading || !quoteData.price || parseFloat(quoteData.price) <= 0}
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <CheckCircle size={16} weight="bold" />}
+        >
+          {loading ? 'Enviando...' : 'Enviar Cotización'}
+        </PrimaryButton>
+      </ModalActions>
+    </StyledDialog>
   );
+};
+
+// ==================== PROP TYPES ====================
+QuoteDesignModal.defaultProps = {
+  isOpen: false,
+  design: null,
+  onClose: () => {},
+  onSubmitQuote: () => {}
 };
 
 export default QuoteDesignModal;

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login/Login';
 import CatalogManagement from './pages/CatalogManagement/CatalogManagement';
+import DesignManagement from './pages/DesignManagement/DesignManagement';
 import SplashScreen from './components/SplashScreen/SplashScreen';
 import RecoveryPasswordPage from './pages/RecoveryPassword/RecoveryPasswordPage';
 import CodeConfirmationPage from './pages/CodeConfirmatioPage/CodeConfirmationPage';
@@ -121,6 +122,30 @@ const AppContent = () => {
           isAuthenticated ? (
             <AuthenticatedLayout>
               <CategoryManagement />
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/design-management" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <DesignManagement />
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/design-management" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <DesignManagement />
             </AuthenticatedLayout>
           ) : (
             <Navigate to="/login" replace />

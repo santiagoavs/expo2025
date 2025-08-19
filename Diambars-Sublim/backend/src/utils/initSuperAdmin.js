@@ -32,7 +32,7 @@ export async function ensureSuperAdminExists() {
       
       // Crear admin con todos los campos requeridos
       await employeeModel.create({
-        name: "Admin",
+        name: "AdminDiambars",
         birthday: new Date("1990-01-01"),
         email,
         address: "Oficina Central",
@@ -40,7 +40,7 @@ export async function ensureSuperAdminExists() {
         password: hashedPassword,
         phoneNumber: "00000000", // 8 dígitos para cumplir con la validación
         dui: "00000000-0", // Formato correcto según la validación
-        role: "Admin", // Usar el formato que espera tu esquema
+        role: "admin", // Usar el formato que espera tu esquema
         active: true,
       });
       console.log("✅ Admin creado desde variables de entorno.");
@@ -48,8 +48,8 @@ export async function ensureSuperAdminExists() {
       // Verificar que el usuario existente tenga el rol admin
       if (existing.role.toLowerCase() !== "admin") {
         console.log("⚠️ El usuario con el email de admin existe pero no tiene rol admin. Actualizando...");
-        await employeeModel.updateOne({ email }, { role: "Admin" });
-        console.log("✅ Rol de admin actualizado a Admin.");
+        await employeeModel.updateOne({ email }, { role: "admin" });
+        console.log("✅ Rol de admin actualizado a admin.");
       } else {
         console.log("🔐 Admin ya existe con rol correcto.");
       }

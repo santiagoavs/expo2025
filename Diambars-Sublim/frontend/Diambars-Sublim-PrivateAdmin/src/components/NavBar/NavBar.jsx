@@ -731,7 +731,12 @@ const MenuSection = styled(Box)(({ theme }) => ({
   },
 }));
 
-const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
+// Reemplaza tu MenuItemStyled actual con esto:
+
+const MenuItemStyled = styled(ListItemButton, {
+  // Filtrar props que no deben pasarse al DOM
+  shouldForwardProp: (prop) => prop !== 'active',
+})(({ theme, active }) => ({
   borderRadius: 12,
   padding: "12px 16px",
   marginBottom: 4,
@@ -823,7 +828,7 @@ const SECONDARY_NAVIGATION = {
     title: "Herramientas",
     items: [
       {
-        to: "/design-editor",
+        to: "/design-management",
         label: "Editor de Diseños",
         icon: <PaintBrush size={18} weight="duotone" />,
         description: "Herramientas de diseño"

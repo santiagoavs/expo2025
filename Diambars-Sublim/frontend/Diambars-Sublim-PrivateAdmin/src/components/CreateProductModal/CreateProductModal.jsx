@@ -975,10 +975,12 @@ const CreateProductModal = ({
               {/* TAB: INFORMACIÓN BÁSICA */}
               {activeTab === 'basic' && (
                 <FormSection>
-                  <SectionTitle>
-                    <PackageIcon size={18} weight="duotone" />
-                    Información General
-                  </SectionTitle>
+                  <SectionTitle component="div">
+                   <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                     <Palette size={16} weight="bold" />
+                     <span>Informacion general</span>
+                  </Box>
+                </SectionTitle>
                   
                   <Box sx={{ 
                     display: 'grid',
@@ -1176,10 +1178,12 @@ const CreateProductModal = ({
               {activeTab === 'images' && (
                 <Box>
                   <FormSection>
-                    <SectionTitle>
-                      <ImageIcon size={18} weight="duotone" />
-                      Imagen Principal *
-                    </SectionTitle>
+                   <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>imagen principal</span>
+  </Box>
+</SectionTitle>
                     
                     <Box>
                       {imagePreview ? (
@@ -1216,7 +1220,7 @@ const CreateProductModal = ({
                             style={{ display: 'none' }}
                           />
                           <UploadIcon size={32} weight="duotone" />
-                          <Typography variant="body1" mt={1} sx={{ color: '#010326' }}>
+                          <Typography component="div" variant="body1" mt={1} sx={{ color: '#010326' }}>
                             Arrastra o haz clic para subir
                           </Typography>
                           <Typography variant="caption" sx={{ color: '#64748b' }}>
@@ -1234,10 +1238,12 @@ const CreateProductModal = ({
                   </FormSection>
 
                   <FormSection>
-                    <SectionTitle>
-                      <ImageIcon size={18} weight="duotone" />
-                      Imágenes Adicionales
-                    </SectionTitle>
+                    <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>imagenes adicionales</span>
+  </Box>
+</SectionTitle>
                     
                     <Box>
                       <ImageUploadContainer onClick={() => additionalImagesInputRef.current?.click()}>
@@ -1250,7 +1256,7 @@ const CreateProductModal = ({
                           style={{ display: 'none' }}
                         />
                         <AddIcon size={32} weight="duotone" />
-                        <Typography variant="body1" mt={1} sx={{ color: '#010326' }}>
+                        <Typography component="div" variant="body1" mt={1} sx={{ color: '#010326' }}>
                           Agregar imágenes (max. 5)
                         </Typography>
                       </ImageUploadContainer>
@@ -1284,10 +1290,12 @@ const CreateProductModal = ({
                 <Box>
                   <FormSection>
                     <Box display="flex" justifyContent="space-between" alignItems="center" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
-                      <SectionTitle>
-                        <EditIcon size={18} weight="duotone" />
-                        Áreas de Personalización
-                      </SectionTitle>
+                      <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>Areas de personalizacion</span>
+  </Box>
+</SectionTitle>
                       <Box display="flex" gap={1} width={{ xs: '100%', sm: 'auto' }}>
                         <SecondaryButton
                           startIcon={<EditIcon size={16} weight="duotone" />}
@@ -1316,7 +1324,9 @@ const CreateProductModal = ({
 
                     {customizationAreas.length === 0 ? (
                       <EmptyState>
-                        <Typography>No hay áreas configuradas</Typography>
+                       <Box component="div">
+                         <div>No hay áreas configuradas</div>
+                        </Box>
                       </EmptyState>
                     ) : (
                       customizationAreas.map((area, index) => (
@@ -1461,10 +1471,12 @@ const CreateProductModal = ({
                 <Box>
                   <FormSection>
                     <Box display="flex" justifyContent="space-between" alignItems="center" flexDirection={{ xs: 'column', sm: 'row' }} gap={2}>
-                      <SectionTitle>
-                        <TagIcon size={18} weight="duotone" />
-                        Opciones del Producto
-                      </SectionTitle>
+                      <SectionTitle component="div">
+  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Palette size={16} weight="bold" />
+    <span>Opciones del producto</span>
+  </Box>
+</SectionTitle>
                       <PrimaryButton
                         startIcon={<AddIcon size={16} weight="duotone" />}
                         onClick={addProductOption}
@@ -1476,7 +1488,9 @@ const CreateProductModal = ({
 
                     {productOptions.length === 0 ? (
                       <EmptyState>
-                        <Typography>No hay opciones configuradas</Typography>
+                        <Box component="div">
+                          <div>No hay opciones configuradas</div>
+                        </Box>
                       </EmptyState>
                     ) : (
                       productOptions.map((option, optionIndex) => (

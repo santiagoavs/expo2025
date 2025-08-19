@@ -983,7 +983,7 @@ const CatalogManagement = () => {
                 filter: 'drop-shadow(0 4px 8px rgba(31, 100, 191, 0.3))'
               }} 
             />
-            <Typography variant="body1" sx={{ color: '#010326', fontWeight: 600 }}>
+            <Typography component="div" variant="body1" sx={{ color: '#010326', fontWeight: 600 }}>
               Cargando catálogo de productos...
             </Typography>
           </LoadingContainer>
@@ -1220,20 +1220,26 @@ const CatalogManagement = () => {
         {/* Lista de Productos */}
         <ProductsSection>
           <SectionHeader>
-            <SectionTitle>
-              <GridNine size={24} weight="duotone" />
-              Productos
-              <Chip 
-                label={`${products.length}${pagination.totalProducts !== products.length ? ` de ${pagination.totalProducts}` : ''}`}
-                size="small"
-                sx={{
-                  background: alpha('#1F64BF', 0.1),
-                  color: '#032CA6',
-                  fontWeight: 600,
-                  ml: 1
-                }}
-              />
-            </SectionTitle>
+            <SectionTitle component="div">
+  <Box sx={{ 
+    display: 'flex', 
+    alignItems: 'center',
+    gap: 1
+  }}>
+    <GridNine size={24} weight="duotone" />
+    <span>Productos</span>
+    <Chip 
+      label={`${products.length}${pagination.totalProducts !== products.length ? ` de ${pagination.totalProducts}` : ''}`}
+      size="small"
+      sx={{
+        background: alpha('#1F64BF', 0.1),
+        color: '#032CA6',
+        fontWeight: 600,
+        ml: 1
+      }}
+    />
+  </Box>
+</SectionTitle>
           </SectionHeader>
 
           {/* Estado de carga durante refetch */}

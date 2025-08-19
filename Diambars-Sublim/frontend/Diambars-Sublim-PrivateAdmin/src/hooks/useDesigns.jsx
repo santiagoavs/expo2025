@@ -1,228 +1,597 @@
-// src/hooks/useDesigns.jsx - Hook completo para gestión de diseños
+// src/hooks/useDesigns.js - HOOK COMPLETO PARA GESTIÓN DE DISEÑOS ADMIN
 import { useCallback, useEffect, useState } from 'react';
-import designService from '../api/DesignService';
-import { toast } from 'react-hot-toast';
-
-const handleError = (error, defaultMessage) => {
-  const errorData = error.response?.data || {};
-  const errorMessage = errorData.message || errorData.error || error.message || defaultMessage;
-
-  console.error('Error:', { error, response: error.response, config: error.config });
-  toast.error(errorMessage);
-  throw new Error(errorMessage);
-};
+import DesignService from '../api/DesignService';
+import Swal from 'sweetalert2';
 
 const useDesigns = () => {
+  // ==================== ESTADOS ====================
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
-    total: 0,
-    pages: 0,
+    totalDesigns: 0,
+    totalPages: 0,
     currentPage: 1,
-    limit: 10,
+    perPage: 12,
     hasNext: false,
-    hasPrev: false
+    hasPrev: false,
+    nextPage: null,
+    prevPage: null
   });
 
-  // Función para formatear diseños con campos faltantes
-  const formatDesign = (design) => {
-    return {
-      ...design,
-      id: design._id || design.id,
-      formattedPrice: design.price ? `$${design.price.toFixed(2)}` : 'Sin cotizar',
-      statusText: getStatusText(design.status),
-      statusColor: getStatusColor(design.status),
-      productName: design.product?.name || 'Producto no disponible',
-      productImage: design.product?.images?.main || null,
-      userName: design.user?.name || 'Usuario desconocido',
-      userEmail: design.user?.email || '',
-      createdDate: design.createdAt ? new Date(design.createdAt).toLocaleDateString() : null,
-      quotedDate: design.quotedAt ? new Date(design.quotedAt).toLocaleDateString() : null,
-      approvedDate: design.approvedAt ? new Date(design.approvedAt).toLocaleDateString() : null,
-      canEdit: design.status === 'draft',
-      canQuote: design.status === 'pending',
-      canRespond: design.status === 'quoted',
-      totalElements: design.elements?.length || 0,
-      complexity: design.metadata?.complexity || 'medium',
-      estimatedDays: design.productionDays || 0
-    };
-  };
+  // Estados para filtros y búsqueda
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',      // 'pending', 'quoted', 'approved', etc.
+    product: '',     // ID del producto
+    user: '',        // ID del usuario/cliente
+    sort: 'createdAt',
+    order: 'desc'
+  });
 
-  // Obtener diseños con filtros
+  // ==================== UTILIDADES ====================
+
+  // Manejar errores de manera consistente
+  const handleError = useCallback((error, defaultMessage = 'Error en operación de diseños') => {
+    console.error('❌ [useDesigns] Error:', error);
+    
+    let errorMessage = defaultMessage;
+    
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    // Mostrar error específico según el tipo
+    if (error?.response?.status === 404) {
+      errorMessage = 'Diseño no encontrado';
+    } else if (error?.response?.status === 403) {
+      errorMessage = 'No tienes permisos para realizar esta acción';
+    } else if (error?.response?.status === 400) {
+      errorMessage = error?.response?.data?.message || 'Datos inválidos';
+    }
+    
+    setError(errorMessage);
+    
+    // Mostrar toast de error
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: errorMessage,
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+      background: '#ffffff',
+      color: '#010326',
+      iconColor: '#040DBF'
+    });
+    
+    return errorMessage;
+  }, []);
+
+  // Formatear diseño usando el servicio
+  const formatDesign = useCallback((design) => {
+    return DesignService.formatDesign(design);
+  }, []);
+
+  // ==================== FUNCIONES PRINCIPALES ====================
+
+  // Obtener diseños con filtros y paginación
   const fetchDesigns = useCallback(async (params = {}) => {
-    setLoading(true);
-    setError(null);
     try {
-      console.log("👉 Obteniendo diseños con params:", params);
-      const response = await designService.getAll(params);
+      setLoading(true);
+      setError(null);
       
-      console.log("🎨 Diseños recibidos:", response);
-
+      console.log('🎨 [useDesigns] Obteniendo diseños:', params);
+      
+      // Combinar parámetros con filtros actuales
+      const queryParams = {
+        ...filters,
+        ...params
+      };
+      
+      const response = await DesignService.getAll(queryParams);
+      
       if (!response.success || !Array.isArray(response.data?.designs)) {
-        throw new Error("Formato de respuesta de diseños inválido");
+        throw new Error("Formato de respuesta inválido");
       }
 
-      const formattedDesigns = response.data.designs.map(formatDesign);
+      // Formatear diseños
+      const formattedDesigns = response.data.designs
+        .map(formatDesign)
+        .filter(design => design !== null);
+      
       setDesigns(formattedDesigns);
       
+      // Actualizar paginación
       if (response.data.pagination) {
         setPagination(response.data.pagination);
       }
-
-    } catch (err) {
-      console.error("❌ Error al cargar diseños:", err);
-      setError(err.message || "Error al cargar diseños");
+      
+      console.log('✅ [useDesigns] Diseños cargados:', {
+        count: formattedDesigns.length,
+        pagination: response.data.pagination
+      });
+      
+      return formattedDesigns;
+    } catch (error) {
+      handleError(error, 'Error al cargar diseños');
       setDesigns([]);
+      return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters, formatDesign, handleError]);
 
-  // Crear diseño
-  const createDesign = useCallback(async (designData) => {
+  // Crear diseño para cliente (Admin)
+  const createDesignForClient = useCallback(async (designData) => {
     try {
-      console.log("🆕 Creando diseño:", designData);
+      setLoading(true);
+      setError(null);
+      
+      console.log('🆕 [useDesigns] Creando diseño para cliente:', designData);
       
       // Validar datos antes de enviar
-      const validation = designService.validateDesignData(designData);
+      const validation = DesignService.validateDesignData(designData);
       if (!validation.isValid) {
-        throw new Error(`Errores de validación: ${validation.errors.join(', ')}`);
+        throw new Error(`Errores de validación:\n• ${validation.errors.join('\n• ')}`);
       }
 
-      const response = await designService.create(designData);
-      toast.success('Diseño creado exitosamente');
+      const response = await DesignService.createForClient(designData);
       
-      // Actualizar lista de diseños
+      if (!response.success) {
+        throw new Error(response.message || 'Error al crear diseño');
+      }
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Diseño creado!',
+        text: 'El diseño se ha enviado para cotización',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true,
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown animate__faster'
+        }
+      });
+      
+      // Refrescar lista
       await fetchDesigns();
-      return response;
+      
+      console.log('✅ [useDesigns] Diseño creado exitosamente');
+      return response.data;
     } catch (error) {
       handleError(error, 'Error al crear diseño');
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }, [fetchDesigns]);
+  }, [fetchDesigns, handleError]);
 
-  // Guardar como borrador
-  const saveDraft = useCallback(async (draftData) => {
-    try {
-      console.log("💾 Guardando borrador:", draftData);
-      
-      const response = await designService.saveDraft(draftData);
-      toast.success('Borrador guardado exitosamente');
-      
-      await fetchDesigns();
-      return response;
-    } catch (error) {
-      handleError(error, 'Error al guardar borrador');
-    }
-  }, [fetchDesigns]);
-
-  // Actualizar diseño
+  // Actualizar diseño existente
   const updateDesign = useCallback(async (id, designData) => {
     try {
-      console.log("✏️ Actualizando diseño:", id, designData);
+      setLoading(true);
+      setError(null);
       
-      const response = await designService.update(id, designData);
-      toast.success('Diseño actualizado exitosamente');
+      console.log('✏️ [useDesigns] Actualizando diseño:', { id, designData });
       
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+      
+      const response = await DesignService.update(id, designData);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al actualizar diseño');
+      }
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Diseño actualizado!',
+        text: 'Los cambios se han guardado exitosamente',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
       await fetchDesigns();
-      return response;
+      
+      console.log('✅ [useDesigns] Diseño actualizado exitosamente');
+      return response.data;
     } catch (error) {
       handleError(error, 'Error al actualizar diseño');
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }, [fetchDesigns]);
+  }, [fetchDesigns, handleError]);
 
-  // Clonar diseño
-  const cloneDesign = useCallback(async (id, newName) => {
-    try {
-      console.log("📋 Clonando diseño:", id);
-      
-      const response = await designService.clone(id, newName);
-      toast.success('Diseño clonado exitosamente');
-      
-      await fetchDesigns();
-      return response;
-    } catch (error) {
-      handleError(error, 'Error al clonar diseño');
+  /**
+ * Actualizar color del producto en un diseño
+ * @param {string} id - ID del diseño
+ * @param {string} color - Color en formato hexadecimal
+ * @returns {Promise} Resultado de la actualización
+ */
+const updateProductColor = useCallback(async (id, color) => {
+  try {
+    setError(null);
+    
+    console.log('🎨 [useDesigns] Actualizando color del producto:', { id, color });
+    
+    if (!id) {
+      throw new Error('ID de diseño requerido');
     }
-  }, [fetchDesigns]);
+
+    const response = await DesignService.updateProductColor(id, color);
+    
+    if (!response.success) {
+      throw new Error(response.message || 'Error al actualizar color del producto');
+    }
+    
+    // Mostrar éxito con toast discreto
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Color del producto actualizado',
+      showConfirmButton: false,
+      timer: 2000,
+      background: '#ffffff',
+      color: '#010326'
+    });
+    
+    console.log('✅ [useDesigns] Color del producto actualizado exitosamente');
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Error al actualizar color del producto');
+    throw error;
+  }
+}, [handleError]);
 
   // Obtener diseño por ID
   const getDesignById = useCallback(async (id) => {
     try {
-      console.log("🔍 Obteniendo diseño por ID:", id);
+      setError(null);
       
-      const response = await designService.getById(id);
-      if (response.success && response.data?.design) {
-        return formatDesign(response.data.design);
+      console.log('🔍 [useDesigns] Obteniendo diseño por ID:', id);
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
       }
-      throw new Error("Diseño no encontrado");
+
+      const response = await DesignService.getById(id);
+      
+      if (!response.success || !response.data?.design) {
+        throw new Error('Diseño no encontrado');
+      }
+
+      const formattedDesign = formatDesign(response.data.design);
+      console.log('✅ [useDesigns] Diseño obtenido:', formattedDesign);
+      
+      return formattedDesign;
     } catch (error) {
       handleError(error, 'Error al obtener diseño');
+      return null;
     }
-  }, []);
+  }, [formatDesign, handleError]);
 
-  // ==================== FUNCIONES DE ADMIN ====================
+  // Clonar diseño
+  const cloneDesign = useCallback(async (id, options = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('📋 [useDesigns] Clonando diseño:', { id, options });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
 
-  // Cotizar diseño (admin)
+      const response = await DesignService.clone(id, options);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al clonar diseño');
+      }
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Diseño clonado!',
+        text: 'Se ha creado una copia del diseño',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
+      await fetchDesigns();
+      
+      console.log('✅ [useDesigns] Diseño clonado exitosamente');
+      return response.data;
+    } catch (error) {
+      handleError(error, 'Error al clonar diseño');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchDesigns, handleError]);
+
+  // Guardar borrador
+  const saveDraft = useCallback(async (designData) => {
+    try {
+      setError(null);
+      
+      console.log('💾 [useDesigns] Guardando borrador:', designData);
+      
+      const response = await DesignService.saveDraft(designData);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al guardar borrador');
+      }
+      
+      // Mostrar éxito (toast más discreto para borradores)
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Borrador guardado',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#ffffff',
+        color: '#010326'
+      });
+      
+      console.log('✅ [useDesigns] Borrador guardado exitosamente');
+      return response.data;
+    } catch (error) {
+      handleError(error, 'Error al guardar borrador');
+      throw error;
+    }
+  }, [handleError]);
+
+  // ==================== SISTEMA DE COTIZACIONES ====================
+
+  // Enviar cotización (Admin)
   const submitQuote = useCallback(async (id, quoteData) => {
     try {
-      console.log("💰 Enviando cotización:", id, quoteData);
+      setLoading(true);
+      setError(null);
       
-      if (!quoteData.price || quoteData.price <= 0) {
-        throw new Error("El precio debe ser mayor que 0");
+      console.log('💰 [useDesigns] Enviando cotización:', { id, quoteData });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
       }
 
-      if (!quoteData.productionDays || quoteData.productionDays <= 0) {
-        throw new Error("Los días de producción deben ser mayor que 0");
-      }
-
-      const response = await designService.submitQuote(id, quoteData);
-      toast.success('Cotización enviada al cliente');
+      const response = await DesignService.submitQuote(id, quoteData);
       
+      if (!response.success) {
+        throw new Error(response.message || 'Error al enviar cotización');
+      }
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Cotización enviada!',
+        text: 'La cotización ha sido enviada al cliente',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
       await fetchDesigns();
-      return response;
+      
+      console.log('✅ [useDesigns] Cotización enviada exitosamente');
+      return response.data;
     } catch (error) {
       handleError(error, 'Error al enviar cotización');
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }, [fetchDesigns]);
+  }, [fetchDesigns, handleError]);
 
-  // Responder a cotización (cliente)
+  // Responder a cotización (Para testing como cliente)
   const respondToQuote = useCallback(async (id, responseData) => {
     try {
-      console.log("📝 Respondiendo a cotización:", id, responseData);
+      setLoading(true);
+      setError(null);
       
-      const response = await designService.respondToQuote(id, responseData);
+      console.log('📝 [useDesigns] Respondiendo a cotización:', { id, responseData });
       
-      if (responseData.accept) {
-        toast.success('Cotización aceptada. Tu pedido ha sido creado.');
-      } else {
-        toast.success('Cotización rechazada');
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+
+      const response = await DesignService.respondToQuote(id, responseData);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al responder cotización');
       }
       
+      const actionText = responseData.accept ? 'aceptada' : 'rechazada';
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: `¡Cotización ${actionText}!`,
+        text: response.message || `La cotización ha sido ${actionText}`,
+        icon: responseData.accept ? 'success' : 'info',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
       await fetchDesigns();
-      return response;
+      
+      console.log('✅ [useDesigns] Respuesta a cotización procesada');
+      return response.data;
     } catch (error) {
       handleError(error, 'Error al responder cotización');
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }, [fetchDesigns]);
+  }, [fetchDesigns, handleError]);
 
-  // Obtener mis diseños (cliente)
-  const getMyDesigns = useCallback(async (includeDetails = false) => {
+  // ==================== GESTIÓN DE ESTADOS ====================
+
+  // Cambiar estado del diseño
+  const changeDesignStatus = useCallback(async (id, newStatus, notes = '') => {
     try {
-      const response = await designService.getMyDesigns(includeDetails);
-      if (response.success && Array.isArray(response.data?.designs)) {
-        return response.data.designs.map(formatDesign);
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 [useDesigns] Cambiando estado:', { id, newStatus, notes });
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
       }
-      return [];
+
+      const response = await DesignService.changeStatus(id, newStatus, notes);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al cambiar estado');
+      }
+      
+      const statusText = DesignService.getStatusText(newStatus);
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Estado actualizado!',
+        text: `El diseño ahora está en estado: ${statusText}`,
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
+      await fetchDesigns();
+      
+      console.log('✅ [useDesigns] Estado cambiado exitosamente');
+      return response.data;
     } catch (error) {
-      console.error("Error obteniendo mis diseños:", error);
+      handleError(error, 'Error al cambiar estado');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchDesigns, handleError]);
+
+  // Cancelar diseño
+  const cancelDesign = useCallback(async (id, reason = '') => {
+    try {
+      console.log('❌ [useDesigns] Solicitando cancelación de diseño:', id);
+      
+      if (!id) {
+        throw new Error('ID de diseño requerido');
+      }
+      
+      // Confirmación con SweetAlert2
+      const result = await Swal.fire({
+        title: '¿Cancelar diseño?',
+        html: `
+          <p>¿Estás seguro de que quieres cancelar este diseño?</p>
+          <p class="text-sm text-gray-600 mt-2">Esta acción no se puede deshacer.</p>
+        `,
+        input: 'textarea',
+        inputPlaceholder: 'Motivo de cancelación (opcional)',
+        inputValue: reason,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#040DBF',
+        cancelButtonColor: '#032CA6',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No cancelar',
+        reverseButtons: true,
+        focusCancel: true
+      });
+
+      if (!result.isConfirmed) {
+        return false;
+      }
+      
+      setLoading(true);
+      setError(null);
+      
+      const response = await DesignService.cancel(id, result.value || reason);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Error al cancelar diseño');
+      }
+      
+      // Mostrar éxito
+      await Swal.fire({
+        title: '¡Diseño cancelado!',
+        text: response.message || 'El diseño ha sido cancelado exitosamente',
+        icon: 'success',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#1F64BF',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refrescar lista
+      await fetchDesigns();
+      
+      console.log('✅ [useDesigns] Diseño cancelado exitosamente');
+      return true;
+    } catch (error) {
+      handleError(error, 'Error al cancelar diseño');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchDesigns, handleError]);
+
+  // ==================== OBTENER DISEÑOS DE USUARIO ====================
+
+  // Obtener diseños de un usuario específico
+  const getUserDesigns = useCallback(async (userId, options = {}) => {
+    try {
+      setError(null);
+      
+      console.log('👤 [useDesigns] Obteniendo diseños del usuario:', userId);
+      
+      if (!userId) {
+        throw new Error('ID de usuario requerido');
+      }
+
+      const response = await DesignService.getUserDesigns(userId, options);
+      
+      if (!response.success || !Array.isArray(response.data?.designs)) {
+        throw new Error('Error obteniendo diseños del usuario');
+      }
+
+      const formattedDesigns = response.data.designs
+        .map(formatDesign)
+        .filter(design => design !== null);
+      
+      console.log('✅ [useDesigns] Diseños del usuario obtenidos:', formattedDesigns.length);
+      return formattedDesigns;
+    } catch (error) {
+      handleError(error, 'Error al obtener diseños del usuario');
       return [];
     }
-  }, []);
+  }, [formatDesign, handleError]);
 
   // ==================== ESTADÍSTICAS Y ANÁLISIS ====================
 
-  // Calcular estadísticas de diseños
+  // Obtener estadísticas de diseños
   const getDesignStats = useCallback(() => {
     const total = designs.length;
     const pending = designs.filter(d => d.status === 'pending').length;
@@ -230,41 +599,35 @@ const useDesigns = () => {
     const approved = designs.filter(d => d.status === 'approved').length;
     const rejected = designs.filter(d => d.status === 'rejected').length;
     const completed = designs.filter(d => d.status === 'completed').length;
+    const drafts = designs.filter(d => d.status === 'draft').length;
     
     const totalRevenue = designs
-      .filter(d => d.price && ['approved', 'completed'].includes(d.status))
-      .reduce((sum, d) => sum + d.price, 0);
-
+      .filter(d => d.status === 'approved' || d.status === 'completed')
+      .reduce((sum, design) => sum + (design.price || 0), 0);
+    
     const avgPrice = quoted > 0 ? 
-      designs.filter(d => d.price).reduce((sum, d) => sum + d.price, 0) / designs.filter(d => d.price).length :
-      0;
+      designs.filter(d => d.price > 0).reduce((sum, d) => sum + d.price, 0) / designs.filter(d => d.price > 0).length 
+      : 0;
 
-    const avgProductionTime = designs.filter(d => d.productionDays).length > 0 ?
-      designs.filter(d => d.productionDays).reduce((sum, d) => sum + d.productionDays, 0) / designs.filter(d => d.productionDays).length :
-      0;
+    // Top 5 diseños por precio
+    const topDesignsByPrice = [...designs]
+      .filter(d => d.price > 0)
+      .sort((a, b) => b.price - a.price)
+      .slice(0, 5);
 
-    // Diseños por complejidad
-    const complexityStats = {
-      low: designs.filter(d => d.complexity === 'low').length,
-      medium: designs.filter(d => d.complexity === 'medium').length,
-      high: designs.filter(d => d.complexity === 'high').length
-    };
+    // Diseños más recientes
+    const recentDesigns = [...designs]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
 
-    // Top productos más diseñados
-    const productStats = {};
-    designs.forEach(design => {
-      const productName = design.productName;
-      if (productStats[productName]) {
-        productStats[productName]++;
-      } else {
-        productStats[productName] = 1;
-      }
-    });
+    // Complejidad promedio
+    const complexityDistribution = designs.reduce((acc, design) => {
+      acc[design.complexity] = (acc[design.complexity] || 0) + 1;
+      return acc;
+    }, {});
 
-    const topProducts = Object.entries(productStats)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
+    // Tasa de conversión (cotizados -> aprobados)
+    const conversionRate = quoted > 0 ? ((approved / quoted) * 100) : 0;
 
     return { 
       total, 
@@ -273,102 +636,136 @@ const useDesigns = () => {
       approved, 
       rejected, 
       completed,
+      drafts,
       totalRevenue,
       avgPrice,
-      avgProductionTime,
-      complexityStats,
-      topProducts,
-      conversionRate: total > 0 ? (approved / total) * 100 : 0,
-      pendingQuotes: pending,
-      activeQuotes: quoted
+      topDesignsByPrice,
+      recentDesigns,
+      complexityDistribution,
+      conversionRate
     };
   }, [designs]);
 
-  // Filtrar diseños por criterios específicos
-  const filterDesigns = useCallback((criteria) => {
-    return designs.filter(design => {
-      if (criteria.status && design.status !== criteria.status) return false;
-      if (criteria.product && design.product?._id !== criteria.product) return false;
-      if (criteria.user && design.user?._id !== criteria.user) return false;
-      if (criteria.minPrice && (!design.price || design.price < criteria.minPrice)) return false;
-      if (criteria.maxPrice && design.price && design.price > criteria.maxPrice) return false;
-      if (criteria.complexity && design.complexity !== criteria.complexity) return false;
-      
-      if (criteria.search) {
-        const searchTerm = criteria.search.toLowerCase();
-        return design.name?.toLowerCase().includes(searchTerm) ||
-               design.productName?.toLowerCase().includes(searchTerm) ||
-               design.userName?.toLowerCase().includes(searchTerm);
-      }
-      
-      return true;
+  // ==================== GESTIÓN DE FILTROS ====================
+
+  // Actualizar filtros
+  const updateFilters = useCallback((newFilters) => {
+    setFilters(prev => ({
+      ...prev,
+      ...newFilters
+    }));
+  }, []);
+
+  // Limpiar filtros
+  const clearFilters = useCallback(() => {
+    setFilters({
+      search: '',
+      status: '',
+      product: '',
+      user: '',
+      sort: 'createdAt',
+      order: 'desc'
     });
-  }, [designs]);
+  }, []);
+
+  // ==================== UTILIDADES DE KONVA ====================
+
+  // Preparar diseño para editor Konva
+  const prepareForKonvaEditor = useCallback((design) => {
+    try {
+      return DesignService.prepareForKonvaEditor(design);
+    } catch (error) {
+      console.error('❌ [useDesigns] Error preparando para Konva:', error);
+      return null;
+    }
+  }, []);
+
+  // Convertir datos de Konva a formato backend
+  const prepareFromKonvaEditor = useCallback((konvaData) => {
+    try {
+      return DesignService.prepareFromKonvaEditor(konvaData);
+    } catch (error) {
+      console.error('❌ [useDesigns] Error convirtiendo desde Konva:', error);
+      return null;
+    }
+  }, []);
 
   // ==================== EFECTOS ====================
 
-  // Cargar diseños inicialmente
+  // Cargar diseños cuando cambien los filtros
   useEffect(() => {
     fetchDesigns();
-  }, []);
+  }, [fetchDesigns]);
+
+  // Limpiar error después de un tiempo
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  // ==================== RETORNO ====================
 
   return {
-    // Estado
+    // Estados principales
     designs,
     loading,
     error,
     pagination,
+    filters,
 
-    // Funciones principales
+    // Funciones principales CRUD
     fetchDesigns,
-    createDesign,
-    saveDraft,
+    createDesignForClient,
     updateDesign,
-    cloneDesign,
+    updateProductColor,
     getDesignById,
+    cloneDesign,
+    saveDraft,
+    getUserDesigns,
 
-    // Funciones de admin
+    // Sistema de cotizaciones
     submitQuote,
     respondToQuote,
-    getMyDesigns,
 
-    // Análisis y estadísticas
+    // Gestión de estados
+    changeDesignStatus,
+    cancelDesign,
+
+    // Estadísticas y análisis
     getDesignStats,
-    filterDesigns,
 
-    // Refrescar datos
-    refetch: fetchDesigns
+    // Gestión de filtros
+    updateFilters,
+    clearFilters,
+
+    // Utilidades Konva
+    prepareForKonvaEditor,
+    prepareFromKonvaEditor,
+
+    // Utilidades
+    refetch: fetchDesigns,
+    
+    // Estados calculados
+    hasDesigns: designs.length > 0,
+    isEmpty: !loading && designs.length === 0,
+    hasError: !!error,
+    isFirstLoad: !loading && designs.length === 0 && !error,
+    
+    // Funciones auxiliares
+    formatDesign,
+    
+    // Validación
+    validateDesignData: DesignService.validateDesignData,
+    
+    // Configuración de estados
+    getStatusText: DesignService.getStatusText,
+    getStatusColor: DesignService.getStatusColor
   };
-};
-
-// ==================== FUNCIONES AUXILIARES ====================
-
-// Obtener texto del estado
-const getStatusText = (status) => {
-  const statusMap = {
-    'draft': 'Borrador',
-    'pending': 'Pendiente',
-    'quoted': 'Cotizado',
-    'approved': 'Aprobado',
-    'rejected': 'Rechazado',
-    'completed': 'Completado',
-    'archived': 'Archivado'
-  };
-  return statusMap[status] || status;
-};
-
-// Obtener color del estado
-const getStatusColor = (status) => {
-  const colorMap = {
-    'draft': 'gray',
-    'pending': 'blue',
-    'quoted': 'orange',
-    'approved': 'green',
-    'rejected': 'red',
-    'completed': 'purple',
-    'archived': 'gray'
-  };
-  return colorMap[status] || 'gray';
 };
 
 export default useDesigns;
