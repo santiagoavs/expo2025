@@ -1,6 +1,30 @@
 // src/components/designs/DesignEditorModal.jsx - MODAL DEL EDITOR DE DISEÑOS
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Rect as KonvaRect, Circle as KonvaCircle, Transformer, Group } from 'react-konva';
+import useImage from 'use-image';
 import './designEditorModal.css';
+
+// Imagen desde URL usando useImage
+const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransformEnd, x = 0, y = 0, rotation = 0, draggable = true, visible = true }) => {
+  const [image] = useImage(src || '', 'anonymous');
+  return (
+    <KonvaImage
+      id={id}
+      image={image}
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rotation={rotation}
+      draggable={draggable}
+      visible={visible}
+      onClick={onClick}
+      onTap={onTap}
+      onDragEnd={onDragEnd}
+      onTransformEnd={onTransformEnd}
+    />
+  );
+};
 
 const DesignEditorModal = ({
   isOpen,
@@ -22,6 +46,10 @@ const DesignEditorModal = ({
 
   // Referencias
   const autoSaveTimeoutRef = useRef(null);
+  const stageRef = useRef(null);
+  const transformerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [selectedElementId, setSelectedElementId] = useState(null);
 
   // ==================== EFECTOS ====================
 
@@ -32,9 +60,15 @@ const DesignEditorModal = ({
       
       const design = designData.design;
       setDesignName(design.name || 'Diseño sin nombre');
-      setElements(design.elements || []);
+      // Asegurar IDs únicos en elementos
+      const normalized = (design.elements || []).map((el) => ({
+        ...el,
+        id: el.id || el._id || `${el.type || 'elem'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      }));
+      setElements(normalized);
       setProductColorFilter(design.productColorFilter || '#ffffff');
       setSelectedElement(null);
+      setSelectedElementId(null);
       setHasUnsavedChanges(false);
       setSaveStatus('saved');
       setZoom(100);
@@ -76,16 +110,42 @@ const DesignEditorModal = ({
     setSaveStatus('saved');
   }, []);
 
+  // ==================== CONFIGURACIÓN DE STAGE ====================
+  const product = designData?.design?.product || null;
+  const [productImage] = useImage(product?.image || product?.mainImage || null, 'anonymous');
+  const stageConfig = useMemo(() => {
+    const defaultWidth = 800;
+    const defaultHeight = 600;
+    const areas = product?.customizationAreas || [];
+    if (areas.length > 0) {
+      let maxX = 0, maxY = 0;
+      areas.forEach((area) => {
+        const ax = area.position?.x || 0;
+        const ay = area.position?.y || 0;
+        const aw = area.position?.width || 200;
+        const ah = area.position?.height || 100;
+        maxX = Math.max(maxX, ax + aw);
+        maxY = Math.max(maxY, ay + ah);
+      });
+      return {
+        width: Math.max(defaultWidth, maxX + 100),
+        height: Math.max(defaultHeight, maxY + 100)
+      };
+    }
+    return { width: defaultWidth, height: defaultHeight };
+  }, [product]);
+
   // ==================== MANEJO DE ELEMENTOS ====================
 
   const addTextElement = useCallback(() => {
+    const area = designData?.design?.product?.customizationAreas?.[0];
     const newElement = {
       id: `text-${Date.now()}`,
       type: 'text',
-      areaId: designData?.design?.product?.customizationAreas?.[0]?.id || 'area-1',
+      areaId: area?._id || area?.id || 'area-1',
       konvaAttrs: {
-        x: 50,
-        y: 50,
+        x: (area?.position?.x || 0) + 20,
+        y: (area?.position?.y || 0) + 20,
         text: 'Nuevo texto',
         fontSize: 24,
         fontFamily: 'Arial',
@@ -96,6 +156,7 @@ const DesignEditorModal = ({
     
     setElements(prev => [...prev, newElement]);
     setSelectedElement(newElement);
+    setSelectedElementId(newElement.id);
     setActiveTool('select');
     markAsUnsaved();
     
@@ -106,27 +167,29 @@ const DesignEditorModal = ({
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+    fileInputRef.current = input;
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
+          const area = designData?.design?.product?.customizationAreas?.[0];
           const newElement = {
             id: `image-${Date.now()}`,
             type: 'image',
-            areaId: designData?.design?.product?.customizationAreas?.[0]?.id || 'area-1',
+            areaId: area?._id || area?.id || 'area-1',
             konvaAttrs: {
-              x: 50,
-              y: 50,
-              width: 100,
-              height: 100,
+              x: (area?.position?.x || 0) + 20,
+              y: (area?.position?.y || 0) + 20,
+              width: Math.min(200, (area?.position?.width || 200) - 40),
+              height: Math.min(150, (area?.position?.height || 150) - 40),
               image: event.target.result
             }
           };
           
           setElements(prev => [...prev, newElement]);
           setSelectedElement(newElement);
+          setSelectedElementId(newElement.id);
           setActiveTool('select');
           markAsUnsaved();
           
@@ -140,9 +203,10 @@ const DesignEditorModal = ({
   }, [designData, markAsUnsaved]);
 
   const addShapeElement = useCallback((shapeType = 'rect') => {
+    const area = designData?.design?.product?.customizationAreas?.[0];
     const baseAttrs = {
-      x: 50,
-      y: 50,
+      x: (area?.position?.x || 0) + 20,
+      y: (area?.position?.y || 0) + 20,
       fill: '#3F2724',
       stroke: '#000000',
       strokeWidth: 0
@@ -163,7 +227,7 @@ const DesignEditorModal = ({
       id: `${shapeType}-${Date.now()}`,
       type: 'shape',
       shapeType,
-      areaId: designData?.design?.product?.customizationAreas?.[0]?.id || 'area-1',
+      areaId: area?._id || area?.id || 'area-1',
       konvaAttrs: {
         ...baseAttrs,
         ...specificAttrs
@@ -172,6 +236,7 @@ const DesignEditorModal = ({
     
     setElements(prev => [...prev, newElement]);
     setSelectedElement(newElement);
+    setSelectedElementId(newElement.id);
     setActiveTool('select');
     markAsUnsaved();
     
@@ -200,6 +265,7 @@ const DesignEditorModal = ({
 
     setElements(prev => prev.filter(el => el.id !== selectedElement.id));
     setSelectedElement(null);
+    setSelectedElementId(null);
     markAsUnsaved();
 
     console.log('🗑️ [DesignEditor] Elemento eliminado:', selectedElement.id);
@@ -207,6 +273,7 @@ const DesignEditorModal = ({
 
   const selectElement = useCallback((element) => {
     setSelectedElement(element);
+    setSelectedElementId(element?.id || null);
     setActiveTool('select');
   }, []);
 
@@ -648,6 +715,62 @@ const DesignEditorModal = ({
 
   const design = designData.design;
 
+  // ==================== RENDERIZADO KONVA ====================
+  const onCanvasClick = useCallback((e) => {
+    // Des-seleccionar si se clickea el fondo
+    if (e.target === e.target.getStage()) {
+      setSelectedElement(null);
+      setSelectedElementId(null);
+      if (transformerRef.current) transformerRef.current.nodes([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!stageRef.current || !transformerRef.current) return;
+    if (!selectedElementId) {
+      transformerRef.current.nodes([]);
+      return;
+    }
+    const stage = stageRef.current;
+    const node = stage.findOne(`#${selectedElementId}`);
+    if (node) {
+      transformerRef.current.nodes([node]);
+      transformerRef.current.getLayer().batchDraw();
+    }
+  }, [selectedElementId]);
+
+  const handleElementDrag = useCallback((id, e) => {
+    const x = Math.round(e.target.x());
+    const y = Math.round(e.target.y());
+    setElements(prev => prev.map(el => el.id === id ? { ...el, konvaAttrs: { ...el.konvaAttrs, x, y } } : el));
+    if (selectedElement?.id === id) {
+      setSelectedElement(prev => prev ? { ...prev, konvaAttrs: { ...prev.konvaAttrs, x, y } } : prev);
+    }
+    markAsUnsaved();
+  }, [selectedElement, markAsUnsaved]);
+
+  const handleElementTransform = useCallback((id, node) => {
+    // Normalizar escala a dimensiones
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    node.scaleX(1);
+    node.scaleY(1);
+    const updates = {
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      rotation: Math.round(node.rotation()),
+    };
+    if (node.className === 'Text' || node.className === 'Image' || node.className === 'Rect') {
+      updates.width = Math.round((node.width() || 0) * scaleX);
+      updates.height = Math.round((node.height() || 0) * scaleY);
+    }
+    setElements(prev => prev.map(el => el.id === id ? { ...el, konvaAttrs: { ...el.konvaAttrs, ...updates } } : el));
+    if (selectedElement?.id === id) {
+      setSelectedElement(prev => prev ? { ...prev, konvaAttrs: { ...prev.konvaAttrs, ...updates } } : prev);
+    }
+    markAsUnsaved();
+  }, [selectedElement, markAsUnsaved]);
+
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="design-editor-modal" onClick={(e) => e.stopPropagation()}>
@@ -786,27 +909,127 @@ const DesignEditorModal = ({
           <div className="canvas-area">
             <div className="canvas-container">
               <div className="canvas-wrapper">
-                <div className="canvas-mock">
-                  {design?.product?.mainImage && (
-                    <img 
-                      src={design.product.mainImage} 
-                      alt={design.product.name}
-                      className="product-background"
-                      style={{ 
-                        filter: productColorFilter !== '#ffffff' 
-                          ? `sepia(1) saturate(3) hue-rotate(${productColorFilter})` 
-                          : 'none' 
-                      }}
-                    />
-                  )}
-                  <div className="canvas-overlay">
-                    <div>Canvas del Editor Konva</div>
-                    <div style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.7 }}>
-                      {elements.length} elemento{elements.length !== 1 ? 's' : ''}
-                      {selectedElement && ` • ${selectedElement.type} seleccionado`}
-                    </div>
-                  </div>
-                </div>
+                <Stage
+                  ref={stageRef}
+                  width={stageConfig.width}
+                  height={stageConfig.height}
+                  scaleX={zoom / 100}
+                  scaleY={zoom / 100}
+                  onMouseDown={onCanvasClick}
+                  onTouchStart={onCanvasClick}
+                >
+                  <Layer>
+                    {/* Imagen de producto */}
+                    {productImage && (
+                      <KonvaImage
+                        image={productImage}
+                        x={0}
+                        y={0}
+                        width={stageConfig.width}
+                        height={stageConfig.height}
+                        opacity={0.3}
+                        listening={false}
+                      />
+                    )}
+                    {/* Tinte de color del producto */}
+                    {productColorFilter && productColorFilter !== '#ffffff' && (
+                      <KonvaRect
+                        x={0}
+                        y={0}
+                        width={stageConfig.width}
+                        height={stageConfig.height}
+                        fill={productColorFilter}
+                        globalCompositeOperation="multiply"
+                        opacity={0.3}
+                        listening={false}
+                      />
+                    )}
+                    {/* Áreas de personalización */}
+                    {(product?.customizationAreas || []).map((area, idx) => (
+                      <Group key={area._id || area.id || idx} listening={false}>
+                        <KonvaRect
+                          x={area.position?.x || 0}
+                          y={area.position?.y || 0}
+                          width={area.position?.width || 200}
+                          height={area.position?.height || 100}
+                          stroke="#10B981"
+                          dash={[5, 5]}
+                          strokeWidth={2}
+                          opacity={0.6}
+                        />
+                      </Group>
+                    ))}
+                    {/* Elementos */}
+                    {elements.map((el) => {
+                      if (!el || !el.konvaAttrs) return null;
+                      const commonProps = {
+                        id: el.id,
+                        x: el.konvaAttrs.x || 0,
+                        y: el.konvaAttrs.y || 0,
+                        rotation: el.konvaAttrs.rotation || 0,
+                        visible: el.visible !== false,
+                        draggable: true,
+                        onClick: () => selectElement(el),
+                        onTap: () => selectElement(el),
+                        onDragEnd: (e) => handleElementDrag(el.id, e),
+                        onTransformEnd: (e) => handleElementTransform(el.id, e.target)
+                      };
+                      if (el.type === 'text') {
+                        return (
+                          <KonvaText
+                            key={el.id}
+                            {...commonProps}
+                            text={el.konvaAttrs.text || ''}
+                            fontSize={el.konvaAttrs.fontSize || 24}
+                            fontFamily={el.konvaAttrs.fontFamily || 'Arial'}
+                            fill={el.konvaAttrs.fill || '#000000'}
+                            width={el.konvaAttrs.width}
+                            height={el.konvaAttrs.height}
+                          />
+                        );
+                      } else if (el.type === 'image') {
+                        return (
+                          <UrlImage
+                            key={el.id}
+                            id={el.id}
+                            src={el.konvaAttrs.image}
+                            width={el.konvaAttrs.width || 200}
+                            height={el.konvaAttrs.height || 150}
+                            {...commonProps}
+                          />
+                        );
+                      } else if (el.type === 'shape') {
+                        if (el.shapeType === 'circle') {
+                          const radius = el.konvaAttrs.radius || Math.min((el.konvaAttrs.width || 100) / 2, (el.konvaAttrs.height || 100) / 2);
+                          return (
+                            <KonvaCircle
+                              key={el.id}
+                              {...commonProps}
+                              radius={radius}
+                              fill={el.konvaAttrs.fill || '#3F2724'}
+                              stroke={el.konvaAttrs.stroke || undefined}
+                              strokeWidth={el.konvaAttrs.strokeWidth || 0}
+                            />
+                          );
+                        }
+                        return (
+                          <KonvaRect
+                            key={el.id}
+                            {...commonProps}
+                            width={el.konvaAttrs.width || 100}
+                            height={el.konvaAttrs.height || 100}
+                            fill={el.konvaAttrs.fill || '#3F2724'}
+                            stroke={el.konvaAttrs.stroke || undefined}
+                            strokeWidth={el.konvaAttrs.strokeWidth || 0}
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                    {/* Transformer */}
+                    <Transformer ref={transformerRef} rotateEnabled={true} />
+                  </Layer>
+                </Stage>
               </div>
             </div>
 
