@@ -74,7 +74,7 @@ const DesignService = {
         errors.push(`Elemento ${index + 1}: atributos no definidos`);
       }
       
-      if (element.type === 'text' && !element.konvaAttrs?.text?.trim()) {
+      if (element.type === 'text' && (!element.konvaAttrs?.text || !element.konvaAttrs.text.trim())) {
         errors.push(`Elemento de texto ${index + 1}: texto vacío`);
       }
       
@@ -489,11 +489,6 @@ const EditableText = ({
   onFinishEdit 
 }) => {
   const textRef = useRef();
-  const [tempText, setTempText] = useState(text || '');
-
-  useEffect(() => {
-    setTempText(text || '');
-  }, [text]);
 
   const handleDoubleClick = useCallback(() => {
     if (onStartEdit) {
@@ -654,7 +649,7 @@ const KonvaDesignEditor = ({
   onSave 
 }) => {
   // 1. Estados principales
-  const [elements, setElements] = useState(initialDesign?.elements || []);
+  const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
   const [stageScale, setStageScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
@@ -663,11 +658,11 @@ const KonvaDesignEditor = ({
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [editingTextId, setEditingTextId] = useState(null);
-  const [selectedAreaId, setSelectedAreaId] = useState(product?.customizationAreas?.[0]?._id || '');
+  const [selectedAreaId, setSelectedAreaId] = useState('');
   const [productColorFilter, setProductColorFilter] = useState('#ffffff');
   
-  // Estados para nuevos elementos
-  const [newTextContent, setNewTextContent] = useState('Nuevo texto');
+  // Estados para nuevos elementos - CORREGIDO: texto por defecto vacío
+  const [newTextContent, setNewTextContent] = useState('');
   const [textProperties, setTextProperties] = useState({
     fontSize: 24,
     fontFamily: 'Arial',
@@ -678,17 +673,65 @@ const KonvaDesignEditor = ({
   const theme = useTheme();
   const stageRef = useRef();
   const transformerRef = useRef();
-  const fileInputRef = useRef(null); // Corregido: inicializado como null
+  const fileInputRef = useRef(null);
 
   // Imagen del producto con filtro de color
   const [originalProductImage] = useImage(product?.images?.main || product?.mainImage, 'anonymous');
   const [filteredProductImage, setFilteredProductImage] = useState(null);
 
-  // 3. Efectos
+  // 3. Efectos - CORREGIDO: inicialización de elementos y área seleccionada
+  useEffect(() => {
+    if (isOpen) {
+      // Configurar elementos iniciales con validación robusta
+      if (initialDesign?.elements && Array.isArray(initialDesign.elements)) {
+        const validElements = initialDesign.elements.filter(el => {
+          // Validar que el elemento tiene todas las propiedades requeridas
+          return el && 
+                 el.id && 
+                 el.type && 
+                 el.konvaAttrs && 
+                 typeof el.id === 'string' &&
+                 typeof el.type === 'string' &&
+                 typeof el.konvaAttrs === 'object';
+        }).map(el => {
+          // Asegurar que el elemento tiene un ID válido
+          return {
+            ...el,
+            id: el.id || generateElementId(el.type),
+            konvaAttrs: {
+              ...el.konvaAttrs,
+              x: el.konvaAttrs.x || 0,
+              y: el.konvaAttrs.y || 0
+            }
+          };
+        });
+        
+        console.log('Cargando elementos iniciales válidos:', validElements);
+        setElements(validElements);
+      } else {
+        console.log('No hay elementos iniciales o son inválidos');
+        setElements([]);
+      }
+
+      // Configurar área seleccionada
+      if (product?.customizationAreas?.length > 0) {
+        const firstAreaId = product.customizationAreas[0]._id || product.customizationAreas[0].id;
+        setSelectedAreaId(firstAreaId);
+      }
+
+      // Resetear otros estados
+      setSelectedElementId(null);
+      setEditingTextId(null);
+      setNewTextContent('');
+      setStageScale(1);
+      setStagePosition({ x: 0, y: 0 });
+    }
+  }, [isOpen, initialDesign, product]);
+
   useEffect(() => {
     if (selectedElementId && transformerRef.current) {
       const stage = stageRef.current;
-      const node = stage.findOne(`#${selectedElementId}`);
+      const node = stage?.findOne(`#${selectedElementId}`);
       if (node) {
         transformerRef.current.nodes([node]);
         transformerRef.current.getLayer().batchDraw();
@@ -712,13 +755,6 @@ const KonvaDesignEditor = ({
     }
   }, [originalProductImage, productColorFilter]);
 
-  // Configurar área seleccionada por defecto
-  useEffect(() => {
-    if (product?.customizationAreas?.length > 0 && !selectedAreaId) {
-      setSelectedAreaId(product.customizationAreas[0]._id || product.customizationAreas[0].id);
-    }
-  }, [product, selectedAreaId]);
-
   // 4. Funciones/manejadores
   const handleOpenImageDialog = useCallback(() => {
     setShowImageDialog(true);
@@ -738,8 +774,8 @@ const KonvaDesignEditor = ({
       let maxX = 0, maxY = 0;
       
       product.customizationAreas.forEach(area => {
-        const areaRight = area.position.x + area.position.width;
-        const areaBottom = area.position.y + area.position.height;
+        const areaRight = (area.position?.x || 0) + (area.position?.width || 200);
+        const areaBottom = (area.position?.y || 0) + (area.position?.height || 100);
         maxX = Math.max(maxX, areaRight);
         maxY = Math.max(maxY, areaBottom);
       });
@@ -792,6 +828,7 @@ const KonvaDesignEditor = ({
     return `${type}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
+  // CORREGIDO: función de agregar texto con validaciones mejoradas
   const addTextElement = useCallback(() => {
     if (!selectedAreaId) {
       alert('Por favor selecciona un área de personalización primero');
@@ -799,7 +836,7 @@ const KonvaDesignEditor = ({
     }
 
     const selectedArea = product?.customizationAreas?.find(area => 
-      area._id === selectedAreaId || area.id === selectedAreaId
+      (area._id === selectedAreaId || area.id === selectedAreaId)
     );
     
     if (!selectedArea) {
@@ -807,24 +844,36 @@ const KonvaDesignEditor = ({
       return;
     }
 
+    // Usar texto del input o texto por defecto
+    const textContent = newTextContent.trim() || 'Nuevo texto';
+
     const newElement = {
       id: generateElementId('text'),
       type: 'text',
       areaId: selectedAreaId,
       konvaAttrs: {
-        x: selectedArea.position.x + 20,
-        y: selectedArea.position.y + 20,
-        text: newTextContent,
+        x: (selectedArea.position?.x || 0) + 20,
+        y: (selectedArea.position?.y || 0) + 20,
+        text: textContent,
         fontSize: textProperties.fontSize,
         fontFamily: textProperties.fontFamily,
         fill: textProperties.fill,
-        width: Math.min(200, selectedArea.position.width - 40),
+        width: Math.min(200, (selectedArea.position?.width || 200) - 40),
         draggable: true
       }
     };
     
-    setElements(prev => [...prev, newElement]);
+    console.log('Agregando elemento de texto:', newElement);
+    
+    setElements(prev => {
+      const updated = [...prev, newElement];
+      console.log('Lista de elementos actualizada:', updated);
+      return updated;
+    });
     setSelectedElementId(newElement.id);
+    
+    // Limpiar el input después de agregar
+    setNewTextContent('');
   }, [newTextContent, textProperties, selectedAreaId, product]);
 
   const addImageElement = useCallback((imageData) => {
@@ -834,7 +883,7 @@ const KonvaDesignEditor = ({
     }
 
     const selectedArea = product?.customizationAreas?.find(area => 
-      area._id === selectedAreaId || area.id === selectedAreaId
+      (area._id === selectedAreaId || area.id === selectedAreaId)
     );
     
     if (!selectedArea) {
@@ -847,30 +896,66 @@ const KonvaDesignEditor = ({
       type: 'image',
       areaId: selectedAreaId,
       konvaAttrs: {
-        x: selectedArea.position.x + 20,
-        y: selectedArea.position.y + 20,
-        width: Math.min(200, selectedArea.position.width - 40),
-        height: Math.min(150, selectedArea.position.height - 40),
+        x: (selectedArea.position?.x || 0) + 20,
+        y: (selectedArea.position?.y || 0) + 20,
+        width: Math.min(200, (selectedArea.position?.width || 200) - 40),
+        height: Math.min(150, (selectedArea.position?.height || 150) - 40),
         image: imageData,
         draggable: true
       }
     };
     
-    setElements(prev => [...prev, newElement]);
+    console.log('Agregando elemento de imagen:', newElement);
+    
+    setElements(prev => {
+      const updated = [...prev, newElement];
+      console.log('Lista de elementos actualizada:', updated);
+      return updated;
+    });
     setSelectedElementId(newElement.id);
     setShowImageDialog(false);
   }, [selectedAreaId, product]);
 
+  // CORREGIDO: función de actualización de elementos con validaciones
   const updateElement = useCallback((elementId, updates) => {
-    setElements(prev => prev.map(el => 
-      el.id === elementId 
-        ? { ...el, konvaAttrs: { ...el.konvaAttrs, ...updates } }
-        : el
-    ));
+    if (!elementId || !updates) {
+      console.warn('updateElement: parámetros inválidos', { elementId, updates });
+      return;
+    }
+
+    setElements(prev => {
+      // Validar que todos los elementos en el array son válidos
+      const validPrevElements = prev.filter(el => {
+        if (!el || !el.id || !el.type) {
+          console.warn('Elemento inválido encontrado y removido:', el);
+          return false;
+        }
+        return true;
+      });
+
+      const updated = validPrevElements.map(el => {
+        if (el.id === elementId) {
+          const updatedElement = {
+            ...el,
+            konvaAttrs: { ...el.konvaAttrs, ...updates }
+          };
+          console.log('Actualizando elemento:', updatedElement);
+          return updatedElement;
+        }
+        return el;
+      });
+      return updated;
+    });
   }, []);
 
   const deleteElement = useCallback((elementId) => {
-    setElements(prev => prev.filter(el => el.id !== elementId));
+    console.log('Eliminando elemento:', elementId);
+    setElements(prev => {
+      const updated = prev.filter(el => el.id !== elementId);
+      console.log('Elementos después de eliminar:', updated);
+      return updated;
+    });
+    
     if (selectedElementId === elementId) {
       setSelectedElementId(null);
     }
@@ -887,11 +972,18 @@ const KonvaDesignEditor = ({
         id: generateElementId(element.type),
         konvaAttrs: {
           ...element.konvaAttrs,
-          x: element.konvaAttrs.x + 20,
-          y: element.konvaAttrs.y + 20
+          x: (element.konvaAttrs.x || 0) + 20,
+          y: (element.konvaAttrs.y || 0) + 20
         }
       };
-      setElements(prev => [...prev, newElement]);
+      
+      console.log('Duplicando elemento:', newElement);
+      
+      setElements(prev => {
+        const updated = [...prev, newElement];
+        console.log('Elementos después de duplicar:', updated);
+        return updated;
+      });
       setSelectedElementId(newElement.id);
     }
   }, [elements]);
@@ -899,13 +991,13 @@ const KonvaDesignEditor = ({
   const moveElementToArea = useCallback((elementId, newAreaId) => {
     const element = elements.find(el => el.id === elementId);
     const newArea = product?.customizationAreas?.find(area => 
-      area._id === newAreaId || area.id === newAreaId
+      (area._id === newAreaId || area.id === newAreaId)
     );
     
     if (element && newArea) {
       updateElement(elementId, {
-        x: newArea.position.x + 20,
-        y: newArea.position.y + 20
+        x: (newArea.position?.x || 0) + 20,
+        y: (newArea.position?.y || 0) + 20
       });
       
       setElements(prev => prev.map(el => 
@@ -980,23 +1072,28 @@ const KonvaDesignEditor = ({
 
   // ==================== EDICIÓN DE TEXTO ====================
   const handleStartTextEdit = useCallback((elementId) => {
+    console.log('Iniciando edición de texto para elemento:', elementId);
     setEditingTextId(elementId);
     setSelectedElementId(elementId);
   }, []);
 
   const handleFinishTextEdit = useCallback((elementId, newText) => {
+    console.log('Finalizando edición de texto:', { elementId, newText });
     if (newText && newText.trim()) {
       updateElement(elementId, { text: newText.trim() });
     }
     setEditingTextId(null);
   }, [updateElement]);
 
+  // CORREGIDO: manejo del cambio de contenido de texto
   const handleTextContentChange = useCallback((value) => {
     setNewTextContent(value);
+    
+    // Si hay un elemento seleccionado y es de texto, actualizarlo en tiempo real
     if (selectedElementId) {
       const element = elements.find(el => el.id === selectedElementId);
       if (element && element.type === 'text') {
-        updateElement(selectedElementId, { text: value });
+        updateElement(selectedElementId, { text: value || 'Texto vacío' });
       }
     }
   }, [selectedElementId, elements, updateElement]);
@@ -1032,6 +1129,14 @@ const KonvaDesignEditor = ({
 
   // ==================== GUARDAR DISEÑO ====================
   const handleSave = useCallback(() => {
+    console.log('Intentando guardar elementos:', elements);
+    
+    // Validar que hay elementos
+    if (!elements || elements.length === 0) {
+      alert('Debe agregar al menos un elemento al diseño antes de guardar');
+      return;
+    }
+
     // Validar elementos antes de guardar
     const validation = DesignService.validateElementsForSubmission(elements);
     if (!validation.isValid) {
@@ -1040,29 +1145,46 @@ const KonvaDesignEditor = ({
     }
 
     // Convertir elementos al formato correcto para el backend
-    const designElements = elements.map(el => ({
-      type: el.type,
-      areaId: el.areaId || product?.customizationAreas?.[0]?._id || product?.customizationAreas?.[0]?.id || '',
-      konvaAttrs: {
-        ...el.konvaAttrs,
-        id: undefined,
-        draggable: undefined
+    const designElements = elements.map(el => {
+      // Validar que el elemento tenga las propiedades necesarias
+      if (!el.type || !el.konvaAttrs) {
+        console.warn('Elemento inválido encontrado:', el);
+        return null;
       }
-    }));
+
+      return {
+        type: el.type,
+        areaId: el.areaId || product?.customizationAreas?.[0]?._id || product?.customizationAreas?.[0]?.id || '',
+        konvaAttrs: {
+          ...el.konvaAttrs,
+          // Remover propiedades que no necesita el backend
+          id: undefined,
+          draggable: undefined
+        }
+      };
+    }).filter(Boolean); // Remover elementos null
+
+    console.log('Elementos procesados para guardar:', designElements);
+
+    if (designElements.length === 0) {
+      alert('No hay elementos válidos para guardar');
+      return;
+    }
     
-    // Incluir el filtro de color del producto si se cambió
-    const designData = {
-      elements: designElements,
-      productColorFilter: productColorFilter !== '#ffffff' ? productColorFilter : null
-    };
-    
-    onSave(designElements, productColorFilter);
+    // Llamar función de guardado
+    try {
+      onSave(designElements, productColorFilter !== '#ffffff' ? productColorFilter : null);
+      console.log('Diseño guardado exitosamente');
+    } catch (error) {
+      console.error('Error al guardar diseño:', error);
+      alert('Error al guardar el diseño. Inténtalo de nuevo.');
+    }
   }, [elements, onSave, product, productColorFilter]);
 
   // ==================== ELEMENTO SELECCIONADO ====================
-  const selectedElement = elements.find(el => el.id === selectedElementId);
+  const selectedElement = elements.find(el => el && el.id === selectedElementId);
   const selectedArea = product?.customizationAreas?.find(area => 
-    area._id === selectedAreaId || area.id === selectedAreaId
+    (area._id === selectedAreaId || area.id === selectedAreaId)
   );
 
   // ==================== RENDERIZADO DE ÁREAS ====================
@@ -1077,9 +1199,9 @@ const KonvaDesignEditor = ({
           y={area.position?.y || 0}
           width={area.position?.width || 200}
           height={area.position?.height || 100}
-          stroke={area._id === selectedAreaId || area.id === selectedAreaId ? '#1F64BF' : '#10B981'}
-          strokeWidth={area._id === selectedAreaId || area.id === selectedAreaId ? 3 : 2}
-          fill={area._id === selectedAreaId || area.id === selectedAreaId ? 'rgba(31, 100, 191, 0.1)' : 'rgba(16, 185, 129, 0.05)'}
+          stroke={(area._id === selectedAreaId || area.id === selectedAreaId) ? '#1F64BF' : '#10B981'}
+          strokeWidth={(area._id === selectedAreaId || area.id === selectedAreaId) ? 3 : 2}
+          fill={(area._id === selectedAreaId || area.id === selectedAreaId) ? 'rgba(31, 100, 191, 0.1)' : 'rgba(16, 185, 129, 0.05)'}
           dash={[5, 5]}
           listening={false}
         />
@@ -1091,7 +1213,7 @@ const KonvaDesignEditor = ({
           text={area.displayName || area.name || `Área ${index + 1}`}
           fontSize={12}
           fontFamily="Arial"
-          fill={area._id === selectedAreaId || area.id === selectedAreaId ? '#1F64BF' : '#10B981'}
+          fill={(area._id === selectedAreaId || area.id === selectedAreaId) ? '#1F64BF' : '#10B981'}
           fontStyle="bold"
           listening={false}
         />
@@ -1164,6 +1286,8 @@ const KonvaDesignEditor = ({
                       margin="dense"
                       multiline
                       rows={2}
+                      placeholder="Escribe aquí el texto..."
+                      helperText="Deja vacío para usar texto por defecto"
                     />
                     
                     <Box sx={{ mt: 2, mb: 1 }}>
@@ -1234,7 +1358,7 @@ const KonvaDesignEditor = ({
                     
                     <Button
                       variant="outlined"
-                      onClick={() => fileInputRef.current?.click()} // Corregido: ahora abre el explorador de archivos
+                      onClick={() => fileInputRef.current?.click()}
                       disabled={!selectedAreaId}
                       sx={{ 
                         mb: 2, 
@@ -1275,7 +1399,7 @@ const KonvaDesignEditor = ({
                     <SectionTitle component="div">
                       <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Package size={16} weight="bold" />
-                        <span>Elementos</span>
+                        <span>Elementos ({elements.length})</span>
                       </Box>
                     </SectionTitle>
                     
@@ -1294,8 +1418,8 @@ const KonvaDesignEditor = ({
                             )}
                             <Typography variant="body2" fontWeight={600}>
                               {element.type === 'text' 
-                                ? element.konvaAttrs.text?.substring(0, 15) + (element.konvaAttrs.text?.length > 15 ? '...' : '')
-                                : `Imagen ${element.id.split('-')[1]}`
+                                ? (element.konvaAttrs?.text?.substring(0, 15) || 'Texto') + (element.konvaAttrs?.text?.length > 15 ? '...' : '')
+                                : `Imagen ${element.id?.split('-')?.[1] || 'nueva'}`
                               }
                             </Typography>
                           </Box>
@@ -1333,6 +1457,9 @@ const KonvaDesignEditor = ({
                           <Typography variant="body2">
                             No hay elementos aún
                           </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Agrega texto o imágenes para comenzar
+                          </Typography>
                         </Box>
                       )}
                     </ElementsList>
@@ -1361,7 +1488,7 @@ const KonvaDesignEditor = ({
                           {area.displayName || area.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                          {area.position.width} × {area.position.height} px
+                          {area.position?.width || 200} × {area.position?.height || 100} px
                         </Typography>
                         <Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                           {area.accepts?.text && (
@@ -1448,7 +1575,7 @@ const KonvaDesignEditor = ({
                     {product?.customizationAreas?.map((area, index) => (
                       <Chip
                         key={area._id || area.id || index}
-                        label={`${area.displayName || area.name} (${area.position.width}×${area.position.height})`}
+                        label={`${area.displayName || area.name} (${area.position?.width || 200}×${area.position?.height || 100})`}
                         size="small"
                         variant="outlined"
                         sx={{ 
@@ -1564,7 +1691,7 @@ const KonvaDesignEditor = ({
                 {renderCustomizationAreas()}
 
                 {/* Elementos del diseño */}
-                {elements.map((element) => {
+                {elements.filter(element => element && element.id && element.type && element.konvaAttrs).map((element) => {
                   if (element.type === 'text') {
                     return (
                       <EditableText
@@ -1680,7 +1807,7 @@ const KonvaDesignEditor = ({
                       <ModernTextField
                         label="Contenido"
                         value={selectedElement.konvaAttrs.text || ''}
-                        onChange={(e) => handleTextContentChange(e.target.value)}
+                        onChange={(e) => updateElement(selectedElementId, { text: e.target.value || 'Texto vacío' })}
                         multiline
                         rows={3}
                         fullWidth
@@ -1965,7 +2092,7 @@ const KonvaDesignEditor = ({
                 autoFocus
                 label="Contenido del texto"
                 value={elements.find(el => el.id === editingTextId)?.konvaAttrs?.text || ''}
-                onChange={(e) => updateElement(editingTextId, { text: e.target.value })}
+                onChange={(e) => updateElement(editingTextId, { text: e.target.value || 'Texto vacío' })}
                 fullWidth
                 multiline
                 rows={4}
