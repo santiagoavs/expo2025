@@ -1,10 +1,22 @@
 // src/api/apiClient.js - VERSION CORREGIDA
 import axios from 'axios';
 
+const computeBaseURL = () => {
+  try {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && typeof envUrl === 'string') {
+      const trimmed = envUrl.replace(/\/$/, '');
+      return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+    }
+  } catch (_) {}
+  // Por defecto, usar ruta relativa para aprovechar el proxy de Vite (/api -> http://localhost:4000)
+  return '/api';
+};
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
+  baseURL: computeBaseURL(),
   withCredentials: true,
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -21,7 +33,12 @@ console.log('🔧 [apiClient] Configuración inicial:', {
 apiClient.interceptors.request.use(
   config => {
     console.log('🚀 [apiClient] === REQUEST START ===');
-    console.log('🎯 [apiClient] URL completa:', config.baseURL + config.url);
+    try {
+      const full = new URL(config.url, config.baseURL || window.location.origin).toString();
+      console.log('🎯 [apiClient] URL completa:', full);
+    } catch {
+      console.log('🎯 [apiClient] URL (raw):', config.baseURL, config.url);
+    }
     console.log('🔧 [apiClient] Método:', config.method?.toUpperCase());
     console.log('📋 [apiClient] Headers enviados:', config.headers);
     console.log('🍪 [apiClient] WithCredentials:', config.withCredentials);
@@ -83,7 +100,12 @@ apiClient.interceptors.response.use(
   },
   error => {
     console.error('❌ [apiClient] === RESPONSE ERROR START ===');
-    console.error('🎯 [apiClient] URL que falló:', error.config?.url);
+    try {
+      const failedFull = new URL(error.config?.url || '', error.config?.baseURL || window.location.origin).toString();
+      console.error('🎯 [apiClient] URL que falló:', failedFull);
+    } catch {
+      console.error('🎯 [apiClient] URL que falló:', error.config?.url);
+    }
     console.error('🔧 [apiClient] Método:', error.config?.method?.toUpperCase());
     console.error('📊 [apiClient] Status:', error.response?.status);
     console.error('📋 [apiClient] Status Text:', error.response?.statusText);
