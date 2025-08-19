@@ -1,6 +1,30 @@
 // src/components/designs/CreateDesignModal.jsx - MODAL DE CREACIÓN PARA USUARIOS PÚBLICOS
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Rect as KonvaRect, Circle as KonvaCircle, Transformer, Group } from 'react-konva';
+import useImage from 'use-image';
 import './createDesignModal.css';
+
+// Componente auxiliar para cargar imagen por URL dentro del editor inline
+const InlineUrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransformEnd, x = 0, y = 0, rotation = 0, draggable = true, visible = true }) => {
+  const [image] = useImage(src || '', 'anonymous');
+  return (
+    <KonvaImage
+      id={id}
+      image={image}
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      rotation={rotation}
+      draggable={draggable}
+      visible={visible}
+      onClick={onClick}
+      onTap={onTap}
+      onDragEnd={onDragEnd}
+      onTransformEnd={onTransformEnd}
+    />
+  );
+};
 
 const CreateDesignModal = ({
   isOpen,
@@ -33,6 +57,35 @@ const CreateDesignModal = ({
   // Estados del editor
   const [showEditor, setShowEditor] = useState(false);
   const [designElements, setDesignElements] = useState([]);
+  // Estados del editor (overlay)
+  const [editorElements, setEditorElements] = useState([]);
+  const [editorColor, setEditorColor] = useState('#ffffff');
+  const [selectedElId, setSelectedElId] = useState(null);
+  const stageRef = useRef(null);
+  const transformerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [productBaseImage] = useImage(selectedProduct?.mainImage || null, 'anonymous');
+  const editorStageConfig = useMemo(() => {
+    const defaultWidth = 800;
+    const defaultHeight = 600;
+    const areas = selectedProduct?.customizationAreas || [];
+    if (areas.length > 0) {
+      let maxX = 0, maxY = 0;
+      areas.forEach((area) => {
+        const ax = area.position?.x || 0;
+        const ay = area.position?.y || 0;
+        const aw = area.position?.width || 200;
+        const ah = area.position?.height || 100;
+        maxX = Math.max(maxX, ax + aw);
+        maxY = Math.max(maxY, ay + ah);
+      });
+      return {
+        width: Math.max(defaultWidth, maxX + 100),
+        height: Math.max(defaultHeight, maxY + 100)
+      };
+    }
+    return { width: defaultWidth, height: defaultHeight };
+  }, [selectedProduct]);
 
   // Referencias
   const searchTimeoutRef = useRef(null);
@@ -164,6 +217,10 @@ const CreateDesignModal = ({
     if (validateStep(step)) {
       if (step === 1) {
         // Ir al editor de diseño
+        // Inicializar editor con estado actual
+        setEditorElements(designElements && designElements.length > 0 ? designElements : []);
+        setEditorColor(designData.productColorFilter || '#ffffff');
+        setSelectedElId(null);
         setShowEditor(true);
       } else {
         setStep(step + 1);
@@ -200,6 +257,116 @@ const CreateDesignModal = ({
   const handleEditorClose = useCallback(() => {
     setShowEditor(false);
   }, []);
+
+  // ==================== LÓGICA DEL EDITOR (KONVA) ====================
+  const addTextEl = useCallback(() => {
+    const area = selectedProduct?.customizationAreas?.[0];
+    const newEl = {
+      id: `text-${Date.now()}`,
+      type: 'text',
+      areaId: area?._id || area?.id || 'area-1',
+      konvaAttrs: {
+        x: (area?.position?.x || 0) + 20,
+        y: (area?.position?.y || 0) + 20,
+        text: 'Nuevo texto',
+        fontSize: 24,
+        fontFamily: 'Arial',
+        fill: '#000000'
+      }
+    };
+    setEditorElements(prev => [...prev, newEl]);
+    setSelectedElId(newEl.id);
+  }, [selectedProduct]);
+
+  const addImageEl = useCallback(() => {
+    if (!fileInputRef.current) {
+      fileInputRef.current = document.createElement('input');
+      fileInputRef.current.type = 'file';
+      fileInputRef.current.accept = 'image/*';
+      fileInputRef.current.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const area = selectedProduct?.customizationAreas?.[0];
+          const newEl = {
+            id: `image-${Date.now()}`,
+            type: 'image',
+            areaId: area?._id || area?.id || 'area-1',
+            konvaAttrs: {
+              x: (area?.position?.x || 0) + 20,
+              y: (area?.position?.y || 0) + 20,
+              width: Math.min(200, (area?.position?.width || 200) - 40),
+              height: Math.min(150, (area?.position?.height || 150) - 40),
+              image: ev.target.result
+            }
+          };
+          setEditorElements(prev => [...prev, newEl]);
+          setSelectedElId(newEl.id);
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+    fileInputRef.current.click();
+  }, [selectedProduct]);
+
+  const onCanvasClick = useCallback((e) => {
+    if (e.target === e.target.getStage()) {
+      setSelectedElId(null);
+      if (transformerRef.current) transformerRef.current.nodes([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!stageRef.current || !transformerRef.current) return;
+    if (!selectedElId) {
+      transformerRef.current.nodes([]);
+      return;
+    }
+    const node = stageRef.current.findOne(`#${selectedElId}`);
+    if (node) {
+      transformerRef.current.nodes([node]);
+      transformerRef.current.getLayer().batchDraw();
+    }
+  }, [selectedElId]);
+
+  const handleDragEnd = useCallback((id, e) => {
+    const x = Math.round(e.target.x());
+    const y = Math.round(e.target.y());
+    setEditorElements(prev => prev.map(el => el.id === id ? { ...el, konvaAttrs: { ...el.konvaAttrs, x, y } } : el));
+  }, []);
+
+  const handleTransformEnd = useCallback((id, node) => {
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    node.scaleX(1);
+    node.scaleY(1);
+    const updates = {
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      rotation: Math.round(node.rotation()),
+    };
+    if (node.className === 'Text' || node.className === 'Image' || node.className === 'Rect') {
+      updates.width = Math.round((node.width() || 0) * scaleX);
+      updates.height = Math.round((node.height() || 0) * scaleY);
+    }
+    setEditorElements(prev => prev.map(el => el.id === id ? { ...el, konvaAttrs: { ...el.konvaAttrs, ...updates } } : el));
+  }, []);
+
+  const removeSelected = useCallback(() => {
+    if (!selectedElId) return;
+    setEditorElements(prev => prev.filter(el => el.id !== selectedElId));
+    setSelectedElId(null);
+  }, [selectedElId]);
+
+  const normalizedToSubmit = useCallback(() => {
+    // Limpiar props innecesarias en konvaAttrs
+    return editorElements.map(el => ({
+      type: el.type,
+      areaId: el.areaId,
+      konvaAttrs: { ...el.konvaAttrs }
+    }));
+  }, [editorElements]);
 
   const handleSubmit = useCallback(async () => {
     if (!validateStep(3)) return;
@@ -508,73 +675,137 @@ const CreateDesignModal = ({
       {showEditor && selectedProduct && (
         <div className="editor-overlay">
           <div className="editor-container">
-            {/* Aquí iría el componente del editor Konva */}
-            <div className="editor-placeholder">
-              <h3>Editor de Diseños</h3>
-              <p>Producto: {selectedProduct.name}</p>
-              <p>Áreas disponibles: {selectedProduct.customizationAreas?.length || 0}</p>
-              
-              {/* Simulación del editor - en producción sería el componente Konva real */}
-              <div className="editor-mock">
-                <div className="editor-tools">
-                  <button className="tool-btn">📝 Texto</button>
-                  <button className="tool-btn">🖼️ Imagen</button>
-                  <button className="tool-btn">🎨 Color</button>
-                </div>
-                
-                <div className="editor-canvas">
-                  <div className="canvas-placeholder">
-                    <img 
-                      src={selectedProduct.mainImage} 
-                      alt={selectedProduct.name}
-                      className="product-base"
-                    />
-                    <div className="overlay-text">
-                      Canvas del Editor
-                      <br />
-                      (Componente Konva se integraría aquí)
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="editor-properties">
-                  <h4>Propiedades</h4>
-                  <p>Selecciona un elemento para editarlo</p>
-                </div>
+            <div className="editor-toolbar">
+              <div className="editor-tools">
+                <button className="tool-btn" onClick={addTextEl}>📝 Texto</button>
+                <button className="tool-btn" onClick={addImageEl}>🖼️ Imagen</button>
+                <label className="tool-color">
+                  🎨 Color
+                  <input type="color" value={editorColor} onChange={(e) => setEditorColor(e.target.value)} />
+                </label>
+                <button className="tool-btn" onClick={removeSelected} disabled={!selectedElId}>🗑️ Eliminar</button>
               </div>
-              
               <div className="editor-actions">
-                <button 
-                  onClick={handleEditorClose}
-                  className="btn btn-cancel"
-                >
-                  Cerrar sin guardar
-                </button>
-                <button 
-                  onClick={() => {
-                    // Simular elementos guardados
-                    const mockElements = [
-                      {
-                        id: 'text-1',
-                        type: 'text',
-                        areaId: selectedProduct.customizationAreas?.[0]?.id,
-                        konvaAttrs: {
-                          x: 50,
-                          y: 50,
-                          text: 'Texto de ejemplo',
-                          fontSize: 24,
-                          fontFamily: 'Arial',
-                          fill: '#000000'
-                        }
-                      }
-                    ];
-                    handleEditorSave(mockElements, '#ffffff');
-                  }}
-                  className="btn btn-primary"
-                >
-                  Guardar Diseño
-                </button>
+                <button onClick={handleEditorClose} className="btn btn-cancel">Cerrar sin guardar</button>
+                <button onClick={() => handleEditorSave(normalizedToSubmit(), editorColor)} className="btn btn-primary">Guardar Diseño</button>
               </div>
+            </div>
+
+            <div className="editor-canvas">
+              <Stage
+                ref={stageRef}
+                width={editorStageConfig.width}
+                height={editorStageConfig.height}
+                onMouseDown={onCanvasClick}
+                onTouchStart={onCanvasClick}
+              >
+                <Layer>
+                  {productBaseImage && (
+                    <KonvaImage
+                      image={productBaseImage}
+                      x={0}
+                      y={0}
+                      width={editorStageConfig.width}
+                      height={editorStageConfig.height}
+                      opacity={0.3}
+                      listening={false}
+                    />
+                  )}
+                  {editorColor && editorColor !== '#ffffff' && (
+                    <KonvaRect
+                      x={0}
+                      y={0}
+                      width={editorStageConfig.width}
+                      height={editorStageConfig.height}
+                      fill={editorColor}
+                      globalCompositeOperation="multiply"
+                      opacity={0.3}
+                      listening={false}
+                    />
+                  )}
+                  {(selectedProduct?.customizationAreas || []).map((area, idx) => (
+                    <Group key={area._id || area.id || idx} listening={false}>
+                      <KonvaRect
+                        x={area.position?.x || 0}
+                        y={area.position?.y || 0}
+                        width={area.position?.width || 200}
+                        height={area.position?.height || 100}
+                        stroke="#10B981"
+                        dash={[5, 5]}
+                        strokeWidth={2}
+                        opacity={0.6}
+                      />
+                    </Group>
+                  ))}
+                  {editorElements.map((el) => {
+                    if (!el || !el.konvaAttrs) return null;
+                    const commonProps = {
+                      id: el.id,
+                      x: el.konvaAttrs.x || 0,
+                      y: el.konvaAttrs.y || 0,
+                      rotation: el.konvaAttrs.rotation || 0,
+                      visible: el.visible !== false,
+                      draggable: true,
+                      onClick: () => setSelectedElId(el.id),
+                      onTap: () => setSelectedElId(el.id),
+                      onDragEnd: (e) => handleDragEnd(el.id, e),
+                      onTransformEnd: (e) => handleTransformEnd(el.id, e.target)
+                    };
+                    if (el.type === 'text') {
+                      return (
+                        <KonvaText
+                          key={el.id}
+                          {...commonProps}
+                          text={el.konvaAttrs.text || ''}
+                          fontSize={el.konvaAttrs.fontSize || 24}
+                          fontFamily={el.konvaAttrs.fontFamily || 'Arial'}
+                          fill={el.konvaAttrs.fill || '#000000'}
+                          width={el.konvaAttrs.width}
+                          height={el.konvaAttrs.height}
+                        />
+                      );
+                    } else if (el.type === 'image') {
+                      return (
+                        <InlineUrlImage
+                          key={el.id}
+                          id={el.id}
+                          src={el.konvaAttrs.image}
+                          width={el.konvaAttrs.width || 200}
+                          height={el.konvaAttrs.height || 150}
+                          {...commonProps}
+                        />
+                      );
+                    } else if (el.type === 'shape') {
+                      if (el.shapeType === 'circle') {
+                        const radius = el.konvaAttrs.radius || Math.min((el.konvaAttrs.width || 100) / 2, (el.konvaAttrs.height || 100) / 2);
+                        return (
+                          <KonvaCircle
+                            key={el.id}
+                            {...commonProps}
+                            radius={radius}
+                            fill={el.konvaAttrs.fill || '#3F2724'}
+                            stroke={el.konvaAttrs.stroke || undefined}
+                            strokeWidth={el.konvaAttrs.strokeWidth || 0}
+                          />
+                        );
+                      }
+                      return (
+                        <KonvaRect
+                          key={el.id}
+                          {...commonProps}
+                          width={el.konvaAttrs.width || 100}
+                          height={el.konvaAttrs.height || 100}
+                          fill={el.konvaAttrs.fill || '#3F2724'}
+                          stroke={el.konvaAttrs.stroke || undefined}
+                          strokeWidth={el.konvaAttrs.strokeWidth || 0}
+                        />
+                      );
+                    }
+                    return null;
+                  })}
+                  <Transformer ref={transformerRef} rotateEnabled={true} />
+                </Layer>
+              </Stage>
             </div>
           </div>
         </div>
