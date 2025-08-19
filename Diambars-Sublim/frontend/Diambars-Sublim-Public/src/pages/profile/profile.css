@@ -168,3 +168,97 @@ body.modal-open .profile-page * {
     margin-top: 100px;
   }
 }
+
+/* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
+
+/* Laptops grandes (1201px - 1599px) */
+@media (min-width: 1201px) and (max-width: 1599px) {
+  .profile-container {
+    gap: 16px;
+  }
+}
+
+/* Rango crítico (1061px - 1200px) */
+@media (min-width: 1061px) and (max-width: 1200px) {
+  .profile-container {
+    gap: 14px;
+  }
+  .profile-title {
+    font-size: 2.7rem;
+    margin-top: 120px;
+  }
+}
+
+/* 900px - 1060px */
+@media (min-width: 900px) and (max-width: 1060px) {
+  .profile-container {
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .left-column, .right-column {
+    transform: scale(0.98);
+  }
+}
+
+/* Tablets landscape (768px - 899px) */
+@media (min-width: 768px) and (max-width: 899px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+  }
+  .profile-title {
+    font-size: 2.4rem;
+    margin-top: 110px;
+  }
+}
+
+/* Tablets portrait (600px - 767px) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .profile-container {
+    gap: 14px;
+    padding: 0 14px;
+  }
+  .profile-title {
+    font-size: 2.2rem;
+    margin-top: 100px;
+  }
+}
+
+/* Móviles grandes (480px - 599px) */
+@media (min-width: 480px) and (max-width: 599px) {
+  .profile-container {
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .profile-title {
+    font-size: 2rem;
+    margin-top: 80px;
+  }
+}
+
+/* Móviles pequeños (360px - 479px) */
+@media (min-width: 360px) and (max-width: 479px) {
+  .profile-container {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .profile-title {
+    font-size: 1.8rem;
+    margin-top: 70px;
+  }
+}
+
+/* Móviles muy pequeños (-359px) */
+@media (max-width: 359px) {
+  .profile-container {
+    gap: 10px;
+    padding: 0 8px;
+  }
+  .profile-title {
+    font-size: 1.6rem;
+    margin-top: 60px;
+  }
+}
