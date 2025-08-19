@@ -1,4 +1,3 @@
-// src/hooks/useLogin.js - PANEL ADMIN CORREGIDO
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ export const useLogin = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
+    clearErrors,
     reset
   } = useForm({
     mode: 'onChange',
@@ -22,194 +22,78 @@ export const useLogin = () => {
     }
   });
 
-  // Configuración personalizada de SweetAlert con colores modernos
-  const showAlert = (type, title, text, options = {}) => {
-    const defaultOptions = {
-      title,
-      text,
-      icon: type,
-      confirmButtonColor: '#fbbf24',
-      cancelButtonColor: '#6b7280',
-      background: '#ffffff',
-      color: '#1f2937',
-      customClass: {
-        popup: 'modern-swal-popup',
-        title: 'modern-swal-title',
-        content: 'modern-swal-content',
-        confirmButton: 'modern-swal-confirm',
-        cancelButton: 'modern-swal-cancel'
-      },
-      showClass: {
-        popup: 'animate__animated animate__fadeInDown animate__faster'
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutUp animate__faster'
-      }
-    };
-
-    return Swal.fire({
-      ...defaultOptions,
-      ...options
-    });
-  };
-
   const onSubmit = async (data) => {
     try {
-      console.log('[useLogin-ADMIN] Iniciando login para:', data.email);
-      
       const user = await login(data);
-      
-      console.log('[useLogin-ADMIN] Usuario recibido:', user);
-      
-      // Verificar que el usuario tenga permisos (doble verificación)
+
+      // Validar roles
       const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
       const allowedRoles = ['admin', 'manager', 'employee', 'warehouse'];
-      
       const userType = user.type?.toLowerCase();
       const userRole = user.role?.toLowerCase();
-      
+
       const hasValidType = allowedTypes.includes(userType);
       const hasValidRole = allowedRoles.includes(userRole);
 
       if (hasValidType || hasValidRole) {
-        console.log('[useLogin-ADMIN] Usuario autorizado, redirigiendo...');
-        
-        // Alerta de éxito con información del usuario
-        await showAlert(
-          'success',
-          '¡Bienvenido!',
-          `Acceso autorizado como ${user.role || user.type}`,
-          {
-            timer: 2000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-          }
-        );
-       
-        // Limpiar formulario
+        await Swal.fire({
+          title: '¡Bienvenido!',
+          text: `Acceso autorizado como ${user.role || user.type}`,
+          icon: 'success',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#ffffff',
+          color: '#1f2937'
+        });
         reset();
-        
-        // Redirigir al panel después del login exitoso
         navigate('/catalog-management', { replace: true });
       } else {
-        console.warn('[useLogin-ADMIN] Usuario sin permisos suficientes');
-        
-        // Alerta de acceso denegado
-        await showAlert(
-          'warning',
-          'Acceso Denegado',
-          'Se requiere una cuenta de empleado para acceder al panel administrativo',
-          {
-            confirmButtonText: 'Entendido'
-          }
-        );
-       
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Acceso Denegado',
+          text: 'Se requiere una cuenta de empleado para acceder al panel administrativo',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#fbbf24',
+          background: '#ffffff',
+          color: '#1f2937'
+        });
         setError('root', {
           message: 'Solo personal autorizado puede acceder al sistema'
         });
+        setTimeout(() => clearErrors('root'), 2000);
       }
     } catch (error) {
-      console.error('[useLogin-ADMIN] Error en login:', error);
-      
-      let alertTitle = 'Error de Autenticación';
       let alertText = 'Ha ocurrido un error al iniciar sesión';
-     
-      if (error.message?.includes('Credenciales incorrectas') || 
-          error.message?.includes('credenciales')) {
-        alertTitle = 'Credenciales Incorrectas';
+      if (error.message?.includes('Credenciales incorrectas') || error.message?.includes('credenciales')) {
         alertText = 'El correo electrónico o la contraseña son incorrectos. Verifica tus datos e intenta nuevamente.';
-       
-        await showAlert('error', alertTitle, alertText, {
-          confirmButtonText: 'Reintentar'
-        });
-       
-        setError('root', { message: 'Email o contraseña incorrectos' });
-       
-      } else if (error.message?.includes('personal autorizado') || 
-                 error.message?.includes('empleado')) {
-        alertTitle = 'Acceso Restringido';
+      } else if (error.message?.includes('personal autorizado') || error.message?.includes('empleado')) {
         alertText = 'Se requiere una cuenta de empleado para acceder al panel administrativo.';
-       
-        await showAlert('warning', alertTitle, alertText, {
-          confirmButtonText: 'Entendido'
-        });
-       
-        setError('root', { message: 'Se requiere cuenta de empleado' });
-       
       } else if (error.needsVerification) {
-        // Empleados normalmente no necesitan verificación, pero por si acaso
-        const result = await showAlert(
-          'info',
-          'Verificación Requerida',
-          'Tu cuenta necesita ser verificada por un administrador.',
-          {
-            confirmButtonText: 'Entendido'
-          }
-        );
-        
-        setError('root', { message: 'Cuenta pendiente de verificación' });
-        return;
-       
+        alertText = 'Tu cuenta necesita ser verificada por un administrador.';
       } else if (error.message?.includes('red') || error.code === 'NETWORK_ERROR') {
-        alertTitle = 'Error de Conexión';
         alertText = 'No se pudo conectar con el servidor. Verifica tu conexión a internet y que el servidor esté funcionando.';
-       
-        await showAlert('error', alertTitle, alertText, {
-          confirmButtonText: 'Reintentar'
-        });
-        
-        setError('root', { message: 'Error de conexión con el servidor' });
-       
       } else if (error.message?.includes('servidor') || error.status >= 500) {
-        alertTitle = 'Error del Servidor';
         alertText = 'El servidor está experimentando problemas. Por favor, intenta más tarde.';
-       
-        await showAlert('error', alertTitle, alertText, {
-          confirmButtonText: 'Entendido'
-        });
-        
-        setError('root', { message: 'Error del servidor, intenta más tarde' });
-       
       } else {
-        // Error genérico
         alertText = error.message || 'Error desconocido al iniciar sesión';
-        await showAlert('error', alertTitle, alertText, {
-          confirmButtonText: 'Reintentar'
-        });
-        
-        setError('root', { message: alertText });
       }
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de inicio de sesión',
+        text: alertText,
+        confirmButtonText: 'Reintentar',
+        confirmButtonColor: '#fbbf24',
+        background: '#ffffff',
+        color: '#1f2937'
+      });
+      setError('root', { message: alertText });
+      setTimeout(() => clearErrors('root'), 2000);
     }
   };
 
-  // Función para mostrar alerta de loading durante el proceso
-  const showLoadingAlert = () => {
-    return Swal.fire({
-      title: 'Iniciando Sesión...',
-      text: 'Por favor espera mientras verificamos tus credenciales',
-      icon: 'info',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      background: '#ffffff',
-      color: '#1f2937',
-      customClass: {
-        popup: 'modern-swal-popup'
-      },
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-  };
-
-  // Función para cerrar la alerta de loading
-  const closeLoadingAlert = () => {
-    Swal.close();
-  };
-
-  // Validaciones mejoradas
   const validateEmail = (value) => {
     if (!value?.trim()) return 'Email requerido';
     if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)) {
@@ -226,7 +110,6 @@ export const useLogin = () => {
 
   return {
     register: (name, options = {}) => {
-      // Agregar validaciones automáticas según el campo
       switch (name) {
         case 'email':
           return register(name, { ...options, validate: validateEmail });
@@ -240,9 +123,6 @@ export const useLogin = () => {
     errors,
     isSubmitting,
     onSubmit,
-    showAlert,
-    showLoadingAlert,
-    closeLoadingAlert,
     reset
   };
 };

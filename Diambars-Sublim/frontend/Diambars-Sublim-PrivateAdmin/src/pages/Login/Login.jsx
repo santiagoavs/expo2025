@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Envelope, 
@@ -12,10 +12,7 @@ import { useLogin } from '../../hooks/useLogin';
 import './login.css';
 
 const LoginPage = () => {
-  console.log("[LoginPage] Rendering login page");
-  
   const location = useLocation();
-  
   const {
     register,
     handleSubmit,
@@ -24,11 +21,9 @@ const LoginPage = () => {
     onSubmit
   } = useLogin();
 
-  // Obtener mensaje de éxito si viene de recuperación
   const successMessage = location.state?.message;
   const messageType = location.state?.type;
 
-  // Función para manejar el submit (mantiene tu lógica original)
   const handleFormSubmit = async (data) => {
     await onSubmit(data);
   };
