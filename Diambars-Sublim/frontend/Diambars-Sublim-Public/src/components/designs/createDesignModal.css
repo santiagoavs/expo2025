@@ -697,9 +697,9 @@
 .editor-container {
   background: white;
   border-radius: 20px;
-  width: 95vw;
-  height: 90vh;
-  max-width: 1400px;
+  width: min(95vw, 1200px);
+  height: min(90vh, 90vh);
+  max-width: 100%;
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(1, 3, 38, 0.32);
 }
@@ -859,6 +859,7 @@
   .editor-container {
     width: 100%;
     height: 95vh;
+    border-radius: 12px;
   }
   
   .editor-mock {
