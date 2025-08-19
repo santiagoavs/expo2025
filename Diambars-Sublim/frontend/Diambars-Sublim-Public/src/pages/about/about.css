@@ -235,4 +235,28 @@
       font-size: 0.95rem;
     }
   }
+
+  /* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
+  @media (min-width: 1201px) and (max-width: 1599px) {
+    .about-section { max-width: 900px; }
+  }
+  @media (min-width: 1061px) and (max-width: 1200px) {
+    .about-title { font-size: 2.8rem; }
+    .about-section { max-width: 820px; }
+  }
+  @media (min-width: 900px) and (max-width: 1060px) {
+    .about-section { max-width: 760px; }
+  }
+  @media (min-width: 600px) and (max-width: 767px) {
+    .about-section { max-width: 520px; }
+  }
+  @media (min-width: 480px) and (max-width: 599px) {
+    .about-section { max-width: 420px; }
+  }
+  @media (min-width: 360px) and (max-width: 479px) {
+    .about-section { max-width: 340px; }
+  }
+  @media (max-width: 359px) {
+    .about-section { max-width: 300px; }
+  }
   
