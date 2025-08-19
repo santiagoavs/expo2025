@@ -17,6 +17,20 @@
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
+/* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
+@media (max-width: 899px) {
+  .payment-container { width: 100%; max-width: 520px; }
+}
+@media (max-width: 599px) {
+  .payment-container { max-width: 440px; }
+}
+@media (max-width: 479px) {
+  .payment-container { max-width: 360px; }
+}
+@media (max-width: 359px) {
+  .payment-container { max-width: 320px; }
+}
+
 .payment-container::before {
   content: '';
   position: absolute;
