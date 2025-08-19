@@ -27,7 +27,8 @@ import {
   Tag as TagIcon,
   Package as PackageIcon,
   Upload as UploadIcon,
-  Warning
+  Warning,
+  Palette
 } from '@phosphor-icons/react';
 import KonvaAreaEditor from '../KonvaAreaEditor/KonvaAreaEditor';
 import useCategories from '../../hooks/useCategories'; // ✅ IMPORTAR HOOK DE CATEGORÍAS

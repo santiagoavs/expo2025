@@ -79,7 +79,7 @@ const limiter = rateLimit({
 // Rate limit más estricto para auth
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  max: 5,
   message: 'Demasiados intentos de autenticación, intente más tarde',
   skipSuccessfulRequests: true
 });

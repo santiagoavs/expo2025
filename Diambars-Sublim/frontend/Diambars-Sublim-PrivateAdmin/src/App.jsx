@@ -17,6 +17,8 @@ import Users from './pages/Users/Users';
 import Orders from './pages/Orders/Orders';
 import Employees from './pages/Employees/Employees';
 import Profile from './pages/Profile/Profile';
+//Ruta catch-all
+import NotFound404 from './pages/NotFound404/NotFound404';
 
 // Layout para páginas con autenticación (incluye Navbar y Footer)
 const AuthenticatedLayout = ({ children }) => {
@@ -213,13 +215,13 @@ const AppContent = () => {
       
       {/* Ruta catch-all */}
       <Route 
-        path="*" 
-        element={
-          isAuthenticated ? 
-            <Navigate to="/catalog-management" replace /> : 
-            <Navigate to="/login" replace />
-        } 
-      />
+  path="*" 
+  element={
+    <PublicLayout>
+      <NotFound404 />
+    </PublicLayout>
+  } 
+/>
     </Routes>
   );
 };
