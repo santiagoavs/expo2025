@@ -15,60 +15,42 @@ const FilterSidebar = ({ onFiltersChange, activeFilters = {} }) => {
   }, []);
 
   const fetchCategories = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    console.log('Cargando categorías...');
-    
-    // Construir la URL completa
-    const baseURL = process.env.NODE_ENV === 'production' 
-      ? process.env.REACT_APP_API_URL || '' 
-      : 'http://localhost:4000';
-    
-    const url = `${baseURL}/api/categories`;
-    console.log('Fetching desde:', url);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
-    
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Cargando categorías...');
+      
+      const response = await fetch('/api/categories', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Respuesta completa de categorías:', data);
+      
+      if (data.categories && data.categoryTree) {
+        setCategories(data.categories);
+        setCategoryTree(data.categoryTree);
+        console.log('✅ Categorías cargadas:', data.categories.length);
+      } else {
+        console.warn('⚠️ Estructura de datos inesperada:', data);
+        setError('Estructura de datos inesperada del servidor');
+      }
+    } catch (err) {
+      console.error('❌ Error cargando categorías:', err);
+      setError(`Error al cargar categorías: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    
-    // Verificar que la respuesta sea JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Expected JSON, got ${contentType}`);
-    }
-    
-    const data = await response.json();
-    console.log('Data recibida:', data);
-    
-    if (data.categories && data.categoryTree) {
-      setCategories(data.categories);
-      setCategoryTree(data.categoryTree);
-      console.log('✅ Categorías cargadas:', data.categories.length);
-    } else {
-      console.warn('⚠️ Estructura de datos inesperada:', data);
-      setError('Estructura de datos inesperada del servidor');
-    }
-  } catch (err) {
-    console.error('❌ Error cargando categorías:', err);
-    setError(`Error al cargar categorías: ${err.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Manejar selección de categoría
   const handleCategorySelect = (categoryId, categoryName) => {

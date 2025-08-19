@@ -81,12 +81,99 @@
   justify-items: center;
 }
 
-
 .category-content-wrapper {
   width: 100%;
   display: flex;
   justify-content: center;
   padding: 20px 0;
+}
+
+/* Mensaje que aparece dentro del grid cuando no hay productos */
+.product-grid-message {
+  grid-column: 1 / -1; /* Ocupa todo el ancho del grid */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  min-height: 300px;
+}
+
+.product-grid-message h3 {
+  color: #3F2724;
+  margin-bottom: 1rem;
+  font-family: 'DiambarsFont', sans-serif;
+}
+
+.product-grid-message p {
+  color: #666;
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+.retry-button,
+.clear-filters-button {
+  background: #3F2724;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover,
+.clear-filters-button:hover {
+  background: #2d1e1b;
+}
+
+/* Skeleton loading que mantiene el formato de tus cards */
+.loading-skeleton {
+  background: linear-gradient(135deg, rgba(255, 246, 226, 0.2), rgba(245, 231, 198, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-text {
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  width: 80%;
+}
+
+.skeleton-button {
+  height: 36px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 20px;
+  width: 90%;
+  margin-top: auto;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* ------------------------- */
