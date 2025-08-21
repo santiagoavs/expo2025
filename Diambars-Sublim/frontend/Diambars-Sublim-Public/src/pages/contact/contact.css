@@ -77,19 +77,17 @@
   }
 }
 
+/* CONTENEDOR PRINCIPAL - Tailwind controlará el layout */
 .contact-container {
-  display: flex;
   margin: 120px auto;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
   position: relative;
   z-index: 1;
   gap: 1rem;
 }
 
+/* ELIMINADO: flex, flex-direction, align-items, justify-content */
+
 .contact-info-section {
-  flex: 1;
   padding: 4rem 3rem;
   display: flex;
   flex-direction: column;
@@ -103,13 +101,12 @@
   align-items: center;
 }
 
+/* TARJETA DE INFORMACIÓN - Tailwind controlará dimensiones */
 .contact-info-card {
   display: flex;
   align-items: center;
   position: relative;
   border-radius: 20px;
-  width: 250px;
-  height: 400px;
   padding: 2.5rem;
   text-align: center;
   font-size: 1rem;
@@ -121,6 +118,8 @@
   border: 1px solid rgba(255, 255, 255, 0.4);
   animation: fadeInUp 0.6s ease-out;
 }
+
+/* ELIMINADO: width: 250px; height: 400px; */
 
 .contact-info-card::before {
   content: "";
@@ -192,18 +191,16 @@
 }
 
 .contact-form-section {
-  flex: 1;
   padding: 4rem 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* CONTENEDOR DE FORMULARIO - Tailwind controlará dimensiones */
 .contact-form-container {
   position: relative;
   border-radius: 20px;
-  max-width: 500px;
-  width: 100%;
   padding: 2.5rem;
   text-align: center;
   font-size: 1rem;
@@ -216,6 +213,8 @@
   animation: fadeInUp 0.6s ease-out;
 }
 
+/* ELIMINADO: max-width: 500px; width: 100%; */
+
 .contact-form-container::before {
   content: "";
   position: absolute;
@@ -226,17 +225,6 @@
   transform: translateY(10px) scale(0.95);
   filter: blur(17px);
   opacity: 0.8;
-}
-
-@keyframes fadeInUp {
-  from {
-      opacity: 0;
-      transform: translateY(20px);
-  }
-  to {
-      opacity: 1;
-      transform: translateY(0);
-  }
 }
 
 .form-header {
@@ -287,9 +275,9 @@
   font-size: 0.95rem;
 }
 
+/* INPUTS - Tailwind controlará el ancho */
 .contact-form input {
-position: relative;
-  width: 420px;
+  position: relative;
   padding: 12px;
   border-radius: 10px;
   font-family: 'Inter', sans-serif;
@@ -304,6 +292,8 @@ position: relative;
     0 0 0 1px rgba(255, 255, 255, 0.15);
   color: #3F2724;
 }
+
+/* ELIMINADO: width: 420px; */
 
 .contact-form input::after {
   content: '';
@@ -346,10 +336,10 @@ position: relative;
     inset 0 2px 4px rgba(255, 255, 255, 0.3);
 }
 
+/* TEXTAREA - Tailwind controlará el ancho */
 .contact-form textarea {
   position: relative;
   resize: none;
-  width: 420px;
   padding: 12px;
   margin-bottom: 1rem;
   border-radius: 10px;
@@ -365,6 +355,8 @@ position: relative;
     0 0 0 1px rgba(255, 255, 255, 0.15);
   color: #3F2724;
 }
+
+/* ELIMINADO: width: 420px; */
 
 .contact-form textarea::after {
   content: '';
@@ -407,13 +399,13 @@ position: relative;
     inset 0 2px 4px rgba(255, 255, 255, 0.3);
 }
 
+/* BOTÓN - Tailwind controlará el ancho */
 .send-button {
   position: relative;
   color: #FFF1D0;
   border-radius: 15px;
   padding: 12px 32px;
   height: 50px; 
-  width: 445px;
   margin: 6px auto 0;
   font-size: 1.1rem;
   font-family: 'DiambarsFont', italic;
@@ -430,6 +422,8 @@ position: relative;
     0 8px 32px rgba(40, 60, 62, 0.18),
     0 0 0 1px rgba(180, 220, 255, 0.4);
 }
+
+/* ELIMINADO: width: 445px; */
 
 .send-button::before {
   content: "";
@@ -495,8 +489,8 @@ position: relative;
   z-index: 2;
 }
 
+/* MENSAJES - Tailwind controlará el ancho */
 .status-message {
-  width: 420px;
   padding: 15px 20px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -509,6 +503,8 @@ position: relative;
   border: 1px solid rgba(255, 255, 255, 0.3);
   animation: statusSlideIn 0.4s ease-out;
 }
+
+/* ELIMINADO: width: 420px; */
 
 .status-message.success {
   background: rgba(72, 187, 120, 0.15);
@@ -594,8 +590,8 @@ position: relative;
   }
 }
 
+/* COOLDOWN - Tailwind controlará el ancho */
 .cooldown-message {
-  width: 420px;
   padding: 15px 20px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -613,6 +609,8 @@ position: relative;
     inset 0 1px 2px rgba(255, 255, 255, 0.2);
   animation: statusSlideIn 0.4s ease-out;
 }
+
+/* ELIMINADO: width: 420px; */
 
 /* Estilos para formulario deshabilitado durante cooldown */
 .contact-form.disabled {
@@ -691,56 +689,4 @@ position: relative;
 
 .security-indicator .icon {
   color: #28a745;
-}
-
-/* Responsive para elementos anti-spam */
-@media (max-width: 768px) {
-  .cooldown-message {
-    width: 100%;
-    max-width: 420px;
-  }
-  
-  .char-counter {
-    text-align: center;
-  }
-}
-
-/* Responsive para mensajes de estado */
-@media (max-width: 768px) {
-  .status-message {
-    width: 100%;
-    max-width: 420px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .office-image {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .contact-container {
-    flex-direction: column;
-  }
-  
-  .contact-info-section,
-  .contact-form-section {
-    padding: 2rem 1.5rem;
-  }
-  
-  .contact-info-card,
-  .contact-form-container {
-    padding: 2rem;
-  }
-  
-  .contact-title {
-    font-size: 1.5rem;
-  }
-  
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
 }

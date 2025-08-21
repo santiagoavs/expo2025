@@ -306,116 +306,123 @@ const Contact = () => {
 };
 
   return (
-    <>
-      <main className="contact-page">
-        <div className="contact-container">
-            <div className="contact-info-card">
-              <div className='contact-info-container'>
-              <div className="contact-info-item">
-                <LocationIcon />
-                <div className="contact-info-content">
-                  <h3>Ubicación</h3>
-                  <p>Avenida Aguilares 218<br />San Salvador CP, San Salvador 1101</p>
-                </div>
-              </div>
-              
-              <div className="contact-info-item">
-                <PhoneIcon />
-                <div className="contact-info-content">
-                  <h3>Teléfono</h3>
-                  <p>+503 0000-0000</p>
-                </div>
-              </div>
-              
-              <div className="contact-info-item">
-                <ClockIcon />
-                <div className="contact-info-content">
-                  <h3>Horarios</h3>
-                  <p>Lun - Vie: 7:00 AM - 3:45 PM</p>
-                </div>
-              </div>
+  <>
+    <main className="contact-page">
+      {/* CONTENEDOR PRINCIPAL CON TAILWINDS RESPONSIVE */}
+      <div className="contact-container flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 mx-auto mt-32 px-4 lg:px-8">
+        
+        {/* TARJETA DE INFORMACIÓN */}
+        <div className="contact-info-card w-full lg:w-80 xl:w-96 h-auto lg:min-h-[400px] p-6 lg:p-8 flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-8 lg:space-y-10">
+            <div className="contact-info-item flex items-center gap-4">
+              <LocationIcon />
+              <div className="contact-info-content">
+                <h3 className="font-spectral italic text-[#3F2724]">Ubicación</h3>
+                <p className="text-sm text-gray-600">Avenida Aguilares 218<br />San Salvador CP, San Salvador 1101</p>
               </div>
             </div>
-
-            <div className="contact-form-container">
-              <div className="form-header">
-                <h1 className="contact-title">¿Dudas o consultas?</h1>
-                <h4 className="contact-subtitle">¡Contáctanos!</h4>
+            
+            <div className="contact-info-item flex items-center gap-4">
+              <PhoneIcon />
+              <div className="contact-info-content">
+                <h3 className="font-spectral italic text-[#3F2724]">Teléfono</h3>
+                <p className="text-sm text-gray-600">+503 0000-0000</p>
               </div>
-              
-              {/* Mensaje de estado */}
-              {submitStatus && (
-                <div className={`status-message ${submitStatus}`}>
-                  {statusMessage}
-                </div>
-              )}
-              
-              {/* Indicador de cooldown */}
-              {cooldownActive && (
-                <div className="cooldown-message">
-                  Siguiente mensaje disponible en: {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
-                </div>
-              )}
-              
-              <form className="contact-form" onSubmit={handleSubmit}>
-                {/* Campo honeypot - invisible para usuarios, visible para bots */}
-                <input
-                  type="text"
-                  name="website"
-                  style={{ display: 'none' }}
-                  onChange={handleHoneypotChange}
-                  tabIndex="-1"
-                  autoComplete="off"
-                />
-                
-                <h2 className='contact-label'>Nombre completo</h2>
-                <input 
-                  type="text" 
-                  name="fullName" 
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required 
-                  disabled={isSubmitting || cooldownActive}
-                  placeholder="Ingresa tu nombre completo"
-                />
-                
-                <h2 className='contact-label'>Correo electrónico</h2>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required 
-                  disabled={isSubmitting || cooldownActive}
-                  placeholder="tu.email@ejemplo.com"
-                />
-                
-                <h2 className='contact-label'>Comentario o mensaje</h2>
-                <textarea 
-                  name="message" 
-                  rows="4" 
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  required 
-                  disabled={isSubmitting || cooldownActive}
-                  placeholder="Cuéntanos en qué podemos ayudarte..."
-                />
-
-                <button 
-                  type="submit" 
-                  className="send-button"
-                  disabled={isSubmitting || cooldownActive}
-                >
-                  {isSubmitting ? 'Enviando...' : cooldownActive ? 'En espera...' : 'Enviar'}
-                </button>
-              </form>
             </div>
+            
+            <div className="contact-info-item flex items-center gap-4">
+              <ClockIcon />
+              <div className="contact-info-content">
+                <h3 className="font-spectral italic text-[#3F2724]">Horarios</h3>
+                <p className="text-sm text-gray-600">Lun - Vie: 7:00 AM - 3:45 PM</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
 
-      <ContactButton />
-      <Footer />
-    </>
+        {/* FORMULARIO */}
+        <div className="contact-form-container w-full max-w-md lg:max-w-lg xl:max-w-xl p-6 lg:p-8">
+          <div className="form-header flex flex-col items-start mb-8">
+            <h1 className="contact-title text-2xl lg:text-3xl font-bold text-[#3F2724]">¿Dudas o consultas?</h1>
+            <h4 className="contact-subtitle font-spectral italic text-[#3F2724]">¡Contáctanos!</h4>
+          </div>
+          
+          {/* Mensaje de estado */}
+          {submitStatus && (
+            <div className={`status-message ${submitStatus} w-full mb-5`}>
+              {statusMessage}
+            </div>
+          )}
+          
+          {/* Indicador de cooldown */}
+          {cooldownActive && (
+            <div className="cooldown-message w-full mb-5">
+              Siguiente mensaje disponible en: {Math.floor(cooldownTime / 60)}:{(cooldownTime % 60).toString().padStart(2, '0')}
+            </div>
+          )}
+          
+          <form className="contact-form flex flex-col items-center gap-4 lg:gap-5" onSubmit={handleSubmit}>
+            {/* Campo honeypot */}
+            <input
+              type="text"
+              name="website"
+              className="hidden"
+              onChange={handleHoneypotChange}
+              tabIndex="-1"
+              autoComplete="off"
+            />
+            
+            <h2 className='contact-label self-start ml-5 font-bold'>Nombre completo</h2>
+            <input 
+              type="text" 
+              name="fullName" 
+              value={formData.fullName}
+              onChange={handleInputChange}
+              required 
+              disabled={isSubmitting || cooldownActive}
+              placeholder="Ingresa tu nombre completo"
+              className="w-full"
+            />
+            
+            <h2 className='contact-label self-start ml-5 font-bold'>Correo electrónico</h2>
+            <input 
+              type="email" 
+              name="email" 
+              value={formData.email}
+              onChange={handleInputChange}
+              required 
+              disabled={isSubmitting || cooldownActive}
+              placeholder="tu.email@ejemplo.com"
+              className="w-full"
+            />
+            
+            <h2 className='contact-label self-start ml-5 font-bold'>Comentario o mensaje</h2>
+            <textarea 
+              name="message" 
+              rows="4" 
+              value={formData.message}
+              onChange={handleInputChange}
+              required 
+              disabled={isSubmitting || cooldownActive}
+              placeholder="Cuéntanos en qué podemos ayudarte..."
+              className="w-full"
+            />
+
+            <button 
+              type="submit" 
+              className="send-button w-full"
+              disabled={isSubmitting || cooldownActive}
+            >
+              {isSubmitting ? 'Enviando...' : cooldownActive ? 'En espera...' : 'Enviar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <ContactButton />
+    <Footer />
+  </>
   );
 };
 
