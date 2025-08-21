@@ -82,7 +82,6 @@
   margin: 120px auto;
   position: relative;
   z-index: 1;
-  gap: 1rem;
 }
 
 /* ELIMINADO: flex, flex-direction, align-items, justify-content */
@@ -107,7 +106,6 @@
   align-items: center;
   position: relative;
   border-radius: 20px;
-  padding: 2.5rem;
   text-align: center;
   font-size: 1rem;
   color: #3F2724;
@@ -148,7 +146,6 @@
   display: flex;
   align-items: center;
   margin-bottom: 2rem;
-  gap: 1rem;
 }
 
 .contact-info-item:last-child {
@@ -201,7 +198,6 @@
 .contact-form-container {
   position: relative;
   border-radius: 20px;
-  padding: 2.5rem;
   text-align: center;
   font-size: 1rem;
   color: #3F2724;
@@ -256,7 +252,6 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .contact-label {
