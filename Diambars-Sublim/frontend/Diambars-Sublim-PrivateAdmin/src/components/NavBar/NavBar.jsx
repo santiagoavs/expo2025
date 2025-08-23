@@ -404,26 +404,35 @@ const NavItem = styled(Button)(({ theme, active }) => ({
   },
 }));
 
-const MoreButton = styled(Button)(({ theme, open }) => ({
+// Nuevo componente para dropdown buttons
+const DropdownButton = styled(Button)(({ theme, open, hasActiveItems }) => ({
   position: "relative",
   display: "flex",
   alignItems: "center",
   gap: 8,
   padding: "10px 16px",
-  color: "#64748b",
+  color: hasActiveItems ? "#FFFFFF" : (open ? "#040DBF" : "#64748b"),
   fontSize: 14,
   fontWeight: 600,
   borderRadius: 16,
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  background: open ? "rgba(31, 100, 191, 0.08)" : "transparent",
+  background: hasActiveItems 
+    ? "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)" 
+    : (open ? "rgba(31, 100, 191, 0.08)" : "transparent"),
   minWidth: "auto",
   textTransform: "none",
   whiteSpace: "nowrap",
+  boxShadow: hasActiveItems ? "0 4px 12px rgba(4, 13, 191, 0.3)" : "none",
   
   "&:hover": {
-    background: "rgba(31, 100, 191, 0.08)",
-    color: "#040DBF",
+    background: hasActiveItems 
+      ? "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)"
+      : "rgba(31, 100, 191, 0.08)",
+    color: hasActiveItems ? "#FFFFFF" : "#040DBF",
     transform: "translateY(-1px)",
+    boxShadow: hasActiveItems 
+      ? "0 6px 16px rgba(4, 13, 191, 0.4)"
+      : "0 2px 8px rgba(31, 100, 191, 0.15)",
   },
   
   // Tablets
@@ -442,11 +451,11 @@ const MoreButton = styled(Button)(({ theme, open }) => ({
     borderRadius: 12,
     minWidth: 40,
     
-    "& .more-label": {
+    "& .dropdown-label": {
       display: "none",
     },
     
-    "& .more-caret": {
+    "& .dropdown-caret": {
       display: "none",
     },
   },
@@ -731,10 +740,7 @@ const MenuSection = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Reemplaza tu MenuItemStyled actual con esto:
-
 const MenuItemStyled = styled(ListItemButton, {
-  // Filtrar props que no deben pasarse al DOM
   shouldForwardProp: (prop) => prop !== 'active',
 })(({ theme, active }) => ({
   borderRadius: 12,
@@ -768,48 +774,59 @@ const MenuItemStyled = styled(ListItemButton, {
 }));
 
 // ============================================
-// CONFIGURACIÓN DE NAVEGACIÓN
+// CONFIGURACIÓN DE NAVEGACIÓN REESTRUCTURADA
 // ============================================
 
 /**
- * PÁGINAS PRINCIPALES - Aparecen en el navbar
- * Modifica este array para cambiar las páginas principales
+ * PÁGINAS PRINCIPALES FIJAS - Aparecen siempre en el navbar
  */
 const MAIN_NAVIGATION = [
   {
-    to: "/catalog-management",
-    label: "Catálogo",
-    icon: <ChartBar size={18} weight="duotone" />,
-    description: "Gestión de productos y servicios"
-  },
-  {
-    to: "/orders", 
-    label: "Pedidos",
-    icon: <ShoppingCart size={18} weight="duotone" />,
-    description: "Control de pedidos y órdenes"
-  },
-  {
-    to: "/employees",
-    label: "Empleados", 
-    icon: <UserList size={18} weight="duotone" />,
-    description: "Gestión de personal"
-  },
-  {
-    to: "/users",
-    label: "Usuarios",
-    icon: <Users size={18} weight="duotone" />,
-    description: "Administración de usuarios"
+    to: "/dashboard",
+    label: "Inicio",
+    icon: <House size={18} weight="duotone" />,
+    description: "Panel principal"
   },
 ];
 
 /**
- * NAVEGACIÓN SECUNDARIA - Aparece en el menú "Más"
- * Organizada por categorías para mejor UX
+ * MENÚS DESPLEGABLES - Organizados por categorías
  */
-const SECONDARY_NAVIGATION = {
-  management: {
-    title: "Gestión",
+const DROPDOWN_MENUS = {
+  personal: {
+    label: "Personal",
+    icon: <Users size={18} weight="duotone" />,
     items: [
+      {
+        to: "/employees",
+        label: "Empleados",
+        icon: <UserList size={18} weight="duotone" />,
+        description: "Gestión de personal"
+      },
+      {
+        to: "/users",
+        label: "Usuarios",
+        icon: <Users size={18} weight="duotone" />,
+        description: "Administración de usuarios"
+      },
+    ]
+  },
+  gestion: {
+    label: "Gestión",
+    icon: <Folders size={18} weight="duotone" />,
+    items: [
+      {
+        to: "/catalog-management",
+        label: "Catálogo",
+        icon: <ChartBar size={18} weight="duotone" />,
+        description: "Gestión de productos y servicios"
+      },
+      {
+        to: "/orders",
+        label: "Pedidos",
+        icon: <ShoppingCart size={18} weight="duotone" />,
+        description: "Control de pedidos y órdenes"
+      },
       {
         to: "/category-management",
         label: "Categorías",
@@ -824,8 +841,9 @@ const SECONDARY_NAVIGATION = {
       },
     ]
   },
-  tools: {
-    title: "Herramientas",
+  herramientas: {
+    label: "Herramientas",
+    icon: <PaintBrush size={18} weight="duotone" />,
     items: [
       {
         to: "/design-management",
@@ -847,15 +865,10 @@ const SECONDARY_NAVIGATION = {
       },
     ]
   },
-  analytics: {
-    title: "Reportes y Análisis",
+  analisis: {
+    label: "Análisis",
+    icon: <ChartBar size={18} weight="duotone" />,
     items: [
-      {
-        to: "/dashboard",
-        label: "Dashboard",
-        icon: <House size={18} weight="duotone" />,
-        description: "Panel principal"
-      },
       {
         to: "/payment-dashboard",
         label: "Dashboard de Pagos",
@@ -885,8 +898,14 @@ const SECONDARY_NAVIGATION = {
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [moreMenuAnchor, setMoreMenuAnchor] = useState(null);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  
+  // Estados para los menús desplegables individuales
+  const [dropdownStates, setDropdownStates] = useState({
+    personal: { open: false, anchor: null },
+    gestion: { open: false, anchor: null },
+    herramientas: { open: false, anchor: null },
+    analisis: { open: false, anchor: null }
+  });
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -894,12 +913,12 @@ const Navbar = () => {
   const theme = useTheme();
   
   // Breakpoints responsivos mejorados
-  const isXs = useMediaQuery(`(max-width: ${customBreakpoints.sm - 1}px)`); // 0-479px
-  const isSm = useMediaQuery(`(min-width: ${customBreakpoints.sm}px) and (max-width: ${customBreakpoints.md - 1}px)`); // 480-767px
-  const isMd = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`); // 768-1023px
-  const isLg = useMediaQuery(`(min-width: ${customBreakpoints.lg}px) and (max-width: ${customBreakpoints.xl - 1}px)`); // 1024-1439px
-  const isMobile = useMediaQuery(`(max-width: ${customBreakpoints.md - 1}px)`); // 0-767px (todos los móviles)
-  const isTablet = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`); // 768-1023px
+  const isXs = useMediaQuery(`(max-width: ${customBreakpoints.sm - 1}px)`);
+  const isSm = useMediaQuery(`(min-width: ${customBreakpoints.sm}px) and (max-width: ${customBreakpoints.md - 1}px)`);
+  const isMd = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`);
+  const isLg = useMediaQuery(`(min-width: ${customBreakpoints.lg}px) and (max-width: ${customBreakpoints.xl - 1}px)`);
+  const isMobile = useMediaQuery(`(max-width: ${customBreakpoints.md - 1}px)`);
+  const isTablet = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`);
 
   // Detectar scroll
   useEffect(() => {
@@ -911,34 +930,55 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Determinar elementos visibles según dispositivo (RESPONSIVE PERFECTO)
+  // Determinar elementos visibles según dispositivo
   const getVisibleItemsCount = () => {
     if (isXs || isSm) return 0; // Móviles: solo hamburguesa
-    if (isMd) return 2; // Tablets: 2 links + "Más"
-    if (isLg) return 3; // Desktop pequeño: 3 links + "Más"
-    return 4; // Desktop grande: 4 links completos
+    return 1; // Todas las pantallas: solo Dashboard + dropdowns
   };
 
   const visibleItemsCount = getVisibleItemsCount();
-  const visibleItems = MAIN_NAVIGATION.slice(0, visibleItemsCount);
-  const hasMoreItems = visibleItemsCount < MAIN_NAVIGATION.length || Object.keys(SECONDARY_NAVIGATION).length > 0;
+  const visibleMainItems = MAIN_NAVIGATION.slice(0, visibleItemsCount);
+
+  // Funciones para manejar dropdowns
+  const handleDropdownClick = (dropdownKey, event) => {
+    setDropdownStates(prev => ({
+      ...prev,
+      [dropdownKey]: {
+        open: !prev[dropdownKey].open,
+        anchor: prev[dropdownKey].open ? null : event.currentTarget
+      }
+    }));
+    
+    // Cerrar otros dropdowns
+    Object.keys(dropdownStates).forEach(key => {
+      if (key !== dropdownKey && dropdownStates[key].open) {
+        setDropdownStates(prev => ({
+          ...prev,
+          [key]: { open: false, anchor: null }
+        }));
+      }
+    });
+  };
+
+  const handleDropdownClose = (dropdownKey) => {
+    setDropdownStates(prev => ({
+      ...prev,
+      [dropdownKey]: { open: false, anchor: null }
+    }));
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleMoreClick = (event) => {
-    setMoreMenuAnchor(event.currentTarget);
-    setMoreMenuOpen(!moreMenuOpen);
-  };
-
-  const handleMoreClose = () => {
-    setMoreMenuOpen(false);
-    setMoreMenuAnchor(null);
-  };
-
   const handleLogout = async () => {
-    handleMoreClose();
+    // Cerrar todos los dropdowns
+    setDropdownStates({
+      personal: { open: false, anchor: null },
+      gestion: { open: false, anchor: null },
+      herramientas: { open: false, anchor: null },
+      analisis: { open: false, anchor: null }
+    });
     
     const result = await Swal.fire({
       title: '¿Cerrar sesión?',
@@ -989,6 +1029,11 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
+  // Verificar si un dropdown tiene elementos activos
+  const hasActiveItems = (dropdownKey) => {
+    return DROPDOWN_MENUS[dropdownKey].items.some(item => isActiveRoute(item.to));
+  };
+
   return (
     <>
       {/* Navbar Principal */}
@@ -1017,7 +1062,8 @@ const Navbar = () => {
           {/* Navegación Desktop - Solo visible en tablets y desktop */}
           {!isMobile && (
             <NavContainer>
-              {visibleItems.map((item) => (
+              {/* Enlaces principales visibles */}
+              {visibleMainItems.map((item) => (
                 <NavItem
                   key={item.to}
                   component={Link}
@@ -1030,21 +1076,24 @@ const Navbar = () => {
                 </NavItem>
               ))}
               
-              {hasMoreItems && (
-                <MoreButton
-                  onClick={handleMoreClick}
-                  open={moreMenuOpen}
-                  startIcon={<ListIcon size={18} weight="duotone" />}
+              {/* Menús desplegables */}
+              {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
+                <DropdownButton
+                  key={key}
+                  onClick={(e) => handleDropdownClick(key, e)}
+                  open={dropdownStates[key].open}
+                  hasActiveItems={hasActiveItems(key)}
+                  startIcon={dropdown.icon}
                   endIcon={
-                    <span className="more-caret">
-                      {moreMenuOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                    <span className="dropdown-caret">
+                      {dropdownStates[key].open ? <CaretUp size={14} /> : <CaretDown size={14} />}
                     </span>
                   }
-                  title="Ver más opciones"
+                  title={`Ver opciones de ${dropdown.label}`}
                 >
-                  <span className="more-label">Más</span>
-                </MoreButton>
-              )}
+                  <span className="dropdown-label">{dropdown.label}</span>
+                </DropdownButton>
+              ))}
             </NavContainer>
           )}
 
@@ -1087,120 +1136,69 @@ const Navbar = () => {
         </StyledToolbar>
       </StyledAppBar>
 
-      {/* Menú Desplegable "Más" - Solo para desktop/tablet */}
-      {!isMobile && (
+      {/* Menús Desplegables - Solo para desktop/tablet */}
+      {!isMobile && Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
         <StyledPopper
-          open={moreMenuOpen}
-          anchorEl={moreMenuAnchor}
+          key={key}
+          open={dropdownStates[key].open}
+          anchorEl={dropdownStates[key].anchor}
           placement="bottom-end"
           transition
         >
           {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={300}>
               <Paper>
-                <ClickAwayListener onClickAway={handleMoreClose}>
-                  <Box>
-                    {Object.entries(SECONDARY_NAVIGATION).map(([key, section]) => (
-                      <MenuSection key={key}>
-                        <Typography
-                          variant="subtitle2"
-                          fontWeight={700}
-                          color="#475569"
-                          textTransform="uppercase"
-                          letterSpacing={0.5}
-                          fontSize={11}
-                          sx={{ mb: 1.5, px: 1 }}
+                <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+                  <MenuSection>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      color="#475569"
+                      textTransform="uppercase"
+                      letterSpacing={0.5}
+                      fontSize={11}
+                      sx={{ mb: 1.5, px: 1 }}
+                    >
+                      {dropdown.label}
+                    </Typography>
+                    <List dense sx={{ p: 0 }}>
+                      {dropdown.items.map((item) => (
+                        <MenuItemStyled
+                          key={item.to}
+                          component={Link}
+                          to={item.to}
+                          active={isActiveRoute(item.to)}
+                          onClick={() => handleDropdownClose(key)}
                         >
-                          {section.title}
-                        </Typography>
-                        <List dense sx={{ p: 0 }}>
-                          {section.items.map((item) => (
-                            <MenuItemStyled
-                              key={item.to}
-                              component={Link}
-                              to={item.to}
-                              active={isActiveRoute(item.to)}
-                              onClick={handleMoreClose}
-                            >
-                              <ListItemIcon sx={{ 
-                                color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
-                                minWidth: 32 
-                              }}>
-                                {item.icon}
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={item.label}
-                                secondary={item.description}
-                                primaryTypographyProps={{
-                                  fontWeight: 600,
-                                  fontSize: 14,
-                                  color: isActiveRoute(item.to) ? "#040DBF" : "#334155"
-                                }}
-                                secondaryTypographyProps={{
-                                  fontSize: 12,
-                                  color: "#64748b"
-                                }}
-                              />
-                            </MenuItemStyled>
-                          ))}
-                        </List>
-                      </MenuSection>
-                    ))}
-                    
-                    {/* Enlaces principales ocultos en responsive */}
-                    {MAIN_NAVIGATION.slice(visibleItemsCount).length > 0 && (
-                      <MenuSection>
-                        <Typography
-                          variant="subtitle2"
-                          fontWeight={700}
-                          color="#475569"
-                          textTransform="uppercase"
-                          letterSpacing={0.5}
-                          fontSize={11}
-                          sx={{ mb: 1.5, px: 1 }}
-                        >
-                          Navegación Principal
-                        </Typography>
-                        <List dense sx={{ p: 0 }}>
-                          {MAIN_NAVIGATION.slice(visibleItemsCount).map((item) => (
-                            <MenuItemStyled
-                              key={item.to}
-                              component={Link}
-                              to={item.to}
-                              active={isActiveRoute(item.to)}
-                              onClick={handleMoreClose}
-                            >
-                              <ListItemIcon sx={{ 
-                                color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
-                                minWidth: 32 
-                              }}>
-                                {item.icon}
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={item.label}
-                                secondary={item.description}
-                                primaryTypographyProps={{
-                                  fontWeight: 600,
-                                  fontSize: 14,
-                                  color: isActiveRoute(item.to) ? "#040DBF" : "#334155"
-                                }}
-                                secondaryTypographyProps={{
-                                  fontSize: 12,
-                                  color: "#64748b"
-                                }}
-                              />
-                            </MenuItemStyled>
-                          ))}
-                        </List>
-                      </MenuSection>
-                    )}
-                  </Box>
+                          <ListItemIcon sx={{ 
+                            color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
+                            minWidth: 32 
+                          }}>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.label}
+                            secondary={item.description}
+                            primaryTypographyProps={{
+                              fontWeight: 600,
+                              fontSize: 14,
+                              color: isActiveRoute(item.to) ? "#040DBF" : "#334155"
+                            }}
+                            secondaryTypographyProps={{
+                              fontSize: 12,
+                              color: "#64748b"
+                            }}
+                          />
+                        </MenuItemStyled>
+                      ))}
+                    </List>
+                  </MenuSection>
                 </ClickAwayListener>
               </Paper>
             </Fade>
           )}
         </StyledPopper>
-      )}
+      ))}
 
       {/* Sidebar Móvil */}
       <StyledDrawer
@@ -1208,7 +1206,7 @@ const Navbar = () => {
         open={isSidebarOpen}
         onClose={toggleSidebar}
         ModalProps={{
-          keepMounted: true, // Mejor performance en móviles
+          keepMounted: true,
         }}
       >
         {/* Header del Sidebar */}
@@ -1353,8 +1351,8 @@ const Navbar = () => {
             </List>
           </Box>
 
-          {/* Navegación Secundaria */}
-          {Object.entries(SECONDARY_NAVIGATION).map(([key, section], sectionIndex) => (
+          {/* Menús de Categorías en Sidebar */}
+          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown], sectionIndex) => (
             <Box key={key}>
               <Typography
                 variant="subtitle2"
@@ -1364,10 +1362,10 @@ const Navbar = () => {
                 letterSpacing={1}
                 sx={{ mb: 2, px: 1 }}
               >
-                {section.title}
+                {dropdown.label}
               </Typography>
               <List sx={{ p: 0 }}>
-                {section.items.map((item, itemIndex) => (
+                {dropdown.items.map((item, itemIndex) => (
                   <ListItem key={item.to} disablePadding sx={{ mb: 1 }}>
                     <MenuItemStyled
                       component={Link}
