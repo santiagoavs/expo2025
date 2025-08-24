@@ -671,30 +671,32 @@ const DesignCard = ({
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        {visibleOptions.map((option, index) => (
-          <React.Fragment key={option.label}>
-            {option.divider && index > 0 && (
-              <Box sx={{ 
+        {visibleOptions.map((option, index) => [
+          option.divider && index > 0 ? (
+            <Box 
+              key={`divider-${index}`}
+              sx={{ 
                 height: '1px', 
                 backgroundColor: alpha('#1F64BF', 0.08), 
                 margin: '4px 16px' 
-              }} />
-            )}
-            <MenuItem
-              onClick={option.action}
-              sx={{ 
+              }} 
+            />
+          ) : null,
+          <MenuItem
+            key={option.label}
+            onClick={option.action}
+            sx={{ 
+              color: option.color,
+              '& svg': { 
                 color: option.color,
-                '& svg': { 
-                  color: option.color,
-                  flexShrink: 0
-                }
-              }}
-            >
-              <option.icon size={16} weight="bold" />
-              {option.label}
-            </MenuItem>
-          </React.Fragment>
-        ))}
+                flexShrink: 0
+              }
+            }}
+          >
+            <option.icon size={16} weight="bold" />
+            {option.label}
+          </MenuItem>
+        ]).flat().filter(Boolean)}
       </Menu>
     </DesignCardContainer>
   );
