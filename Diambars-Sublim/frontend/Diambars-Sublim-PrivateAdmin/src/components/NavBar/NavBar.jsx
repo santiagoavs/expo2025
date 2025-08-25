@@ -47,23 +47,19 @@ import {
 } from "@phosphor-icons/react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Swal from "sweetalert2";
-
-// ============================================
-// BREAKPOINTS CUSTOMIZADOS PARA MÓVILES
-// ============================================
 
 const customBreakpoints = {
-  xs: 0,      // 0px - 479px (móviles pequeños)
-  sm: 480,    // 480px - 767px (móviles grandes)
-  md: 768,    // 768px - 1023px (tablets)
-  lg: 1024,   // 1024px - 1439px (desktop pequeño)
-  xl: 1440,   // 1440px+ (desktop grande)
+  xs: 0,
+  sm: 480,
+  md: 768,
+  lg: 1024,
+  xl: 1440,
 };
 
-// ============================================
-// ANIMACIONES Y KEYFRAMES
-// ============================================
+const glassShine = keyframes`
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+`;
 
 const slideInFromTop = keyframes`
   from {
@@ -76,58 +72,240 @@ const slideInFromTop = keyframes`
   }
 `;
 
-const pulseGlow = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(31, 100, 191, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(31, 100, 191, 0.1);
-  }
-`;
-
 const statusPulse = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 `;
 
-// ============================================
-// STYLED COMPONENTS RESPONSIVE
-// ============================================
+const GlassBase = styled(Box)(({ theme }) => ({
+  background: "rgba(255, 255, 255, 0.85)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(31, 100, 191, 0.15)",
+  boxShadow: `
+    0 8px 25px rgba(31, 100, 191, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95)
+  `,
+  position: "relative",
+  overflow: "hidden",
+  transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
 
-const StyledAppBar = styled(AppBar)(({ theme, scrolled }) => ({
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.3), transparent)",
+  },
+
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
+    transition: "all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)",
+    opacity: 0,
+  },
+
+  "&:hover::after": {
+    left: "100%",
+    opacity: 1,
+  },
+}));
+
+const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, open }) => {
+  const isActive = active || hasActiveItems;
+  const isHover = open;
+
+  return {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "10px 16px",
+    minWidth: "auto",
+    borderRadius: 16,
+    textTransform: "none",
+    fontWeight: 600,
+    fontSize: 14,
+    transition: "all 0.3s ease",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    
+    // Solo aplicar estilos visuales cuando está activo, es danger o está open (hover)
+    ...(isActive ? {
+      color: "#FFFFFF",
+      background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      border: "1px solid rgba(255, 255, 255, 0.25)",
+      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+    } : variant === "danger" ? {
+      color: "#FFFFFF",
+      background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      border: "1px solid rgba(255, 255, 255, 0.25)",
+      boxShadow: "0 6px 20px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+    } : isHover ? {
+      color: "#040DBF",
+      background: "rgba(31, 100, 191, 0.15)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      border: "1px solid rgba(31, 100, 191, 0.25)",
+      boxShadow: "0 6px 20px rgba(31, 100, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
+    } : {
+      // Estado por defecto: completamente transparente
+      color: "#64748b",
+      background: "transparent",
+      border: "none",
+      boxShadow: "none",
+    }),
+    
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: 0,
+      left: "-100%",
+      width: "100%",
+      height: "100%",
+      background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+      transition: "all 0.6s ease",
+      opacity: 0,
+    },
+    
+    "&:hover": {
+      // Solo efecto de reflejo, sin cambios de tamaño o posición
+      ...(isActive ? {
+        background: "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)",
+        boxShadow: "0 8px 30px rgba(4, 13, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+      } : variant === "danger" ? {
+        background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
+        boxShadow: "0 8px 30px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+      } : isHover ? {
+        color: "#040DBF",
+        background: "rgba(31, 100, 191, 0.2)",
+      } : {
+        // Hover minimalista solo con cambio de color
+        color: "#040DBF",
+      }),
+    },
+    
+    "&:hover::before": {
+      left: "100%",
+      opacity: 1,
+    },
+    
+    [theme.breakpoints.down('lg')]: {
+      padding: "8px 14px",
+      fontSize: 13,
+      gap: 6,
+      borderRadius: 14,
+    },
+    
+    [theme.breakpoints.down('md')]: {
+      padding: "8px 10px",
+      fontSize: 12,
+      gap: 4,
+      borderRadius: 12,
+      minWidth: 40,
+      
+      "& .nav-label, & .dropdown-label": {
+        display: "none",
+      },
+      "& .dropdown-caret": {
+        display: "none",
+      },
+    },
+  };
+});
+
+const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
+  width: 44,
+  height: 44,
+  borderRadius: 12,
+  background: variant === "danger" 
+    ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
+    : "rgba(255, 255, 255, 0.8)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  border: variant === "danger" 
+    ? "1px solid rgba(255, 255, 255, 0.25)"
+    : "1px solid rgba(226, 232, 240, 0.6)",
+  color: variant === "danger" ? "#FFFFFF" : "#64748b",
+  transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+  boxShadow: variant === "danger" 
+    ? "0 6px 20px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)"
+    : "0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+  position: "relative",
+  overflow: "hidden",
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)",
+    transition: "all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)",
+    opacity: 0,
+  },
+
+  "&:hover": {
+    background: variant === "danger" 
+      ? "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)"
+      : "rgba(31, 100, 191, 0.12)",
+    borderColor: variant === "danger" 
+      ? "rgba(255, 255, 255, 0.35)" 
+      : "rgba(31, 100, 191, 0.35)",
+    color: variant === "danger" ? "#FFFFFF" : "#040DBF",
+    transform: "translateY(-3px) scale(1.06)",
+    boxShadow: variant === "danger" 
+      ? "0 8px 30px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
+      : "0 6px 25px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+  },
+
+  "&:hover::before": {
+    left: "100%",
+    opacity: 1,
+  },
+
+  [theme.breakpoints.down('md')]: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+  },
+}));
+
+const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden }) => ({
   position: "fixed",
   top: 0,
   left: 0,
   right: 0,
   height: 72,
-  background: scrolled 
-    ? "rgba(255, 255, 255, 0.98)" 
-    : "rgba(255, 255, 255, 0.95)",
-  backdropFilter: "blur(24px)",
-  WebkitBackdropFilter: "blur(24px)",
-  borderBottom: "1px solid rgba(31, 100, 191, 0.12)",
-  boxShadow: scrolled 
-    ? "0 8px 32px rgba(1, 3, 38, 0.12)" 
-    : "0 4px 20px rgba(1, 3, 38, 0.08)",
-  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+  background: "#FFFFFF",
+  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
+  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+  transition: "all 0.3s ease",
   zIndex: 1300,
-  
-  // Tablets (768px - 1023px)
+  transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
+  opacity: hidden ? 0 : 1,
+
   [theme.breakpoints.down('lg')]: {
     height: 68,
   },
-  
-  // Móviles grandes (480px - 767px)
   [theme.breakpoints.down('md')]: {
     height: 64,
   },
-  
-  // Móviles pequeños (0px - 479px)
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     height: 60,
   },
-  
-  // iPhone SE y dispositivos muy pequeños
   [`@media (max-width: 375px)`]: {
     height: 56,
   },
@@ -138,61 +316,51 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   padding: "0 32px",
   justifyContent: "space-between",
   minHeight: "unset !important",
-  
-  // Desktop pequeño
+  position: "relative",
+
   [theme.breakpoints.down('xl')]: {
     padding: "0 24px",
   },
-  
-  // Tablets
   [theme.breakpoints.down('lg')]: {
     padding: "0 20px",
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     padding: "0 16px",
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     padding: "0 12px",
   },
-  
-  // iPhone SE y dispositivos muy pequeños
   [`@media (max-width: 375px)`]: {
     padding: "0 8px",
   },
 }));
 
-const BrandContainer = styled(Box)(({ theme }) => ({
+const BrandContainer = styled(GlassBase)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 16,
   cursor: "pointer",
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   borderRadius: 16,
   padding: "8px 12px",
   flex: "0 0 auto",
-  
+
   "&:hover": {
-    transform: "translateY(-1px)",
-    background: "rgba(31, 100, 191, 0.04)",
+    transform: "translateY(-2px)",
+    boxShadow: `
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.2)
+    `,
   },
-  
-  // Tablets
+
   [theme.breakpoints.down('lg')]: {
     gap: 14,
     padding: "6px 10px",
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     gap: 12,
     padding: "4px 8px",
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     gap: 10,
     padding: "2px 4px",
@@ -212,34 +380,27 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   boxShadow: "0 4px 12px rgba(4, 13, 191, 0.24)",
   transition: "all 0.3s ease",
   flexShrink: 0,
-  
+
   "&:hover": {
     transform: "scale(1.05) rotate(2deg)",
     boxShadow: "0 6px 20px rgba(4, 13, 191, 0.32)",
   },
-  
-  // Tablets
+
   [theme.breakpoints.down('lg')]: {
     width: 44,
     height: 44,
     borderRadius: 11,
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     width: 40,
     height: 40,
     borderRadius: 10,
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     width: 36,
     height: 36,
     borderRadius: 9,
   },
-  
-  // iPhone SE
   [`@media (max-width: 375px)`]: {
     width: 32,
     height: 32,
@@ -252,8 +413,7 @@ const BrandText = styled(Box)(({ theme }) => ({
   flexDirection: "column",
   gap: 2,
   flex: "0 0 auto",
-  
-  // Móviles muy pequeños - ocultar texto secundario
+
   [`@media (max-width: 320px)`]: {
     "& .brand-subtitle": {
       display: "none",
@@ -269,28 +429,20 @@ const BrandName = styled(Typography)(({ theme }) => ({
   letterSpacing: "-0.02em",
   lineHeight: 1,
   whiteSpace: "nowrap",
-  
-  // Tablets
+  textShadow: "0 1px 2px rgba(1, 3, 38, 0.1)",
+
   [theme.breakpoints.down('lg')]: {
     fontSize: 22,
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     fontSize: 20,
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     fontSize: 18,
   },
-  
-  // iPhone SE
   [`@media (max-width: 375px)`]: {
     fontSize: 16,
   },
-  
-  // Dispositivos muy pequeños
   [`@media (max-width: 320px)`]: {
     fontSize: 15,
   },
@@ -304,47 +456,33 @@ const BrandSubtitle = styled(Typography)(({ theme }) => ({
   textTransform: "lowercase",
   lineHeight: 1,
   whiteSpace: "nowrap",
-  
-  // Tablets
+
   [theme.breakpoints.down('lg')]: {
     fontSize: 11,
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     fontSize: 10,
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     fontSize: 9,
   },
-  
-  // iPhone SE
   [`@media (max-width: 375px)`]: {
     fontSize: 8,
   },
 }));
 
-const NavContainer = styled(Box)(({ theme }) => ({
+const NavContainer = styled(GlassBase)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 4,
-  background: "rgba(248, 250, 252, 0.8)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
   borderRadius: 20,
   padding: "6px",
-  backdropFilter: "blur(12px)",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-  
-  // Tablets
+
   [theme.breakpoints.down('lg')]: {
     gap: 3,
     padding: "5px",
     borderRadius: 18,
   },
-  
-  // Móviles grandes
   [theme.breakpoints.down('md')]: {
     gap: 2,
     padding: "4px",
@@ -352,134 +490,23 @@ const NavContainer = styled(Box)(({ theme }) => ({
   },
 }));
 
-const NavItem = styled(Button)(({ theme, active }) => ({
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "10px 16px",
-  color: active ? "#FFFFFF" : "#64748b",
-  fontSize: 14,
-  fontWeight: 600,
-  borderRadius: 16,
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  background: active 
-    ? "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)" 
-    : "transparent",
-  minWidth: "auto",
-  textTransform: "none",
-  boxShadow: active ? "0 4px 12px rgba(4, 13, 191, 0.3)" : "none",
-  whiteSpace: "nowrap",
-  
-  "&:hover": {
-    background: active 
-      ? "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)"
-      : "rgba(31, 100, 191, 0.08)",
-    color: active ? "#FFFFFF" : "#040DBF",
-    transform: "translateY(-1px)",
-    boxShadow: active 
-      ? "0 6px 16px rgba(4, 13, 191, 0.4)"
-      : "0 2px 8px rgba(31, 100, 191, 0.15)",
-  },
-  
-  // Tablets
-  [theme.breakpoints.down('lg')]: {
-    padding: "8px 14px",
-    fontSize: 13,
-    gap: 6,
-    borderRadius: 14,
-  },
-  
-  // Móviles grandes - solo iconos
-  [theme.breakpoints.down('md')]: {
-    padding: "8px 10px",
-    fontSize: 12,
-    gap: 4,
-    borderRadius: 12,
-    minWidth: 40,
-    
-    "& .nav-label": {
-      display: "none",
-    },
-  },
-}));
-
-// Nuevo componente para dropdown buttons
-const DropdownButton = styled(Button)(({ theme, open, hasActiveItems }) => ({
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  padding: "10px 16px",
-  color: hasActiveItems ? "#FFFFFF" : (open ? "#040DBF" : "#64748b"),
-  fontSize: 14,
-  fontWeight: 600,
-  borderRadius: 16,
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  background: hasActiveItems 
-    ? "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)" 
-    : (open ? "rgba(31, 100, 191, 0.08)" : "transparent"),
-  minWidth: "auto",
-  textTransform: "none",
-  whiteSpace: "nowrap",
-  boxShadow: hasActiveItems ? "0 4px 12px rgba(4, 13, 191, 0.3)" : "none",
-  
-  "&:hover": {
-    background: hasActiveItems 
-      ? "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)"
-      : "rgba(31, 100, 191, 0.08)",
-    color: hasActiveItems ? "#FFFFFF" : "#040DBF",
-    transform: "translateY(-1px)",
-    boxShadow: hasActiveItems 
-      ? "0 6px 16px rgba(4, 13, 191, 0.4)"
-      : "0 2px 8px rgba(31, 100, 191, 0.15)",
-  },
-  
-  // Tablets
-  [theme.breakpoints.down('lg')]: {
-    padding: "8px 14px",
-    fontSize: 13,
-    gap: 6,
-    borderRadius: 14,
-  },
-  
-  // Móviles grandes - solo iconos
-  [theme.breakpoints.down('md')]: {
-    padding: "8px 10px",
-    fontSize: 12,
-    gap: 4,
-    borderRadius: 12,
-    minWidth: 40,
-    
-    "& .dropdown-label": {
-      display: "none",
-    },
-    
-    "& .dropdown-caret": {
-      display: "none",
-    },
-  },
-}));
-
-const UserContainer = styled(Box)(({ theme }) => ({
+const UserContainer = styled(GlassBase)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 12,
   padding: "6px 12px 6px 6px",
-  background: "linear-gradient(135deg, rgba(4, 13, 191, 0.04) 0%, rgba(31, 100, 191, 0.02) 100%)",
-  border: "1px solid rgba(31, 100, 191, 0.12)",
   borderRadius: 24,
-  transition: "all 0.3s ease",
   cursor: "pointer",
-  
+
   "&:hover": {
-    background: "linear-gradient(135deg, rgba(4, 13, 191, 0.08) 0%, rgba(31, 100, 191, 0.04) 100%)",
-    borderColor: "rgba(31, 100, 191, 0.2)",
-    transform: "translateY(-1px)",
-    boxShadow: "0 4px 12px rgba(4, 13, 191, 0.15)",
+    transform: "translateY(-2px)",
+    boxShadow: `
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.2)
+    `,
   },
-  
-  // Móviles grandes - solo avatar
+
   [theme.breakpoints.down('md')]: {
     padding: "4px",
     gap: 0,
@@ -501,7 +528,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   boxShadow: "0 3px 12px rgba(4, 13, 191, 0.3)",
   transition: "all 0.3s ease",
   position: "relative",
-  
+
   "&::after": {
     content: '""',
     position: "absolute",
@@ -513,14 +540,14 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
     border: "2px solid #FFFFFF",
     borderRadius: "50%",
     animation: `${statusPulse} 2s ease-in-out infinite`,
+    boxShadow: "0 2px 6px rgba(16, 185, 129, 0.3)",
   },
-  
+
   "&:hover": {
     transform: "scale(1.05)",
     boxShadow: "0 4px 16px rgba(4, 13, 191, 0.4)",
   },
-  
-  // Tablets
+
   [theme.breakpoints.down('lg')]: {
     width: 38,
     height: 38,
@@ -531,8 +558,6 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
       height: 11,
     },
   },
-  
-  // Móviles
   [theme.breakpoints.down('md')]: {
     width: 36,
     height: 36,
@@ -545,100 +570,40 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   },
 }));
 
-const ActionButton = styled(IconButton)(({ theme, variant }) => ({
-  width: 44,
-  height: 44,
-  borderRadius: 12,
-  background: variant === "danger" ? "rgba(239, 68, 68, 0.08)" : "rgba(248, 250, 252, 0.8)",
-  border: `1px solid ${variant === "danger" ? "rgba(239, 68, 68, 0.2)" : "rgba(226, 232, 240, 0.8)"}`,
-  color: variant === "danger" ? "#dc2626" : "#64748b",
-  transition: "all 0.3s ease",
-  backdropFilter: "blur(8px)",
-  
-  "&:hover": {
-    background: variant === "danger" ? "rgba(239, 68, 68, 0.12)" : "rgba(31, 100, 191, 0.08)",
-    borderColor: variant === "danger" ? "rgba(239, 68, 68, 0.3)" : "rgba(31, 100, 191, 0.2)",
-    color: variant === "danger" ? "#dc2626" : "#040DBF",
-    transform: "translateY(-1px)",
-    boxShadow: `0 4px 12px ${variant === "danger" ? "rgba(239, 68, 68, 0.2)" : "rgba(31, 100, 191, 0.15)"}`,
-  },
-  
-  // Tablets
-  [theme.breakpoints.down('lg')]: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-  },
-  
-  // Móviles
-  [theme.breakpoints.down('md')]: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
-  },
-}));
-
-const MobileButton = styled(IconButton)(({ theme }) => ({
-  width: 44,
-  height: 44,
-  borderRadius: 12,
-  background: "rgba(248, 250, 252, 0.8)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
-  color: "#64748b",
-  transition: "all 0.3s ease",
-  backdropFilter: "blur(8px)",
-  
-  "&:hover": {
-    background: "rgba(31, 100, 191, 0.08)",
-    borderColor: "rgba(31, 100, 191, 0.2)",
-    color: "#040DBF",
-    transform: "scale(1.05)",
-  },
-  
-  // Tablets
-  [theme.breakpoints.down('lg')]: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-  },
-  
-  // Móviles
-  [theme.breakpoints.down('md')]: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
-  },
-  
-  // Móviles pequeños
-  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-  },
-}));
-
 const StyledPopper = styled(Popper)(({ theme }) => ({
   zIndex: 1400,
-  
+
   "& .MuiPaper-root": {
-    background: "rgba(255, 255, 255, 0.98)",
-    backdropFilter: "blur(24px)",
+    background: "rgba(255, 255, 255, 0.95)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
     borderRadius: 20,
-    border: "1px solid rgba(31, 100, 191, 0.12)",
-    boxShadow: "0 12px 40px rgba(1, 3, 38, 0.15)",
+    border: "1px solid rgba(226, 232, 240, 0.8)",
+    boxShadow: `
+      0 8px 25px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 1)
+    `,
     padding: "12px",
     minWidth: 280,
     animation: `${slideInFromTop} 0.3s ease-out`,
     marginTop: "8px !important",
+    overflow: "hidden",
     
-    // Tablets
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 1,
+      background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.3), transparent)",
+    },
+    
     [theme.breakpoints.down('lg')]: {
       minWidth: 260,
       borderRadius: 18,
       padding: "10px",
     },
-    
-    // Móviles
     [theme.breakpoints.down('md')]: {
       minWidth: 240,
       borderRadius: 16,
@@ -650,22 +615,17 @@ const StyledPopper = styled(Popper)(({ theme }) => ({
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
     width: 380,
-    background: "rgba(255, 255, 255, 0.98)",
-    backdropFilter: "blur(24px)",
+    background: "#FFFFFF",
     border: "none",
-    boxShadow: "-12px 0 40px rgba(1, 3, 38, 0.15)",
+    borderLeft: "1px solid rgba(226, 232, 240, 0.8)",
+    boxShadow: "-4px 0 15px rgba(0, 0, 0, 0.1)",
     
-    // Tablets grandes
     [theme.breakpoints.down('lg')]: {
       width: 360,
     },
-    
-    // Tablets pequeñas
     [theme.breakpoints.down('md')]: {
       width: 320,
     },
-    
-    // Móviles grandes
     [`@media (max-width: ${customBreakpoints.md - 1}px)`]: {
       width: "100%",
       maxWidth: "100vw",
@@ -673,113 +633,93 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
   },
 }));
 
-const DrawerHeader = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: "24px 24px 20px",
-  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
-  
-  // Móviles
-  [theme.breakpoints.down('md')]: {
-    padding: "20px 20px 16px",
-  },
-  
-  // Móviles pequeños
-  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
-    padding: "16px 16px 12px",
+const LogoutConfirmationModal = styled(Box)(({ theme }) => ({
+  position: "fixed",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 320,
+  background: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  borderRadius: 20,
+  border: "1px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: `
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8)
+  `,
+  padding: 24,
+  zIndex: 1500,
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 1), transparent)",
   },
 }));
 
-const DrawerContent = styled(Box)(({ theme }) => ({
-  flex: 1,
-  padding: "24px",
-  display: "flex",
-  flexDirection: "column",
-  gap: 24,
-  overflowY: "auto",
-  
-  "&::-webkit-scrollbar": {
-    width: 6,
-  },
-  "&::-webkit-scrollbar-track": {
-    background: "rgba(248, 250, 252, 0.8)",
-    borderRadius: 3,
-  },
-  "&::-webkit-scrollbar-thumb": {
-    background: "rgba(148, 163, 184, 0.8)",
-    borderRadius: 3,
-    "&:hover": {
-      background: "rgba(100, 116, 139, 0.9)",
-    },
-  },
-  
-  // Móviles
-  [theme.breakpoints.down('md')]: {
-    padding: "20px",
-    gap: 20,
-  },
-  
-  // Móviles pequeños
-  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
-    padding: "16px",
-    gap: 16,
-  },
-}));
-
-const MenuSection = styled(Box)(({ theme }) => ({
-  padding: "16px",
-  borderRadius: 16,
-  background: "linear-gradient(135deg, rgba(4, 13, 191, 0.02) 0%, rgba(31, 100, 191, 0.01) 100%)",
-  border: "1px solid rgba(31, 100, 191, 0.08)",
-  
-  // Móviles
-  [theme.breakpoints.down('md')]: {
-    padding: "12px",
-    borderRadius: 14,
-  },
-}));
-
-const MenuItemStyled = styled(ListItemButton, {
-  shouldForwardProp: (prop) => prop !== 'active',
-})(({ theme, active }) => ({
+const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
   borderRadius: 12,
   padding: "12px 16px",
   marginBottom: 4,
-  background: active ? "rgba(31, 100, 191, 0.1)" : "transparent",
-  border: `1px solid ${active ? "rgba(31, 100, 191, 0.2)" : "transparent"}`,
+  background: active 
+    ? "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)" 
+    : "rgba(248, 250, 252, 0.8)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
+  border: active 
+    ? "1px solid rgba(255, 255, 255, 0.2)" 
+    : "1px solid rgba(226, 232, 240, 0.6)",
   transition: "all 0.3s ease",
-  
-  "&:hover": {
-    background: "rgba(31, 100, 191, 0.08)",
-    borderColor: "rgba(31, 100, 191, 0.15)",
-    transform: "translateX(4px)",
+  overflow: "hidden",
+  position: "relative",
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+    transition: "left 0.6s ease",
   },
-  
+
+  "&:hover": {
+    background: active 
+      ? "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)"
+      : "rgba(31, 100, 191, 0.08)",
+    borderColor: active 
+      ? "rgba(255, 255, 255, 0.3)" 
+      : "rgba(31, 100, 191, 0.2)",
+    transform: "translateX(4px)",
+    boxShadow: active 
+      ? "0 4px 12px rgba(4, 13, 191, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+      : "0 4px 12px rgba(31, 100, 191, 0.1)",
+  },
+
+  "&:hover::before": {
+    animation: `${glassShine} 0.6s ease`,
+  },
+
   "&:last-child": {
     marginBottom: 0,
   },
-  
-  // Móviles
+
   [theme.breakpoints.down('md')]: {
     padding: "10px 14px",
     borderRadius: 10,
   },
-  
-  // Móviles pequeños
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     padding: "8px 12px",
     borderRadius: 8,
   },
 }));
 
-// ============================================
-// CONFIGURACIÓN DE NAVEGACIÓN REESTRUCTURADA
-// ============================================
-
-/**
- * PÁGINAS PRINCIPALES FIJAS - Aparecen siempre en el navbar
- */
 const MAIN_NAVIGATION = [
   {
     to: "/dashboard",
@@ -789,9 +729,6 @@ const MAIN_NAVIGATION = [
   },
 ];
 
-/**
- * MENÚS DESPLEGABLES - Organizados por categorías
- */
 const DROPDOWN_MENUS = {
   personal: {
     label: "Personal",
@@ -891,28 +828,24 @@ const DROPDOWN_MENUS = {
   }
 };
 
-// ============================================
-// COMPONENTE PRINCIPAL
-// ============================================
-
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  
-  // Estados para los menús desplegables individuales
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNavbarLogoutConfirm, setShowNavbarLogoutConfirm] = useState(false);
+
   const [dropdownStates, setDropdownStates] = useState({
     personal: { open: false, anchor: null },
     gestion: { open: false, anchor: null },
     herramientas: { open: false, anchor: null },
     analisis: { open: false, anchor: null }
   });
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
   const theme = useTheme();
-  
-  // Breakpoints responsivos mejorados
+
   const isXs = useMediaQuery(`(max-width: ${customBreakpoints.sm - 1}px)`);
   const isSm = useMediaQuery(`(min-width: ${customBreakpoints.sm}px) and (max-width: ${customBreakpoints.md - 1}px)`);
   const isMd = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`);
@@ -920,7 +853,6 @@ const Navbar = () => {
   const isMobile = useMediaQuery(`(max-width: ${customBreakpoints.md - 1}px)`);
   const isTablet = useMediaQuery(`(min-width: ${customBreakpoints.md}px) and (max-width: ${customBreakpoints.lg - 1}px)`);
 
-  // Detectar scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -930,16 +862,14 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Determinar elementos visibles según dispositivo
   const getVisibleItemsCount = () => {
-    if (isXs || isSm) return 0; // Móviles: solo hamburguesa
-    return 1; // Todas las pantallas: solo Dashboard + dropdowns
+    if (isXs || isSm) return 0;
+    return 1;
   };
 
   const visibleItemsCount = getVisibleItemsCount();
   const visibleMainItems = MAIN_NAVIGATION.slice(0, visibleItemsCount);
 
-  // Funciones para manejar dropdowns
   const handleDropdownClick = (dropdownKey, event) => {
     setDropdownStates(prev => ({
       ...prev,
@@ -949,7 +879,6 @@ const Navbar = () => {
       }
     }));
     
-    // Cerrar otros dropdowns
     Object.keys(dropdownStates).forEach(key => {
       if (key !== dropdownKey && dropdownStates[key].open) {
         setDropdownStates(prev => ({
@@ -968,11 +897,6 @@ const Navbar = () => {
   };
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleLogout = async () => {
-    // Cerrar todos los dropdowns
     setDropdownStates({
       personal: { open: false, anchor: null },
       gestion: { open: false, anchor: null },
@@ -980,66 +904,60 @@ const Navbar = () => {
       analisis: { open: false, anchor: null }
     });
     
-    const result = await Swal.fire({
-      title: '¿Cerrar sesión?',
-      text: '¿Estás seguro que deseas salir del sistema?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#040DBF',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Sí, cerrar sesión',
-      cancelButtonText: 'Cancelar',
-      background: '#FFFFFF',
-      color: '#010326',
-      borderRadius: '16px',
-    });
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
-    if (result.isConfirmed) {
-      try {
-        await logout();
-        
-        Swal.fire({
-          position: 'top-end',
-          icon: 'success',
-          title: 'Sesión cerrada correctamente',
-          showConfirmButton: false,
-          timer: 2000,
-          toast: true,
-          background: '#FFFFFF',
-          color: '#010326',
-        });
-        
-        navigate('/login');
-      } catch (error) {
-        Swal.fire({
-          position: 'top-end',
-          icon: 'error',
-          title: 'Error al cerrar sesión',
-          showConfirmButton: false,
-          timer: 2000,
-          toast: true,
-          background: '#fef2f2',
-          color: '#dc2626'
-        });
-      }
+  // Logout desde sidebar
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await logout();
+      setShowLogoutConfirm(false);
+      setIsSidebarOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  // Logout desde navbar
+  const handleNavbarLogoutClick = () => {
+    setShowNavbarLogoutConfirm(true);
+  };
+
+  const handleNavbarLogoutConfirm = async () => {
+    try {
+      await logout();
+      setShowNavbarLogoutConfirm(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
+  const handleNavbarLogoutCancel = () => {
+    setShowNavbarLogoutConfirm(false);
   };
 
   const isActiveRoute = (path) => {
     return location.pathname === path;
   };
 
-  // Verificar si un dropdown tiene elementos activos
   const hasActiveItems = (dropdownKey) => {
     return DROPDOWN_MENUS[dropdownKey].items.some(item => isActiveRoute(item.to));
   };
 
   return (
     <>
-      {/* Navbar Principal */}
-      <StyledAppBar scrolled={isScrolled} elevation={0}>
+      <StyledAppBar scrolled={isScrolled} hidden={isSidebarOpen} elevation={0}>
         <StyledToolbar>
-          {/* Logo y Marca */}
           <BrandContainer>
             <LogoContainer>
               <img 
@@ -1059,12 +977,10 @@ const Navbar = () => {
             </BrandText>
           </BrandContainer>
 
-          {/* Navegación Desktop - Solo visible en tablets y desktop */}
           {!isMobile && (
             <NavContainer>
-              {/* Enlaces principales visibles */}
               {visibleMainItems.map((item) => (
-                <NavItem
+                <GlassButton
                   key={item.to}
                   component={Link}
                   to={item.to}
@@ -1073,12 +989,11 @@ const Navbar = () => {
                   title={item.description}
                 >
                   <span className="nav-label">{item.label}</span>
-                </NavItem>
+                </GlassButton>
               ))}
               
-              {/* Menús desplegables */}
               {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-                <DropdownButton
+                <GlassButton
                   key={key}
                   onClick={(e) => handleDropdownClick(key, e)}
                   open={dropdownStates[key].open}
@@ -1092,14 +1007,12 @@ const Navbar = () => {
                   title={`Ver opciones de ${dropdown.label}`}
                 >
                   <span className="dropdown-label">{dropdown.label}</span>
-                </DropdownButton>
+                </GlassButton>
               ))}
             </NavContainer>
           )}
 
-          {/* Acciones del Navbar */}
           <Box display="flex" alignItems="center" gap={1.5}>
-            {/* Usuario - Solo visible en desktop grande */}
             {!isMd && !isMobile && (
               <UserContainer>
                 <StyledAvatar>
@@ -1116,112 +1029,117 @@ const Navbar = () => {
               </UserContainer>
             )}
 
-            {/* Botones de Acción - Solo visible en desktop */}
             {!isMobile && !isTablet && (
               <Stack direction="row" spacing={1}>
-                <ActionButton component={Link} to="/profile" title="Perfil">
+                <GlassIconButton component={Link} to="/profile" title="Perfil">
                   <Gear size={20} weight="duotone" />
-                </ActionButton>
-                <ActionButton variant="danger" onClick={handleLogout} title="Cerrar sesión">
+                </GlassIconButton>
+                <GlassIconButton variant="danger" onClick={handleNavbarLogoutClick} title="Cerrar sesión">
                   <SignOut size={20} weight="duotone" />
-                </ActionButton>
+                </GlassIconButton>
               </Stack>
             )}
 
-            {/* Botón Móvil - Siempre visible */}
-            <MobileButton onClick={toggleSidebar}>
+            <GlassIconButton onClick={toggleSidebar}>
               <ListIcon size={20} weight="duotone" />
-            </MobileButton>
+            </GlassIconButton>
           </Box>
         </StyledToolbar>
       </StyledAppBar>
 
-      {/* Menús Desplegables - Solo para desktop/tablet */}
-      {!isMobile && Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-        <StyledPopper
-          key={key}
-          open={dropdownStates[key].open}
-          anchorEl={dropdownStates[key].anchor}
-          placement="bottom-end"
-          transition
-        >
-          {({ TransitionProps }) => (
-            <Fade {...TransitionProps} timeout={300}>
-              <Paper>
-                <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
-                  <MenuSection>
-                    <Typography
-                      variant="subtitle2"
-                      fontWeight={700}
-                      color="#475569"
-                      textTransform="uppercase"
-                      letterSpacing={0.5}
-                      fontSize={11}
-                      sx={{ mb: 1.5, px: 1 }}
-                    >
-                      {dropdown.label}
-                    </Typography>
-                    <List dense sx={{ p: 0 }}>
-                      {dropdown.items.map((item) => (
-                        <MenuItemStyled
-                          key={item.to}
-                          component={Link}
-                          to={item.to}
-                          active={isActiveRoute(item.to)}
-                          onClick={() => handleDropdownClose(key)}
-                        >
-                          <ListItemIcon sx={{ 
-                            color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
-                            minWidth: 32 
-                          }}>
-                            {item.icon}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={item.label}
-                            secondary={item.description}
-                            primaryTypographyProps={{
-                              fontWeight: 600,
-                              fontSize: 14,
-                              color: isActiveRoute(item.to) ? "#040DBF" : "#334155"
-                            }}
-                            secondaryTypographyProps={{
-                              fontSize: 12,
-                              color: "#64748b"
-                            }}
-                          />
-                        </MenuItemStyled>
-                      ))}
-                    </List>
-                  </MenuSection>
-                </ClickAwayListener>
-              </Paper>
-            </Fade>
-          )}
-        </StyledPopper>
-      ))}
+      {/* Modal de confirmación de logout para navbar */}
+      {showNavbarLogoutConfirm && (
+        <>
+          <Box sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+            zIndex: 1350,
+          }} onClick={handleNavbarLogoutCancel} />
+          
+          <LogoutConfirmationModal sx={{ zIndex: 1360 }}>
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Box sx={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#FFFFFF",
+              }}>
+                <SignOut size={24} weight="duotone" />
+              </Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700} color="#010326" fontSize={18}>
+                  Cerrar Sesión
+                </Typography>
+                <Typography variant="body2" color="#64748b" fontSize={14}>
+                  ¿Estás seguro que deseas salir?
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Typography variant="body2" color="#475569" mb={3} fontSize={14}>
+              Tu sesión actual se cerrará y serás redirigido a la página de inicio de sesión.
+            </Typography>
+            
+            <Stack direction="row" spacing={2}>
+              <GlassButton onClick={handleNavbarLogoutCancel} sx={{
+                flex: 1,
+                py: 1.5,
+                borderRadius: 2,
+                background: "rgba(148, 163, 184, 0.2)",
+                color: "#64748b",
+                "&:hover": {
+                  background: "rgba(148, 163, 184, 0.3)",
+                  color: "#475569",
+                },
+              }}>
+                Cancelar
+              </GlassButton>
+              
+              <GlassButton variant="danger" onClick={handleNavbarLogoutConfirm} sx={{
+                flex: 1,
+                py: 1.5,
+                borderRadius: 2,
+              }}>
+                Confirmar
+              </GlassButton>
+            </Stack>
+          </LogoutConfirmationModal>
+        </>
+      )}
 
-      {/* Sidebar Móvil */}
       <StyledDrawer
         anchor="right"
         open={isSidebarOpen}
         onClose={toggleSidebar}
-        ModalProps={{
-          keepMounted: true,
-        }}
+        ModalProps={{ keepMounted: true }}
       >
-        {/* Header del Sidebar */}
-        <DrawerHeader>
+        <Box sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 3,
+          borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
+        }}>
           <Box display="flex" alignItems="center" gap={2}>
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
-                fontWeight: 700,
-                fontSize: 18,
-                borderRadius: 2,
-              }}
-            >
+            <Avatar sx={{
+              width: 40,
+              height: 40,
+              background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
+              color: "#FFFFFF",
+              fontWeight: 700,
+              fontSize: 18,
+              borderRadius: 2,
+            }}>
               D
             </Avatar>
             <Box>
@@ -1233,44 +1151,52 @@ const Navbar = () => {
               </Typography>
             </Box>
           </Box>
-          <IconButton
-            onClick={toggleSidebar}
-            sx={{
-              width: 40,
-              height: 40,
-              background: "rgba(4, 13, 191, 0.08)",
-              color: "#040DBF",
-              borderRadius: 2,
-              transition: "all 0.3s ease",
-              "&:hover": {
-                background: "#040DBF",
-                color: "#FFFFFF",
-                transform: "rotate(90deg) scale(1.05)",
-              },
-            }}
-          >
+          <GlassIconButton onClick={toggleSidebar} sx={{
+            "&:hover": { transform: "rotate(90deg) scale(1.05)" }
+          }}>
             <X size={20} weight="bold" />
-          </IconButton>
-        </DrawerHeader>
+          </GlassIconButton>
+        </Box>
 
-        {/* Contenido del Sidebar */}
-        <DrawerContent>
-          {/* Información del Usuario */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              background: "linear-gradient(135deg, rgba(4, 13, 191, 0.04) 0%, rgba(31, 100, 191, 0.02) 100%)",
-              border: "1px solid rgba(31, 100, 191, 0.12)",
-              borderRadius: 3,
-              transition: "all 0.3s ease",
-              "&:hover": {
-                background: "linear-gradient(135deg, rgba(4, 13, 191, 0.06) 0%, rgba(31, 100, 191, 0.03) 100%)",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 12px rgba(4, 13, 191, 0.1)",
-              },
-            }}
-          >
+        <Box sx={{ 
+          flex: 1, 
+          p: 3, 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 3,
+          overflowY: "auto",
+          "&::-webkit-scrollbar": { width: 6 },
+          "&::-webkit-scrollbar-track": { background: "rgba(226, 232, 240, 0.3)", borderRadius: 3 },
+          "&::-webkit-scrollbar-thumb": { 
+            background: "rgba(148, 163, 184, 0.6)", 
+            borderRadius: 3,
+            "&:hover": { background: "rgba(100, 116, 139, 0.8)" }
+          },
+        }}>
+          <Paper elevation={0} sx={{
+            p: 3,
+            background: "rgba(31, 100, 191, 0.05)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            border: "1px solid rgba(31, 100, 191, 0.1)",
+            borderRadius: 3,
+            transition: "all 0.3s ease",
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.2), transparent)",
+            },
+            "&:hover": {
+              transform: "translateY(-2px)",
+              boxShadow: "0 4px 12px rgba(31, 100, 191, 0.1)",
+            },
+          }}>
             <Box display="flex" alignItems="center" gap={2}>
               <StyledAvatar sx={{ width: 56, height: 56, fontSize: 22 }}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -1279,32 +1205,20 @@ const Navbar = () => {
                 <Typography variant="h6" fontWeight={700} color="#010326" fontSize={18}>
                   {user?.name || 'Usuario'}
                 </Typography>
-                <Chip
-                  label={user?.type || 'admin'}
-                  size="small"
-                  sx={{
-                    background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
-                    color: "#FFFFFF",
-                    fontWeight: 600,
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                  }}
-                />
+                <Chip label={user?.type || 'admin'} size="small" sx={{
+                  background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
+                  color: "#FFFFFF",
+                  fontWeight: 600,
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }} />
               </Box>
             </Box>
           </Paper>
 
-          {/* Navegación Principal */}
           <Box>
-            <Typography
-              variant="subtitle2"
-              fontWeight={700}
-              color="#475569"
-              textTransform="uppercase"
-              letterSpacing={1}
-              sx={{ mb: 2, px: 1 }}
-            >
+            <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={1} sx={{ mb: 2, px: 1 }}>
               Navegación Principal
             </Typography>
             <List sx={{ p: 0 }}>
@@ -1322,13 +1236,11 @@ const Navbar = () => {
                       animation: `${slideInFromTop} 0.4s ease-out`,
                     }}
                   >
-                    <ListItemIcon
-                      sx={{
-                        color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
-                        minWidth: 40,
-                        fontSize: 20,
-                      }}
-                    >
+                    <ListItemIcon sx={{
+                      color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
+                      minWidth: 40,
+                      fontSize: 20,
+                    }}>
                       {item.icon}
                     </ListItemIcon>
                     <ListItemText
@@ -1337,12 +1249,12 @@ const Navbar = () => {
                       primaryTypographyProps={{
                         fontWeight: 700,
                         fontSize: 16,
-                        color: isActiveRoute(item.to) ? "#040DBF" : "#334155",
+                        color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326",
                       }}
                       secondaryTypographyProps={{
                         fontSize: 13,
                         fontWeight: 500,
-                        color: "#64748b",
+                        color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b",
                       }}
                     />
                   </MenuItemStyled>
@@ -1351,17 +1263,9 @@ const Navbar = () => {
             </List>
           </Box>
 
-          {/* Menús de Categorías en Sidebar */}
           {Object.entries(DROPDOWN_MENUS).map(([key, dropdown], sectionIndex) => (
             <Box key={key}>
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color="#475569"
-                textTransform="uppercase"
-                letterSpacing={1}
-                sx={{ mb: 2, px: 1 }}
-              >
+              <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={1} sx={{ mb: 2, px: 1 }}>
                 {dropdown.label}
               </Typography>
               <List sx={{ p: 0 }}>
@@ -1379,13 +1283,11 @@ const Navbar = () => {
                         animation: `${slideInFromTop} 0.4s ease-out`,
                       }}
                     >
-                      <ListItemIcon
-                        sx={{
-                          color: isActiveRoute(item.to) ? "#040DBF" : "#64748b",
-                          minWidth: 40,
-                          fontSize: 20,
-                        }}
-                      >
+                      <ListItemIcon sx={{
+                        color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
+                        minWidth: 40,
+                        fontSize: 20,
+                      }}>
                         {item.icon}
                       </ListItemIcon>
                       <ListItemText
@@ -1394,12 +1296,12 @@ const Navbar = () => {
                         primaryTypographyProps={{
                           fontWeight: 700,
                           fontSize: 16,
-                          color: isActiveRoute(item.to) ? "#040DBF" : "#334155",
+                          color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326",
                         }}
                         secondaryTypographyProps={{
                           fontSize: 13,
                           fontWeight: 500,
-                          color: "#64748b",
+                          color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b",
                         }}
                       />
                     </MenuItemStyled>
@@ -1409,63 +1311,156 @@ const Navbar = () => {
             </Box>
           ))}
 
-          {/* Acciones */}
           <Box sx={{ mt: "auto", pt: 3, borderTop: "1px solid rgba(226, 232, 240, 0.8)" }}>
             <Stack spacing={2}>
-              <Button
+              <GlassButton
                 component={Link}
                 to="/profile"
                 onClick={toggleSidebar}
                 startIcon={<Gear size={20} weight="duotone" />}
-                sx={{
-                  justifyContent: "flex-start",
-                  py: 2,
-                  px: 3,
-                  borderRadius: 2,
-                  background: "rgba(248, 250, 252, 0.8)",
-                  border: "1px solid rgba(226, 232, 240, 0.8)",
-                  color: "#334155",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    background: "rgba(31, 100, 191, 0.08)",
-                    borderColor: "rgba(31, 100, 191, 0.2)",
-                    color: "#040DBF",
-                    transform: "translateY(-1px)",
-                  },
-                }}
+                sx={{ justifyContent: "flex-start", py: 2, px: 3, borderRadius: 2 }}
               >
                 Perfil
-              </Button>
+              </GlassButton>
               
-              <Button
-                onClick={handleLogout}
+              <GlassButton
+                variant="danger"
+                onClick={handleLogoutClick}
                 startIcon={<SignOut size={20} weight="duotone" />}
-                sx={{
-                  justifyContent: "flex-start",
-                  py: 2,
-                  px: 3,
-                  borderRadius: 2,
-                  background: "rgba(239, 68, 68, 0.08)",
-                  border: "1px solid rgba(239, 68, 68, 0.2)",
-                  color: "#dc2626",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    background: "rgba(239, 68, 68, 0.12)",
-                    borderColor: "rgba(239, 68, 68, 0.3)",
-                    transform: "translateY(-1px)",
-                  },
-                }}
+                sx={{ justifyContent: "flex-start", py: 2, px: 3, borderRadius: 2 }}
               >
                 Cerrar Sesión
-              </Button>
+              </GlassButton>
             </Stack>
           </Box>
-        </DrawerContent>
+
+          {/* Modal de confirmación de logout dentro del sidebar */}
+          {showLogoutConfirm && (
+            <>
+              <Box sx={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(4px)",
+                WebkitBackdropFilter: "blur(4px)",
+                zIndex: 1450,
+              }} onClick={handleLogoutCancel} />
+              
+              <LogoutConfirmationModal>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Box sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#FFFFFF",
+                  }}>
+                    <SignOut size={24} weight="duotone" />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" fontWeight={700} color="#010326" fontSize={18}>
+                      Cerrar Sesión
+                    </Typography>
+                    <Typography variant="body2" color="#64748b" fontSize={14}>
+                      ¿Estás seguro que deseas salir?
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Typography variant="body2" color="#475569" mb={3} fontSize={14}>
+                  Tu sesión actual se cerrará y serás redirigido a la página de inicio de sesión.
+                </Typography>
+                
+                <Stack direction="row" spacing={2}>
+                  <GlassButton onClick={handleLogoutCancel} sx={{
+                    flex: 1,
+                    py: 1.5,
+                    borderRadius: 2,
+                    background: "rgba(148, 163, 184, 0.2)",
+                    color: "#64748b",
+                    "&:hover": {
+                      background: "rgba(148, 163, 184, 0.3)",
+                      color: "#475569",
+                    },
+                  }}>
+                    Cancelar
+                  </GlassButton>
+                  
+                  <GlassButton variant="danger" onClick={handleLogoutConfirm} sx={{
+                    flex: 1,
+                    py: 1.5,
+                    borderRadius: 2,
+                  }}>
+                    Confirmar
+                  </GlassButton>
+                </Stack>
+              </LogoutConfirmationModal>
+            </>
+          )}
+        </Box>
       </StyledDrawer>
+
+      {/* Menús Desplegables - Solo cuando navbar visible y sidebar cerrado */}
+      {!isMobile && !isSidebarOpen && Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
+        <StyledPopper
+          key={key}
+          open={dropdownStates[key].open}
+          anchorEl={dropdownStates[key].anchor}
+          placement="bottom-end"
+          transition
+        >
+          {({ TransitionProps }) => (
+            <Fade {...TransitionProps} timeout={300}>
+              <Paper>
+                <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+                  <Box sx={{ p: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
+                      {dropdown.label}
+                    </Typography>
+                    <List dense sx={{ p: 0 }}>
+                      {dropdown.items.map((item) => (
+                        <MenuItemStyled
+                          key={item.to}
+                          component={Link}
+                          to={item.to}
+                          active={isActiveRoute(item.to)}
+                          onClick={() => handleDropdownClose(key)}
+                        >
+                          <ListItemIcon sx={{ 
+                            color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
+                            minWidth: 32 
+                          }}>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.label}
+                            secondary={item.description}
+                            primaryTypographyProps={{
+                              fontWeight: 600,
+                              fontSize: 14,
+                              color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326"
+                            }}
+                            secondaryTypographyProps={{
+                              fontSize: 12,
+                              color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b"
+                            }}
+                          />
+                        </MenuItemStyled>
+                      ))}
+                    </List>
+                  </Box>
+                </ClickAwayListener>
+              </Paper>
+            </Fade>
+          )}
+        </StyledPopper>
+      ))}
     </>
   );
 };

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login/Login';
+import Dashboard from './pages/Dashboard/Dashboard';
 import CatalogManagement from './pages/CatalogManagement/CatalogManagement';
 import DesignManagement from './pages/DesignManagement/DesignManagement';
 import SplashScreen from './components/SplashScreen/SplashScreen';
@@ -106,6 +107,18 @@ const AppContent = () => {
       />
       
       {/* Rutas protegidas (con navbar y footer) */}
+      <Route 
+        path="/Dashboard" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <Dashboard/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
       <Route 
         path="/catalog-management" 
         element={

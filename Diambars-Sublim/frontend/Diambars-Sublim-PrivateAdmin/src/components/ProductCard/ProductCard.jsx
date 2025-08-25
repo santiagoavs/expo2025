@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import './ProductCard.css';
-
-// Componentes de iconos simples como reemplazo
-const EditIcon = () => <span style={{ fontSize: 'inherit' }}>✏️</span>;
-const TrashIcon = () => <span style={{ fontSize: 'inherit' }}>🗑️</span>;
-const EyeIcon = () => <span style={{ fontSize: 'inherit' }}>👁️</span>;
-const StarIcon = () => <span style={{ fontSize: 'inherit' }}>⭐</span>;
-const InventoryIcon = () => <span style={{ fontSize: 'inherit' }}>📦</span>;
-const DollarIcon = () => <span style={{ fontSize: 'inherit' }}>💲</span>;
+import {
+  MagnifyingGlass as ViewIcon,
+  PencilSimple as EditIcon,
+  X as DeleteIcon,
+  Star as StarIcon,
+  Package as InventoryIcon,
+  Eye as EyeIcon,
+  Trash as TrashIcon,
+  CurrencyDollar as DollarIcon
+} from '@phosphor-icons/react';
 
 const ProductCard = ({ 
   id,
@@ -87,7 +89,7 @@ const ProductCard = ({
       {/* Ranking badge para productos top */}
       {isTopProduct && rank && (
         <div className="product-rank-badge">
-          <StarIcon />
+          <StarIcon size={16} weight="duotone" />
           <span>#{rank}</span>
         </div>
       )}
@@ -104,7 +106,7 @@ const ProductCard = ({
           />
         ) : (
           <div className="product-image-fallback">
-            <InventoryIcon />
+            <InventoryIcon size={24} weight="duotone" />
             <span>Sin imagen</span>
           </div>
         )}
@@ -117,21 +119,21 @@ const ProductCard = ({
               onClick={(e) => handleAction('view', e)}
               title="Ver producto"
             >
-              <EyeIcon />
+              <EyeIcon size={24} weight="duotone" />
             </button>
             <button 
               className="product-action-btn product-edit-btn"
               onClick={(e) => handleAction('edit', e)}
               title="Editar producto"
             >
-              <EditIcon />
+              <EditIcon size={24} weight="duotone" />
             </button>
             <button 
               className="product-action-btn product-delete-btn"
               onClick={(e) => handleAction('delete', e)}
               title="Eliminar producto"
             >
-              <TrashIcon />
+              <TrashIcon size={24} weight="duotone" />
             </button>
           </div>
         </div>
@@ -155,7 +157,7 @@ const ProductCard = ({
 
         <div className="product-card-details">
           <div className="product-card-price">
-            <DollarIcon />
+            <DollarIcon size={16} weight="duotone" />
             <span className="product-price-value">
               {formatPrice(price)}
             </span>
