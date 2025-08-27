@@ -472,6 +472,15 @@
   .login-form-container {
     padding: 1.5rem;
     margin-bottom: 80px;
+    width: 220px;
+  }
+
+  .login-form-container input {
+    width: 200px;
+  }
+  
+  .telephone-input {
+    width: 145px !important;
   }
 
   .tabs button {

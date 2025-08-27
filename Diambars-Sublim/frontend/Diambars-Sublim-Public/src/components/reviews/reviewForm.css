@@ -186,3 +186,46 @@ form {
   color: green;
   text-align: center;
 }
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .review-form {
+    width: 90%;
+    padding: 2rem;
+  }
+
+}
+
+/* Teléfonos grandes y pantallas pequeñas */
+@media (max-width: 768px) {
+  .review-form {
+    width: 95%;
+    padding: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .review-submit-button {
+    width: 100%;
+    font-size: 1rem;
+  }
+}
+
+/* Teléfonos muy pequeños */
+@media (max-width: 480px) {
+  .review-form {
+    width: 100%;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .review-submit-button {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+
+  .review-form h2 {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+}
