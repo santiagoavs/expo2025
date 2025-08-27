@@ -87,8 +87,9 @@ const GlassBase = styled(Box)(({ theme }) => ({
     inset 0 1px 0 rgba(255, 255, 255, 0.95)
   `,
   position: "relative",
-  overflow: "hidden",
-  transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+  overflow: "visible",
+  transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+  pointerEvents: "auto",
 
   "&::before": {
     content: '""',
@@ -99,26 +100,9 @@ const GlassBase = styled(Box)(({ theme }) => ({
     height: 1,
     background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.3), transparent)",
   },
-
-  "&::after": {
-    content: '""',
-    position: "absolute",
-    top: 0,
-    left: "-100%",
-    width: "100%",
-    height: "100%",
-    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
-    transition: "all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)",
-    opacity: 0,
-  },
-
-  "&:hover::after": {
-    left: "100%",
-    opacity: 1,
-  },
 }));
 
-const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, open }) => {
+const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, open, ...props }) => {
   const isActive = active || hasActiveItems;
   const isHover = open;
 
@@ -133,9 +117,10 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
     textTransform: "none",
     fontWeight: 600,
     fontSize: 14,
-    transition: "all 0.3s ease",
-    overflow: "hidden",
+    transition: "color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+    overflow: "visible",
     whiteSpace: "nowrap",
+    pointerEvents: "auto",
     
     // Solo aplicar estilos visuales cuando está activo, es danger o está open (hover)
     ...(isActive ? {
@@ -167,18 +152,6 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
       boxShadow: "none",
     }),
     
-    "&::before": {
-      content: '""',
-      position: "absolute",
-      top: 0,
-      left: "-100%",
-      width: "100%",
-      height: "100%",
-      background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
-      transition: "all 0.6s ease",
-      opacity: 0,
-    },
-    
     "&:hover": {
       // Solo efecto de reflejo, sin cambios de tamaño o posición
       ...(isActive ? {
@@ -194,11 +167,6 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
         // Hover minimalista solo con cambio de color
         color: "#040DBF",
       }),
-    },
-    
-    "&:hover::before": {
-      left: "100%",
-      opacity: 1,
     },
     
     [theme.breakpoints.down('lg')]: {
@@ -225,7 +193,7 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
   };
 });
 
-const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
+const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
   width: 44,
   height: 44,
   borderRadius: 12,
@@ -283,7 +251,7 @@ const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
   },
 }));
 
-const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden }) => ({
+const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden, ...props }) => ({
   position: "fixed",
   top: 0,
   left: 0,
@@ -335,23 +303,16 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const BrandContainer = styled(GlassBase)(({ theme }) => ({
+const BrandContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 16,
   cursor: "pointer",
-  borderRadius: 16,
   padding: "8px 12px",
   flex: "0 0 auto",
-
-  "&:hover": {
-    transform: "translateY(-2px)",
-    boxShadow: `
-      0 12px 40px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.2)
-    `,
-  },
+  background: "transparent",
+  border: "none",
+  boxShadow: "none",
 
   [theme.breakpoints.down('lg')]: {
     gap: 14,
@@ -376,14 +337,30 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   justifyContent: "center",
   borderRadius: 12,
   overflow: "hidden",
-  background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
-  boxShadow: "0 4px 12px rgba(4, 13, 191, 0.24)",
+  background: "transparent",
   transition: "all 0.3s ease",
   flexShrink: 0,
 
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
+    transition: "all 0.6s ease",
+    opacity: 0,
+    zIndex: 1,
+  },
+
+  "&:hover::before": {
+    left: "100%",
+    opacity: 1,
+  },
+
   "&:hover": {
-    transform: "scale(1.05) rotate(2deg)",
-    boxShadow: "0 6px 20px rgba(4, 13, 191, 0.32)",
+    transform: "scale(1.05)",
   },
 
   [theme.breakpoints.down('lg')]: {
@@ -413,6 +390,9 @@ const BrandText = styled(Box)(({ theme }) => ({
   flexDirection: "column",
   gap: 2,
   flex: "0 0 auto",
+  background: "transparent",
+  border: "none",
+  boxShadow: "none",
 
   [`@media (max-width: 320px)`]: {
     "& .brand-subtitle": {
@@ -477,6 +457,8 @@ const NavContainer = styled(GlassBase)(({ theme }) => ({
   gap: 4,
   borderRadius: 20,
   padding: "6px",
+  transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+  pointerEvents: "auto",
 
   [theme.breakpoints.down('lg')]: {
     gap: 3,
@@ -572,6 +554,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
 
 const StyledPopper = styled(Popper)(({ theme }) => ({
   zIndex: 1400,
+  pointerEvents: "auto",
 
   "& .MuiPaper-root": {
     background: "rgba(255, 255, 255, 0.95)",
@@ -585,9 +568,10 @@ const StyledPopper = styled(Popper)(({ theme }) => ({
     `,
     padding: "12px",
     minWidth: 280,
-    animation: `${slideInFromTop} 0.3s ease-out`,
+    animation: `${slideInFromTop} 0.2s ease-out`,
     marginTop: "8px !important",
-    overflow: "hidden",
+    overflow: "visible",
+    pointerEvents: "auto",
     
     "&::before": {
       content: '""',
@@ -662,7 +646,7 @@ const LogoutConfirmationModal = styled(Box)(({ theme }) => ({
   },
 }));
 
-const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
+const MenuItemStyled = styled(ListItemButton)(({ theme, active, ...props }) => ({
   borderRadius: 12,
   padding: "12px 16px",
   marginBottom: 4,
@@ -674,20 +658,10 @@ const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
   border: active 
     ? "1px solid rgba(255, 255, 255, 0.2)" 
     : "1px solid rgba(226, 232, 240, 0.6)",
-  transition: "all 0.3s ease",
-  overflow: "hidden",
+  transition: "background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+  overflow: "visible",
   position: "relative",
-
-  "&::before": {
-    content: '""',
-    position: "absolute",
-    top: 0,
-    left: "-100%",
-    width: "100%",
-    height: "100%",
-    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
-    transition: "left 0.6s ease",
-  },
+  pointerEvents: "auto",
 
   "&:hover": {
     background: active 
@@ -702,10 +676,6 @@ const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
       : "0 4px 12px rgba(31, 100, 191, 0.1)",
   },
 
-  "&:hover::before": {
-    animation: `${glassShine} 0.6s ease`,
-  },
-
   "&:last-child": {
     marginBottom: 0,
   },
@@ -717,6 +687,83 @@ const MenuItemStyled = styled(ListItemButton)(({ theme, active }) => ({
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     padding: "8px 12px",
     borderRadius: 8,
+  },
+}));
+
+const SidebarButton = styled(Button)(({ theme, variant, ...props }) => ({
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: "14px 20px",
+  minWidth: "auto",
+  borderRadius: 12,
+  textTransform: "none",
+  fontWeight: 600,
+  fontSize: 14,
+  transition: "all 0.3s ease",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  pointerEvents: "auto",
+  
+  ...(variant === "profile" ? {
+    color: "#FFFFFF",
+    background: "#040DBF",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    boxShadow: "0 4px 12px rgba(4, 13, 191, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+  } : variant === "danger" ? {
+    color: "#FFFFFF",
+    background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+    border: "1px solid rgba(255, 255, 255, 0.25)",
+    boxShadow: "0 4px 12px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+  } : {
+    color: "#64748b",
+    background: "rgba(248, 250, 252, 0.8)",
+    border: "1px solid rgba(226, 232, 240, 0.6)",
+    boxShadow: "none",
+  }),
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: "-100%",
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+    transition: "all 0.6s ease",
+    opacity: 0,
+    zIndex: 1,
+  },
+
+  "&:hover": {
+    ...(variant === "profile" ? {
+      background: "#1F64BF",
+      color: "#FFFFFF",
+      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      transform: "translateY(-1px)",
+    } : variant === "danger" ? {
+      background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
+      color: "#FFFFFF",
+      boxShadow: "0 6px 20px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      transform: "translateY(-1px)",
+    } : {
+      background: "rgba(31, 100, 191, 0.08)",
+      borderColor: "rgba(31, 100, 191, 0.2)",
+      color: "#040DBF",
+      transform: "translateY(-1px)",
+    }),
+  },
+
+  "&:hover::before": {
+    left: "100%",
+    opacity: 1,
+  },
+
+  [theme.breakpoints.down('md')]: {
+    padding: "12px 18px",
+    fontSize: 13,
+    gap: 10,
   },
 }));
 
@@ -1130,27 +1177,35 @@ const Navbar = () => {
           p: 3,
           borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
         }}>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Avatar sx={{
-              width: 40,
-              height: 40,
-              background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
-              color: "#FFFFFF",
-              fontWeight: 700,
-              fontSize: 18,
-              borderRadius: 2,
-            }}>
-              D
-            </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
-                DIAMBARS
-              </Typography>
-              <Typography variant="caption" color="#64748b" fontWeight={500}>
-                administración
-              </Typography>
-            </Box>
-          </Box>
+                     <Box display="flex" alignItems="center" gap={2}>
+             <Box sx={{
+               width: 40,
+               height: 40,
+               display: "flex",
+               alignItems: "center",
+               justifyContent: "center",
+               borderRadius: 2,
+               overflow: "hidden",
+             }}>
+               <img 
+                 src="/logo.png" 
+                 alt="DIAMBARS Logo" 
+                 style={{ 
+                   width: '100%', 
+                   height: '100%', 
+                   objectFit: 'contain'
+                 }} 
+               />
+             </Box>
+             <Box>
+               <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
+                 DIAMBARS
+               </Typography>
+               <Typography variant="caption" color="#64748b" fontWeight={500}>
+                 administración
+               </Typography>
+             </Box>
+           </Box>
           <GlassIconButton onClick={toggleSidebar} sx={{
             "&:hover": { transform: "rotate(90deg) scale(1.05)" }
           }}>
@@ -1182,7 +1237,9 @@ const Navbar = () => {
             borderRadius: 3,
             transition: "all 0.3s ease",
             position: "relative",
-            overflow: "hidden",
+            overflow: "visible",
+            width: "100%",
+            boxSizing: "border-box",
             "&::before": {
               content: '""',
               position: "absolute",
@@ -1197,12 +1254,12 @@ const Navbar = () => {
               boxShadow: "0 4px 12px rgba(31, 100, 191, 0.1)",
             },
           }}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <StyledAvatar sx={{ width: 56, height: 56, fontSize: 22 }}>
+            <Box display="flex" alignItems="center" gap={2} width="100%">
+              <StyledAvatar sx={{ width: 56, height: 56, fontSize: 22, flexShrink: 0 }}>
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </StyledAvatar>
-              <Box flex={1}>
-                <Typography variant="h6" fontWeight={700} color="#010326" fontSize={18}>
+              <Box flex={1} minWidth={0}>
+                <Typography variant="h6" fontWeight={700} color="#010326" fontSize={18} noWrap>
                   {user?.name || 'Usuario'}
                 </Typography>
                 <Chip label={user?.type || 'admin'} size="small" sx={{
@@ -1212,6 +1269,7 @@ const Navbar = () => {
                   fontSize: 11,
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
+                  mt: 0.5,
                 }} />
               </Box>
             </Box>
@@ -1313,24 +1371,25 @@ const Navbar = () => {
 
           <Box sx={{ mt: "auto", pt: 3, borderTop: "1px solid rgba(226, 232, 240, 0.8)" }}>
             <Stack spacing={2}>
-              <GlassButton
+              <SidebarButton
                 component={Link}
                 to="/profile"
                 onClick={toggleSidebar}
+                variant="profile"
                 startIcon={<Gear size={20} weight="duotone" />}
-                sx={{ justifyContent: "flex-start", py: 2, px: 3, borderRadius: 2 }}
+                sx={{ justifyContent: "flex-start", width: "100%" }}
               >
                 Perfil
-              </GlassButton>
+              </SidebarButton>
               
-              <GlassButton
+              <SidebarButton
                 variant="danger"
                 onClick={handleLogoutClick}
                 startIcon={<SignOut size={20} weight="duotone" />}
-                sx={{ justifyContent: "flex-start", py: 2, px: 3, borderRadius: 2 }}
+                sx={{ justifyContent: "flex-start", width: "100%" }}
               >
                 Cerrar Sesión
-              </GlassButton>
+              </SidebarButton>
             </Stack>
           </Box>
 

@@ -513,7 +513,7 @@ const CategoryManagement = () => {
   if (loading) {
     return (
       <div className="category-page">
-        <Navbar />
+
         <div className="category-loading">
           <div className="category-spinner"></div>
           <p>Cargando categorías...</p>
@@ -525,7 +525,6 @@ const CategoryManagement = () => {
   if (error) {
     return (
       <div className="category-page">
-        <Navbar />
         <div className="category-error">
           <div className="category-error__icon">❌</div>
           <h2>Error al cargar categorías</h2>
@@ -543,7 +542,6 @@ const CategoryManagement = () => {
 
   return (
     <div className="category-page">
-      <Navbar />
       
       <div className="category-container">
         <div className="category-content">

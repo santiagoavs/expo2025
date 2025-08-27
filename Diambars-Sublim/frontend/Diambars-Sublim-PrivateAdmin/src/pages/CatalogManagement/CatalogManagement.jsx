@@ -39,7 +39,6 @@ import {
   ChartLine
 } from '@phosphor-icons/react';
 
-import Navbar from '../../components/NavBar/NavBar';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import CreateProductModal from '../../components/CreateProductModal/CreateProductModal';
 import useProducts from '../../hooks/useProducts';
@@ -59,31 +58,40 @@ Swal.mixin({
   }
 });
 
-// ================ ESTILOS MODERNOS RESPONSIVE ================
-const PageContainer = styled(Box)({
+// ================ ESTILOS MODERNOS RESPONSIVE - CATALOGO ================
+const CatalogPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   background: 'white',
   width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
 });
 
-const ContentWrapper = styled(Box)(({ theme }) => ({
+const CatalogContentWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '1920px', // Máximo ancho permitido para pantallas grandes
+  maxWidth: '1600px', // Más ancho para mejor uso del espacio
   margin: '0 auto',
   paddingTop: '120px',
   paddingBottom: '40px',
-  paddingLeft: '24px', // Reducido para mejor uso del espacio
-  paddingRight: '24px',
+  paddingLeft: '32px',
+  paddingRight: '32px',
   minHeight: 'calc(100vh - 120px)',
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1400px',
+    paddingLeft: '28px',
+    paddingRight: '28px',
+  },
   [theme.breakpoints.down('lg')]: {
-    paddingLeft: '20px',
-    paddingRight: '20px',
+    maxWidth: '1200px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
   },
   [theme.breakpoints.down('md')]: {
     paddingTop: '110px',
-    paddingLeft: '18px',
-    paddingRight: '18px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
   },
   [theme.breakpoints.down('sm')]: {
     paddingTop: '100px',
@@ -92,7 +100,7 @@ const ContentWrapper = styled(Box)(({ theme }) => ({
   }
 }));
 
-const ModernCard = styled(Paper)(({ theme }) => ({
+const CatalogModernCard = styled(Paper)(({ theme }) => ({
   background: 'white',
   borderRadius: '16px',
   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
@@ -104,13 +112,17 @@ const ModernCard = styled(Paper)(({ theme }) => ({
   }
 }));
 
-const HeaderSection = styled(ModernCard)(({ theme }) => ({
-  padding: '32px',
+const CatalogHeaderSection = styled(CatalogModernCard)(({ theme }) => ({
+  padding: '40px',
   marginBottom: '32px',
   background: 'white',
   position: 'relative',
   zIndex: 1,
-  width: '100%', // Asegurar que ocupe todo el ancho
+  width: '100%',
+  boxSizing: 'border-box',
+  [theme.breakpoints.down('lg')]: {
+    padding: '32px',
+  },
   [theme.breakpoints.down('md')]: {
     padding: '24px',
     marginBottom: '24px',
@@ -121,15 +133,19 @@ const HeaderSection = styled(ModernCard)(({ theme }) => ({
   }
 }));
 
-const HeaderContent = styled(Box)(({ theme }) => ({
+const CatalogHeaderContent = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center', // Centrado vertical
   justifyContent: 'space-between',
-  gap: '24px',
-  width: '100%', // Asegurar ancho completo
+  gap: '32px',
+  width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    gap: '24px',
+  },
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
-    alignItems: 'stretch',
+    alignItems: 'center', // Centrado en móvil
+    textAlign: 'center', // Texto centrado
     gap: '20px',
   },
   [theme.breakpoints.down('sm')]: {
@@ -137,68 +153,94 @@ const HeaderContent = styled(Box)(({ theme }) => ({
   }
 }));
 
-const HeaderInfo = styled(Box)({
+const CatalogHeaderInfo = styled(Box)(({ theme }) => ({
   flex: 1,
-  width: '100%', // Asegurar ancho completo
-});
-
-const MainTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '2rem',
-  fontWeight: 700,
-  color: '#010326',
-  marginBottom: '8px',
-  letterSpacing: '-0.025em',
-  lineHeight: 1.2,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start', // Alineación a la izquierda en desktop
+  justifyContent: 'center',
   [theme.breakpoints.down('md')]: {
-    fontSize: '1.75rem',
-  },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '1.5rem',
+    alignItems: 'center', // Centrado en móvil
+    textAlign: 'center',
   }
 }));
 
-const MainDescription = styled(Typography)(({ theme }) => ({
-  fontSize: '1rem',
+const CatalogMainTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '2.5rem',
+  fontWeight: 700,
+  color: '#010326',
+  marginBottom: '12px',
+  letterSpacing: '-0.025em',
+  lineHeight: 1.2,
+  textAlign: 'left',
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '2.2rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.8rem',
+    textAlign: 'center',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.6rem',
+  }
+}));
+
+const CatalogMainDescription = styled(Typography)(({ theme }) => ({
+  fontSize: '1.1rem',
   color: '#032CA6',
   fontWeight: 400,
-  lineHeight: 1.5,
+  lineHeight: 1.6,
   opacity: 0.9,
+  textAlign: 'left',
+  maxWidth: '600px',
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '1rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '0.95rem',
+    textAlign: 'center',
+    maxWidth: '100%',
+  },
   [theme.breakpoints.down('sm')]: {
     fontSize: '0.9rem',
   }
 }));
 
-const HeaderActions = styled(Box)(({ theme }) => ({
+const CatalogHeaderActions = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: '12px',
-  alignItems: 'flex-start',
+  gap: '16px',
+  alignItems: 'center',
   flexShrink: 0,
+  [theme.breakpoints.down('lg')]: {
+    gap: '12px',
+  },
   [theme.breakpoints.down('md')]: {
-    justifyContent: 'flex-end',
-    gap: '10px',
-    width: '100%', // Asegurar ancho completo
+    justifyContent: 'center',
+    gap: '12px',
+    width: '100%',
   },
   [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     width: '100%',
-    gap: '8px',
+    gap: '10px',
     '& > *': {
-      width: '100%',
+      flex: 1,
     }
   }
 }));
 
-const PrimaryActionButton = styled(Button)(({ theme }) => ({
+const CatalogPrimaryActionButton = styled(Button)(({ theme }) => ({
   background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
   color: 'white',
   borderRadius: '12px',
-  padding: '12px 24px',
-  fontSize: '0.875rem',
+  padding: '14px 28px',
+  fontSize: '0.9rem',
   fontWeight: 600,
   textTransform: 'none',
   boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  minWidth: '140px',
+  minWidth: '160px',
+  whiteSpace: 'nowrap',
   '&:hover': {
     background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
     boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)',
@@ -207,75 +249,91 @@ const PrimaryActionButton = styled(Button)(({ theme }) => ({
   '&:active': {
     transform: 'translateY(0)',
   },
+  [theme.breakpoints.down('lg')]: {
+    minWidth: '140px',
+    padding: '12px 24px',
+    fontSize: '0.875rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    minWidth: 'auto',
+    flex: 1,
+  },
   [theme.breakpoints.down('sm')]: {
     minWidth: 'auto',
-    padding: '12px 16px',
-    justifyContent: 'center',
+    padding: '12px 20px',
+    fontSize: '0.85rem',
   }
 }));
 
-const SecondaryActionButton = styled(IconButton)(({ theme }) => ({
+const CatalogSecondaryActionButton = styled(IconButton)(({ theme }) => ({
   background: alpha('#1F64BF', 0.08),
   color: '#1F64BF',
   borderRadius: '12px',
-  width: '48px',
-  height: '48px',
+  width: '52px',
+  height: '52px',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   flexShrink: 0,
   '&:hover': {
     background: alpha('#1F64BF', 0.12),
     transform: 'translateY(-1px)',
   },
-  [theme.breakpoints.down('sm')]: {
-    width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    width: '48px',
     height: '48px',
-    borderRadius: '12px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '48px',
+    height: '48px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '48px',
+    height: '48px',
   }
 }));
 
-// CONTENEDOR UNIFICADO corregido
-const UnifiedContainer = styled(Box)(({ theme }) => ({
+// CONTENEDOR UNIFICADO CATALOGO
+const CatalogUnifiedContainer = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '100%', // Usar todo el ancho disponible
+  maxWidth: '100%',
   margin: '0 auto',
 }));
 
-const StatsContainer = styled(UnifiedContainer)(({ theme }) => ({
+const CatalogStatsContainer = styled(CatalogUnifiedContainer)(({ theme }) => ({
   marginBottom: '32px',
   position: 'relative',
   zIndex: 1,
 }));
 
-// GRID DE ESTADÍSTICAS MEJORADO - SOLUCIÓN AL SOLAPAMIENTO
-const StatsGrid = styled(Box)(({ theme }) => ({
+// GRID DE ESTADÍSTICAS CATALOGO - MEJORADO
+const CatalogStatsGrid = styled(Box)(({ theme }) => ({
   width: '100%',
   display: 'grid',
-  gap: '20px',
+  gap: '24px',
   // Grid responsivo mejorado
   gridTemplateColumns: 'repeat(4, 1fr)', // Desktop - 4 columnas iguales
   [theme.breakpoints.down(1400)]: { // Pantallas grandes pero no ultra wide
     gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '18px',
+    gap: '20px',
   },
   [theme.breakpoints.down('lg')]: { // Tablets grandes (≥992px) 
     gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 grid para tablets
-    gap: '16px',
+    gap: '18px',
   },
   [theme.breakpoints.down('md')]: { // Tablets pequeñas (≥768px)
     gridTemplateColumns: 'repeat(2, 1fr)', // Mantener 2x2
-    gap: '14px',
+    gap: '16px',
   },
   [theme.breakpoints.down('sm')]: { // Móviles grandes (≥600px)
     gridTemplateColumns: 'repeat(2, 1fr)', // 2 columnas en móviles grandes
-    gap: '12px',
+    gap: '14px',
   },
   [theme.breakpoints.down(480)]: { // Móviles pequeños
     gridTemplateColumns: '1fr', // 1 columna para móviles muy pequeños
-    gap: '10px',
+    gap: '12px',
   }
 }));
 
-const StatCard = styled(ModernCard)(({ theme, variant }) => {
+const CatalogStatCard = styled(CatalogModernCard)(({ theme, variant }) => {
   const variants = {
     primary: {
       background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
@@ -291,9 +349,9 @@ const StatCard = styled(ModernCard)(({ theme, variant }) => {
   const selectedVariant = variants[variant] || variants.secondary;
 
   return {
-    padding: '24px',
+    padding: '28px',
     width: '100%',
-    minHeight: '140px', // Altura mínima consistente
+    minHeight: '160px', // Altura mínima consistente
     maxHeight: 'auto', // Permitir crecimiento si es necesario
     display: 'flex',
     flexDirection: 'column',
@@ -307,39 +365,39 @@ const StatCard = styled(ModernCard)(({ theme, variant }) => {
       position: 'absolute',
       top: 0,
       right: 0,
-      width: '100px',
-      height: '100px',
+      width: '120px',
+      height: '120px',
       background: 'rgba(255, 255, 255, 0.1)',
       borderRadius: '50%',
       transform: 'translate(30px, -30px)',
     } : {},
     [theme.breakpoints.down('lg')]: {
-      padding: '20px',
-      minHeight: '130px',
+      padding: '24px',
+      minHeight: '150px',
     },
     [theme.breakpoints.down('md')]: {
-      padding: '18px',
-      minHeight: '120px',
+      padding: '20px',
+      minHeight: '140px',
     },
     [theme.breakpoints.down('sm')]: {
-      padding: '16px',
-      minHeight: '110px',
+      padding: '18px',
+      minHeight: '130px',
     }
   };
 });
 
-const StatHeader = styled(Box)({
+const CatalogStatHeader = styled(Box)({
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'space-between',
-  marginBottom: '12px',
+  marginBottom: '16px',
   width: '100%',
 });
 
-const StatIconContainer = styled(Box)(({ variant, theme }) => ({
-  width: '48px',
-  height: '48px',
-  borderRadius: '12px',
+const CatalogStatIconContainer = styled(Box)(({ variant, theme }) => ({
+  width: '56px',
+  height: '56px',
+  borderRadius: '14px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -348,39 +406,49 @@ const StatIconContainer = styled(Box)(({ variant, theme }) => ({
     : alpha('#1F64BF', 0.1),
   color: variant === 'primary' ? 'white' : '#1F64BF',
   flexShrink: 0,
+  [theme.breakpoints.down('lg')]: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+  },
   [theme.breakpoints.down('md')]: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '10px',
+  },
+  [theme.breakpoints.down('sm')]: {
     width: '40px',
     height: '40px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    width: '36px',
-    height: '36px',
+    borderRadius: '10px',
   }
 }));
 
-const StatValue = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '2rem',
+const CatalogStatValue = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '2.2rem',
   fontWeight: 700,
   lineHeight: 1.1,
-  marginBottom: '4px',
+  marginBottom: '6px',
   color: variant === 'primary' ? 'white' : '#010326',
   [theme.breakpoints.down('lg')]: {
-    fontSize: '1.8rem',
+    fontSize: '2rem',
   },
   [theme.breakpoints.down('md')]: {
-    fontSize: '1.6rem',
+    fontSize: '1.8rem',
   },
   [theme.breakpoints.down('sm')]: {
-    fontSize: '1.4rem',
+    fontSize: '1.6rem',
   }
 }));
 
-const StatLabel = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '0.875rem',
+const CatalogStatLabel = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '0.9rem',
   fontWeight: 500,
   opacity: variant === 'primary' ? 0.9 : 0.7,
   color: variant === 'primary' ? 'white' : '#032CA6',
   lineHeight: 1.3,
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '0.875rem',
+  },
   [theme.breakpoints.down('md')]: {
     fontSize: '0.8rem',
   },
@@ -389,13 +457,13 @@ const StatLabel = styled(Typography)(({ variant, theme }) => ({
   }
 }));
 
-const StatChange = styled(Box)(({ variant, trend }) => ({
+const CatalogStatChange = styled(Box)(({ variant, trend }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '4px',
+  gap: '6px',
   marginTop: 'auto', // Empujar hacia abajo
-  padding: '4px 8px',
-  borderRadius: '6px',
+  padding: '6px 10px',
+  borderRadius: '8px',
   background: variant === 'primary' 
     ? 'rgba(255, 255, 255, 0.15)' 
     : trend === 'up' 
@@ -404,8 +472,8 @@ const StatChange = styled(Box)(({ variant, trend }) => ({
   width: 'fit-content',
 }));
 
-const StatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
-  fontSize: '0.75rem',
+const CatalogStatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
+  fontSize: '0.8rem',
   fontWeight: 600,
   color: variant === 'primary' 
     ? 'white' 
@@ -413,57 +481,64 @@ const StatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
       ? '#10B981' 
       : '#EF4444',
   [theme.breakpoints.down('sm')]: {
-    fontSize: '0.7rem',
+    fontSize: '0.75rem',
   }
 }));
 
-const ControlsSection = styled(ModernCard)(({ theme }) => ({
-  padding: '24px',
+const CatalogControlsSection = styled(CatalogModernCard)(({ theme }) => ({
+  padding: '32px',
   marginBottom: '32px',
   background: 'white',
   position: 'relative',
   zIndex: 1,
   width: '100%',
+  boxSizing: 'border-box',
+  [theme.breakpoints.down('lg')]: {
+    padding: '28px',
+  },
   [theme.breakpoints.down('md')]: {
-    padding: '20px',
+    padding: '24px',
     marginBottom: '24px',
   },
   [theme.breakpoints.down('sm')]: {
-    padding: '18px',
+    padding: '20px',
     marginBottom: '20px',
   }
 }));
 
-const ControlsContent = styled(Box)(({ theme }) => ({
+const CatalogControlsContent = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
-  gap: '20px',
+  alignItems: 'flex-start',
+  gap: '24px',
   width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    gap: '20px',
+  },
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '16px',
+    gap: '18px',
   },
   [theme.breakpoints.down('sm')]: {
-    gap: '14px',
+    gap: '16px',
   }
 }));
 
-const SearchSection = styled(Box)(({ theme }) => ({
+const CatalogSearchSection = styled(Box)(({ theme }) => ({
   flex: 1,
-  maxWidth: '500px',
-  width: '100%', // Asegurar ancho completo
+  minWidth: 0, // Permitir que se encoja
   [theme.breakpoints.down('md')]: {
-    maxWidth: 'none',
+    flex: 'none',
+    width: '100%',
   }
 }));
 
-const ModernTextField = styled(TextField)(({ theme }) => ({
+const CatalogModernTextField = styled(TextField)(({ theme }) => ({
+  width: '100%',
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
     backgroundColor: '#F2F2F2',
     transition: 'all 0.3s ease',
-    width: '100%', // Asegurar ancho completo
     '& fieldset': {
       border: 'none',
     },
@@ -474,103 +549,133 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
     '&.Mui-focused': {
       backgroundColor: 'white',
       boxShadow: '0 4px 16px rgba(31, 100, 191, 0.12)',
+    },
+    '& input': {
+      // Asegurar que el texto sea visible
+      color: '#010326',
+      fontSize: '0.9rem',
+      fontWeight: 500,
+      '&::placeholder': {
+        color: '#64748b',
+        opacity: 1,
+      }
     }
   }
 }));
 
-const FiltersSection = styled(Box)(({ theme }) => ({
+const CatalogFiltersSection = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
+  gap: '14px',
   flexWrap: 'wrap',
-  width: '100%', // Asegurar ancho completo
+  flexShrink: 0, // Evitar que se encoja
+  [theme.breakpoints.down('lg')]: {
+    gap: '12px',
+  },
   [theme.breakpoints.down('md')]: {
     justifyContent: 'flex-start',
-    gap: '10px',
+    gap: '12px',
+    width: '100%',
   },
   [theme.breakpoints.down('sm')]: {
     justifyContent: 'center',
-    gap: '8px',
+    gap: '10px',
     '& > *': {
       minWidth: 'fit-content',
     }
   }
 }));
 
-const FilterChip = styled(Box)(({ theme, active }) => ({
+const CatalogFilterChip = styled(Box)(({ theme, active }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '8px 12px',
-  borderRadius: '8px',
+  gap: '8px',
+  padding: '10px 14px',
+  borderRadius: '10px',
   background: active ? alpha('#1F64BF', 0.1) : '#F2F2F2',
   border: `1px solid ${active ? alpha('#1F64BF', 0.2) : 'transparent'}`,
   cursor: 'pointer',
   transition: 'all 0.2s ease',
-  fontSize: '0.875rem',
+  fontSize: '0.9rem',
   fontWeight: 500,
   color: active ? '#1F64BF' : '#032CA6',
+  whiteSpace: 'nowrap', // Evitar que el texto se rompa
   '&:hover': {
     background: active ? alpha('#1F64BF', 0.15) : 'white',
     transform: 'translateY(-1px)',
   },
+  [theme.breakpoints.down('lg')]: {
+    padding: '8px 12px',
+    fontSize: '0.875rem',
+  },
   [theme.breakpoints.down('sm')]: {
-    padding: '6px 10px',
+    padding: '8px 10px',
     fontSize: '0.8rem',
   }
 }));
 
-const ProductsSection = styled(UnifiedContainer)({
+const CatalogProductsSection = styled(CatalogUnifiedContainer)({
   marginBottom: '32px',
   position: 'relative',
   zIndex: 1,
 });
 
-const SectionHeader = styled(Box)(({ theme }) => ({
+const CatalogSectionHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginBottom: '24px',
-  paddingBottom: '16px',
+  marginBottom: '28px',
+  paddingBottom: '18px',
   borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  width: '100%', // Asegurar ancho completo
+  width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    marginBottom: '24px',
+    paddingBottom: '16px',
+  },
   [theme.breakpoints.down('sm')]: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: '12px',
+    gap: '14px',
     marginBottom: '20px',
     paddingBottom: '12px',
   }
 }));
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '1.5rem',
+const CatalogSectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.6rem',
   fontWeight: 600,
   color: '#010326',
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: '10px',
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '1.5rem',
+  },
   [theme.breakpoints.down('sm')]: {
     fontSize: '1.3rem',
   }
 }));
 
-const ProductsGrid = styled(Box)(({ theme }) => ({
+const CatalogProductsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
-  gap: '24px',
+  gap: '28px',
   width: '100%',
-  // Grid responsivo para productos mejorado
-  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', // Desktop
+  // Grid responsivo para productos mejorado - 4 columnas por fila
+  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', // Desktop - 4 columnas
+  [theme.breakpoints.down('xl')]: {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gap: '24px',
+  },
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
     gap: '20px',
   },
   [theme.breakpoints.down('md')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
     gap: '18px',
   },
   [theme.breakpoints.down('sm')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '16px',
   },
   [theme.breakpoints.down(480)]: {
@@ -579,12 +684,15 @@ const ProductsGrid = styled(Box)(({ theme }) => ({
   }
 }));
 
-const EmptyState = styled(ModernCard)(({ theme }) => ({
-  padding: '80px 40px',
+const CatalogEmptyState = styled(CatalogModernCard)(({ theme }) => ({
+  padding: '100px 40px',
   textAlign: 'center',
   background: 'white',
   border: `2px dashed ${alpha('#1F64BF', 0.2)}`,
   width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    padding: '80px 30px',
+  },
   [theme.breakpoints.down('md')]: {
     padding: '60px 30px',
   },
@@ -593,16 +701,21 @@ const EmptyState = styled(ModernCard)(({ theme }) => ({
   }
 }));
 
-const EmptyStateIcon = styled(Box)(({ theme }) => ({
-  width: '80px',
-  height: '80px',
+const CatalogEmptyStateIcon = styled(Box)(({ theme }) => ({
+  width: '90px',
+  height: '90px',
   borderRadius: '50%',
   background: alpha('#1F64BF', 0.1),
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '0 auto 24px',
+  margin: '0 auto 28px',
   color: '#1F64BF',
+  [theme.breakpoints.down('lg')]: {
+    width: '80px',
+    height: '80px',
+    marginBottom: '24px',
+  },
   [theme.breakpoints.down('sm')]: {
     width: '60px',
     height: '60px',
@@ -610,23 +723,31 @@ const EmptyStateIcon = styled(Box)(({ theme }) => ({
   }
 }));
 
-const EmptyStateTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '1.5rem',
+const CatalogEmptyStateTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.6rem',
   fontWeight: 600,
   color: '#010326',
-  marginBottom: '12px',
+  marginBottom: '14px',
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '1.5rem',
+  },
   [theme.breakpoints.down('sm')]: {
     fontSize: '1.3rem',
   }
 }));
 
-const EmptyStateDescription = styled(Typography)(({ theme }) => ({
-  fontSize: '1rem',
+const CatalogEmptyStateDescription = styled(Typography)(({ theme }) => ({
+  fontSize: '1.1rem',
   color: '#032CA6',
-  marginBottom: '32px',
-  maxWidth: '400px',
-  margin: '0 auto 32px',
-  lineHeight: 1.5,
+  marginBottom: '36px',
+  maxWidth: '450px',
+  margin: '0 auto 36px',
+  lineHeight: 1.6,
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '1rem',
+    marginBottom: '32px',
+    maxWidth: '400px',
+  },
   [theme.breakpoints.down('sm')]: {
     fontSize: '0.9rem',
     marginBottom: '24px',
@@ -634,21 +755,21 @@ const EmptyStateDescription = styled(Typography)(({ theme }) => ({
   }
 }));
 
-const LoadingContainer = styled(Box)({
+const CatalogLoadingContainer = styled(Box)({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   minHeight: '60vh',
-  gap: '20px',
+  gap: '24px',
 });
 
-const LoadingOverlay = styled(ModernCard)({
+const CatalogLoadingOverlay = styled(CatalogModernCard)({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '12px',
-  padding: '20px',
+  gap: '14px',
+  padding: '24px',
   marginBottom: '24px',
   background: alpha('#1F64BF', 0.04),
 });
@@ -972,10 +1093,9 @@ const CatalogManagement = () => {
   // ==================== RENDER ====================
   if (loading && !hasProducts) {
     return (
-      <PageContainer>
-        <Navbar />
-        <ContentWrapper>
-          <LoadingContainer>
+      <CatalogPageContainer>
+        <CatalogContentWrapper>
+          <CatalogLoadingContainer>
             <CircularProgress 
               size={48} 
               sx={{ 
@@ -986,52 +1106,50 @@ const CatalogManagement = () => {
             <Typography component="div" variant="body1" sx={{ color: '#010326', fontWeight: 600 }}>
               Cargando catálogo de productos...
             </Typography>
-          </LoadingContainer>
-        </ContentWrapper>
-      </PageContainer>
+          </CatalogLoadingContainer>
+        </CatalogContentWrapper>
+      </CatalogPageContainer>
     );
   }
 
   return (
-    <PageContainer>
-      <Navbar />
-      
-      <ContentWrapper>
+    <CatalogPageContainer>
+      <CatalogContentWrapper>
         {/* Header Principal */}
-        <HeaderSection>
-          <HeaderContent>
-            <HeaderInfo>
-              <MainTitle>
+        <CatalogHeaderSection>
+          <CatalogHeaderContent>
+            <CatalogHeaderInfo>
+              <CatalogMainTitle>
                 Gestión de Productos
-              </MainTitle>
-              <MainDescription>
+              </CatalogMainTitle>
+              <CatalogMainDescription>
                 Administra tu catálogo de productos personalizados y plantillas
-              </MainDescription>
-            </HeaderInfo>
+              </CatalogMainDescription>
+            </CatalogHeaderInfo>
             
-            <HeaderActions>
-              <PrimaryActionButton
+            <CatalogHeaderActions>
+              <CatalogPrimaryActionButton
                 onClick={handleCreateProduct}
                 disabled={loading}
                 startIcon={<Plus size={18} weight="bold" />}
               >
                 Nuevo Producto
-              </PrimaryActionButton>
+              </CatalogPrimaryActionButton>
               
-              <SecondaryActionButton
+              <CatalogSecondaryActionButton
                 onClick={fetchProducts}
                 disabled={loading}
                 title="Refrescar productos"
               >
                 <ArrowsClockwise size={20} weight="bold" />
-              </SecondaryActionButton>
-            </HeaderActions>
-          </HeaderContent>
-        </HeaderSection>
+              </CatalogSecondaryActionButton>
+            </CatalogHeaderActions>
+          </CatalogHeaderContent>
+        </CatalogHeaderSection>
 
         {/* Mensajes de Error */}
         {error && (
-          <ModernCard sx={{ 
+          <CatalogModernCard sx={{ 
             p: 3, 
             mb: 4,
             background: alpha('#dc2626', 0.05),
@@ -1055,43 +1173,43 @@ const CatalogManagement = () => {
                 Reintentar
               </Button>
             </Box>
-          </ModernCard>
+          </CatalogModernCard>
         )}
 
         {/* Estadísticas - Ahora alineadas con el contenido */}
-        <StatsContainer>
-          <StatsGrid>
+        <CatalogStatsContainer>
+          <CatalogStatsGrid>
             {stats.map((stat) => (
-              <StatCard key={stat.id} variant={stat.variant}>
-                <StatHeader>
+              <CatalogStatCard key={stat.id} variant={stat.variant}>
+                <CatalogStatHeader>
                   <Box>
-                    <StatValue variant={stat.variant}>
+                    <CatalogStatValue variant={stat.variant}>
                       {stat.value}
-                    </StatValue>
-                    <StatLabel variant={stat.variant}>
+                    </CatalogStatValue>
+                    <CatalogStatLabel variant={stat.variant}>
                       {stat.title}
-                    </StatLabel>
+                    </CatalogStatLabel>
                   </Box>
-                  <StatIconContainer variant={stat.variant}>
+                  <CatalogStatIconContainer variant={stat.variant}>
                     <stat.icon size={24} weight="duotone" />
-                  </StatIconContainer>
-                </StatHeader>
-                <StatChange variant={stat.variant} trend={stat.trend}>
+                  </CatalogStatIconContainer>
+                </CatalogStatHeader>
+                <CatalogStatChange variant={stat.variant} trend={stat.trend}>
                   <TrendUp size={12} weight="bold" />
-                  <StatTrendText variant={stat.variant} trend={stat.trend}>
+                  <CatalogStatTrendText variant={stat.variant} trend={stat.trend}>
                     {stat.change}
-                  </StatTrendText>
-                </StatChange>
-              </StatCard>
+                  </CatalogStatTrendText>
+                </CatalogStatChange>
+              </CatalogStatCard>
             ))}
-          </StatsGrid>
-        </StatsContainer>
+          </CatalogStatsGrid>
+        </CatalogStatsContainer>
 
         {/* Controles de búsqueda y filtros */}
-        <ControlsSection>
-          <ControlsContent>
-            <SearchSection>
-              <ModernTextField
+        <CatalogControlsSection>
+          <CatalogControlsContent>
+            <CatalogSearchSection>
+              <CatalogModernTextField
                 fullWidth
                 placeholder="Buscar productos por nombre..."
                 value={searchQuery}
@@ -1104,10 +1222,10 @@ const CatalogManagement = () => {
                   ),
                 }}
               />
-            </SearchSection>
+            </CatalogSearchSection>
 
-            <FiltersSection>
-              <FilterChip 
+            <CatalogFiltersSection>
+              <CatalogFilterChip 
                 active={selectedFilter !== 'all'}
                 onClick={() => setSelectedFilter(selectedFilter === 'all' ? 'active' : 'all')}
               >
@@ -1124,6 +1242,7 @@ const CatalogManagement = () => {
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
+                        color: '#010326',
                       }
                     }}
                   >
@@ -1132,9 +1251,9 @@ const CatalogManagement = () => {
                     <MenuItem value="inactive">Inactivos</MenuItem>
                   </Select>
                 </FormControl>
-              </FilterChip>
+              </CatalogFilterChip>
 
-              <FilterChip active={selectedCategory !== ''}>
+              <CatalogFilterChip active={selectedCategory !== ''}>
                 <Package size={16} weight="bold" />
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <Select
@@ -1149,6 +1268,7 @@ const CatalogManagement = () => {
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
+                        color: '#010326',
                       }
                     }}
                   >
@@ -1164,9 +1284,9 @@ const CatalogManagement = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </FilterChip>
+              </CatalogFilterChip>
 
-              <FilterChip active={sortOption !== 'newest'}>
+              <CatalogFilterChip active={sortOption !== 'newest'}>
                 <ChartLine size={16} weight="bold" />
                 <FormControl size="small" sx={{ minWidth: 100 }}>
                   <Select
@@ -1179,6 +1299,7 @@ const CatalogManagement = () => {
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
+                        color: '#010326',
                       }
                     }}
                   >
@@ -1190,7 +1311,7 @@ const CatalogManagement = () => {
                     <MenuItem value="price_desc">Precio ↓</MenuItem>
                   </Select>
                 </FormControl>
-              </FilterChip>
+              </CatalogFilterChip>
 
               {(searchQuery || selectedFilter !== 'all' || selectedCategory || sortOption !== 'newest') && (
                 <Button
@@ -1213,14 +1334,14 @@ const CatalogManagement = () => {
                   Limpiar
                 </Button>
               )}
-            </FiltersSection>
-          </ControlsContent>
-        </ControlsSection>
+            </CatalogFiltersSection>
+          </CatalogControlsContent>
+        </CatalogControlsSection>
 
         {/* Lista de Productos */}
-        <ProductsSection>
-          <SectionHeader>
-            <SectionTitle component="div">
+        <CatalogProductsSection>
+          <CatalogSectionHeader>
+            <CatalogSectionTitle component="div">
   <Box sx={{ 
     display: 'flex', 
     alignItems: 'center',
@@ -1239,23 +1360,23 @@ const CatalogManagement = () => {
       }}
     />
   </Box>
-</SectionTitle>
-          </SectionHeader>
+</CatalogSectionTitle>
+          </CatalogSectionHeader>
 
           {/* Estado de carga durante refetch */}
           {loading && hasProducts && (
-            <LoadingOverlay>
+            <CatalogLoadingOverlay>
               <CircularProgress size={20} sx={{ color: '#1F64BF' }} />
               <Typography variant="body2" sx={{ color: '#1F64BF', fontWeight: 600 }}>
                 Actualizando productos...
               </Typography>
-            </LoadingOverlay>
+            </CatalogLoadingOverlay>
           )}
 
           {/* Lista de productos */}
           {products.length > 0 ? (
             <>
-              <ProductsGrid>
+              <CatalogProductsGrid>
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -1274,7 +1395,7 @@ const CatalogManagement = () => {
                     onView={() => handleViewProduct(product.id)}
                   />
                 ))}
-              </ProductsGrid>
+              </CatalogProductsGrid>
 
               {/* Paginación */}
               {pagination.totalPages > 1 && (
@@ -1310,7 +1431,7 @@ const CatalogManagement = () => {
                     ← Anterior
                   </Button>
                   
-                  <ModernCard sx={{ 
+                  <CatalogModernCard sx={{ 
                     px: 3, 
                     py: 1,
                     minWidth: { xs: '100%', sm: 'auto' },
@@ -1319,7 +1440,7 @@ const CatalogManagement = () => {
                     <Typography variant="body2" sx={{ color: '#032CA6', fontWeight: 600 }}>
                       {pagination.currentPage} de {pagination.totalPages}
                     </Typography>
-                  </ModernCard>
+                  </CatalogModernCard>
                   
                   <Button
                     variant="outlined"
@@ -1348,22 +1469,22 @@ const CatalogManagement = () => {
               )}
             </>
           ) : (
-            <EmptyState>
-              <EmptyStateIcon>
+            <CatalogEmptyState>
+              <CatalogEmptyStateIcon>
                 <Package size={40} weight="duotone" />
-              </EmptyStateIcon>
-              <EmptyStateTitle>
+              </CatalogEmptyStateIcon>
+              <CatalogEmptyStateTitle>
                 {searchQuery || selectedFilter !== 'all' || selectedCategory 
                   ? 'No hay productos que coincidan' 
                   : 'No hay productos en el catálogo'
                 }
-              </EmptyStateTitle>
-              <EmptyStateDescription>
+              </CatalogEmptyStateTitle>
+              <CatalogEmptyStateDescription>
                 {searchQuery || selectedFilter !== 'all' || selectedCategory
                   ? 'Intenta ajustar los filtros de búsqueda o crear un nuevo producto para comenzar'
                   : 'Comienza creando tu primer producto personalizado para el catálogo'
                 }
-              </EmptyStateDescription>
+              </CatalogEmptyStateDescription>
               
               <Box sx={{ 
                 display: 'flex', 
@@ -1373,7 +1494,7 @@ const CatalogManagement = () => {
                 alignItems: 'center',
                 width: '100%'
               }}>
-                <PrimaryActionButton
+                <CatalogPrimaryActionButton
                   onClick={handleCreateProduct}
                   startIcon={<Plus size={18} weight="bold" />}
                   sx={{
@@ -1381,7 +1502,7 @@ const CatalogManagement = () => {
                   }}
                 >
                   Crear Producto
-                </PrimaryActionButton>
+                </CatalogPrimaryActionButton>
                 
                 {process.env.NODE_ENV === 'development' && (
                   <Button
@@ -1406,23 +1527,23 @@ const CatalogManagement = () => {
                   </Button>
                 )}
               </Box>
-            </EmptyState>
+            </CatalogEmptyState>
           )}
-        </ProductsSection>
-      </ContentWrapper>
+        </CatalogProductsSection>
+      </CatalogContentWrapper>
 
-      {/* Modal de creación/edición de producto */}
-      {showCreateModal && (
-        <CreateProductModal
-          isOpen={showCreateModal}
-          onClose={handleCloseModal}
-          onCreateProduct={handleProductCreated}
-          editMode={!!editingProduct}
-          productToEdit={editingProduct}
-        />
-      )}
-    </PageContainer>
-  );
-};
+             {/* Modal de creación/edición de producto */}
+       {showCreateModal && (
+         <CreateProductModal
+           isOpen={showCreateModal}
+           onClose={handleCloseModal}
+           onCreateProduct={handleProductCreated}
+           editMode={!!editingProduct}
+           productToEdit={editingProduct}
+         />
+       )}
+     </CatalogPageContainer>
+   );
+ };
 
 export default CatalogManagement;

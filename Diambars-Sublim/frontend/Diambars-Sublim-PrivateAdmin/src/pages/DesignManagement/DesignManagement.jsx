@@ -46,8 +46,7 @@ import {
   PencilSimple
 } from '@phosphor-icons/react';
 
-// Importar componentes personalizados
-import Navbar from '../../components/NavBar/NavBar';
+// Importar componentes personalizados  
 import DesignCard from '../../components/DesignCard/DesignCard';
 import CreateDesignModal from '../../components/CreateDesignModal/CreateDesignModal';
 import QuoteDesignModal from '../../components/QuoteDesignModal/QuoteDesignModal';
@@ -59,23 +58,32 @@ import useProducts from '../../hooks/useProducts';
 import useUsers from '../../hooks/useUsers';
 
 // ================ ESTILOS MODERNOS ================
-const PageContainer = styled(Box)({
+const DesignPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   background: 'white',
   width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
 });
 
-const ContentWrapper = styled(Box)(({ theme }) => ({
+const DesignContentWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '1920px',
+  maxWidth: '1600px',
   margin: '0 auto',
   paddingTop: '120px',
   paddingBottom: '40px',
   paddingLeft: '24px',
   paddingRight: '24px',
   minHeight: 'calc(100vh - 120px)',
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1400px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
   [theme.breakpoints.down('lg')]: {
+    maxWidth: '1200px',
     paddingLeft: '20px',
     paddingRight: '20px',
   },
@@ -104,7 +112,7 @@ const ModernCard = styled(Paper)(({ theme }) => ({
 }));
 
 // Header Section
-const HeaderSection = styled(ModernCard)(({ theme }) => ({
+const DesignHeaderSection = styled(ModernCard)(({ theme }) => ({
   padding: '32px',
   marginBottom: '32px',
   background: 'white',
@@ -121,7 +129,7 @@ const HeaderSection = styled(ModernCard)(({ theme }) => ({
   }
 }));
 
-const HeaderContent = styled(Box)(({ theme }) => ({
+const DesignHeaderContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'space-between',
@@ -129,7 +137,7 @@ const HeaderContent = styled(Box)(({ theme }) => ({
   width: '100%',
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
-    alignItems: 'stretch',
+    alignItems: 'center',
     gap: '20px',
   },
   [theme.breakpoints.down('sm')]: {
@@ -137,10 +145,13 @@ const HeaderContent = styled(Box)(({ theme }) => ({
   }
 }));
 
-const HeaderInfo = styled(Box)({
+const DesignHeaderInfo = styled(Box)(({ theme }) => ({
   flex: 1,
   width: '100%',
-});
+  [theme.breakpoints.down('md')]: {
+    textAlign: 'center',
+  }
+}));
 
 const MainTitle = styled(Typography)(({ theme }) => ({
   fontSize: '2rem',
@@ -421,7 +432,7 @@ const StatTrend = styled(Box)(({ variant, theme }) => ({
 }));
 
 // Controles y filtros
-const ControlsSection = styled(ModernCard)(({ theme }) => ({
+const DesignControlsSection = styled(ModernCard)(({ theme }) => ({
   padding: '24px',
   marginBottom: '32px',
   background: 'white',
@@ -438,14 +449,14 @@ const ControlsSection = styled(ModernCard)(({ theme }) => ({
   }
 }));
 
-const ControlsContent = styled(Box)(({ theme }) => ({
+const DesignControlsContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: '20px',
   width: '100%',
 }));
 
-const SearchSection = styled(Box)(({ theme }) => ({
+const DesignSearchSection = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
@@ -457,7 +468,7 @@ const SearchSection = styled(Box)(({ theme }) => ({
   }
 }));
 
-const ModernTextField = styled(TextField)(({ theme }) => ({
+const DesignModernTextField = styled(TextField)(({ theme }) => ({
   flex: 1,
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
@@ -474,11 +485,18 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
     '&.Mui-focused': {
       backgroundColor: 'white',
       boxShadow: '0 4px 16px rgba(31, 100, 191, 0.12)',
+    },
+    '& input': {
+      color: '#010326',
+      '&::placeholder': {
+        color: '#032CA6',
+        opacity: 0.7,
+      }
     }
   }
 }));
 
-const FiltersSection = styled(Box)(({ theme }) => ({
+const DesignFiltersSection = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
@@ -497,7 +515,7 @@ const FiltersSection = styled(Box)(({ theme }) => ({
   }
 }));
 
-const FilterControl = styled(FormControl)(({ theme }) => ({
+const DesignFilterControl = styled(FormControl)(({ theme }) => ({
   minWidth: '140px',
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
@@ -515,6 +533,9 @@ const FilterControl = styled(FormControl)(({ theme }) => ({
     '&.Mui-focused': {
       backgroundColor: 'white',
       boxShadow: '0 4px 16px rgba(31, 100, 191, 0.12)',
+    },
+    '& .MuiSelect-select': {
+      color: '#010326',
     }
   },
   [theme.breakpoints.down('sm')]: {
@@ -522,7 +543,7 @@ const FilterControl = styled(FormControl)(({ theme }) => ({
   }
 }));
 
-const SortControl = styled(Box)(({ theme }) => ({
+const DesignSortControl = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
@@ -578,17 +599,21 @@ const DesignsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gap: '24px',
   width: '100%',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+  [theme.breakpoints.down('xl')]: {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gap: '20px',
+  },
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
     gap: '20px',
   },
   [theme.breakpoints.down('md')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
     gap: '18px',
   },
   [theme.breakpoints.down('sm')]: {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '16px',
   },
   [theme.breakpoints.down(480)]: {
@@ -1239,9 +1264,8 @@ const DesignManagement = () => {
   
   if (loading && !hasDesigns && designs.length === 0) {
     return (
-      <PageContainer>
-        <Navbar />
-        <ContentWrapper>
+      <DesignPageContainer>
+        <DesignContentWrapper>
           <LoadingContainer>
             <CircularProgress 
               size={48} 
@@ -1257,22 +1281,21 @@ const DesignManagement = () => {
               Preparando tu panel administrativo
             </Typography>
           </LoadingContainer>
-        </ContentWrapper>
-      </PageContainer>
+        </DesignContentWrapper>
+      </DesignPageContainer>
     );
   }
 
   // ==================== RENDER PRINCIPAL ====================
   
   return (
-    <PageContainer>
-      <Navbar />
+    <DesignPageContainer>
       
-      <ContentWrapper>
+      <DesignContentWrapper>
         {/* Header Principal */}
-        <HeaderSection>
-          <HeaderContent>
-            <HeaderInfo>
+        <DesignHeaderSection>
+          <DesignHeaderContent>
+            <DesignHeaderInfo>
               <MainTitle>
                 <Palette size={32} weight="duotone" />
                 Gestión de Diseños
@@ -1280,7 +1303,7 @@ const DesignManagement = () => {
               <MainDescription>
                 Administra diseños personalizados, cotizaciones y flujo de aprobación de clientes
               </MainDescription>
-            </HeaderInfo>
+            </DesignHeaderInfo>
             
             <HeaderActions>
               <SecondaryActionButton
@@ -1309,8 +1332,8 @@ const DesignManagement = () => {
                 Nuevo Diseño
               </PrimaryActionButton>
             </HeaderActions>
-          </HeaderContent>
-        </HeaderSection>
+          </DesignHeaderContent>
+        </DesignHeaderSection>
 
         {/* Alerta de Error */}
         {error && (
@@ -1374,11 +1397,11 @@ const DesignManagement = () => {
         </StatsContainer>
 
         {/* Controles de búsqueda y filtros */}
-        <ControlsSection>
-          <ControlsContent>
+        <DesignControlsSection>
+          <DesignControlsContent>
             {/* Barra de búsqueda principal */}
-            <SearchSection>
-              <ModernTextField
+            <DesignSearchSection>
+              <DesignModernTextField
                 placeholder="Buscar diseños por nombre, cliente o producto..."
                 value={searchQuery}
                 onChange={handleSearchChange}
@@ -1391,7 +1414,7 @@ const DesignManagement = () => {
                 }}
               />
               
-              <SortControl onClick={handleSortChange}>
+              <DesignSortControl onClick={handleSortChange}>
                 <Typography variant="body2" sx={{ color: '#032CA6', fontWeight: 500 }}>
                   Fecha
                 </Typography>
@@ -1400,12 +1423,12 @@ const DesignManagement = () => {
                 ) : (
                   <SortAscending size={16} weight="bold" color="#032CA6" />
                 )}
-              </SortControl>
-            </SearchSection>
+              </DesignSortControl>
+            </DesignSearchSection>
 
             {/* Filtros avanzados */}
-            <FiltersSection>
-              <FilterControl size="small">
+            <DesignFiltersSection>
+              <DesignFilterControl size="small">
                 <Select
                   value={selectedStatus}
                   onChange={handleStatusChange}
@@ -1454,9 +1477,9 @@ const DesignManagement = () => {
                     </Box>
                   </MenuItem>
                 </Select>
-              </FilterControl>
+              </DesignFilterControl>
 
-              <FilterControl size="small">
+              <DesignFilterControl size="small">
                 <Select
                   value={selectedProduct}
                   onChange={handleProductChange}
@@ -1494,9 +1517,9 @@ const DesignManagement = () => {
                     </MenuItem>
                   ))}
                 </Select>
-              </FilterControl>
+              </DesignFilterControl>
 
-              <FilterControl size="small">
+              <DesignFilterControl size="small">
                 <Select
                   value={selectedUser}
                   onChange={handleUserChange}
@@ -1519,7 +1542,7 @@ const DesignManagement = () => {
                     </MenuItem>
                   ))}
                 </Select>
-              </FilterControl>
+              </DesignFilterControl>
 
               {/* Botón para limpiar filtros */}
               {(searchQuery || selectedStatus || selectedProduct || selectedUser) && (
@@ -1545,9 +1568,9 @@ const DesignManagement = () => {
                   </Button>
                 </Tooltip>
               )}
-            </FiltersSection>
-          </ControlsContent>
-        </ControlsSection>
+            </DesignFiltersSection>
+          </DesignControlsContent>
+        </DesignControlsSection>
 
         {/* Lista de Diseños */}
         <DesignsSection>
@@ -1831,7 +1854,7 @@ const DesignManagement = () => {
             </Typography>
           </Box>
         )}
-      </ContentWrapper>
+      </DesignContentWrapper>
 
       {/* ==================== MODALES ==================== */}
 
@@ -1872,7 +1895,7 @@ const DesignManagement = () => {
           enableZoom={true}
         />
       )}
-    </PageContainer>
+    </DesignPageContainer>
   );
 };
 
