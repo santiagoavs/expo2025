@@ -1,4 +1,4 @@
-  .about-page {
+.about-page {
     min-height: 120vh;
     display: flex;
     flex-direction: column;
@@ -31,6 +31,7 @@
     font-family: 'Inter', sans-serif;
     position: relative;
     overflow: hidden;
+    scroll-behavior: smooth;
     }
     
     @keyframes backgroundFlow {
@@ -65,6 +66,73 @@
           0% 0%;
       }
     }
+
+  /* Estilos para el sistema de pestañas */
+  .about-tabs-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 120px;
+    margin-bottom: 2rem;
+    z-index: 2;
+    position: relative;
+  }
+
+  .about-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 3rem;
+    max-width: 1200px;
+    padding: 1rem 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
+
+  .about-tabs button {
+    padding: 1rem 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Spectral';
+    font-style: italic;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #3F2724;
+    transition: all 0.3s ease;
+    position: relative;
+    text-align: center;
+    letter-spacing: -1.8px;
+  }
+
+  .about-tabs button:hover {
+    color: #63423c;
+    transform: translateY(-2px);
+    text-shadow: 0 2px 4px rgba(63, 39, 36, 0.2);
+  }
+
+  .about-tabs button.active {
+    color: #503531;
+    transform: translateY(-2px);
+    text-shadow: 0 2px 6px rgba(63, 39, 36, 0.3);
+  }
+
+  .about-tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #b02f2f83, #8b2635);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: 0 2px 8px rgba(176, 47, 47, 0.3);
+  }
   
   .about-main-container {
     height: auto;
@@ -80,6 +148,8 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     border: 1px solid rgba(255, 255, 255, 0.4);
     animation: fadeInUp 0.6s ease-out;
+    transform-origin: top center;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }  
 
   .about-main-container::before {
@@ -96,21 +166,12 @@
 
   .about-bg-logo {
     position: absolute;
-    bottom: 380px;
+    bottom: 770px;
     left: 50%;
     transform: translateX(-50%);
     max-width: 90%;
     z-index: 0;
     pointer-events: none;
-  }
-  
-  .about-title {
-    font-family: 'DiambarsFont';
-    font-size: 3rem;
-    margin-bottom: 2rem;
-    margin-top: 120px;
-    text-align: center;
-    z-index: 2;
   }
   
   .about-main-text {
@@ -122,7 +183,165 @@
     color: #3F2724;
     padding: 0 1rem;
   }
-  
+
+  .accordion-item {
+    position: relative;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    max-width: 850px;
+    width: 90%;
+    z-index: 2;
+    background: rgba(255, 246, 226, 0.08); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.05),
+      0 0 0 1px rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    transform-origin: top;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .accordion-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(
+      220deg,
+      rgba(255, 246, 226, 0.15), 
+      rgba(245, 231, 198, 0.08) 
+    );
+    z-index: -1;
+    transform: translateY(6px) scale(0.98);
+    filter: blur(8px);
+    opacity: 0.5;
+  }
+
+  .accordion-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 24px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+  .accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+  }
+
+  .accordion-header:hover {
+    background: rgba(255, 246, 226, 0.15);
+  }
+
+  .accordion-header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+    color: #3F2724;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4); 
+  }
+
+  .accordion-arrow {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #3F2724;
+    border-radius: 50%;
+    color: #3F2724;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  .accordion-arrow::before {
+    content: '';
+    width: 8px;
+    height: 2px;
+    background: #3F2724;
+    position: absolute;
+    transition: all 0.3s ease;
+  }
+
+  .accordion-arrow::after {
+    content: '';
+    width: 2px;
+    height: 8px;
+    background: #3F2724;
+    position: absolute;
+    transition: all 0.3s ease;
+  }
+
+  .accordion-arrow.open {
+    border-color: #b02f2f83;
+    background: rgba(176, 47, 47, 0.1);
+    transform: rotate(180deg);
+  }
+
+  .accordion-arrow.open::before {
+    background: #b02f2f83;
+  }
+
+  .accordion-arrow.open::after {
+    background: #b02f2f83;
+    transform: rotate(90deg);
+    opacity: 0;
+  }
+
+  .accordion-content {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.4s ease 0.1s,
+                transform 0.4s ease;
+  }
+
+  .accordion-content.open {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+    transition: max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.5s ease,
+                transform 0.5s ease;
+  }
+
+  .accordion-body {
+    padding: 0 2rem 1.5rem 2rem;
+    transform: translateY(-10px);
+    transition: transform 0.3s ease;
+  }
+
+  .accordion-content.open .accordion-body {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .accordion-body p,
+  .accordion-body ul {
+    color: #3F2724;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    margin-bottom: 1rem;
+  }
+
+  .accordion-body ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .accordion-body strong {
+    color: #2d1e1b;
+  }
+
   .about-section {
     position: relative;
     border-radius: 12px;
@@ -152,7 +371,6 @@
     transform: translateY(6px) scale(0.98);
     filter: blur(8px);
     opacity: 0.5;
-    
   }
 
   .about-section h3 {
@@ -185,11 +403,39 @@
 .about-page::-webkit-scrollbar-thumb:hover {
   background: rgba(63, 39, 36, 0.6);
 }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
   
   @media (max-width: 768px) {
-    .about-title {
-      font-size: 2.2rem;
+    .about-tabs-container {
+      margin-top: 100px;
+      padding: 0 1rem;
     }
+
+    .about-tabs {
+      gap: 2rem;
+      padding: 0.5rem 0;
+    }
+
+    .about-tabs button {
+      font-size: 1.4rem;
+      padding: 0.8rem 0;
+    }
+
+    .about-tabs button.active::after {
+      width: 60px;
+      height: 3px;
+    }
+
     .about-bg-logo {
       bottom: 600px;
     }
@@ -198,23 +444,59 @@
       font-size: 1rem;
     }
   
+    .accordion-item,
     .about-section {
       padding: 1.2rem;
       max-width: 400px;
     }
-  
+
+    .accordion-header {
+      padding: 1.2rem;
+    }
+
+    .accordion-body {
+      padding: 0 1.2rem 1.2rem 1.2rem;
+    }
+
+    .accordion-header h3,
     .about-section h3 {
       font-size: 1.1rem;
     }
+
+    .accordion-arrow {
+      width: 20px;
+      height: 20px;
+    }
+
+    .accordion-arrow::before {
+      width: 6px;
+    }
+
+    .accordion-arrow::after {
+      height: 6px;
+    }
   
+    .accordion-body ul li,
     .about-section ul li {
       font-size: 0.95rem;
     }
   }
 
   @media (max-width: 500px) {
-    .about-title {
-      font-size: 2.2rem;
+    .about-tabs {
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .about-tabs button {
+      font-size: 1.2rem;
+      padding: 0.6rem 0;
+    }
+
+    .about-tabs button.active::after {
+      width: 50px;
+      height: 2px;
     }
 
     .about-bg-logo {
@@ -225,15 +507,31 @@
       font-size: 1rem;
     }
   
+    .accordion-item,
     .about-section {
       padding: 1.2rem;
       max-width: 300px;
     }
+
+    .accordion-arrow {
+      width: 18px;
+      height: 18px;
+    }
+
+    .accordion-arrow::before {
+      width: 5px;
+    }
+
+    .accordion-arrow::after {
+      height: 5px;
+    }
   
+    .accordion-header h3,
     .about-section h3 {
       font-size: 1.1rem;
     }
   
+    .accordion-body ul li,
     .about-section ul li {
       font-size: 0.95rem;
     }
@@ -241,25 +539,30 @@
 
   /* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
   @media (min-width: 1201px) and (max-width: 1599px) {
+    .accordion-item,
     .about-section { max-width: 900px; }
   }
   @media (min-width: 1061px) and (max-width: 1200px) {
-    .about-title { font-size: 2.8rem; }
+    .accordion-item,
     .about-section { max-width: 820px; }
   }
   @media (min-width: 900px) and (max-width: 1060px) {
+    .accordion-item,
     .about-section { max-width: 760px; }
   }
   @media (min-width: 600px) and (max-width: 767px) {
+    .accordion-item,
     .about-section { max-width: 520px; }
   }
   @media (min-width: 480px) and (max-width: 599px) {
+    .accordion-item,
     .about-section { max-width: 420px; }
   }
   @media (min-width: 360px) and (max-width: 479px) {
+    .accordion-item,
     .about-section { max-width: 340px; }
   }
   @media (max-width: 359px) {
+    .accordion-item,
     .about-section { max-width: 300px; }
   }
-  
