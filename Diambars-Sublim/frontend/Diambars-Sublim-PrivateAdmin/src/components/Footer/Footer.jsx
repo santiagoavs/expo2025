@@ -1,21 +1,80 @@
 // src/components/Footer/Footer.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Phone, 
   MapPin, 
   EnvelopeSimple, 
-  InstagramLogo, 
-  FacebookLogo, 
-  TwitterLogo, 
-  LinkedinLogo, 
-  Heart,
+  WhatsappLogo,
   Shield,
-  Clock
+  Clock,
+  House,
+  Users,
+  Folders,
+  PaintBrush,
+  ChartBar,
+  Calculator,
+  CaretDown,
+  CaretUp
 } from '@phosphor-icons/react';
 import './Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [openDropdowns, setOpenDropdowns] = useState({});
+
+  const toggleDropdown = (section) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const navigationSections = {
+    principales: {
+      title: "Accesos Rápidos",
+      icon: <House size={16} weight="duotone" />,
+      isQuickAccess: true,
+      links: [
+        { to: "/dashboard", label: "Dashboard" },
+        { to: "/quotes", label: "Cotización" },
+        { to: "/design-management", label: "Editor de Diseños" }
+      ]
+    },
+    personal: {
+      title: "Personal",
+      icon: <Users size={16} weight="duotone" />,
+      links: [
+        { to: "/employees", label: "Empleados" },
+        { to: "/users", label: "Usuarios" }
+      ]
+    },
+    gestion: {
+      title: "Gestión",
+      icon: <Folders size={16} weight="duotone" />,
+      links: [
+        { to: "/catalog-management", label: "Catálogo" },
+        { to: "/orders", label: "Pedidos" },
+        { to: "/category-management", label: "Categorías" },
+        { to: "/reviews", label: "Reseñas" }
+      ]
+    },
+    herramientas: {
+      title: "Herramientas",
+      icon: <PaintBrush size={16} weight="duotone" />,
+      links: [
+        { to: "/manual-orders", label: "Pedido Manual" }
+      ]
+    },
+    analisis: {
+      title: "Análisis",
+      icon: <ChartBar size={16} weight="duotone" />,
+      links: [
+        { to: "/payment-dashboard", label: "Dashboard de Pagos" },
+        { to: "/reports", label: "Reportes" },
+        { to: "/address-dashboard", label: "Dashboard de Direcciones" }
+      ]
+    }
+  };
 
   return (
     <footer className="footer-private">
@@ -60,36 +119,62 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Sección central - Enlaces útiles */}
-        <div className="footer-private__section footer-private__section--links">
-          <h4 className="footer-private__section-title">Enlaces Útiles</h4>
-          <div className="footer-private__links-grid">
-            <div className="footer-private__links-column">
-              <a href="/catalog-management" className="footer-private__link">
-                Gestión de Catálogo
-              </a>
-              <a href="/orders" className="footer-private__link">
-                Pedidos
-              </a>
-              <a href="/employees" className="footer-private__link">
-                Empleados
-              </a>
-            </div>
-            <div className="footer-private__links-column">
-              <a href="/users" className="footer-private__link">
-                Usuarios
-              </a>
-              <a href="/category-management" className="footer-private__link">
-                Categorías
-              </a>
-              <a href="/profile" className="footer-private__link">
-                Perfil
-              </a>
-            </div>
+        {/* Sección central - Navegación completa con dropdowns */}
+        <div className="footer-private__section footer-private__section--navigation">
+          <h4 className="footer-private__section-title">Navegación del Sistema</h4>
+          
+          <div className="footer-private__navigation-sections">
+            {Object.entries(navigationSections).map(([key, section]) => (
+              <div 
+                key={key} 
+                className={`footer-private__nav-section ${
+                  section.isQuickAccess ? 'footer-private__nav-section--quick-access' : ''
+                }`}
+              >
+                <div 
+                  className="footer-private__nav-header"
+                  onClick={() => toggleDropdown(key)}
+                >
+                  <div className="footer-private__nav-title">
+                    {section.icon}
+                    <span>{section.title}</span>
+                    {section.isQuickAccess && (
+                      <span className="footer-private__quick-badge"></span>
+                    )}
+                  </div>
+                  <div className="footer-private__nav-toggle">
+                    {openDropdowns[key] ? 
+                      <CaretUp size={14} weight="bold" /> : 
+                      <CaretDown size={14} weight="bold" />
+                    }
+                  </div>
+                </div>
+                
+                <div className={`footer-private__nav-links ${openDropdowns[key] ? 'footer-private__nav-links--open' : ''}`}>
+                  {section.links.map((link) => (
+                    <a 
+                      key={link.to} 
+                      href={link.to} 
+                      className="footer-private__nav-link"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Enlace directo a perfil */}
+          <div className="footer-private__quick-links">
+            <a href="/profile" className="footer-private__quick-link">
+              <Shield size={16} weight="duotone" />
+              Mi Perfil
+            </a>
           </div>
         </div>
 
-        {/* Sección derecha - Estado del sistema y redes */}
+        {/* Sección derecha - Estado del sistema y WhatsApp */}
         <div className="footer-private__section footer-private__section--status">
           <h4 className="footer-private__section-title">Estado del Sistema</h4>
           
@@ -101,43 +186,17 @@ const Footer = () => {
           </div>
 
           <div className="footer-private__social">
-            <h5 className="footer-private__social-title">Síguenos</h5>
+            <h5 className="footer-private__social-title">Contacto</h5>
             <div className="footer-private__social-icons">
               <a 
-                href="https://facebook.com" 
+                href="https://wa.me/50322345678" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="footer-private__social-link"
-                title="Facebook"
+                className="footer-private__social-link footer-private__social-link--whatsapp"
+                title="WhatsApp"
               >
-                <FacebookLogo size={18} weight="duotone" />
-              </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="footer-private__social-link"
-                title="Instagram"
-              >
-                <InstagramLogo size={18} weight="duotone" />
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="footer-private__social-link"
-                title="Twitter"
-              >
-                <TwitterLogo size={18} weight="duotone" />
-              </a>
-              <a 
-                href="https://linkedin.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="footer-private__social-link"
-                title="LinkedIn"
-              >
-                <LinkedinLogo size={18} weight="duotone" />
+                <WhatsappLogo size={20} weight="duotone" />
+                <span className="footer-private__whatsapp-text">WhatsApp</span>
               </a>
             </div>
           </div>
