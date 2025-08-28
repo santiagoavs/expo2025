@@ -103,22 +103,29 @@
     border: none;
     cursor: pointer;
     color: #3F2724;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     text-align: center;
     letter-spacing: -1.8px;
+    transform: translateY(0);
   }
 
-  .about-tabs button:hover {
+  .about-tabs button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: translateY(0) scale(0.95);
+  }
+
+  .about-tabs button:hover:not(:disabled) {
     color: #63423c;
-    transform: translateY(-2px);
-    text-shadow: 0 2px 4px rgba(63, 39, 36, 0.2);
+    transform: translateY(-3px);
+    text-shadow: 0 4px 8px rgba(63, 39, 36, 0.3);
   }
 
   .about-tabs button.active {
     color: #503531;
-    transform: translateY(-2px);
-    text-shadow: 0 2px 6px rgba(63, 39, 36, 0.3);
+    transform: translateY(-3px);
+    text-shadow: 0 4px 12px rgba(63, 39, 36, 0.4);
   }
 
   .about-tabs button.active::after {
@@ -132,6 +139,18 @@
     border-radius: 2px;
     transform: translateX(-50%);
     box-shadow: 0 2px 8px rgba(176, 47, 47, 0.3);
+    animation: tabIndicator 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tabIndicator {
+    from {
+      width: 0;
+      opacity: 0;
+    }
+    to {
+      width: 80px;
+      opacity: 1;
+    }
   }
   
   .about-main-container {
@@ -147,10 +166,27 @@
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     border: 1px solid rgba(255, 255, 255, 0.4);
-    animation: fadeInUp 0.6s ease-out;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     transform-origin: top center;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 1;
+    transform: translateY(0);
   }  
+
+  .about-main-container.tab-transition {
+    animation: tabContentTransition 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tabContentTransition {
+    0% {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 
   .about-main-container::before {
     content: "";
@@ -166,12 +202,22 @@
 
   .about-bg-logo {
     position: absolute;
-    bottom: 770px;
+    bottom: 730px;
     left: 50%;
     transform: translateX(-50%);
     max-width: 90%;
     z-index: 0;
     pointer-events: none;
+    animation: logoFloat 6s ease-in-out infinite;
+  }
+
+  @keyframes logoFloat {
+    0%, 100% {
+      transform: translateX(-50%) translateY(0px);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-10px);
+    }
   }
   
   .about-main-text {
@@ -182,7 +228,50 @@
     z-index: 2;
     color: #3F2724;
     padding: 0 1rem;
+    animation: textFadeIn 0.8s ease-out 0.2s both;
   }
+
+  @keyframes textFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .about-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: containerFadeIn 0.8s ease-out 0.4s both;
+    min-height: 400px;
+    position: relative;
+  }
+
+  @keyframes containerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Clase específica para animaciones de carga de acordeones */
+  .accordion-item.loading-animation {
+    animation: accordionItemFadeIn 0.6s ease-out both;
+  }
+
+  .accordion-item.loading-animation:nth-child(1) { animation-delay: 0.1s; }
+  .accordion-item.loading-animation:nth-child(2) { animation-delay: 0.2s; }
+  .accordion-item.loading-animation:nth-child(3) { animation-delay: 0.3s; }
+  .accordion-item.loading-animation:nth-child(4) { animation-delay: 0.4s; }
+  .accordion-item.loading-animation:nth-child(5) { animation-delay: 0.5s; }
 
   .accordion-item {
     position: relative;
@@ -198,7 +287,24 @@
       0 0 0 1px rgba(255, 255, 255, 0.15);
     overflow: hidden;
     transform-origin: top;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .accordion-item:nth-child(1) { animation-delay: 0.1s; }
+  .accordion-item:nth-child(2) { animation-delay: 0.2s; }
+  .accordion-item:nth-child(3) { animation-delay: 0.3s; }
+  .accordion-item:nth-child(4) { animation-delay: 0.4s; }
+  .accordion-item:nth-child(5) { animation-delay: 0.5s; }
+
+  @keyframes accordionItemFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   .accordion-item::before {
@@ -218,10 +324,10 @@
   }
 
   .accordion-item:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.02);
     box-shadow: 
-        0 6px 24px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(255, 255, 255, 0.2);
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
   .accordion-header {
@@ -238,7 +344,7 @@
   }
 
   .accordion-header:hover {
-    background: rgba(255, 246, 226, 0.15);
+    background: rgba(255, 246, 226, 0.2);
   }
 
   .accordion-header h3 {
@@ -246,6 +352,11 @@
     margin: 0;
     color: #3F2724;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4); 
+    transition: all 0.3s ease;
+  }
+
+  .accordion-header:hover h3 {
+    transform: translateX(5px);
   }
 
   .accordion-arrow {
@@ -269,7 +380,7 @@
     height: 2px;
     background: #3F2724;
     position: absolute;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .accordion-arrow::after {
@@ -278,53 +389,34 @@
     height: 8px;
     background: #3F2724;
     position: absolute;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .accordion-arrow.open {
     border-color: #b02f2f83;
     background: rgba(176, 47, 47, 0.1);
-    transform: rotate(180deg);
+    transform: rotate(0deg) scale(1.1);
   }
 
   .accordion-arrow.open::before {
     background: #b02f2f83;
+    transform: rotate(0deg);
   }
 
   .accordion-arrow.open::after {
     background: #b02f2f83;
     transform: rotate(90deg);
-    opacity: 0;
+    opacity: 1;
   }
 
+  /* Animación específica para el contenido del acordeón */
   .accordion-content {
     overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
-                opacity 0.4s ease 0.1s,
-                transform 0.4s ease;
-  }
-
-  .accordion-content.open {
-    opacity: 1;
-    max-height: 2000px;
-    transform: translateY(0);
-    transition: max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
-                opacity 0.5s ease,
-                transform 0.5s ease;
+    transition: none; /* Sin transición CSS para evitar conflictos */
   }
 
   .accordion-body {
     padding: 0 2rem 1.5rem 2rem;
-    transform: translateY(-10px);
-    transition: transform 0.3s ease;
-  }
-
-  .accordion-content.open .accordion-body {
-    transform: translateY(0);
-    opacity: 1;
   }
 
   .accordion-body p,
@@ -336,6 +428,7 @@
 
   .accordion-body ul li {
     margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
   }
 
   .accordion-body strong {
@@ -407,7 +500,7 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
