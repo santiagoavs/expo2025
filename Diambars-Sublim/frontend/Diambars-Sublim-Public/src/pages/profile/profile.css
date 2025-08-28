@@ -77,18 +77,6 @@
   }
 }
 
-.profile-title {
-  text-align: center;
-  font-size: 3rem;
-  margin-top: 140px;
-  font-family: 'DiambarsFont';
-  font-weight: bold;
-  font-style: italic;
-  color: #3F2724;
-  position: relative;
-  z-index: 1;
-}
-
 .login-container {
   display: flex;
   justify-content: center;
@@ -101,7 +89,7 @@
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap; 
-  margin-bottom: 100px;
+  margin: 120px auto;
   position: relative;
   z-index: 1;
 }

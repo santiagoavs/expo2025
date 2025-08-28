@@ -323,7 +323,7 @@ const Contact = () => {
                 <PhoneIcon />
                 <div className="contact-info-content">
                   <h3>Teléfono</h3>
-                  <p>+503 0000-0000</p>
+                  <p>+503 7016-4304</p>
                 </div>
               </div>
               

@@ -27,7 +27,6 @@ const Profile = () => {
   //Si ya está autenticado, mostramos el perfil
   return (
     <main className="profile-page">
-      <h1 className="profile-title">Personaliza tu perfil</h1>
       <section className="profile-container">
         <div className="left-column">
           <UserInfo />

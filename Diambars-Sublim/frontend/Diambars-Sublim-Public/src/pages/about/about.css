@@ -630,7 +630,7 @@
     }
   }
 
-  /* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
+  /* ==================== RESPONSIVE ==================== */
   @media (min-width: 1201px) and (max-width: 1599px) {
     .accordion-item,
     .about-section { max-width: 900px; }

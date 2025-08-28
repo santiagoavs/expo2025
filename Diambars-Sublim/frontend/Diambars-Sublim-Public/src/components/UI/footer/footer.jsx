@@ -30,7 +30,7 @@ const Footer = () => {
           </div>
           <p className="footer-tagline">Calidad superior en sublimación</p>
           <p className="footer-description">
-            Nos especializamos en la creatividad de nuestros clientes; si puedes imaginarlo, puedes hacerlo. En Diambars Sublim eres
+            En Diambars Sublim eres
             tú el que decide lo que quiere, desde qué material utilizaremos para fabricar tu producto, hasta las ideas más únicas
             para la personalización de los mismos. No te quedes con las ganas, coméntanos hasta el más mínimo detalle, nosotros 
             hacemos el resto.

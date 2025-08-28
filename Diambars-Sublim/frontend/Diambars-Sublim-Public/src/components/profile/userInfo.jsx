@@ -293,7 +293,6 @@ function UserInfo() {
               disabled
               readOnly
             />
-            <span onClick={() => setShowPassword(!showPassword)} className="toggle-eye">👁️</span>
           </div>
         </div>
         
