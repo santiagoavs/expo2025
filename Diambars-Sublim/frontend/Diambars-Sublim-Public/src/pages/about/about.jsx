@@ -111,6 +111,56 @@ const About = () => {
     );
   };
 
+  // MODIFICACIÓN: useEffect para manejar el hash en la URL
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1); // Eliminar el '#'
+      if (hash) {
+        let targetTab = '';
+        let targetAccordionId = '';
+
+        // Determinar la pestaña y el acordeón a abrir
+        if (hash === 'custom-orders' || hash === 'bulk-orders') {
+          targetTab = 'about';
+          targetAccordionId = hash;
+        } else if (hash === 'terms') {
+          targetTab = 'terms';
+          targetAccordionId = 'terms-general'; // O el primer acordeón de la sección
+        } else if (hash === 'privacy') {
+          targetTab = 'privacy';
+          targetAccordionId = 'privacy-collection'; // O el primer acordeón de la sección
+        } else if (hash === 'cookies') {
+          targetTab = 'cookies';
+          targetAccordionId = 'cookies-what'; // O el primer acordeón de la sección
+        }
+
+        if (targetTab) {
+          setActiveTab(targetTab);
+          // Abrir el acordeón si existe y no está ya abierto
+          if (targetAccordionId && !openAccordions[targetAccordionId]) {
+            setOpenAccordions(prev => ({ ...prev, [targetAccordionId]: true }));
+          }
+
+          // Desplazarse al elemento después de un pequeño retraso para que la UI se actualice
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100); // Pequeño retraso para permitir que el contenido se renderice
+        }
+      }
+    };
+
+    // Ejecutar al montar el componente y en cada cambio de hash
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [openAccordions]); // Dependencia para reaccionar si un acordeón ya está abierto/cerrado
+
   // Contenido de cada pestaña
   const renderTabContent = () => {
     switch (activeTab) {
@@ -165,7 +215,7 @@ const About = () => {
               <AccordionItem 
                 id="custom-orders" 
                 title="Pedidos Personalizados"
-                tag="custom-orders"
+                tag="custom-orders" // Añadido tag para el ID del elemento
               >
                 <p>Tus pedidos pueden ser entregados tanto a la dirección brindada con tu registro
                   o la dirección activa al momento de hacer el pedido, también se puede determinar un punto de encuentro
@@ -181,7 +231,7 @@ const About = () => {
               <AccordionItem 
                 id="bulk-orders" 
                 title="Pedidos al Mayoreo"
-                tag="bulk-orders"
+                tag="bulk-orders" // Añadido tag para el ID del elemento
               >
                 <p>No contamos con un servicio de pedido por mayoreo desde nuestro sitio web oficial, más sí que puedes contar 
                   con nosotros para esto. Para realizar un pedido al mayoreo, comunícate directamente
@@ -199,7 +249,7 @@ const About = () => {
               Términos y Condiciones de Uso - Diambars Sublim
             </div>
             <div className='about-container'>
-              <AccordionItem id="terms-general" title="Términos Generales">
+              <AccordionItem id="terms-general" title="Términos Generales" tag="terms"> {/* Añadido tag para el ID del elemento */}
                 <h4>Disposiciones generales</h4>
                 <p>El presente documento establece los términos y condiciones que regulan el acceso y uso del sitio web de Diambars Sublim, 
                   empresa dedicada a la personalización de productos mediante técnicas de sublimación.</p>
@@ -244,7 +294,7 @@ const About = () => {
               Política de Privacidad - Protección de tus datos personales
             </div>
             <div className='about-container'>
-              <AccordionItem id="privacy-collection" title="Recolección de Datos">
+              <AccordionItem id="privacy-collection" title="Recolección de Datos" tag="privacy"> {/* Añadido tag para el ID del elemento */}
                 <h4>Información y finalidad de los datos recopilados</h4>
                 <p>Diambars Sublim recopila y almacena los siguientes datos personales: 
                   nombre completo, dirección de correo electrónico, número de teléfono, 
@@ -284,7 +334,7 @@ const About = () => {
               Política de Cookies - Información sobre el uso de cookies en nuestro sitio web
             </div>
             <div className='about-container'>
-              <AccordionItem id="cookies-what" title="¿Qué son las Cookies?">
+              <AccordionItem id="cookies-what" title="¿Qué son las Cookies?" tag="cookies"> {/* Añadido tag para el ID del elemento */}
                 <p>Las cookies son archivos de texto que se almacenan en el dispositivo del usuario al 
                   acceder al sitio web, con el fin de mejorar la experiencia de navegación y permitir 
                   funcionalidades esenciales como la autenticación, la gestión de pedidos y la comunicación personalizada.</p>
