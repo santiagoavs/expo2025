@@ -30,7 +30,7 @@ const Footer = () => {
           </div>
           <p className="footer-tagline">Calidad superior en sublimación</p>
           <p className="footer-description">
-            Nos especializamos en la creatividad de nuestros clientes; si puedes imaginarlo, puedes hacerlo. En Diambars Sublim eres
+            En Diambars Sublim eres
             tú el que decide lo que quiere, desde qué material utilizaremos para fabricar tu producto, hasta las ideas más únicas
             para la personalización de los mismos. No te quedes con las ganas, coméntanos hasta el más mínimo detalle, nosotros 
             hacemos el resto.
@@ -52,24 +52,24 @@ const Footer = () => {
         </div>
 
         {/* Sección de navegación principal */}
-        <div className="footer-section">
-          <h4>Explora</h4>
-          <div className="footer-links">
-            <Link to="/catalogue">Catálogo</Link>
-            <Link to="/about">Acerca de nosotros</Link>
-            <Link to="/contact">Contáctanos</Link>
-            <Link to="/reviews">Reseñas</Link>
+        <div className="footer-sections-wrapper">
+          <div className="footer-section">
+            <h4>Explora</h4>
+            <div className="footer-links">
+              <Link to="/catalogue">Catálogo</Link>
+              <Link to="/about">Acerca de nosotros</Link>
+              <Link to="/contact">Contáctanos</Link>
+              <Link to="/reviews">Reseñas</Link>
+            </div>
           </div>
-        </div>
-
-        {/* Sección de servicios */}
-        <div className="footer-section">
-          <h4>Servicios</h4>
-          <div className="footer-links">
-            <Link to="/profile">Mi Cuenta</Link>
-            <a href="#custom-orders">Pedidos personalizados</a>
-            <a href="#bulk-orders">Pedidos al mayoreo</a>
-            <a href="/design-hub">Revisa y administra tus diseños</a>
+          <div className="footer-section">
+            <h4>Servicios</h4>
+            <div className="footer-links">
+              <Link to="/profile">Mi Cuenta</Link>
+              <Link to="/about#custom-orders">Pedidos personalizados</Link>
+              <Link to="/about#bulk-orders">Pedidos al mayoreo</Link>
+              <Link to="/design-hub">Revisa y administra tus diseños</Link>
+            </div>
           </div>
         </div>
 
@@ -129,9 +129,9 @@ const Footer = () => {
           <p>&copy; {new Date().getFullYear()} Diambars Sublim. Todos los derechos reservados.</p>
         </div>
         <div className="footer-legal">
-          <a href="/privacy">Política de Privacidad</a>
-          <a href="/terms">Términos y Condiciones</a>
-          <a href="/cookies">Política de Cookies</a>
+          <Link to="/about#terms">Términos y Condiciones</Link>
+          <Link to="/about#privacy">Política de Privacidad</Link>
+          <Link to="/about#cookies">Política de Cookies</Link>
         </div>
       </div>
     </footer>

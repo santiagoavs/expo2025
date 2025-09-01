@@ -169,9 +169,10 @@
 }
 
 .nav-text {
-    font-weight: 400;
+    font-weight: bold;
     font-size: 1.25rem;
-    font-family: 'DiambarsFont', sans-serif;
+    font-family: 'Spectral', sans-serif;
+    letter-spacing: -1.9px;
     margin-left: 5px;
     align-items: center;
     line-height: 1;
