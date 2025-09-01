@@ -39,8 +39,8 @@ import {
 } from '@phosphor-icons/react';
 
 // Importar componentes
-import KonvaDesignEditor from '../KonvaDesignEditor/KonvaDesignEditor';
-import KonvaDesignViewer from '../KonvaDesignViewer/KonvaDesignViewer';
+import { FabricDesignEditorSimple } from '../FabricDesignEditor';
+import FabricDesignViewer from '../FabricDesignViewer/FabricDesignViewer';
 
 // ================ SERVICIO DE VALIDACIÓN INTEGRADO ================
 const DesignService = {
@@ -67,7 +67,30 @@ const DesignService = {
       if (element.type === 'image' && !element.konvaAttrs?.image) {
         errors.push(`Elemento de imagen ${index + 1}: URL de imagen no definida`);
       }
+      
+      // Validación para el nuevo sistema Fabric.js
+      if (element.type === 'text' && !element.text?.trim()) {
+        errors.push(`Elemento de texto ${index + 1}: texto vacío`);
+      }
+      
+      if (element.type === 'image' && !element.src) {
+        errors.push(`Elemento de imagen ${index + 1}: imagen no definida`);
+      }
+      
+      if (element.type === 'rect' || element.type === 'circle' || element.type === 'triangle') {
+        if (element.width === 0 || element.height === 0) {
+          errors.push(`Elemento de forma ${index + 1}: dimensiones inválidas`);
+        }
+      }
     });
+    
+    // Validación para datos del canvas (nuevo formato)
+    if (elements && elements.canvas) {
+      const canvasObjects = elements.canvas.objects || [];
+      if (canvasObjects.length === 0) {
+        errors.push('El canvas no contiene elementos');
+      }
+    }
     
     return {
       isValid: errors.length === 0,
@@ -447,10 +470,22 @@ const CreateDesignModal = ({
     setShowEditor(false);
   }, []);
 
-  // *** CORREGIDO: Función handleSaveDesign arreglada ***
-  const handleSaveDesign = useCallback((elements, productColorFilter) => {
-    console.log('💾 Guardando elementos del diseño:', elements);
+  // *** ACTUALIZADO: Función handleSaveDesign para el nuevo sistema ***
+  const handleSaveDesign = useCallback((canvasData, productColorFilter) => {
+    console.log('💾 Guardando datos del canvas:', canvasData);
     console.log('🎨 Filtro de color del producto:', productColorFilter);
+    
+    // El nuevo editor devuelve datos del canvas en formato Fabric.js
+    let elements = [];
+    
+    if (canvasData && canvasData.canvas) {
+      // Extraer elementos del canvas Fabric.js
+      elements = canvasData.canvas.objects || [];
+      console.log('📋 Elementos extraídos del canvas:', elements);
+    } else if (Array.isArray(canvasData)) {
+      // Fallback para formato anterior
+      elements = canvasData;
+    }
     
     // Validar elementos...
     const validation = DesignService.validateElementsForSubmission(elements);
@@ -459,15 +494,16 @@ const CreateDesignModal = ({
       return;
     }
 
-    // *** FIX: Usar 'elements' en lugar de 'elementsWithArea' ***
+    // Guardar tanto los elementos como los datos completos del canvas
     const finalDesignData = {
       ...designData,
-      elements: elements,  // ← CORREGIDO: era 'elementsWithArea'
+      elements: elements,
+      canvasData: canvasData, // Guardar datos completos del canvas
       productColorFilter: productColorFilter || null
     };
 
     setDesignData(finalDesignData);
-    setDesignElements(elements);  // ← CORREGIDO: era 'elementsWithArea'
+    setDesignElements(elements);
     setShowEditor(false);
     setErrors(prev => ({ ...prev, elements: undefined }));
     
@@ -996,9 +1032,9 @@ const CreateDesignModal = ({
         </ModalActions>
       </StyledDialog>
 
-      {/* Editor Konva */}
+      {/* Editor Fabric Simplificado */}
       {showEditor && selectedProduct && (
-        <KonvaDesignEditor
+        <FabricDesignEditorSimple
           isOpen={showEditor}
           onClose={handleCloseEditor}
           product={selectedProduct}
@@ -1007,20 +1043,14 @@ const CreateDesignModal = ({
         />
       )}
 
-      {/* Vista previa */}
+      {/* Vista previa (Fabric) */}
       {showPreview && selectedProduct && hasDesignElements && (
-        <KonvaDesignViewer
+        <FabricDesignViewer
           isOpen={showPreview}
           onClose={handleClosePreview}
-          design={{
-            name: designData.name,
-            elements: designElements,
-            user: selectedUser,
-            status: 'draft'
-          }}
+          design={{ name: designData.name, elements: designElements, user: selectedUser, status: 'draft' }}
           product={selectedProduct}
-          showInfo={true}
-          enableDownload={true}
+          enableDownload
         />
       )}
     </>

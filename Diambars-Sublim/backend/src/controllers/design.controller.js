@@ -582,16 +582,16 @@ designController.submitQuote = async (req, res) => {
     await design.save();
 
     try {
-      await notificationService.sendNotification({
-        type: "DESIGN_QUOTED",
-        data: {
-          designId: design._id,
-          price: design.price,
-          productionDays: design.productionDays,
-          userEmail: design.user.email,
-          userName: design.user.name,
-          productName: design.product.name
-        }
+      await notificationService.sendCustomNotification({
+        to: design.user.email,
+        subject: `💰 Cotización lista para tu diseño ${design.name}`,
+        isHtml: true,
+        message: `
+          <h2>Tu diseño ha sido cotizado</h2>
+          <p>Precio: <strong>$${design.price}</strong></p>
+          <p>Días de producción: <strong>${design.productionDays}</strong></p>
+          <p>Producto: ${design.product.name}</p>
+        `
       });
     } catch (notificationError) {
       console.error('Error enviando notificación:', notificationError);
@@ -718,6 +718,24 @@ designController.respondToQuote = async (req, res) => {
       
       await newOrder.save();
       
+      try {
+        await notificationService.sendQuoteAcceptedNotification({
+          orderNumber: newOrder.orderNumber,
+          userName: design.user.name,
+          clientNotes
+        });
+        await notificationService.sendStatusUpdateNotification({
+          orderNumber: newOrder.orderNumber,
+          newStatus: 'approved',
+          previousStatus: 'quoted',
+          notes: clientNotes,
+          userEmail: design.user.email,
+          userName: design.user.name
+        });
+      } catch (e) {
+        console.error('Error enviando notificaciones de aprobación:', e);
+      }
+
       res.status(200).json({
         success: true,
         message: "Cotización aceptada. Tu pedido ha sido creado.",
@@ -741,7 +759,17 @@ designController.respondToQuote = async (req, res) => {
       design.rejectionReason = clientNotes || "No se especificó motivo";
       
       await design.save();
-      
+
+      try {
+        await notificationService.sendQuoteRejectedNotification({
+          orderNumber: `DESIGN-${design._id}`,
+          userName: design.user.name,
+          reason: design.rejectionReason
+        });
+      } catch (e) {
+        console.error('Error enviando notificación de rechazo:', e);
+      }
+
       res.status(200).json({
         success: true,
         message: "Cotización rechazada",
@@ -1086,6 +1114,16 @@ designController.updateProductColor = async (req, res) => {
 
     design.productColorFilter = color || null;
     await design.save();
+
+    try {
+      await notificationService.sendCustomNotification({
+        to: design.user.email,
+        subject: `🎨 Color del producto actualizado`,
+        message: `Se actualizó el color del producto para tu diseño ${design.name} a ${design.productColorFilter || 'sin filtro'}`
+      });
+    } catch (e) {
+      console.error('Error notificando cambio de color:', e);
+    }
 
     res.status(200).json({
       success: true,
@@ -1619,18 +1657,17 @@ designController.changeDesignStatus = async (req, res) => {
     await design.save();
 
     try {
-      await notificationService.sendNotification({
-        type: "DESIGN_STATUS_CHANGED",
-        data: {
-          designId: design._id,
-          designName: design.name,
-          previousStatus,
-          newStatus: status,
-          userEmail: design.user.email,
-          userName: design.user.name,
-          productName: design.product.name,
-          notes: notes || ''
-        }
+      await notificationService.sendCustomNotification({
+        to: design.user.email,
+        subject: `📦 Estado de tu diseño actualizado: ${status}`,
+        isHtml: true,
+        message: `
+          <h2>Actualización de estado</h2>
+          <p><strong>Diseño:</strong> ${design.name}</p>
+          <p><strong>Anterior:</strong> ${previousStatus}</p>
+          <p><strong>Nuevo:</strong> ${status}</p>
+          ${notes ? `<p><strong>Notas:</strong> ${notes}</p>` : ''}
+        `
       });
     } catch (notificationError) {
       console.error('Error enviando notificación de cambio de estado:', notificationError);

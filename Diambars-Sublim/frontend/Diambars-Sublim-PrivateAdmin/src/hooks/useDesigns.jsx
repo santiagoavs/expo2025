@@ -248,6 +248,9 @@ const updateProductColor = useCallback(async (id, color) => {
       color: '#010326'
     });
     
+    // Actualizar localmente
+    setDesigns(prev => prev.map(d => d._id === id || d.id === id ? { ...d, productColorFilter: color || null } : d));
+
     console.log('✅ [useDesigns] Color del producto actualizado exitosamente');
     return response.data;
   } catch (error) {

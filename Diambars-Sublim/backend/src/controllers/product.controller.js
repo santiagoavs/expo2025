@@ -163,6 +163,18 @@ productController.getAllProducts = async (req, res) => {
             },
             customizationAreas: Array.isArray(product.customizationAreas) ? product.customizationAreas : [],
             options: Array.isArray(product.options) ? product.options : [],
+            // ✅ CORREGIDO: Incluir editorConfig para que el frontend pueda usar las dimensiones exactas
+            editorConfig: product.editorConfig || {
+              stageWidth: 800,
+              stageHeight: 600,
+              backgroundFill: "#f8f9fa",
+              gridSize: 10,
+              snapToGrid: true,
+              showRulers: true,
+              allowZoom: true,
+              minZoom: 0.5,
+              maxZoom: 3
+            },
             metadata: {
               featured: Boolean(product.metadata?.featured),
               searchTags: Array.isArray(product.metadata?.searchTags) ? product.metadata.searchTags : [],
@@ -302,6 +314,18 @@ productController.getProductById = async (req, res) => {
       },
       customizationAreas: Array.isArray(product.customizationAreas) ? product.customizationAreas : [],
       options: Array.isArray(product.options) ? product.options : [],
+      // ✅ CORREGIDO: Incluir editorConfig para que el frontend pueda usar las dimensiones exactas
+      editorConfig: product.editorConfig || {
+        stageWidth: 800,
+        stageHeight: 600,
+        backgroundFill: "#f8f9fa",
+        gridSize: 10,
+        snapToGrid: true,
+        showRulers: true,
+        allowZoom: true,
+        minZoom: 0.5,
+        maxZoom: 3
+      },
       metadata: {
         featured: Boolean(product.metadata?.featured),
         searchTags: Array.isArray(product.metadata?.searchTags) ? product.metadata.searchTags : [],

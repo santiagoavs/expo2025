@@ -84,28 +84,40 @@ export const generateKonvaConfig = (product, options = {}) => {
       basePrice: product.basePrice
     },
     
-    // Áreas personalizables optimizadas
-    areas: product.customizationAreas.map(area => ({
-      id: area._id.toString(),
-      name: area.name,
-      displayName: area.displayName,
-      position: {
-        x: area.position.x,
-        y: area.position.y,
-        width: area.position.width,
-        height: area.position.height,
-        rotation: area.position.rotationDegree || 0
-      },
-      accepts: {
-        text: !!area.accepts?.text,
-        image: !!area.accepts?.image
-      },
-      maxElements: area.maxElements || 10,
-      // Configuración visual para Konva
-      stroke: area.konvaConfig?.strokeColor || '#06AED5',
-      strokeWidth: area.konvaConfig?.strokeWidth || 2,
-      opacity: area.konvaConfig?.fillOpacity || 0.1
-    })),
+    // ✅ CORREGIDO: Áreas personalizables con coordenadas transformadas para el canvas final
+    areas: product.customizationAreas.map(area => {
+      // ✅ CORREGIDO: Las coordenadas del MongoDB están en 800x600
+      // Necesito transformarlas para el canvas final especificado en options
+      const targetWidth = options.width || 800;
+      const targetHeight = options.height || 600;
+      
+      // ✅ CORREGIDO: Calcular factores de escala
+      const scaleX = targetWidth / 800;
+      const scaleY = targetHeight / 600;
+      
+      return {
+        id: area._id.toString(),
+        name: area.name,
+        displayName: area.displayName,
+        position: {
+          // ✅ CORREGIDO: Aplicar escala a las coordenadas
+          x: Math.round(area.position.x * scaleX),
+          y: Math.round(area.position.y * scaleY),
+          width: Math.round(area.position.width * scaleX),
+          height: Math.round(area.position.height * scaleY),
+          rotation: area.position.rotationDegree || 0
+        },
+        accepts: {
+          text: !!area.accepts?.text,
+          image: !!area.accepts?.image
+        },
+        maxElements: area.maxElements || 10,
+        // Configuración visual para Konva
+        stroke: area.konvaConfig?.strokeColor || '#06AED5',
+        strokeWidth: area.konvaConfig?.strokeWidth || 2,
+        opacity: area.konvaConfig?.fillOpacity || 0.1
+      };
+    }),
     
     // Configuración del editor
     editor: {

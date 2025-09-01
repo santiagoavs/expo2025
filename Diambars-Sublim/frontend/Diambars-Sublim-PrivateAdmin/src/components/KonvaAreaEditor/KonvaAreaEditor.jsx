@@ -24,9 +24,9 @@ import {
   Eye as EyeIcon,
   MagnifyingGlassPlus as ZoomInIcon,
   MagnifyingGlassMinus as ZoomOutIcon,
-  GridFour as GridIcon,
+  SquaresFour as GridIcon,
   Copy as DuplicateIcon,
-  ArrowsCounterClockwise as ResetIcon
+  ArrowCounterClockwise as ResetIcon
 } from '@phosphor-icons/react';
 
 // Configuración global de SweetAlert2
@@ -272,7 +272,8 @@ const KonvaAreaEditor = ({
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(null);
   const [stageScale, setStageScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
-  const [stageDimensions, setStageDimensions] = useState({ width: 800, height: 600 });
+  // ✅ CORREGIDO: Stage dimensions SIEMPRE fijas a 800x600 para mantener consistencia con MongoDB
+  const [stageDimensions] = useState({ width: 800, height: 600 });
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   
@@ -280,29 +281,27 @@ const KonvaAreaEditor = ({
   const containerRef = useRef();
   const [image] = useImage(productImage, 'anonymous');
 
+  // ✅ CORREGIDO: Solo calcular el zoom inicial para que quepa en el contenedor
   useEffect(() => {
     if (image && containerRef.current) {
       const container = containerRef.current;
       const containerWidth = container.offsetWidth - 40;
       const containerHeight = container.offsetHeight - 40;
       
-      const imageRatio = image.width / image.height;
-      const containerRatio = containerWidth / containerHeight;
+      // ✅ CORREGIDO: Calcular zoom para que el stage 800x600 quepa en el contenedor
+      const scaleX = containerWidth / 800;
+      const scaleY = containerHeight / 600;
+      const initialScale = Math.min(scaleX, scaleY, 1); // No ampliar, solo reducir si es necesario
       
-      let newWidth, newHeight;
+      setStageScale(initialScale);
       
-      if (imageRatio > containerRatio) {
-        newWidth = containerWidth;
-        newHeight = containerWidth / imageRatio;
-      } else {
-        newHeight = containerHeight;
-        newWidth = containerHeight * imageRatio;
-      }
+      // ✅ CORREGIDO: Centrar el stage en el contenedor
+      const scaledWidth = 800 * initialScale;
+      const scaledHeight = 600 * initialScale;
+      const centerX = (containerWidth - scaledWidth) / 2;
+      const centerY = (containerHeight - scaledHeight) / 2;
       
-      setStageDimensions({
-        width: Math.min(newWidth, containerWidth),
-        height: Math.min(newHeight, containerHeight)
-      });
+      setStagePosition({ x: centerX, y: centerY });
     }
   }, [image]);
 
