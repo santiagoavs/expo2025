@@ -17,20 +17,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-/* ==================== RESPONSIVE BASADO EN CATEGORY VIEW ==================== */
-@media (max-width: 899px) {
-  .payment-container { width: 100%; max-width: 520px; }
-}
-@media (max-width: 599px) {
-  .payment-container { max-width: 440px; }
-}
-@media (max-width: 479px) {
-  .payment-container { max-width: 360px; }
-}
-@media (max-width: 359px) {
-  .payment-container { max-width: 320px; }
-}
-
 .payment-container::before {
   content: '';
   position: absolute;
@@ -104,9 +90,38 @@
 .payment-list {
   display: flex;
   flex-direction: column;
+  overflow-y: auto; /* Scroll vertical */
+  flex: 1; /* Toma el espacio restante */
+  padding-right: 5px; /* Espacio para la barra de scroll */
+}
+
+/* Estilo minimalista para la barra de scroll */
+.payment-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.payment-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.payment-list::-webkit-scrollbar-thumb {
+  background: rgba(63, 39, 36, 0.3);
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.payment-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(63, 39, 36, 0.5);
+}
+
+/* Para Firefox */
+.payment-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(63, 39, 36, 0.3) transparent;
 }
 
 .payment-method {
+  gap: 0.3rem;
   border-radius: 8px;
   font-size: 14px;
   color: #222;
@@ -123,17 +138,19 @@
 }
 
 .payment-method.active p {
-  color: #000;
+  color: #3F2724;
+  font-weight: 500;
+  margin: 5px 0;
 }
 
 .payment-method.inactive p {
-  color: #6a6a6a;  
+  color: rgba(63, 39, 36, 0.6);
+  margin: 5px 0; 
 }
 
 .payment-buttons {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .payment-button.active-toggle {
@@ -441,6 +458,7 @@
   gap: 14px;
   margin-top: 10px;
   justify-content: center;
+  align-items: center;
 }
 
 .modal-delete-btn {
@@ -508,43 +526,143 @@
   border-radius: 15px !important;
 }
 
-@media (max-width: 480px) {
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 899px) {
+  .payment-container { 
+    width: 100%; 
+    max-width: 365px; 
+  }
   .card-form-container {
-    max-width: 100%;
-    padding: 10px;
+    max-width: 400px;
   }
-  
-  .credit-card-preview {
-    padding: 10px;
+  .rccs {
+    width: 400px;
   }
-  
   .rccs__card {
-    transform: scale(0.75);
+    width: 350px;
+    height: 200px;
   }
-  
-  .form-row {
+  .modal-save-btn,
+  .modal-delete-btn {
+    width: 200px;
+  }
+  .btn-add {
+    width: 80px;
+    font-size: 0.75rem;
+    padding: 8px 16px;
+  }
+  .payment-button.active-toggle,
+  .payment-button.edit {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 599px) {
+  .payment-container { max-width: 440px; }
+  .card-form-container {
+    max-width: 350px;
+  }
+  .rccs {
+    width: 350px;
+  }
+  .rccs__card {
+    width: 300px;
+    height: 180px;
+  }
+  .modal-buttons {
     flex-direction: column;
     gap: 10px;
   }
-  
-  .modal-buttons {
-    flex-direction: column;
+  .modal-save-btn,
+  .modal-delete-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  .btn-add {
+    width: 70px;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+  }
+  .payment-button.active-toggle,
+  .payment-button.edit {
+    padding: 5px 10px;
+    font-size: 0.75rem;
   }
 }
 
-.card-input[name="number"] {
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+@media (max-width: 598px) {
+  .payment-container { max-width: 365px; }
 }
 
-.card-input[name="name"] {
-  text-transform: uppercase;
+@media (max-width: 475px) {
+  .payment-container { max-width: 285px; }
+  .card-form-container {
+    max-width: 280px;
+  }
+  .rccs {
+    width: 300px;
+  }
+  .rccs__card {
+    width: 280px;
+    height: 160px;
+  }
+  .card-input {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .modal-save-btn,
+  .modal-delete-btn {
+    max-width: 180px;
+    font-size: 0.9rem;
+    padding: 12px 20px;
+  }
+  .btn-add {
+    width: 65px;
+    font-size: 0.65rem;
+    padding: 5px 10px;
+  }
+  .payment-button.active-toggle,
+  .payment-button.edit {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
 }
 
-.card-input[name="expiry"],
-.card-input[name="cvc"] {
-  font-family: 'Courier New', monospace;
-  text-align: center;
-  width: 165px;
+@media (max-width: 359px) {
+  .payment-container { max-width: 270px; }
+  .card-form-container {
+    max-width: 250px;
+  }
+  .rccs {
+    width: 280px;
+  }
+  .rccs__card {
+    width: 280px;
+    height: 160px;
+  }
+  .card-input {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  .modal-save-btn,
+  .modal-delete-btn {
+    max-width: 160px;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+  }
+  .btn-add {
+    width: 60px;
+    height: 30px;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+  }
+  .payment-button.active-toggle,
+  .payment-button.edit {
+    padding: 3px 6px;
+    width: 60px;
+    height: 30px;
+    font-size: 0.65rem;
+  }
 }
 

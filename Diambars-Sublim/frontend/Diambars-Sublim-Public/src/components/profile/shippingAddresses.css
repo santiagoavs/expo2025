@@ -92,6 +92,7 @@
 }
 
 .address-item {
+  gap: 0.3rem;
   border-radius: 8px;
   font-size: 14px;
   color: #3F2724; 
@@ -116,7 +117,7 @@
 .address-buttons {
   display: flex;
   gap: 10px;
-  margin: 10px;
+  margin: 0;
 }
 
 .error-message {
@@ -245,7 +246,7 @@
 .header-buttons {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 5px;
 }
 
 .modal-content input {
@@ -536,12 +537,6 @@
   backdrop-filter: blur(8px);
 }
 
-.save-button.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #9ca3af;
-}
-
 .cancel-button {
   position: relative;
   height: 50px;
@@ -605,4 +600,108 @@
 .cancel-button:active {
   transform: translateY(1px);
   backdrop-filter: blur(8px);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 899px) {
+  .address-container { 
+    width: 100%; 
+    max-width: 365px; 
+  }
+  .modal-content input,
+  .modal-content textarea {
+    width: 290px;
+  }
+  .modal-content select {
+    width: 100%;
+    max-width: 400px;
+  }
+  .address-button.active-toggle,
+  .address-button.edit {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 599px) {
+  .address-container { max-width: 440px; }
+  .modal-content input,
+  .modal-content textarea {
+    width: 250px;
+  }
+  .modal-content select {
+    max-width: 375px;
+  }
+  .modal-button-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .submit-button,
+  .cancel-button {
+    width: 100%;
+    max-width: 200px;
+  }
+  .address-button.active-toggle,
+  .address-button.edit {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 598px) {
+  .address-container { max-width: 365px; }
+}
+
+@media (max-width: 475px) {
+  .address-container { max-width: 285px; }
+  .modal-content input,
+  .modal-content textarea {
+    max-width: 280px;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .modal-content select {
+    max-width: 300px;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  .submit-button,
+  .cancel-button {
+    max-width: 180px;
+    font-size: 1rem;
+    padding: 10px 20px;
+  }
+  .address-button.active-toggle,
+  .address-button.edit {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .address-container { max-width: 270px; }
+  .modal-content input,
+  .modal-content textarea {
+    max-width: 250px;
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  .modal-content select {
+    max-width: 270px;
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  .submit-button,
+  .cancel-button {
+    max-width: 160px;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+  .address-button.active-toggle,
+  .address-button.edit {
+    padding: 3px 6px;
+    width: 60px;
+    height: 30px;
+    font-size: 0.65rem;
+  }
 }

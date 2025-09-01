@@ -443,38 +443,89 @@
   -webkit-backdrop-filter: blur(5px) !important;
 }
 
-@media (max-width: 768px) {
-  .custom-swal-popup {
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 899px) {
+  .right-column {
+    gap: 12px!important;
+  }
+  .user-info-container { 
+    width: 100%; 
+    max-width: 415px; 
+  }
+  .swal2-popup.custom-swal-popup {
     margin: 1rem !important;
     padding: 1.5rem !important;
   }
   
-  .custom-swal-title {
+  .swal2-popup .custom-swal-title,
+  .swal2-popup .swal2-title {
     font-size: 1.25rem !important;
   }
   
-  .custom-swal-content {
+  .swal2-popup .custom-swal-content,
+  .swal2-popup .swal2-html-container {
     font-size: 0.9rem !important;
   }
   
-  .custom-swal-button {
+  .swal2-popup .custom-swal-button,
+  .swal2-popup .swal2-confirm {
     padding: 10px 24px !important;
     font-size: 0.9rem !important;
   }
 }
 
-@media (max-width: 768px) {
-  .email-status-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+@media (max-width: 599px) {
+  .user-info-container { max-width: 470px; }
+  .info-grid {
+    grid-template-columns: 1fr;
+    column-gap: 0;
   }
-  
-  .email-verification-status {
-    width: 100%;
+  .save-button {
+    width: 160px;
+    margin: 30px auto;
   }
-  
-  .email-not-verified {
-    width: 100%;
+}
+
+@media (max-width: 598px) {
+  .user-info-container { width: 415px; }
+  .save-button {
+    width: 150px;
+    font-size: 1rem;
+    margin: 30px 120px;
+    padding: 8px 20px;
+  }
+}
+
+@media (max-width: 475px) {
+  .user-info-container { max-width: 335px; }
+  .profile-image {
+    height: 180px;
+  }
+  .add-photo {
+    top: 149px;
+    font-size: 0.8em;
+  }
+  .save-button {
+    width: 140px;
+    margin: 30px 80px;
+    font-size: 1rem;
+    padding: 10px 24px;
+  }
+}
+
+@media (max-width: 359px) {
+  .user-info-container { max-width: 320px; }
+  .profile-image {
+    height: 160px;
+  }
+  .add-photo {
+    top: 129px;
+    font-size: 0.75em;
+  }
+  .save-button {
+    width: 120px;
+    font-size: 0.9rem;
+    margin: 30px 80px;
+    padding: 8px 20px;
   }
 }

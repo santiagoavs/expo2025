@@ -295,18 +295,17 @@ const PaymentMethods = () => {
       {/* Modal para añadir método */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
         <div className="card-form-container">
-          <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Añadir método de pago</h3>
+          <h3 style={{ marginTop: '20px', marginBottom: '20px' }}>Añadir método de pago</h3>
           
           {/* Aviso de seguridad */}
           <div style={{ 
-            background: '#e7f3ff', 
-            border: '1px solid #0066cc', 
-            borderRadius: '4px', 
+            background: '#d7be2e30', 
+            borderRadius: '13px', 
             padding: '10px', 
-            marginBottom: '15px',
+            marginBottom: '5px',
             fontSize: '14px'
           }}>
-            🔒 <strong>Seguridad:</strong> El CVC se solicitará al momento del pago y nunca se almacena.
+            <strong>Seguridad:</strong> El CVC se solicitará al momento del pago y nunca se almacena.
           </div>
           
           <Cards
