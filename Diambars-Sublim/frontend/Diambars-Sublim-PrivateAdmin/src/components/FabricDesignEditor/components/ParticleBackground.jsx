@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-// Fondo animado estilo NotFound404 pero infinito y con más partículas
-const AnimatedBackground = styled(Box)(({ theme }) => ({
+// Fondo optimizado con menos capas de animación para mejor rendimiento
+const OptimizedAnimatedBackground = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: 0,
   left: 0,
@@ -13,7 +13,12 @@ const AnimatedBackground = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
   background: '#FFFFFF',
   
-  // Primera capa de gradientes radiales (como NotFound404)
+  // Optimización de renderizado
+  willChange: 'transform',
+  transform: 'translateZ(0)',
+  backfaceVisibility: 'hidden',
+  
+  // Primera capa de gradientes principales (optimizada)
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -22,34 +27,28 @@ const AnimatedBackground = styled(Box)(({ theme }) => ({
     right: 0,
     bottom: 0,
     background: `
-      radial-gradient(ellipse at 25% 15%, rgba(31, 100, 191, 0.12) 0%, transparent 60%),
-      radial-gradient(ellipse at 75% 25%, rgba(3, 44, 166, 0.10) 0%, transparent 65%),
-      radial-gradient(ellipse at 20% 75%, rgba(4, 13, 191, 0.08) 0%, transparent 70%),
-      radial-gradient(ellipse at 80% 80%, rgba(1, 3, 38, 0.06) 0%, transparent 55%),
-      radial-gradient(ellipse at 50% 40%, rgba(31, 100, 191, 0.05) 0%, transparent 75%),
-      radial-gradient(ellipse at 10% 50%, rgba(64, 123, 255, 0.04) 0%, transparent 50%),
-      radial-gradient(ellipse at 90% 45%, rgba(0, 84, 164, 0.07) 0%, transparent 60%),
-      radial-gradient(ellipse at 35% 85%, rgba(78, 205, 196, 0.06) 0%, transparent 45%),
-      radial-gradient(ellipse at 65% 15%, rgba(150, 206, 180, 0.05) 0%, transparent 55%),
-      radial-gradient(ellipse at 15% 25%, rgba(255, 107, 53, 0.04) 0%, transparent 40%)
+      radial-gradient(ellipse at 25% 15%, rgba(31, 100, 191, 0.08) 0%, transparent 65%),
+      radial-gradient(ellipse at 75% 25%, rgba(3, 44, 166, 0.06) 0%, transparent 70%),
+      radial-gradient(ellipse at 20% 75%, rgba(4, 13, 191, 0.05) 0%, transparent 75%),
+      radial-gradient(ellipse at 80% 80%, rgba(1, 3, 38, 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 40%, rgba(31, 100, 191, 0.03) 0%, transparent 80%)
     `,
     backgroundSize: `
+      250% 250%, 
       200% 200%, 
+      280% 280%, 
       180% 180%, 
-      220% 220%, 
-      170% 170%, 
-      240% 240%, 
-      160% 160%,
-      150% 150%,
-      190% 190%,
-      210% 210%,
-      140% 140%
+      300% 300%
     `,
-    animation: 'backgroundFlow 8s ease-in-out infinite alternate',
-    zIndex: 1
+    animation: 'optimizedBackgroundFlow 12s ease-in-out infinite alternate',
+    zIndex: 1,
+    
+    // Optimización de performance
+    willChange: 'transform',
+    transform: 'translateZ(0)'
   },
   
-  // Segunda capa de partículas brillantes (estrellas)
+  // Segunda capa de acentos brillantes (reducida)
   '&::after': {
     content: '""',
     position: 'absolute',
@@ -58,165 +57,81 @@ const AnimatedBackground = styled(Box)(({ theme }) => ({
     right: 0,
     bottom: 0,
     background: `
-      radial-gradient(circle at 30% 20%, rgba(255, 183, 77, 0.08) 0%, transparent 40%),
-      radial-gradient(circle at 70% 60%, rgba(255, 206, 84, 0.06) 0%, transparent 45%),
-      radial-gradient(circle at 15% 80%, rgba(255, 159, 67, 0.05) 0%, transparent 35%),
-      radial-gradient(circle at 85% 30%, rgba(255, 218, 121, 0.04) 0%, transparent 50%),
-      radial-gradient(circle at 50% 70%, rgba(255, 195, 113, 0.07) 0%, transparent 38%),
-      radial-gradient(circle at 25% 40%, rgba(255, 255, 255, 0.09) 0%, transparent 30%),
-      radial-gradient(circle at 75% 70%, rgba(255, 215, 0, 0.06) 0%, transparent 35%),
-      radial-gradient(circle at 40% 90%, rgba(173, 216, 230, 0.05) 0%, transparent 25%),
-      radial-gradient(circle at 90% 80%, rgba(255, 182, 193, 0.04) 0%, transparent 30%),
-      radial-gradient(circle at 10% 60%, rgba(221, 160, 221, 0.05) 0%, transparent 35%),
-      radial-gradient(circle at 60% 10%, rgba(135, 206, 250, 0.06) 0%, transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(255, 218, 185, 0.04) 0%, transparent 28%)
+      radial-gradient(circle at 30% 20%, rgba(255, 183, 77, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(255, 206, 84, 0.03) 0%, transparent 55%),
+      radial-gradient(circle at 15% 80%, rgba(255, 159, 67, 0.03) 0%, transparent 45%),
+      radial-gradient(circle at 85% 30%, rgba(255, 218, 121, 0.02) 0%, transparent 60%),
+      radial-gradient(circle at 25% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 75% 70%, rgba(173, 216, 230, 0.03) 0%, transparent 35%)
     `,
     backgroundSize: `
-      150% 150%,
-      140% 140%,
-      130% 130%,
+      200% 200%,
+      180% 180%,
       160% 160%,
-      120% 120%,
-      145% 145%,
-      155% 155%,
-      135% 135%,
-      165% 165%,
-      125% 125%,
+      220% 220%,
       170% 170%,
-      140% 140%
+      190% 190%
     `,
-    animation: 'flashColors 6s ease-in-out infinite, colorAppear 3s ease-in-out infinite',
-    zIndex: 2
+    animation: 'optimizedColorFlow 8s ease-in-out infinite, optimizedColorPulse 4s ease-in-out infinite',
+    zIndex: 2,
+    
+    // Optimización
+    willChange: 'transform',
+    transform: 'translateZ(0)'
   },
   
-  // Tercera capa de overlay con destellos adicionales
-  '& .overlay-layer': {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: `
-      radial-gradient(circle at 40% 30%, rgba(100, 149, 237, 0.06) 0%, transparent 70%),
-      radial-gradient(circle at 60% 70%, rgba(70, 130, 180, 0.04) 0%, transparent 75%),
-      radial-gradient(circle at 80% 20%, rgba(30, 144, 255, 0.03) 0%, transparent 65%),
-      radial-gradient(circle at 20% 40%, rgba(255, 105, 180, 0.05) 0%, transparent 60%),
-      radial-gradient(circle at 70% 85%, rgba(173, 216, 230, 0.04) 0%, transparent 55%),
-      radial-gradient(circle at 45% 15%, rgba(255, 218, 185, 0.03) 0%, transparent 45%)
-    `,
-    animation: 'overlayAppear 4s ease-in-out infinite, overlayPulse 5s ease-in-out infinite',
-    zIndex: 3
-  },
-  
-  // Animaciones del fondo principal
-  '@keyframes backgroundFlow': {
+  // Animaciones optimizadas con menos keyframes
+  '@keyframes optimizedBackgroundFlow': {
     '0%': {
       backgroundPosition: `
         25% 15%,
         75% 25%,
         20% 75%,
         80% 80%,
-        50% 40%,
-        10% 50%,
-        90% 45%,
-        35% 85%,
-        65% 15%,
-        15% 25%
+        50% 40%
       `
     },
-    '25%': {
-      backgroundPosition: `
-        30% 20%,
-        70% 30%,
-        25% 70%,
-        75% 75%,
-        45% 45%,
-        15% 45%,
-        85% 50%,
-        40% 80%,
-        60% 20%,
-        20% 30%
-      `
-    },
-    '50%': {
+    '33%': {
       backgroundPosition: `
         35% 25%,
         65% 35%,
         30% 65%,
         70% 70%,
-        40% 50%,
-        20% 40%,
-        80% 55%,
-        45% 75%,
-        55% 25%,
-        25% 35%
+        40% 50%
       `
     },
-    '75%': {
-      backgroundPosition: `
-        40% 30%,
-        60% 40%,
-        35% 60%,
-        65% 65%,
-        35% 55%,
-        25% 35%,
-        75% 60%,
-        50% 70%,
-        50% 30%,
-        30% 40%
-      `
-    },
-    '100%': {
+    '67%': {
       backgroundPosition: `
         45% 35%,
         55% 45%,
         40% 55%,
         60% 60%,
-        30% 60%,
-        30% 30%,
-        70% 65%,
-        55% 65%,
-        45% 35%,
-        35% 45%
+        30% 60%
+      `
+    },
+    '100%': {
+      backgroundPosition: `
+        55% 45%,
+        45% 55%,
+        50% 45%,
+        50% 50%,
+        20% 70%
       `
     }
   },
   
-  // Animación de destellos de colores
-  '@keyframes flashColors': {
-    '0%': {
+  // Animación de colores optimizada
+  '@keyframes optimizedColorFlow': {
+    '0%, 100%': {
       backgroundPosition: `
         30% 20%,
         70% 60%,
         15% 80%,
         85% 30%,
-        50% 70%,
         25% 40%,
-        75% 70%,
-        40% 90%,
-        90% 80%,
-        10% 60%,
-        60% 10%,
-        80% 90%
+        75% 70%
       `,
-      opacity: 0.3
-    },
-    '25%': {
-      backgroundPosition: `
-        35% 25%,
-        65% 55%,
-        20% 75%,
-        80% 35%,
-        45% 65%,
-        30% 45%,
-        70% 65%,
-        45% 85%,
-        85% 75%,
-        15% 55%,
-        55% 15%,
-        75% 85%
-      `,
-      opacity: 0.8
+      opacity: 0.4
     },
     '50%': {
       backgroundPosition: `
@@ -224,96 +139,97 @@ const AnimatedBackground = styled(Box)(({ theme }) => ({
         60% 50%,
         25% 70%,
         75% 40%,
-        40% 60%,
         35% 50%,
-        65% 60%,
-        50% 80%,
-        80% 70%,
-        20% 50%,
-        50% 20%,
-        70% 80%
+        65% 60%
       `,
-      opacity: 1
-    },
-    '75%': {
-      backgroundPosition: `
-        45% 35%,
-        55% 45%,
-        30% 65%,
-        70% 45%,
-        35% 55%,
-        40% 55%,
-        60% 55%,
-        55% 75%,
-        75% 65%,
-        25% 45%,
-        45% 25%,
-        65% 75%
-      `,
-      opacity: 0.6
-    },
-    '100%': {
-      backgroundPosition: `
-        50% 40%,
-        50% 40%,
-        35% 60%,
-        65% 50%,
-        30% 50%,
-        45% 60%,
-        55% 50%,
-        60% 70%,
-        70% 60%,
-        30% 40%,
-        40% 30%,
-        60% 70%
-      `,
-      opacity: 0.2
+      opacity: 0.8
     }
   },
   
-  // Animación de aparición de colores
-  '@keyframes colorAppear': {
+  // Pulso suave optimizado
+  '@keyframes optimizedColorPulse': {
     '0%, 100%': { 
       opacity: 0.3,
-      transform: 'scale(1)'
-    },
-    '50%': { 
-      opacity: 1,
-      transform: 'scale(1.02)'
-    }
-  },
-  
-  // Animación de overlay
-  '@keyframes overlayAppear': {
-    '0%, 100%': { 
-      opacity: 0.3,
-      transform: 'scale(1)'
-    },
-    '50%': { 
-      opacity: 0.8,
-      transform: 'scale(1.01)'
-    }
-  },
-  
-  // Animación de pulso del overlay
-  '@keyframes overlayPulse': {
-    '0%, 100%': { 
-      opacity: 0.3,
-      transform: 'scale(1) rotate(0deg)'
+      transform: 'translateZ(0) scale(1)'
     },
     '50%': { 
       opacity: 0.6,
-      transform: 'scale(1.03) rotate(0.5deg)'
+      transform: 'translateZ(0) scale(1.01)'
+    }
+  },
+  
+  // Media queries para optimización en dispositivos móviles
+  '@media (max-width: 768px)': {
+    '&::before, &::after': {
+      animationDuration: '20s, 10s', // Animaciones más lentas en móvil
+      backgroundSize: '300% 300%' // Menos detalle en móvil
+    }
+  },
+  
+  // Optimización para dispositivos con batería baja
+  '@media (prefers-reduced-motion: reduce)': {
+    '&::before, &::after': {
+      animation: 'none'
     }
   }
 }));
 
-const ParticleBackground = () => {
+// Componente de overlay adicional para más profundidad (opcional)
+const OverlayLayer = styled(Box)({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: `
+    radial-gradient(circle at 40% 30%, rgba(100, 149, 237, 0.03) 0%, transparent 80%),
+    radial-gradient(circle at 60% 70%, rgba(70, 130, 180, 0.02) 0%, transparent 85%),
+    radial-gradient(circle at 20% 40%, rgba(255, 105, 180, 0.02) 0%, transparent 70%)
+  `,
+  animation: 'overlayFloat 6s ease-in-out infinite',
+  zIndex: 3,
+  
+  // Optimización
+  willChange: 'transform',
+  transform: 'translateZ(0)',
+  
+  '@keyframes overlayFloat': {
+    '0%, 100%': { 
+      opacity: 0.2,
+      transform: 'translateZ(0) scale(1) rotate(0deg)'
+    },
+    '50%': { 
+      opacity: 0.4,
+      transform: 'translateZ(0) scale(1.02) rotate(0.5deg)'
+    }
+  }
+});
+
+const ParticleBackground = React.memo(() => {
+  // Detectar si el usuario prefiere menos movimiento
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    return false;
+  }, []);
+
+  // Detectar dispositivos móviles para optimización
+  const isMobile = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  }, []);
+
   return (
-    <AnimatedBackground>
-      <Box className="overlay-layer" />
-    </AnimatedBackground>
+    <OptimizedAnimatedBackground>
+      {/* Solo mostrar overlay en desktop y si no se prefiere movimiento reducido */}
+      {!isMobile && !prefersReducedMotion && <OverlayLayer />}
+    </OptimizedAnimatedBackground>
   );
-};
+});
+
+ParticleBackground.displayName = 'ParticleBackground';
 
 export default ParticleBackground;

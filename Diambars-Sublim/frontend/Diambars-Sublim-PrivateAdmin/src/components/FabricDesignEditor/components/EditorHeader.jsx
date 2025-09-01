@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   X as CloseIcon, FloppyDisk as SaveIcon, Download as ExportIcon,
-  Share as ShareIcon, Settings as SettingsIcon, Question as HelpIcon,
+  Share as ShareIcon, Gear as SettingsIcon, Question as HelpIcon,
   MagnifyingGlassPlus as ZoomInIcon, MagnifyingGlassMinus as ZoomOutIcon,
   ArrowCounterClockwise as ResetIcon, SquaresFour as GridIcon,
   Eye as PreviewIcon, Package, Warning, CheckCircle, Info,

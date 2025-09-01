@@ -1,517 +1,424 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { 
   Box, 
   IconButton, 
   Tooltip, 
-  Badge,
   Chip,
   Fade,
   Grow,
-  Zoom
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { 
-  Stack, 
-  ArrowClockwise, 
+  X as CloseIcon,
+  ArrowLeft as BackIcon,
   FloppyDisk, 
-  TextAa, 
-  Image, 
-  Shapes, 
-  Palette, 
-  MagicWand, 
-  Eye, 
-  EyeSlash, 
+  ArrowCounterClockwise as UndoIcon,
+  ArrowClockwise as RedoIcon,
   Download, 
   Share, 
-  Gear as Settings, 
-  Question,
-  ArrowCounterClockwise,
-  Crop,
-  Sparkle,
-  ArrowsOut,
-  ArrowCounterClockwise as Redo,
-  ArrowClockwise as Undo,
-  Lock,
-  LockOpen as Unlock,
+  Gear as SettingsIcon,
+  MagnifyingGlassPlus as ZoomInIcon,
+  MagnifyingGlassMinus as ZoomOutIcon,
   SquaresFour,
   Ruler,
   Camera
 } from '@phosphor-icons/react';
-import Swal from 'sweetalert2';
 
-// Navbar flotante con glassmorphism
-const FloatingNavbarContainer = styled(Box)(({ theme }) => ({
-  position: 'fixed',
+// Navbar flotante optimizado con posicionamiento relativo al canvas
+const OptimizedFloatingNavbar = styled(Box)(({ theme }) => ({
+  position: 'absolute',
   top: '20px',
   left: '50%',
   transform: 'translateX(-50%)',
-  zIndex: 1000,
+  zIndex: 1050, // Mayor z-index para evitar solapamientos
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-  padding: '12px 20px',
-  background: 'rgba(255, 255, 255, 0.1)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  borderRadius: '25px',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  gap: '4px',
+  padding: '8px 16px',
+  background: 'rgba(255, 255, 255, 0.12)',
+  backdropFilter: 'blur(25px)',
+  WebkitBackdropFilter: 'blur(25px)',
+  borderRadius: '28px',
+  border: '1px solid rgba(255, 255, 255, 0.25)',
   boxShadow: `
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1)
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.15)
   `,
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  maxWidth: '90vw', // Prevenir overflow en pantallas pequeñas
   
   '&:hover': {
-    background: 'rgba(255, 255, 255, 0.15)',
+    background: 'rgba(255, 255, 255, 0.18)',
     transform: 'translateX(-50%) translateY(-2px)',
     boxShadow: `
-      0 12px 40px rgba(0, 0, 0, 0.15),
+      0 12px 40px rgba(0, 0, 0, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.4),
       inset 0 -1px 0 rgba(255, 255, 255, 0.2)
     `
+  },
+
+  // Responsive design
+  [theme.breakpoints.down('md')]: {
+    padding: '6px 12px',
+    gap: '2px'
+  },
+
+  [theme.breakpoints.down('sm')]: {
+    padding: '4px 8px',
+    flexWrap: 'wrap',
+    maxWidth: '95vw'
   }
 }));
 
-// Botones con glassmorphism y animaciones
-const GlassButton = styled(IconButton)(({ theme, variant = 'default' }) => ({
-  width: '44px',
-  height: '44px',
-  borderRadius: '16px',
+// Botones optimizados con mejor rendimiento
+const OptimizedNavButton = styled(IconButton, {
+  shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'active'
+})(({ theme, variant = 'default', active = false }) => ({
+  width: '40px',
+  height: '40px',
+  borderRadius: '14px',
   background: variant === 'primary' 
-    ? 'linear-gradient(135deg, rgba(31, 100, 191, 0.2), rgba(3, 44, 166, 0.15))'
-    : 'rgba(255, 255, 255, 0.1)',
+    ? 'linear-gradient(135deg, rgba(31, 100, 191, 0.25), rgba(3, 44, 166, 0.15))'
+    : active
+      ? 'rgba(31, 100, 191, 0.15)'
+      : 'rgba(255, 255, 255, 0.08)',
   border: variant === 'primary'
-    ? '1px solid rgba(31, 100, 191, 0.3)'
-    : '1px solid rgba(255, 255, 255, 0.2)',
-  color: variant === 'primary' ? '#1F64BF' : '#010326',
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ? '1px solid rgba(31, 100, 191, 0.35)'
+    : active
+      ? '1px solid rgba(31, 100, 191, 0.25)'
+      : '1px solid rgba(255, 255, 255, 0.15)',
+  color: variant === 'primary' || active ? '#1F64BF' : '#010326',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', // Transición más rápida
+  position: 'relative',
   
   '&:hover': {
     background: variant === 'primary'
-      ? 'linear-gradient(135deg, rgba(31, 100, 191, 0.3), rgba(3, 44, 166, 0.25))'
-      : 'rgba(255, 255, 255, 0.2)',
-    transform: 'translateY(-2px) scale(1.05)',
-    boxShadow: variant === 'primary'
-      ? '0 8px 25px rgba(31, 100, 191, 0.3)'
-      : '0 8px 25px rgba(0, 0, 0, 0.15)'
+      ? 'linear-gradient(135deg, rgba(31, 100, 191, 0.35), rgba(3, 44, 166, 0.25))'
+      : 'rgba(255, 255, 255, 0.15)',
+    transform: 'translateY(-1px) scale(1.02)', // Efecto más sutil
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
   },
   
   '&:active': {
-    transform: 'translateY(0px) scale(0.95)'
+    transform: 'translateY(0px) scale(0.98)',
+    transition: 'all 0.1s'
+  },
+
+  '&:disabled': {
+    opacity: 0.4,
+    cursor: 'not-allowed',
+    transform: 'none'
+  },
+
+  // Responsive
+  [theme.breakpoints.down('md')]: {
+    width: '36px',
+    height: '36px'
+  },
+
+  [theme.breakpoints.down('sm')]: {
+    width: '32px',
+    height: '32px'
   }
 }));
 
-// Separador visual
-const Separator = styled(Box)({
+// Separador optimizado
+const NavSeparator = styled(Box)(({ theme }) => ({
   width: '1px',
-  height: '32px',
-  background: 'linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-  margin: '0 4px'
-});
-
-// Indicador de estado
-const StatusIndicator = styled(Chip)(({ status }) => ({
   height: '24px',
+  background: 'linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.25), transparent)',
+  margin: '0 4px',
+  flexShrink: 0,
+
+  [theme.breakpoints.down('sm')]: {
+    display: 'none' // Ocultar separadores en móvil
+  }
+}));
+
+// Indicador de estado optimizado
+const StatusChip = styled(Chip)(({ status, theme }) => ({
+  height: '28px',
   fontSize: '0.75rem',
   fontWeight: 600,
   background: status === 'saved' 
     ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1))'
-    : 'linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1))',
-  color: status === 'saved' ? '#4CAF50' : '#FF9800',
-  border: `1px solid ${status === 'saved' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 152, 0, 0.3)'}`,
-  borderRadius: '12px',
+    : status === 'saving'
+      ? 'linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1))'
+      : 'linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))',
+  color: status === 'saved' ? '#4CAF50' 
+        : status === 'saving' ? '#FF9800' 
+        : '#F44336',
+  border: `1px solid ${status === 'saved' ? 'rgba(76, 175, 80, 0.3)' 
+                      : status === 'saving' ? 'rgba(255, 152, 0, 0.3)' 
+                      : 'rgba(244, 67, 54, 0.3)'}`,
+  borderRadius: '14px',
   backdropFilter: 'blur(10px)',
-  animation: status === 'saving' ? 'pulse 2s ease-in-out infinite' : 'none',
+  animation: status === 'saving' ? 'pulse 1.5s ease-in-out infinite' : 'none',
   
   '@keyframes pulse': {
     '0%, 100%': { opacity: 1 },
-    '50%': { opacity: 0.6 }
+    '50%': { opacity: 0.7 }
+  },
+
+  // Responsive
+  [theme.breakpoints.down('sm')]: {
+    height: '24px',
+    fontSize: '0.7rem',
+    minWidth: 'auto'
   }
 }));
 
 const FloatingNavbar = ({ 
-  onToolSelect, 
-  selectedTool, 
   onSave, 
+  onClose,
+  onBack, // Nueva prop para volver al modal anterior
   onUndo, 
   onRedo,
   canUndo = false,
   canRedo = false,
-  isModified = false,
-  onToggleGrid,
-  onToggleRulers,
-  onToggleSnap,
+  onZoomIn,
+  onZoomOut,
   onExport,
   onShare,
-  onSettings
+  onSettings,
+  isSaving = false,
+  zoomLevel = 100,
+  showGrid = false,
+  showRulers = false,
+  onToggleGrid,
+  onToggleRulers
 }) => {
-  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('saved'); // saved, saving, modified
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Estado optimizado con useMemo
+  const saveStatus = useMemo(() => {
+    return isSaving ? 'saving' : 'saved';
+  }, [isSaving]);
 
-  // Función para mostrar SweetAlert
-  const showAlert = (title, message, icon = 'info') => {
-    Swal.fire({
-      title,
-      text: message,
-      icon,
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdrop: 'rgba(0, 0, 0, 0.4)',
-      confirmButtonColor: '#1F64BF',
-      borderRadius: '20px',
-      customClass: {
-        popup: 'glassmorphism-popup'
+  // Handlers optimizados con useCallback
+  const handleSave = useCallback(async () => {
+    if (onSave && !isSaving) {
+      try {
+        await onSave();
+      } catch (error) {
+        console.error('Error al guardar:', error);
       }
-    });
-  };
-
-  // Función para guardar con feedback
-  const handleSave = async () => {
-    setSaveStatus('saving');
-    try {
-      await onSave();
-      setSaveStatus('saved');
-      showAlert('¡Guardado!', 'El diseño se ha guardado exitosamente', 'success');
-    } catch (error) {
-      setSaveStatus('modified');
-      showAlert('Error', 'No se pudo guardar el diseño', 'error');
     }
-  };
+  }, [onSave, isSaving]);
 
-  // Función para deshacer
-  const handleUndo = () => {
-    if (canUndo) {
+  const handleClose = useCallback(() => {
+    if (onClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const handleBack = useCallback(() => {
+    if (onBack) {
+      onBack();
+    }
+  }, [onBack]);
+
+  const handleUndo = useCallback(() => {
+    if (canUndo && onUndo) {
       onUndo();
-      showAlert('Deshacer', 'Acción deshecha', 'info');
-    } else {
-      showAlert('No disponible', 'No hay acciones para deshacer', 'warning');
     }
-  };
+  }, [canUndo, onUndo]);
 
-  // Función para rehacer
-  const handleRedo = () => {
-    if (canRedo) {
+  const handleRedo = useCallback(() => {
+    if (canRedo && onRedo) {
       onRedo();
-      showAlert('Rehacer', 'Acción rehecha', 'info');
-    } else {
-      showAlert('No disponible', 'No hay acciones para rehacer', 'warning');
     }
-  };
+  }, [canRedo, onRedo]);
 
-  // Función para exportar
-  const handleExport = () => {
-    Swal.fire({
-      title: 'Exportar Diseño',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Formato:</label>
-            <select id="exportFormat" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="png">PNG (Imagen)</option>
-              <option value="jpg">JPG (Imagen)</option>
-              <option value="svg">SVG (Vectorial)</option>
-              <option value="pdf">PDF (Documento)</option>
-            </select>
-          </div>
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Calidad:</label>
-            <select id="exportQuality" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="high">Alta (300 DPI)</option>
-              <option value="medium">Media (150 DPI)</option>
-              <option value="low">Baja (72 DPI)</option>
-            </select>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Exportar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#1F64BF',
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdrop: 'rgba(0, 0, 0, 0.4)',
-      borderRadius: '20px'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const format = document.getElementById('exportFormat').value;
-        const quality = document.getElementById('exportQuality').value;
-        onExport(format, quality);
-        showAlert('Exportando...', `Diseño exportado en formato ${format.toUpperCase()}`, 'success');
-      }
-    });
-  };
+  // Grupos de botones para mejor organización en mobile
+  const navigationButtons = useMemo(() => (
+    <Grow in timeout={200}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {onBack && (
+          <Tooltip title="Volver" arrow placement="bottom">
+            <OptimizedNavButton onClick={handleBack} size="small">
+              <BackIcon size={isMobile ? 16 : 18} />
+            </OptimizedNavButton>
+          </Tooltip>
+        )}
+        
+        <Tooltip title="Cerrar Editor" arrow placement="bottom">
+          <OptimizedNavButton onClick={handleClose} size="small">
+            <CloseIcon size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+      </Box>
+    </Grow>
+  ), [onBack, handleBack, handleClose, isMobile]);
 
-  // Función para compartir
-  const handleShare = () => {
-    Swal.fire({
-      title: 'Compartir Diseño',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Enlace público:</label>
-            <input type="text" id="shareLink" value="https://diambars.com/design/abc123" readonly 
-                   style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f5f5f5;">
-          </div>
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Permisos:</label>
-            <select id="sharePermissions" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="view">Solo visualización</option>
-              <option value="edit">Edición permitida</option>
-              <option value="full">Control total</option>
-            </select>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Copiar Enlace',
-      cancelButtonText: 'Cerrar',
-      confirmButtonColor: '#1F64BF',
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdrop: 'rgba(0, 0, 0, 0.4)',
-      borderRadius: '20px'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigator.clipboard.writeText('https://diambars.com/design/abc123');
-        showAlert('¡Copiado!', 'Enlace copiado al portapapeles', 'success');
-      }
-    });
-  };
+  const editingButtons = useMemo(() => (
+    <Grow in timeout={300}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Tooltip title="Deshacer (Ctrl+Z)" arrow placement="bottom">
+          <OptimizedNavButton
+            disabled={!canUndo}
+            onClick={handleUndo}
+            size="small"
+          >
+            <UndoIcon size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+        
+        <Tooltip title="Rehacer (Ctrl+Y)" arrow placement="bottom">
+          <OptimizedNavButton
+            disabled={!canRedo}
+            onClick={handleRedo}
+            size="small"
+          >
+            <RedoIcon size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+      </Box>
+    </Grow>
+  ), [canUndo, canRedo, handleUndo, handleRedo, isMobile]);
 
-  // Función para configuración
-  const handleSettings = () => {
-    Swal.fire({
-      title: 'Configuración del Editor',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tema:</label>
-            <select id="themeSelect" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="light">Claro</option>
-              <option value="dark">Oscuro</option>
-              <option value="auto">Automático</option>
-            </select>
-          </div>
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Idioma:</label>
-            <select id="languageSelect" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="es">Español</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-            </select>
-          </div>
-          <div style="margin: 15px 0;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Auto-guardado:</label>
-            <select id="autosaveSelect" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-              <option value="30">Cada 30 segundos</option>
-              <option value="60">Cada minuto</option>
-              <option value="300">Cada 5 minutos</option>
-              <option value="0">Desactivado</option>
-            </select>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#1F64BF',
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdrop: 'rgba(0, 0, 0, 0.4)',
-      borderRadius: '20px'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const theme = document.getElementById('themeSelect').value;
-        const language = document.getElementById('languageSelect').value;
-        const autosave = document.getElementById('autosaveSelect').value;
-        onSettings({ theme, language, autosave });
-        showAlert('Configuración', 'Configuración guardada exitosamente', 'success');
-      }
-    });
-  };
+  const viewButtons = useMemo(() => (
+    <Grow in timeout={400}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Tooltip title="Zoom +" arrow placement="bottom">
+          <OptimizedNavButton onClick={onZoomIn} size="small">
+            <ZoomInIcon size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+        
+        <Tooltip title="Zoom -" arrow placement="bottom">
+          <OptimizedNavButton onClick={onZoomOut} size="small">
+            <ZoomOutIcon size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+        
+        {!isMobile && (
+          <>
+            <Tooltip title="Cuadrícula" arrow placement="bottom">
+              <OptimizedNavButton 
+                active={showGrid}
+                onClick={onToggleGrid} 
+                size="small"
+              >
+                <SquaresFour size={18} />
+              </OptimizedNavButton>
+            </Tooltip>
+            
+            <Tooltip title="Reglas" arrow placement="bottom">
+              <OptimizedNavButton 
+                active={showRulers}
+                onClick={onToggleRulers} 
+                size="small"
+              >
+                <Ruler size={18} />
+              </OptimizedNavButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
+    </Grow>
+  ), [onZoomIn, onZoomOut, showGrid, showRulers, onToggleGrid, onToggleRulers, isMobile]);
+
+  const actionButtons = useMemo(() => (
+    <Grow in timeout={500}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Tooltip title="Guardar (Ctrl+S)" arrow placement="bottom">
+          <OptimizedNavButton
+            variant="primary"
+            onClick={handleSave}
+            disabled={isSaving}
+            size="small"
+          >
+            <FloppyDisk size={isMobile ? 16 : 18} />
+          </OptimizedNavButton>
+        </Tooltip>
+        
+        {!isMobile && (
+          <>
+            <Tooltip title="Exportar" arrow placement="bottom">
+              <OptimizedNavButton onClick={onExport} size="small">
+                <Download size={18} />
+              </OptimizedNavButton>
+            </Tooltip>
+            
+            {!isTablet && (
+              <>
+                <Tooltip title="Compartir" arrow placement="bottom">
+                  <OptimizedNavButton onClick={onShare} size="small">
+                    <Share size={18} />
+                  </OptimizedNavButton>
+                </Tooltip>
+                
+                <Tooltip title="Configuración" arrow placement="bottom">
+                  <OptimizedNavButton onClick={onSettings} size="small">
+                    <SettingsIcon size={18} />
+                  </OptimizedNavButton>
+                </Tooltip>
+              </>
+            )}
+          </>
+        )}
+      </Box>
+    </Grow>
+  ), [handleSave, isSaving, onExport, onShare, onSettings, isMobile, isTablet]);
 
   return (
-    <FloatingNavbarContainer>
-      {/* Herramientas básicas */}
-      <Grow in timeout={300}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Seleccionar (V)" arrow>
-            <GlassButton
-              variant={selectedTool === 'select' ? 'primary' : 'default'}
-              onClick={() => onToolSelect('select')}
-            >
-              <Stack size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Texto (T)" arrow>
-            <GlassButton
-              variant={selectedTool === 'text' ? 'primary' : 'default'}
-              onClick={() => onToolSelect('text')}
-            >
-              <TextAa size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Imagen (I)" arrow>
-            <GlassButton
-              variant={selectedTool === 'image' ? 'primary' : 'default'}
-              onClick={() => onToolSelect('image')}
-            >
-              <Image size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Formas (S)" arrow>
-            <GlassButton
-              variant={selectedTool === 'shapes' ? 'primary' : 'default'}
-              onClick={() => onToolSelect('shapes')}
-            >
-              <Shapes size={20} />
-            </GlassButton>
-          </Tooltip>
-        </Box>
-      </Grow>
-
-      <Separator />
-
-      {/* Herramientas de edición */}
-      <Grow in timeout={400}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Deshacer (Ctrl+Z)" arrow>
-            <GlassButton
-              disabled={!canUndo}
-              onClick={handleUndo}
-            >
-              <ArrowClockwise size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Rehacer (Ctrl+Y)" arrow>
-            <GlassButton
-              disabled={!canRedo}
-              onClick={handleRedo}
-            >
-              <ArrowCounterClockwise size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Capas" arrow>
-            <GlassButton onClick={() => showAlert('Capas', 'Gestor de capas - Próximamente', 'info')}>
-              <Stack size={20} />
-            </GlassButton>
-          </Tooltip>
-        </Box>
-      </Grow>
-
-      <Separator />
-
-      {/* Herramientas de transformación */}
-      <Grow in timeout={500}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Recortar" arrow>
-            <GlassButton onClick={() => showAlert('Recortar', 'Herramienta de recorte - Próximamente', 'info')}>
-              <Crop size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Efectos" arrow>
-            <GlassButton onClick={() => showAlert('Efectos', 'Biblioteca de efectos - Próximamente', 'info')}>
-              <Sparkle size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Transformar" arrow>
-            <GlassButton onClick={() => showAlert('Transformar', 'Herramientas de transformación - Próximamente', 'info')}>
-              <ArrowsOut size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Rotar" arrow>
-            <GlassButton onClick={() => showAlert('Rotar', 'Rotación de elementos - Próximamente', 'info')}>
-              <ArrowCounterClockwise size={20} />
-            </GlassButton>
-          </Tooltip>
-        </Box>
-      </Grow>
-
-      <Separator />
-
-      {/* Herramientas de visualización */}
-      <Grow in timeout={600}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Cuadrícula" arrow>
-            <GlassButton onClick={onToggleGrid}>
-              <SquaresFour size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Reglas" arrow>
-            <GlassButton onClick={onToggleRulers}>
-              <Ruler size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Captura" arrow>
-            <GlassButton onClick={() => showAlert('Captura', 'Captura de pantalla - Próximamente', 'info')}>
-              <Camera size={20} />
-            </GlassButton>
-          </Tooltip>
-        </Box>
-      </Grow>
-
-      <Separator />
-
-      {/* Acciones principales */}
-      <Grow in timeout={700}>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Tooltip title="Guardar (Ctrl+S)" arrow>
-            <GlassButton
-              variant="primary"
-              onClick={handleSave}
-            >
-              <FloppyDisk size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Exportar" arrow>
-            <GlassButton onClick={handleExport}>
-              <Download size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Compartir" arrow>
-            <GlassButton onClick={handleShare}>
-              <Share size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Configuración" arrow>
-            <GlassButton onClick={handleSettings}>
-              <Settings size={20} />
-            </GlassButton>
-          </Tooltip>
-          
-          <Tooltip title="Ayuda" arrow>
-            <GlassButton onClick={() => showAlert('Ayuda', 'Centro de ayuda - Próximamente', 'info')}>
-              <Question size={20} />
-            </GlassButton>
-          </Tooltip>
-        </Box>
-      </Grow>
-
-      {/* Indicador de estado */}
-      <Separator />
+    <OptimizedFloatingNavbar>
+      {/* Navegación */}
+      {navigationButtons}
       
-      <Zoom in timeout={800}>
-        <StatusIndicator
-          label={saveStatus === 'saving' ? 'Guardando...' : saveStatus === 'saved' ? 'Guardado' : 'Modificado'}
+      {!isMobile && <NavSeparator />}
+      
+      {/* Edición */}
+      {editingButtons}
+      
+      {!isMobile && <NavSeparator />}
+      
+      {/* Vista */}
+      {viewButtons}
+      
+      {!isMobile && <NavSeparator />}
+      
+      {/* Acciones */}
+      {actionButtons}
+      
+      {!isMobile && <NavSeparator />}
+      
+      {/* Estado */}
+      <Fade in timeout={600}>
+        <StatusChip
+          label={isSaving ? 'Guardando...' : 'Guardado'}
           status={saveStatus}
           size="small"
         />
-      </Zoom>
-    </FloatingNavbarContainer>
+      </Fade>
+
+      {/* Indicador de zoom (solo desktop) */}
+      {!isMobile && !isTablet && (
+        <Fade in timeout={700}>
+          <Box sx={{ 
+            ml: 1, 
+            px: 1, 
+            py: 0.5, 
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: '#010326'
+          }}>
+            {zoomLevel}%
+          </Box>
+        </Fade>
+      )}
+    </OptimizedFloatingNavbar>
   );
 };
 
 export default FloatingNavbar;
-
