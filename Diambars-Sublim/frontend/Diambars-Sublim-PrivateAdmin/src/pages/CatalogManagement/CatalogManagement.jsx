@@ -61,7 +61,7 @@ Swal.mixin({
 // ================ ESTILOS MODERNOS RESPONSIVE - CATALOGO ================
 const CatalogPageContainer = styled(Box)({
   minHeight: '100vh',
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  fontFamily: "'Mona Sans'",
   background: 'white',
   width: '100%',
   display: 'flex',
@@ -78,6 +78,7 @@ const CatalogContentWrapper = styled(Box)(({ theme }) => ({
   paddingLeft: '32px',
   paddingRight: '32px',
   minHeight: 'calc(100vh - 120px)',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('xl')]: {
     maxWidth: '1400px',
     paddingLeft: '28px',
@@ -106,6 +107,7 @@ const CatalogModernCard = styled(Paper)(({ theme }) => ({
   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
   boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  fontFamily: "'Mona Sans'",
   '&:hover': {
     boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
     transform: 'translateY(-1px)',
@@ -115,6 +117,7 @@ const CatalogModernCard = styled(Paper)(({ theme }) => ({
 const CatalogHeaderSection = styled(CatalogModernCard)(({ theme }) => ({
   padding: '40px',
   marginBottom: '32px',
+  fontWeight: '700 !important',
   background: 'white',
   position: 'relative',
   zIndex: 1,
@@ -167,12 +170,13 @@ const CatalogHeaderInfo = styled(Box)(({ theme }) => ({
 
 const CatalogMainTitle = styled(Typography)(({ theme }) => ({
   fontSize: '2.5rem',
-  fontWeight: 700,
+  fontWeight: '700 !important',
   color: '#010326',
   marginBottom: '12px',
   letterSpacing: '-0.025em',
   lineHeight: 1.2,
   textAlign: 'left',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '2.2rem',
   },
@@ -188,11 +192,12 @@ const CatalogMainTitle = styled(Typography)(({ theme }) => ({
 const CatalogMainDescription = styled(Typography)(({ theme }) => ({
   fontSize: '1.1rem',
   color: '#032CA6',
-  fontWeight: 400,
+  fontWeight: '700 !important',
   lineHeight: 1.6,
   opacity: 0.9,
   textAlign: 'left',
   maxWidth: '600px',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '1rem',
   },
@@ -237,6 +242,7 @@ const CatalogPrimaryActionButton = styled(Button)(({ theme }) => ({
   fontSize: '0.9rem',
   fontWeight: 600,
   textTransform: 'none',
+  fontFamily: "'Mona Sans'",
   boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   minWidth: '160px',
@@ -429,6 +435,7 @@ const CatalogStatValue = styled(Typography)(({ variant, theme }) => ({
   lineHeight: 1.1,
   marginBottom: '6px',
   color: variant === 'primary' ? 'white' : '#010326',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '2rem',
   },
@@ -446,6 +453,7 @@ const CatalogStatLabel = styled(Typography)(({ variant, theme }) => ({
   opacity: variant === 'primary' ? 0.9 : 0.7,
   color: variant === 'primary' ? 'white' : '#032CA6',
   lineHeight: 1.3,
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '0.875rem',
   },
@@ -480,6 +488,7 @@ const CatalogStatTrendText = styled(Typography)(({ variant, trend, theme }) => (
     : trend === 'up' 
       ? '#10B981' 
       : '#EF4444',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('sm')]: {
     fontSize: '0.75rem',
   }
@@ -535,6 +544,7 @@ const CatalogSearchSection = styled(Box)(({ theme }) => ({
 
 const CatalogModernTextField = styled(TextField)(({ theme }) => ({
   width: '100%',
+  fontFamily: "'Mona Sans'",
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
     backgroundColor: '#F2F2F2',
@@ -600,6 +610,7 @@ const CatalogFilterChip = styled(Box)(({ theme, active }) => ({
   fontWeight: 500,
   color: active ? '#1F64BF' : '#032CA6',
   whiteSpace: 'nowrap', // Evitar que el texto se rompa
+  fontFamily: "'Mona Sans'",
   '&:hover': {
     background: active ? alpha('#1F64BF', 0.15) : 'white',
     transform: 'translateY(-1px)',
@@ -648,6 +659,7 @@ const CatalogSectionTitle = styled(Typography)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '10px',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '1.5rem',
   },
@@ -728,6 +740,7 @@ const CatalogEmptyStateTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 600,
   color: '#010326',
   marginBottom: '14px',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '1.5rem',
   },
@@ -743,6 +756,7 @@ const CatalogEmptyStateDescription = styled(Typography)(({ theme }) => ({
   maxWidth: '450px',
   margin: '0 auto 36px',
   lineHeight: 1.6,
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
     fontSize: '1rem',
     marginBottom: '32px',
@@ -1103,7 +1117,7 @@ const CatalogManagement = () => {
                 filter: 'drop-shadow(0 4px 8px rgba(31, 100, 191, 0.3))'
               }} 
             />
-            <Typography component="div" variant="body1" sx={{ color: '#010326', fontWeight: 600 }}>
+            <Typography component="div" variant="body1" sx={{ color: '#010326', fontWeight: 600, fontFamily: "'Mona Sans'" }}>
               Cargando catálogo de productos...
             </Typography>
           </CatalogLoadingContainer>
@@ -1116,13 +1130,13 @@ const CatalogManagement = () => {
     <CatalogPageContainer>
       <CatalogContentWrapper>
         {/* Header Principal */}
-        <CatalogHeaderSection>
+        <CatalogHeaderSection sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
           <CatalogHeaderContent>
             <CatalogHeaderInfo>
-              <CatalogMainTitle>
+              <CatalogMainTitle sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
                 Gestión de Productos
               </CatalogMainTitle>
-              <CatalogMainDescription>
+              <CatalogMainDescription sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
                 Administra tu catálogo de productos personalizados y plantillas
               </CatalogMainDescription>
             </CatalogHeaderInfo>
@@ -1158,7 +1172,7 @@ const CatalogManagement = () => {
             zIndex: 1,
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography sx={{ color: '#dc2626', fontWeight: 500 }}>
+              <Typography sx={{ color: '#dc2626', fontWeight: 500, fontFamily: "'Mona Sans'" }}>
                 ⚠️ {error}
               </Typography>
               <Button 
@@ -1167,7 +1181,8 @@ const CatalogManagement = () => {
                 sx={{ 
                   color: '#dc2626',
                   fontWeight: 600,
-                  textTransform: 'none'
+                  textTransform: 'none',
+                  fontFamily: "'Mona Sans'"
                 }}
               >
                 Reintentar
@@ -1237,12 +1252,14 @@ const CatalogManagement = () => {
                     displayEmpty
                     sx={{
                       border: 'none',
+                      fontFamily: "'Mona Sans'",
                       '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
                       '& .MuiSelect-select': { 
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         color: '#010326',
+                        fontFamily: "'Mona Sans'",
                       }
                     }}
                   >
@@ -1263,12 +1280,14 @@ const CatalogManagement = () => {
                     disabled={loadingCategories || categoriesError}
                     sx={{
                       border: 'none',
+                      fontFamily: "'Mona Sans'",
                       '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
                       '& .MuiSelect-select': { 
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         color: '#010326',
+                        fontFamily: "'Mona Sans'",
                       }
                     }}
                   >
@@ -1294,12 +1313,14 @@ const CatalogManagement = () => {
                     onChange={(e) => setSortOption(e.target.value)}
                     sx={{
                       border: 'none',
+                      fontFamily: "'Mona Sans'",
                       '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
                       '& .MuiSelect-select': { 
                         padding: 0,
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         color: '#010326',
+                        fontFamily: "'Mona Sans'",
                       }
                     }}
                   >
@@ -1326,6 +1347,7 @@ const CatalogManagement = () => {
                     backgroundColor: alpha('#032CA6', 0.1),
                     padding: '8px 12px',
                     minWidth: 'auto',
+                    fontFamily: "'Mona Sans'",
                     '&:hover': {
                       backgroundColor: alpha('#032CA6', 0.15),
                     }
@@ -1356,7 +1378,8 @@ const CatalogManagement = () => {
         background: alpha('#1F64BF', 0.1),
         color: '#032CA6',
         fontWeight: 600,
-        ml: 1
+        ml: 1,
+        fontFamily: "'Mona Sans'"
       }}
     />
   </Box>
@@ -1367,7 +1390,7 @@ const CatalogManagement = () => {
           {loading && hasProducts && (
             <CatalogLoadingOverlay>
               <CircularProgress size={20} sx={{ color: '#1F64BF' }} />
-              <Typography variant="body2" sx={{ color: '#1F64BF', fontWeight: 600 }}>
+              <Typography variant="body2" sx={{ color: '#1F64BF', fontWeight: 600, fontFamily: "'Mona Sans'" }}>
                 Actualizando productos...
               </Typography>
             </CatalogLoadingOverlay>
@@ -1418,6 +1441,7 @@ const CatalogManagement = () => {
                       borderColor: alpha('#1F64BF', 0.3),
                       color: '#1F64BF',
                       minWidth: { xs: '100%', sm: 'auto' },
+                      fontFamily: "'Mona Sans'",
                       '&:hover': {
                         borderColor: '#1F64BF',
                         backgroundColor: alpha('#1F64BF', 0.05),
@@ -1437,7 +1461,7 @@ const CatalogManagement = () => {
                     minWidth: { xs: '100%', sm: 'auto' },
                     textAlign: 'center'
                   }}>
-                    <Typography variant="body2" sx={{ color: '#032CA6', fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ color: '#032CA6', fontWeight: 600, fontFamily: "'Mona Sans'" }}>
                       {pagination.currentPage} de {pagination.totalPages}
                     </Typography>
                   </CatalogModernCard>
@@ -1453,6 +1477,7 @@ const CatalogManagement = () => {
                       borderColor: alpha('#1F64BF', 0.3),
                       color: '#1F64BF',
                       minWidth: { xs: '100%', sm: 'auto' },
+                      fontFamily: "'Mona Sans'",
                       '&:hover': {
                         borderColor: '#1F64BF',
                         backgroundColor: alpha('#1F64BF', 0.05),
@@ -1517,6 +1542,7 @@ const CatalogManagement = () => {
                       color: '#1F64BF',
                       padding: '12px 24px',
                       minWidth: { xs: '100%', sm: 'auto' },
+                      fontFamily: "'Mona Sans'",
                       '&:hover': {
                         borderColor: '#1F64BF',
                         backgroundColor: alpha('#1F64BF', 0.05),

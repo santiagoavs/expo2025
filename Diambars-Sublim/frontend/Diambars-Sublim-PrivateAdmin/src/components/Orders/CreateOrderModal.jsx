@@ -30,7 +30,6 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Checkbox,
   FormGroup,
   Stepper,
   Step,
@@ -52,12 +51,12 @@ import {
   FileText,
   Plus,
   Minus,
-  Search,
+  MagnifyingGlass,
   CheckCircle,
   Warning,
   Info,
   Eye,
-  Edit,
+  PencilSimple,
   Trash,
   Copy,
   Link,
@@ -79,13 +78,13 @@ import {
   BatteryMedium,
   BatteryLow,
   BatteryEmpty,
-  SignalHigh,
-  SignalMedium,
-  SignalLow,
-  SignalNone,
+  CellSignalHigh,
+  CellSignalMedium,
+  CellSignalLow,
+  CellSignalNone,
   Bluetooth,
   BluetoothSlash,
-  Wifi,
+
   WifiSlash as WifiOff,
   DeviceMobile,
   DeviceTablet,
@@ -96,9 +95,7 @@ import {
   SpeakerHigh,
   SpeakerLow,
   SpeakerSlash,
-  VolumeHigh,
-  VolumeLow,
-  VolumeSlash,
+
   Play,
   Pause,
   Stop,
@@ -116,10 +113,10 @@ import {
   MusicNotes,
   Headphones,
   MicrophoneSlash,
-  RadioButton,
-  RadioButtonChecked,
-  Checkbox as CheckboxIcon,
-  CheckboxChecked as CheckboxCheckedIcon,
+  Circle,
+  CircleDashed,
+  Square as SquareIcon,
+  CheckSquare as CheckSquareIcon,
   Minus as MinusIcon,
   Plus as PlusIcon,
   CaretUp,
@@ -175,11 +172,7 @@ import {
   ArrowFatLineUp,
   ArrowFatLineDown,
   ArrowFatLineLeft,
-  ArrowFatLineRight,
-  ArrowUpLeft,
-  ArrowUpRight,
-  ArrowDownLeft,
-  ArrowDownRight
+  ArrowFatLineRight
 } from '@phosphor-icons/react';
 
 // Styled Components
@@ -469,7 +462,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                         ...params.InputProps,
                         startAdornment: (
                           <InputAdornment position="start">
-                            <Search size={20} color="#6C757D" />
+                            <MagnifyingGlass size={20} color="#6C757D" />
                           </InputAdornment>
                         ),
                       }}
@@ -529,7 +522,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                             ...params.InputProps,
                             startAdornment: (
                               <InputAdornment position="start">
-                                <Search size={20} color="#6C757D" />
+                                <MagnifyingGlass size={20} color="#6C757D" />
                               </InputAdornment>
                             ),
                           }}
