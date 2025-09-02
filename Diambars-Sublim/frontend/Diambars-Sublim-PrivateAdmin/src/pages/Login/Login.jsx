@@ -103,7 +103,7 @@ const LoginPage = () => {
                   <Envelope className="login-input-icon" weight="duotone" />
                   <input
                     type="email"
-                    placeholder="admin@diambars.com"
+                    placeholder="Correo electrónico"
                     className={`login-form-input ${errors.email ? 'login-input-error' : ''}`}
                     {...register('email', {
                       required: 'Este campo es requerido',
@@ -128,7 +128,7 @@ const LoginPage = () => {
                   <Lock className="login-input-icon" weight="duotone" />
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Contraseña"
                     className={`login-form-input ${errors.password ? 'login-input-error' : ''}`}
                     {...register('password', {
                       required: 'Este campo es requerido',
