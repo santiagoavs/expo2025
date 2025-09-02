@@ -30,14 +30,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Alert,
-  Timeline,
-  TimelineItem,
-  TimelineSeparator,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineOppositeContent
+  Alert
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -56,7 +49,7 @@ import {
   FileText,
   Download,
   Share,
-  Print,
+  Printer,
   Eye,
   Star,
   Warning,
@@ -93,13 +86,12 @@ import {
   BatteryMedium,
   BatteryLow,
   BatteryEmpty,
-  SignalHigh,
-  SignalMedium,
-  SignalLow,
-  SignalNone,
+  CellSignalHigh,
+  CellSignalMedium,
+  CellSignalLow,
+  CellSignalNone,
   Bluetooth,
   BluetoothSlash,
-  Wifi,
   DeviceMobile,
   DeviceTablet,
   Desktop,
@@ -109,9 +101,6 @@ import {
   SpeakerHigh,
   SpeakerLow,
   SpeakerSlash,
-  VolumeHigh,
-  VolumeLow,
-  VolumeSlash,
   Play,
   Pause,
   Stop,
@@ -130,10 +119,10 @@ import {
   MusicNotes,
   Headphones,
   MicrophoneSlash,
-  RadioButton,
-  RadioButtonChecked,
-  Checkbox,
-  CheckboxChecked,
+  Circle,
+  CircleDashed,
+  Square,
+  CheckSquare,
   Minus,
   Plus as PlusIcon,
   CaretUp,
@@ -320,7 +309,7 @@ const statusIcons = {
 const productionStages = [
   { key: 'sourcing_product', label: 'Adquisición de Producto', icon: Package },
   { key: 'preparing_materials', label: 'Preparación de Materiales', icon: Package },
-  { key: 'printing', label: 'Impresión', icon: Print },
+  { key: 'printing', label: 'Impresión', icon: Printer },
   { key: 'sublimating', label: 'Sublimación', icon: Package },
   { key: 'quality_check', label: 'Control de Calidad', icon: CheckCircle },
   { key: 'packaging', label: 'Empaquetado', icon: Package }
@@ -842,36 +831,51 @@ export default function OrderDetailModal({ open, onClose, order }) {
                     Historial de Estados
                   </Typography>
                   
-                  <Timeline>
+                  <Box>
                     {order.statusHistory.map((entry, index) => (
-                      <TimelineItem key={index}>
-                        <TimelineOppositeContent
-                          sx={{ m: 'auto 0' }}
-                          align="right"
-                          variant="body2"
-                          color="text.secondary"
-                        >
-                          {formatDate(entry.timestamp)}
-                        </TimelineOppositeContent>
-                        <TimelineSeparator>
-                          <TimelineDot color="primary">
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center',
+                          mr: 2,
+                          minWidth: '60px'
+                        }}>
+                          <Avatar sx={{ 
+                            bgcolor: 'primary.main', 
+                            width: 40, 
+                            height: 40,
+                            mb: 1
+                          }}>
                             {getStatusIcon(entry.status)}
-                          </TimelineDot>
-                          {index < order.statusHistory.length - 1 && <TimelineConnector />}
-                        </TimelineSeparator>
-                        <TimelineContent sx={{ py: '12px', px: 2 }}>
-                          <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
-                            {statusLabels[entry.status]}
-                          </Typography>
+                          </Avatar>
+                          {index < order.statusHistory.length - 1 && (
+                            <Box sx={{ 
+                              width: 2, 
+                              height: 40, 
+                              bgcolor: 'divider',
+                              mt: 1
+                            }} />
+                          )}
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                              {statusLabels[entry.status]}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDate(entry.timestamp)}
+                            </Typography>
+                          </Box>
                           {entry.notes && (
                             <Typography variant="body2" color="text.secondary">
                               {entry.notes}
                             </Typography>
                           )}
-                        </TimelineContent>
-                      </TimelineItem>
+                        </Box>
+                      </Box>
                     ))}
-                  </Timeline>
+                  </Box>
                 </CardContent>
               </InfoCard>
             </Grid>
@@ -889,7 +893,7 @@ export default function OrderDetailModal({ open, onClose, order }) {
         <ActionButton startIcon={<Share size={16} />} className="secondary">
           Compartir
         </ActionButton>
-        <ActionButton startIcon={<Print size={16} />} className="primary">
+        <ActionButton startIcon={<Printer size={16} />} className="primary">
           Imprimir
         </ActionButton>
       </DialogActions>

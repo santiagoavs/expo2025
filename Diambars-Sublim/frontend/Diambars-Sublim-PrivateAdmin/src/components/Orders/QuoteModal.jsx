@@ -43,14 +43,13 @@ import {
   Percent,
   Tag,
   FileText,
-  Save,
-  Send,
+  FloppyDisk,
+  PaperPlaneTilt,
   Eye,
-  Edit,
+  PencilSimple,
   Trash,
   Copy,
   Link,
-  PaperPlaneTilt,
   ChatTeardrop,
   PhoneCall,
   Video,
@@ -68,13 +67,13 @@ import {
   BatteryMedium,
   BatteryLow,
   BatteryEmpty,
-  SignalHigh,
-  SignalMedium,
-  SignalLow,
-  SignalNone,
+  CellSignalHigh,
+  CellSignalMedium,
+  CellSignalLow,
+  CellSignalNone,
   Bluetooth,
   BluetoothSlash,
-  Wifi,
+
   WifiSlash as WifiOff,
   DeviceMobile,
   DeviceTablet,
@@ -85,9 +84,7 @@ import {
   SpeakerHigh,
   SpeakerLow,
   SpeakerSlash,
-  VolumeHigh,
-  VolumeLow,
-  VolumeSlash,
+
   Play,
   Pause,
   Stop,
@@ -106,10 +103,10 @@ import {
   MusicNotes,
   Headphones,
   MicrophoneSlash,
-  RadioButton,
-  RadioButtonChecked,
-  Checkbox,
-  CheckboxChecked,
+  Circle,
+  CircleDashed,
+  Square,
+  CheckSquare,
   Minus as MinusIcon,
   Plus as PlusIcon,
   CaretUp,
@@ -165,11 +162,7 @@ import {
   ArrowFatLineUp,
   ArrowFatLineDown,
   ArrowFatLineLeft,
-  ArrowFatLineRight,
-  ArrowUpLeft,
-  ArrowUpRight,
-  ArrowDownLeft,
-  ArrowDownRight
+  ArrowFatLineRight
 } from '@phosphor-icons/react';
 
 // Styled Components
@@ -597,7 +590,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
           Cancelar
         </ActionButton>
         <ActionButton 
-          startIcon={<Save size={16} />} 
+          startIcon={<FloppyDisk size={16} />} 
           className="secondary"
           onClick={() => {
             // Aquí iría la lógica para guardar como borrador
@@ -607,7 +600,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
           Guardar Borrador
         </ActionButton>
         <ActionButton 
-          startIcon={<Send size={16} />} 
+          startIcon={<PaperPlaneTilt size={16} />} 
           className="primary"
           onClick={handleSubmit}
         >
