@@ -1,5 +1,5 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Mona Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -11,6 +11,59 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@font-face {
+  font-family: 'Mona Sans';
+  src: url('/fonts/MonaSans.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Forzar Mona Sans en todos los elementos pero permitir fontWeight */
+* {
+  font-family: 'Mona Sans', system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+/* Permitir fontWeight específico en todos los elementos */
+* {
+  font-weight: inherit !important;
+}
+
+/* Asegurar que MUI use Mona Sans pero respete fontWeight */
+.MuiTypography-root,
+.MuiButton-root,
+.MuiInputBase-root,
+.MuiSelect-root,
+.MuiChip-root {
+  font-family: 'Mona Sans' !important;
+}
+
+/* Permitir fontWeight específico en componentes styled */
+[class*="CatalogHeaderSection"],
+[class*="CatalogMainTitle"],
+[class*="CatalogMainDescription"] {
+  font-family: 'Mona Sans' !important;
+  font-weight: inherit !important;
+}
+
+/* Forzar fontWeight bold en elementos específicos del header */
+[class*="CatalogHeaderSection"] *,
+[class*="CatalogMainTitle"],
+[class*="CatalogMainDescription"] {
+  font-weight: 700 !important;
+}
+
+/* Clase específica para forzar bold */
+.force-bold {
+  font-weight: 700 !important;
+  font-family: 'Mona Sans' !important;
+}
+
+/* Selector más específico para MUI Typography */
+.MuiTypography-root.force-bold,
+.MuiTypography-root[style*="font-weight: 700"] {
+  font-weight: 700 !important;
 }
 
 a {
@@ -28,6 +81,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-family: 'Mona Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 h1 {
