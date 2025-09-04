@@ -1,4 +1,4 @@
-// src/components/CreateDesignModal/CreateDesignModal.jsx - MODAL CORREGIDO
+// src/components/CreateDesignModal/CreateDesignModal.jsx - DROPDOWNS ARREGLADOS
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Dialog,
@@ -23,7 +23,9 @@ import {
   CircularProgress,
   styled,
   alpha,
-  useTheme
+  useTheme,
+  Popper,
+  Fade
 } from '@mui/material';
 import {
   X,
@@ -39,7 +41,7 @@ import {
 } from '@phosphor-icons/react';
 
 // Importar componentes
-import { FabricDesignEditorSimple } from '../FabricDesignEditor';
+import FabricDesignEditorGlass from '../FabricDesignEditor/FabricDesignEditor';
 import FabricDesignViewer from '../FabricDesignViewer/FabricDesignViewer';
 
 // ================ SERVICIO DE VALIDACIÓN INTEGRADO ================
@@ -99,149 +101,570 @@ const DesignService = {
   }
 };
 
+// ================ CUSTOM POPPER PARA DROPDOWNS SIN ANIMACIONES ================
+const CustomPopper = styled(Popper)(({ theme }) => ({
+  zIndex: 99999, // Z-index más alto
+  '& *': {
+    transition: 'none !important',
+    animation: 'none !important',
+    transform: 'none !important',
+  },
+  '& .MuiPaper-root': {
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(1, 3, 38, 0.16)',
+    border: `1px solid ${alpha('#1F64BF', 0.12)}`,
+    marginTop: '4px',
+    maxHeight: '300px',
+    overflow: 'auto',
+    transition: 'none !important',
+    animation: 'none !important',
+    transform: 'none !important',
+    '& *': {
+      transition: 'none !important',
+      animation: 'none !important',
+      transform: 'none !important',
+    },
+    '&::-webkit-scrollbar': {
+      width: '6px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: '#f1f1f1',
+      borderRadius: '3px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: alpha('#1F64BF', 0.3),
+      borderRadius: '3px',
+      '&:hover': {
+        background: alpha('#1F64BF', 0.5),
+      },
+    },
+  }
+}));
+
 // ================ ESTILOS MODERNOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    borderRadius: '24px',
-    background: 'white',
-    boxShadow: '0 24px 64px rgba(1, 3, 38, 0.16)',
-    border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-    maxWidth: '1000px',
+    borderRadius: '40px', // Más redondeado
+    background: 'linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%)',
+    boxShadow: '0 40px 80px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(24px)',
+    border: 'none', // Quitado el borde blanco
+    maxWidth: '1400px',
     width: '95vw',
-    maxHeight: '90vh',
-    margin: '16px',
-    overflow: 'hidden'
-  }
+    maxHeight: '92vh',
+    margin: '24px',
+    overflow: 'hidden',
+    animation: 'modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  '@keyframes modalSlideIn': {
+    '0%': {
+      opacity: 0,
+      transform: 'scale(0.95) translateY(20px)',
+    },
+    '100%': {
+      opacity: 1,
+      transform: 'scale(1) translateY(0)',
+    },
+  },
 }));
 
 const ModalHeader = styled(DialogTitle)(({ theme }) => ({
   background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
   color: 'white',
-  padding: '24px 32px',
+  padding: '32px 40px',
   margin: 0,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   position: 'relative',
+  borderRadius: '40px 40px 0 0', // Más redondeado
+  overflow: 'hidden',
+  border: 'none', // Quitado el borde blanco
   '&::before': {
     content: '""',
     position: 'absolute',
     top: 0,
     right: 0,
-    width: '120px',
-    height: '120px',
-    background: 'rgba(255, 255, 255, 0.1)',
+    width: '200px',
+    height: '200px',
+    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%)',
     borderRadius: '50%',
-    transform: 'translate(40px, -40px)'
+    transform: 'translate(50px, -50px)',
+    animation: 'float 6s ease-in-out infinite',
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '150px',
+    height: '150px',
+    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)',
+    borderRadius: '50%',
+    transform: 'translate(-30px, 30px)',
+    animation: 'float 8s ease-in-out infinite reverse',
+  },
+  '@keyframes float': {
+    '0%, 100%': {
+      transform: 'translate(50px, -50px) scale(1)',
+    },
+    '50%': {
+      transform: 'translate(60px, -40px) scale(1.1)',
+    },
   },
   [theme.breakpoints.down('sm')]: {
-    padding: '20px 24px',
+    padding: '24px 32px',
   }
 }));
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '1.5rem',
-  fontWeight: 700,
+  fontSize: '1.75rem',
+  fontWeight: 800,
   color: 'white',
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
-  zIndex: 1,
+  gap: '16px',
+  zIndex: 2,
+  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+  letterSpacing: '-0.02em',
   [theme.breakpoints.down('sm')]: {
-    fontSize: '1.25rem',
+    fontSize: '1.5rem',
   }
 }));
 
 const CloseButton = styled(IconButton)({
   color: 'white',
-  background: 'rgba(255, 255, 255, 0.1)',
-  width: '40px',
-  height: '40px',
-  zIndex: 1,
+  background: 'rgba(255, 255, 255, 0.15)',
+  width: '52px',
+  height: '52px',
+  borderRadius: '18px',
+  backdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  zIndex: 2,
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    transition: 'left 0.6s ease',
+  },
   '&:hover': {
-    background: 'rgba(255, 255, 255, 0.2)',
-  }
+    background: 'rgba(255, 255, 255, 0.25)',
+    transform: 'scale(1.1) translateY(-3px)',
+    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+    '&::before': {
+      left: '100%',
+    },
+  },
+  '&:active': {
+    transform: 'scale(0.95) translateY(-1px)',
+  },
 });
 
 const ModalContent = styled(DialogContent)(({ theme }) => ({
-  padding: '32px',
-  background: 'white',
+  padding: '40px',
+  background: 'linear-gradient(135deg, #FAFBFC 0%, #F8F9FA 100%)',
+  borderRadius: '0 0 40px 40px', // Más redondeado
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent 0%, rgba(31, 100, 191, 0.3) 50%, transparent 100%)',
+  },
   [theme.breakpoints.down('sm')]: {
-    padding: '24px',
+    padding: '32px 24px',
   }
 }));
 
 const StepperContainer = styled(Box)(({ theme }) => ({
-  marginBottom: '32px',
+  marginBottom: '40px',
+  padding: '24px',
+  background: 'rgba(255, 255, 255, 0.8)',
+  borderRadius: '20px',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04)',
   '& .MuiStep-root': {
     '& .MuiStepLabel-root': {
       '& .MuiStepLabel-label': {
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        color: '#032CA6',
+        fontSize: '0.9rem',
+        fontWeight: 700,
+        color: '#1F64BF',
+        letterSpacing: '-0.01em',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&.Mui-active': {
           color: '#1F64BF',
-          fontWeight: 600
+          fontWeight: 800,
+          transform: 'scale(1.02)',
         },
         '&.Mui-completed': {
-          color: '#10B981',
-          fontWeight: 600
+          color: '#040DBF',
+          fontWeight: 700,
         }
       }
     }
   },
   [theme.breakpoints.down('sm')]: {
-    marginBottom: '24px',
+    marginBottom: '32px',
+    padding: '20px',
     '& .MuiStepLabel-label': {
-      fontSize: '0.75rem !important'
+      fontSize: '0.8rem !important'
     }
   }
 }));
 
 const StepContent = styled(Box)({
-  minHeight: '400px',
+  minHeight: '500px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '24px'
+  gap: '32px',
+  padding: '24px',
+  background: 'rgba(255, 255, 255, 0.6)',
+  borderRadius: '20px',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
+  },
 });
 
 const SectionCard = styled(Paper)(({ theme }) => ({
-  padding: '24px',
-  borderRadius: '16px',
-  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  background: 'white',
+  padding: '32px',
+  borderRadius: '24px',
+  border: '1px solid rgba(31, 100, 191, 0.1)',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(242, 242, 242, 0.9) 100%)',
+  boxShadow: '0 8px 32px rgba(31, 100, 191, 0.08)',
+  backdropFilter: 'blur(20px)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '2px',
+    background: 'linear-gradient(90deg, #1F64BF 0%, #040DBF 100%)',
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
+  },
+  '&:hover': {
+    boxShadow: '0 16px 48px rgba(31, 100, 191, 0.15)',
+    transform: 'translateY(-4px) scale(1.01)',
+    '&::before': {
+      opacity: 1,
+    },
+  },
   [theme.breakpoints.down('sm')]: {
-    padding: '20px',
+    padding: '24px',
   }
 }));
 
 const SectionTitle = styled(Typography)({
-  fontSize: '1.125rem',
-  fontWeight: 600,
-  color: '#010326',
-  marginBottom: '16px',
+  fontSize: '1.25rem',
+  fontWeight: 800,
+  color: '#1F64BF',
+  marginBottom: '24px',
   display: 'flex',
   alignItems: 'center',
-  gap: '8px'
+  gap: '12px',
+  letterSpacing: '-0.02em',
+  textShadow: '0 2px 4px rgba(31, 100, 191, 0.1)',
+  position: 'relative',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: '-8px',
+    left: 0,
+    width: '40px',
+    height: '3px',
+    background: 'linear-gradient(90deg, #1F64BF 0%, #040DBF 100%)',
+    borderRadius: '2px',
+  },
 });
 
 const ModernTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
-    background: '#F8F9FA',
-    transition: 'all 0.3s ease',
-    '& fieldset': {
-      borderColor: alpha('#1F64BF', 0.2),
+    borderRadius: '16px',
+    background: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    border: '1px solid rgba(31, 100, 191, 0.1)',
+    paddingTop: '8px', // Espacio adicional para evitar solapamiento
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.95)',
+      borderColor: 'rgba(31, 100, 191, 0.3)',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(31, 100, 191, 0.1)',
     },
-    '&:hover fieldset': {
-      borderColor: alpha('#1F64BF', 0.4),
+    '&.Mui-focused': {
+      background: 'rgba(255, 255, 255, 1)',
+      boxShadow: '0 0 0 4px rgba(31, 100, 191, 0.15)',
+      transform: 'translateY(-2px)',
+    },
+    '& fieldset': {
+      border: 'none',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#1F64BF',
-      borderWidth: '2px',
+      border: 'none',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    color: '#1F64BF',
+    fontWeight: 600,
+    marginTop: '4px', // Espacio adicional para evitar solapamiento
+    '&.Mui-focused': {
+      color: '#1F64BF',
+    },
+    '&.MuiInputLabel-shrink': {
+      transform: 'translate(14px, -9px) scale(0.75)',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: '0 8px',
+      borderRadius: '4px',
     }
   }
 }));
+
+// ================ DROPDOWN PERSONALIZADO SIN MUI (COMO TestDropDown) ================
+const CustomDropdown = ({ 
+  options = [], 
+  value, 
+  onChange, 
+  loading = false, 
+  placeholder = "Seleccionar...",
+  getOptionLabel = (option) => option.name || option,
+  renderOption = null,
+  error = false,
+  helperText = ""
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const filteredOptions = options.filter(option => {
+    const label = getOptionLabel(option);
+    return label.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleOptionClick = (option) => {
+    onChange(option);
+    setSearchTerm(getOptionLabel(option));
+    setIsOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    setIsOpen(true);
+  };
+
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    setIsOpen(true);
+  };
+
+  return (
+    <div 
+      ref={dropdownRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        fontFamily: 'inherit'
+      }}
+    >
+      {/* Input personalizado */}
+      <input
+        ref={inputRef}
+        type="text"
+        value={searchTerm}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        style={{
+          width: '100%',
+          padding: '16px 50px 16px 16px', // Aumentado padding derecho para la flecha más grande
+          border: `1px solid ${error ? '#d32f2f' : 'rgba(31, 100, 191, 0.1)'}`,
+          borderRadius: '16px',
+          fontSize: '16px',
+          outline: 'none',
+          boxSizing: 'border-box',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(10px)',
+          fontFamily: 'inherit',
+          fontWeight: '500',
+          color: '#1F64BF',
+          '&:focus': {
+            borderColor: '#1F64BF',
+            boxShadow: '0 0 0 4px rgba(31, 100, 191, 0.15)',
+          }
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = '#1F64BF';
+          e.target.style.boxShadow = '0 0 0 4px rgba(31, 100, 191, 0.15)';
+          e.target.style.transform = 'translateY(-2px)';
+          setIsOpen(true);
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = error ? '#d32f2f' : 'rgba(31, 100, 191, 0.1)';
+          e.target.style.boxShadow = 'none';
+          e.target.style.transform = 'translateY(0)';
+        }}
+      />
+
+      {/* Icono de flecha */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          position: 'absolute',
+          right: '16px',
+          top: '40%', // Movido más arriba
+          transform: 'translateY(-50%)',
+          cursor: 'pointer',
+          width: '0',
+          height: '0',
+          borderLeft: '8px solid transparent', // Más grande
+          borderRight: '8px solid transparent', // Más grande
+          borderTop: '8px solid #1F64BF', // Más grande y con color de la paleta
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          ...(isOpen && {
+            transform: 'translateY(-50%) rotate(180deg)'
+          })
+        }}
+      />
+
+      {/* Loading indicator */}
+      {loading && (
+        <div
+          style={{
+            position: 'absolute',
+            right: '50px', // Ajustado para la flecha más grande
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '20px',
+            height: '20px',
+            border: '2px solid #f3f3f3',
+            borderTop: '2px solid #1F64BF',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}
+        />
+      )}
+
+      {/* Dropdown list - SIN ANIMACIONES */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: '0',
+            right: '0',
+            zIndex: 99999,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(31, 100, 191, 0.2)',
+            borderRadius: '16px',
+            boxShadow: '0 20px 60px rgba(31, 100, 191, 0.15)',
+            maxHeight: '200px', // Reducido de 300px a 200px
+            overflowY: 'auto',
+            marginTop: '8px',
+            // SIN ANIMACIONES - APARECE INSTANTÁNEAMENTE
+            transition: 'none !important',
+            transform: 'none !important',
+            animation: 'none !important',
+          }}
+        >
+          {filteredOptions.length === 0 ? (
+            <div style={{
+              padding: '16px',
+              color: '#666',
+              fontStyle: 'italic',
+              textAlign: 'center'
+            }}>
+              {loading ? 'Cargando...' : 'No hay resultados'}
+            </div>
+          ) : (
+            filteredOptions.map((option, index) => (
+              <div
+                key={option.id || option._id || index}
+                onClick={() => handleOptionClick(option)}
+                style={{
+                  padding: '12px 16px', // Reducido padding para más compacto
+                  cursor: 'pointer',
+                  borderBottom: index < filteredOptions.length - 1 ? '1px solid rgba(31, 100, 191, 0.1)' : 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  borderRadius: '12px',
+                  margin: '2px 8px', // Reducido margin
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgba(31, 100, 191, 0.08)';
+                  e.target.style.transform = 'translateX(4px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(31, 100, 191, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.transform = 'translateX(0)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                {renderOption ? renderOption(option) : (
+                  <div>
+                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                      {getOptionLabel(option)}
+                    </div>
+                    {option.email && (
+                      <div style={{ fontSize: '14px', color: '#666' }}>
+                        {option.email}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Helper text */}
+      {helperText && (
+        <div style={{
+          marginTop: '12px',
+          fontSize: '13px',
+          color: error ? '#d32f2f' : '#1F64BF',
+          fontWeight: '500',
+          letterSpacing: '-0.01em',
+          opacity: 0.8,
+        }}>
+          {helperText}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DesignPreviewCard = styled(SectionCard)(({ theme }) => ({
   background: 'linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%)',
@@ -264,31 +687,90 @@ const DesignPreviewCard = styled(SectionCard)(({ theme }) => ({
 }));
 
 const ActionButton = styled(Button)(({ variant: buttonVariant, theme }) => ({
-  borderRadius: '12px',
-  padding: '12px 24px',
-  fontSize: '0.875rem',
-  fontWeight: 600,
+  borderRadius: '16px',
+  padding: '14px 28px',
+  fontSize: '0.9rem',
+  fontWeight: 700,
   textTransform: 'none',
   minWidth: '140px',
-  transition: 'all 0.3s ease',
+  position: 'relative',
+  overflow: 'hidden',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  backdropFilter: 'blur(10px)',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+    transition: 'left 0.6s ease',
+  },
+  '&:hover::before': {
+    left: '100%',
+  },
   ...(buttonVariant === 'contained' ? {
     background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
     color: 'white',
-    boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
+    boxShadow: '0 8px 32px rgba(31, 100, 191, 0.3)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     '&:hover': {
-      background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-      boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)',
-      transform: 'translateY(-1px)',
-    }
+      background: 'linear-gradient(135deg, #032CA6 0%, #040DBF 100%)',
+      boxShadow: '0 12px 40px rgba(31, 100, 191, 0.4)',
+      transform: 'translateY(-3px) scale(1.02)',
+    },
+    '&:active': {
+      transform: 'translateY(-1px) scale(0.98)',
+    },
   } : {
-    border: `2px solid ${alpha('#1F64BF', 0.3)}`,
+    border: '2px solid #1F64BF',
     color: '#1F64BF',
+    background: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(20px)',
     '&:hover': {
-      borderColor: '#1F64BF',
-      background: alpha('#1F64BF', 0.05),
-    }
+      background: 'rgba(31, 100, 191, 0.1)',
+      borderColor: '#032CA6',
+      color: '#032CA6',
+      transform: 'translateY(-2px) scale(1.02)',
+      boxShadow: '0 8px 24px rgba(31, 100, 191, 0.2)',
+    },
+    '&:active': {
+      transform: 'translateY(0) scale(0.98)',
+    },
   })
 }));
+
+const CrystalIconButton = styled(IconButton)({
+  background: 'rgba(31, 100, 191, 0.1)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(31, 100, 191, 0.2)',
+  borderRadius: '12px',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.2), transparent)',
+    transition: 'left 0.5s ease',
+  },
+  '&:hover': {
+    background: 'rgba(31, 100, 191, 0.2)',
+    transform: 'translateY(-2px) scale(1.05)',
+    boxShadow: '0 8px 20px rgba(31, 100, 191, 0.3)',
+    '&::before': {
+      left: '100%',
+    },
+  },
+  '&:active': {
+    transform: 'translateY(0) scale(0.95)',
+  },
+});
 
 const ModalActions = styled(DialogActions)(({ theme }) => ({
   padding: '24px 32px',
@@ -351,6 +833,22 @@ const CreateDesignModal = ({
   });
 
   // ==================== EFECTOS ====================
+  // Agregar CSS para spinner de loading
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     if (editMode && designToEdit) {
       setDesignData({
@@ -470,35 +968,29 @@ const CreateDesignModal = ({
     setShowEditor(false);
   }, []);
 
-  // *** ACTUALIZADO: Función handleSaveDesign para el nuevo sistema ***
   const handleSaveDesign = useCallback((canvasData, productColorFilter) => {
     console.log('💾 Guardando datos del canvas:', canvasData);
     console.log('🎨 Filtro de color del producto:', productColorFilter);
     
-    // El nuevo editor devuelve datos del canvas en formato Fabric.js
     let elements = [];
     
     if (canvasData && canvasData.canvas) {
-      // Extraer elementos del canvas Fabric.js
       elements = canvasData.canvas.objects || [];
       console.log('📋 Elementos extraídos del canvas:', elements);
     } else if (Array.isArray(canvasData)) {
-      // Fallback para formato anterior
       elements = canvasData;
     }
     
-    // Validar elementos...
     const validation = DesignService.validateElementsForSubmission(elements);
     if (!validation.isValid) {
       setErrors({ elements: validation.errors.join('; ') });
       return;
     }
 
-    // Guardar tanto los elementos como los datos completos del canvas
     const finalDesignData = {
       ...designData,
       elements: elements,
-      canvasData: canvasData, // Guardar datos completos del canvas
+      canvasData: canvasData,
       productColorFilter: productColorFilter || null
     };
 
@@ -530,14 +1022,12 @@ const CreateDesignModal = ({
     try {
       setLoading(true);
       
-      // Preparar datos finales
       const finalDesignData = {
         ...designData,
         elements: designElements,
         productColorFilter: designData.productColorFilter || null
       };
       
-      // Validación final
       const validation = DesignService.validateElementsForSubmission(designElements);
       if (!validation.isValid) {
         setErrors({ elements: validation.errors.join('; ') });
@@ -592,103 +1082,64 @@ const CreateDesignModal = ({
                   placeholder="Ej: Logo para camiseta promocional"
                 />
 
-                <Autocomplete
+                <CustomDropdown
                   options={users}
                   getOptionLabel={(option) => `${option.name} (${option.email})`}
-                  value={selectedUser || null}
-                  onChange={(event, newValue) => {
-                    handleInputChange('userId', newValue?.id || newValue?._id || '');
+                  value={selectedUser}
+                  onChange={(option) => {
+                    handleInputChange('userId', option?.id || option?._id || '');
                   }}
                   loading={loadingUsers}
-                  renderInput={(params) => (
-                    <ModernTextField
-                      {...params}
-                      label="Cliente"
-                      error={!!errors.userId}
-                      helperText={errors.userId || 'Buscar cliente por nombre o email'}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {loadingUsers ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
+                  placeholder="Buscar cliente por nombre o email"
+                  error={!!errors.userId}
+                  helperText={errors.userId || 'Buscar cliente por nombre o email'}
+                  renderOption={(option) => (
+                    <div>
+                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                        {option.name}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#666' }}>
+                        {option.email}
+                      </div>
+                    </div>
                   )}
-                  renderOption={(props, option) => {
-                    const { key, ...otherProps } = props;
-                    return (
-                      <Box component="li" key={key} {...otherProps}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {option.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {option.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    );
-                  }}
                 />
 
-                <Autocomplete
+                <CustomDropdown
                   options={products}
                   getOptionLabel={(option) => option.name}
-                  value={selectedProduct || null}
-                  onChange={(event, newValue) => {
-                    handleInputChange('productId', newValue?.id || newValue?._id || '');
+                  value={selectedProduct}
+                  onChange={(option) => {
+                    handleInputChange('productId', option?.id || option?._id || '');
                   }}
                   loading={loadingProducts}
-                  renderInput={(params) => (
-                    <ModernTextField
-                      {...params}
-                      label="Producto"
-                      error={!!errors.productId}
-                      helperText={errors.productId || 'Seleccionar producto base para personalizar'}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {loadingProducts ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
+                  placeholder="Seleccionar producto base para personalizar"
+                  error={!!errors.productId}
+                  helperText={errors.productId || 'Seleccionar producto base para personalizar'}
+                  renderOption={(option) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {(option.mainImage || option.images?.main) && (
+                        <img
+                          src={option.mainImage || option.images?.main}
+                          alt={option.name}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      )}
+                      <div>
+                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                          {option.name}
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#666' }}>
+                          {option.formattedPrice || `${option.basePrice}` || 'Precio no disponible'}
+                        </div>
+                      </div>
+                    </div>
                   )}
-                  renderOption={(props, option) => {
-                    const { key, ...otherProps } = props;
-                    return (
-                      <Box component="li" key={key} {...otherProps}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          {(option.mainImage || option.images?.main) && (
-                            <Box
-                              component="img"
-                              src={option.mainImage || option.images?.main}
-                              alt={option.name}
-                              sx={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
-                                objectFit: 'cover'
-                              }}
-                            />
-                          )}
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              {option.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {option.formattedPrice || `${option.basePrice}` || 'Precio no disponible'}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    );
-                  }}
                 />
 
                 <ModernTextField
@@ -730,28 +1181,18 @@ const CreateDesignModal = ({
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', gap: '8px' }}>
-                        <IconButton
+                        <CrystalIconButton
                           size="small"
                           onClick={handlePreviewDesign}
-                          sx={{ 
-                            color: '#059669',
-                            background: alpha('#10B981', 0.1),
-                            '&:hover': { background: alpha('#10B981', 0.2) }
-                          }}
                         >
                           <Eye size={16} weight="bold" />
-                        </IconButton>
-                        <IconButton
+                        </CrystalIconButton>
+                        <CrystalIconButton
                           size="small"
                           onClick={handleOpenEditor}
-                          sx={{ 
-                            color: '#059669',
-                            background: alpha('#10B981', 0.1),
-                            '&:hover': { background: alpha('#10B981', 0.2) }
-                          }}
                         >
                           <PencilSimple size={16} weight="bold" />
-                        </IconButton>
+                        </CrystalIconButton>
                       </Box>
                     </ElementSummary>
                   ) : (
@@ -1034,7 +1475,7 @@ const CreateDesignModal = ({
 
       {/* Editor Fabric Simplificado */}
       {showEditor && selectedProduct && (
-        <FabricDesignEditorSimple
+        <FabricDesignEditorGlass
           isOpen={showEditor}
           onClose={handleCloseEditor}
           product={selectedProduct}

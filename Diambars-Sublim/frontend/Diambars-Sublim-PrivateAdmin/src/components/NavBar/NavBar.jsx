@@ -72,6 +72,15 @@ const slideInFromTop = keyframes`
   }
 `;
 
+const dropdownFadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
 const statusPulse = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.8; transform: scale(1.05); }
@@ -555,8 +564,11 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
 const StyledPopper = styled(Popper)(({ theme }) => ({
   zIndex: 1400,
   pointerEvents: "auto",
+  transition: "none !important",
+  animation: "none !important",
 
   "& .MuiPaper-root": {
+    animation: `${dropdownFadeIn} 0.2s ease-out`,
     background: "rgba(255, 255, 255, 0.95)",
     backdropFilter: "blur(12px)",
     WebkitBackdropFilter: "blur(12px)",
@@ -568,7 +580,6 @@ const StyledPopper = styled(Popper)(({ theme }) => ({
     `,
     padding: "12px",
     minWidth: 280,
-    animation: `${slideInFromTop} 0.2s ease-out`,
     marginTop: "8px !important",
     overflow: "visible",
     pointerEvents: "auto",
@@ -1472,11 +1483,9 @@ const Navbar = () => {
           open={dropdownStates[key].open}
           anchorEl={dropdownStates[key].anchor}
           placement="bottom-end"
-          transition
         >
-          {({ TransitionProps }) => (
-            <Fade {...TransitionProps} timeout={300}>
-              <Paper>
+          {dropdownStates[key].open && (
+            <Paper>
                 <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
                   <Box sx={{ p: 1 }}>
                     <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
@@ -1516,7 +1525,6 @@ const Navbar = () => {
                   </Box>
                 </ClickAwayListener>
               </Paper>
-            </Fade>
           )}
         </StyledPopper>
       ))}
