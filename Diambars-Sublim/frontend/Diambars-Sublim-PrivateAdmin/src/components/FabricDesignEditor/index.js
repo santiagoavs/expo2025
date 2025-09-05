@@ -2,8 +2,7 @@
 
 // Exportar el editor principal
 export { default } from './FabricDesignEditor';
-export { default as FabricDesignEditorGlass } from './FabricDesignEditorGlass';
-export { default as FabricDesignEditorSimple } from './FabricDesignEditor';
+export { default as FabricDesignEditor } from './FabricDesignEditor';
 
 // Exportar hooks
 export { useFabricCanvas } from './hooks/useFabricCanvas';

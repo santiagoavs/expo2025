@@ -49,6 +49,7 @@ import {
 // Importar componentes personalizados  
 import DesignCard from '../../components/DesignCard/DesignCard';
 import CreateDesignModal from '../../components/CreateDesignModal/CreateDesignModal';
+import TestDropdown from '../../components/CreateDesignModal/TestDropDown';
 import QuoteDesignModal from '../../components/QuoteDesignModal/QuoteDesignModal';
 import KonvaDesignViewer from '../../components/KonvaDesignViewer/KonvaDesignViewer';
 
