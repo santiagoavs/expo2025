@@ -35,11 +35,45 @@
   align-items: flex-start;
 }
 
+.footer-logo {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(191, 51, 4, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-logo:hover {
+  transform: rotate(10deg) scale(1.05);
+  box-shadow: 0 6px 20px rgba(191, 51, 4, 0.3);
+}
+
+.footer-logo::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: conic-gradient(from 0deg, #991f00, #f24f27, #991f00);
+  border-radius: 50%;
+  z-index: -1;
+  animation: footer-private-logo-rotate 4s linear infinite;
+}
+
+@keyframes footer-private-logo-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .footer-logo-img {
-    width: 70px;
-    height: 60px;
-  }
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
 
 /* Sección principal izquierda */
 .footer-brand {
@@ -48,18 +82,19 @@
   gap: 1.5rem;
 }
 
-.footer-logo {
+.footer-brand-logo {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 1.5rem;
 }
 
-.footer-logo h2 {
+.footer-logo-h2 h2 {
   font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
-  margin: 0;
+  margin: 0 !important;
   letter-spacing: -0.5px;
 }
 
@@ -451,7 +486,7 @@
     text-align: center;
   }
   
-  .footer-logo h2 {
+  .footer-logo-h2 {
     font-size: 1.8rem;
   }
   
@@ -540,8 +575,12 @@
     padding: 0 0.5rem;
     gap: 1.5rem;
   }
+
+  .footer-brand-logo {
+    gap: 1rem;
+  }
   
-  .footer-logo h2 {
+  .footer-logo-h2 h2 {
     font-size: 1.5rem;
   }
   

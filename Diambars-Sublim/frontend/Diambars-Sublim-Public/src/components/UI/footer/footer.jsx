@@ -24,10 +24,14 @@ const Footer = () => {
         
         {/* Sección principal de la marca */}
         <div className="footer-brand">
+          <div className="footer-brand-logo">
           <div className="footer-logo">
             <img src="images/footer/Logo-B&W.png" alt="Diambars Sublim Logo" className="footer-logo-img" />
-            <h2>Diambars Sublim</h2>
           </div>
+          <div className="footer-logo-h2">
+              <h2>Diambars Sublim</h2>
+            </div>
+            </div>
           <p className="footer-tagline">Calidad superior en sublimación</p>
           <p className="footer-description">
             En Diambars Sublim eres
