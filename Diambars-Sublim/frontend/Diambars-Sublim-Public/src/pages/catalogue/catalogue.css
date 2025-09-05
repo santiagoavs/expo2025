@@ -77,9 +77,6 @@
   
   /* Responsive */
   @media (max-width: 768px) {
-    .catalogue-section {
-      padding: 1rem;
-    }
   
     .catalogue-text-content {
       flex-direction: column;
