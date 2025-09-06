@@ -86,7 +86,6 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
   gap: 1.5rem;
 }
 
@@ -484,6 +483,10 @@
   .footer-brand {
     grid-column: span 1;
     text-align: center;
+  }
+
+  .footer-brand-logo {
+    justify-content: center;
   }
   
   .footer-logo-h2 {

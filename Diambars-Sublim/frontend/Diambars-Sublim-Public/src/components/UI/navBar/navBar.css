@@ -284,6 +284,17 @@
         opacity: 0.8;
     }
 
+    .sidebar-item span {
+    font-weight: bold;
+    font-style: italic;
+    font-size: 1.25rem;
+    font-family: 'Spectral', sans-serif;
+    letter-spacing: -1.9px;
+    margin-left: 5px;
+    align-items: center;
+    line-height: 1;
+    }
+
     .sidebar-header {
         display: flex;
         justify-content: space-between;
