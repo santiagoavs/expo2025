@@ -383,7 +383,7 @@ export default function OrderDetailModal({ open, onClose, order }) {
       <DialogContent dividers>
         <Grid container spacing={3}>
           {/* Información del Cliente */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <InfoCard>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -452,7 +452,7 @@ export default function OrderDetailModal({ open, onClose, order }) {
           </Grid>
 
           {/* Información de Entrega */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <InfoCard>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -544,7 +544,7 @@ export default function OrderDetailModal({ open, onClose, order }) {
           </Grid>
 
           {/* Información de Pago */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <InfoCard>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -773,7 +773,7 @@ export default function OrderDetailModal({ open, onClose, order }) {
                   
                   <Grid container spacing={2}>
                     {order.productionPhotos.map((photo, index) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                         <Paper
                           sx={{
                             p: 2,

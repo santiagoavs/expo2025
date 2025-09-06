@@ -342,7 +342,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
       <DialogContent dividers>
         <Grid container spacing={3}>
           {/* Resumen del Pedido */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <SummaryCard>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -416,7 +416,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
           </Grid>
 
           {/* Formulario de Cotización */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <Box sx={{ mb: 3 }}>
               <Alert severity="info" sx={{ borderRadius: '12px' }}>
                 <Typography variant="body2">
@@ -428,7 +428,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
 
             <Grid container spacing={3}>
               {/* Precio Base */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <StyledTextField
                   fullWidth
                   label="Precio Base de Productos"
@@ -448,7 +448,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
               </Grid>
 
               {/* Tarifa de Envío */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <StyledTextField
                   fullWidth
                   label="Tarifa de Envío"
@@ -468,7 +468,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
               </Grid>
 
               {/* Impuestos */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <StyledTextField
                   fullWidth
                   label="Impuestos"
@@ -488,7 +488,7 @@ export default function QuoteModal({ open, onClose, order, onQuote }) {
               </Grid>
 
               {/* Días Estimados */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <StyledTextField
                   fullWidth
                   label="Días Estimados de Producción"

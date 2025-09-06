@@ -728,7 +728,7 @@ export default function Orders() {
 
         {/* Estadísticas */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <StatsCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -745,7 +745,7 @@ export default function Orders() {
               </CardContent>
             </StatsCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <StyledCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -762,7 +762,7 @@ export default function Orders() {
               </CardContent>
             </StyledCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <StyledCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -779,7 +779,7 @@ export default function Orders() {
               </CardContent>
             </StyledCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <StyledCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -796,7 +796,7 @@ export default function Orders() {
               </CardContent>
             </StyledCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <StyledCard>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -818,7 +818,7 @@ export default function Orders() {
         {/* Filtros y Búsqueda */}
         <FilterCard>
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <SearchField
                 fullWidth
                 placeholder="Buscar por número de pedido, cliente o email..."
@@ -833,7 +833,7 @@ export default function Orders() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth>
                 <InputLabel>Estado</InputLabel>
                 <Select
@@ -855,7 +855,7 @@ export default function Orders() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Stack direction="row" spacing={2}>
                 <ActionButton
                   variant="outlined"
@@ -905,7 +905,7 @@ export default function Orders() {
                 <CardContent>
                   <Grid container spacing={3} alignItems="center">
                     {/* Información Principal */}
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                         <Typography variant="h6" sx={{ fontWeight: 700, color: '#010326' }}>
                           {order.orderNumber}
@@ -940,7 +940,7 @@ export default function Orders() {
                     </Grid>
 
                     {/* Información de Productos */}
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <Box sx={{ mb: 2 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                           Productos
@@ -967,7 +967,7 @@ export default function Orders() {
                     </Grid>
 
                     {/* Información Financiera */}
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="h6" sx={{ fontWeight: 700, color: '#28A745', mb: 1 }}>
                           {formatCurrency(order.total)}

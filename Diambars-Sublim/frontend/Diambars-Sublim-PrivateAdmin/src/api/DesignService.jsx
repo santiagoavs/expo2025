@@ -778,16 +778,20 @@ updateProductColor: async (id, color) => {
       return konvaElements.map(element => {
         const { elementType, areaId, id, name, draggable, ...konvaAttrs } = element;
         
+        const normalizedKonva = {
+          ...konvaAttrs,
+          // Normalizar nombre de imagen para backend
+          ...(konvaAttrs.imageUrl && !konvaAttrs.image ? { image: konvaAttrs.imageUrl } : {}),
+          // Limpiar propiedades específicas de Konva que no necesitamos
+          id: undefined,
+          name: undefined,
+          draggable: undefined
+        };
+
         return {
           type: elementType || element.type || 'text',
           areaId: areaId || '',
-          konvaAttrs: {
-            ...konvaAttrs,
-            // Limpiar propiedades específicas de Konva que no necesitamos
-            id: undefined,
-            name: undefined,
-            draggable: undefined
-          }
+          konvaAttrs: normalizedKonva
         };
       });
     } catch (error) {

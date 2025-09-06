@@ -41,7 +41,7 @@ import {
 } from '@phosphor-icons/react';
 
 // Importar componentes
-import FabricDesignEditorGlass from '../FabricDesignEditor/FabricDesignEditor';
+import EnhancedFabricEditor from '../FabricDesignEditor/EnhancedFabricEditor';
 import FabricDesignViewer from '../FabricDesignViewer/FabricDesignViewer';
 
 // ================ SERVICIO DE VALIDACIÓN INTEGRADO ================
@@ -405,7 +405,7 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
     backdropFilter: 'blur(10px)',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     border: '1px solid rgba(31, 100, 191, 0.1)',
-    paddingTop: '8px', // Espacio adicional para evitar solapamiento
+    paddingTop: '16px', // Espacio adicional para evitar solapamiento
     '&:hover': {
       background: 'rgba(255, 255, 255, 0.95)',
       borderColor: 'rgba(31, 100, 191, 0.3)',
@@ -427,7 +427,7 @@ const ModernTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputLabel-root': {
     color: '#1F64BF',
     fontWeight: 600,
-    marginTop: '4px', // Espacio adicional para evitar solapamiento
+    marginTop: '8px', // Espacio adicional para evitar solapamiento
     '&.Mui-focused': {
       color: '#1F64BF',
     },
@@ -1475,7 +1475,7 @@ const CreateDesignModal = ({
 
       {/* Editor Fabric Simplificado */}
       {showEditor && selectedProduct && (
-        <FabricDesignEditorGlass
+        <EnhancedFabricEditor
           isOpen={showEditor}
           onClose={handleCloseEditor}
           product={selectedProduct}

@@ -430,7 +430,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
 
         <Grid container spacing={3}>
           {/* Contenido del Step */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             {activeStep === 0 && (
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -551,7 +551,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <StyledTextField
                       fullWidth
                       label="Cantidad"
@@ -564,7 +564,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <StyledTextField
                       fullWidth
                       label="Subtotal"
@@ -683,7 +683,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
 
                   {formData.deliveryType === 'meetup' && (
                     <>
-                      <Grid item xs={12} md={6}>
+                      <Grid size={{ xs: 12, md: 6 }}>
                         <StyledTextField
                           fullWidth
                           label="Nombre del Lugar"
@@ -695,7 +695,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                         />
                       </Grid>
 
-                      <Grid item xs={12} md={6}>
+                      <Grid size={{ xs: 12, md: 6 }}>
                         <StyledTextField
                           fullWidth
                           label="Fecha de Encuentro"
@@ -761,7 +761,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                 </Alert>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <SummaryCard>
                       <CardContent>
                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -784,7 +784,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
                     </SummaryCard>
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <SummaryCard>
                       <CardContent>
                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -862,7 +862,7 @@ export default function CreateOrderModal({ open, onClose, onCreate }) {
           </Grid>
 
           {/* Resumen lateral */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <SummaryCard>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>

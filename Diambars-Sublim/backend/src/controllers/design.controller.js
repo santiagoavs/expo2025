@@ -55,7 +55,8 @@ const validateDesignElements = (elements, customizationAreas = []) => {
         break;
         
       case 'image':
-        if (!element.konvaAttrs.image) {
+        // Aceptar tanto image como imageUrl para compatibilidad
+        if (!element.konvaAttrs.image && !element.konvaAttrs.imageUrl) {
           errors.push(`Elemento ${index + 1}: URL de imagen requerida`);
         }
         break;
