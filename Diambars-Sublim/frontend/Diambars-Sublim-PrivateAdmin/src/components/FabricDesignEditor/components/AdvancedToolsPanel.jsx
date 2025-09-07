@@ -61,7 +61,26 @@ import { fabric } from 'fabric';
 // Importar componentes personalizados
 import ColorPicker from './ColorPicker';
 import ImageUploader from './ImageUploader';
+import FontSelector from './FontSelector';
 import useEditorStore from '../stores/useEditorStores';
+import { useFontManager } from '../hooks/useFontManager';
+
+// Función auxiliar para renderizado seguro usando el store
+const safeRenderAll = (canvas) => {
+  if (canvas && canvas.lowerCanvasEl) {
+    const context = canvas.lowerCanvasEl.getContext('2d');
+    if (context && typeof context.clearRect === 'function') {
+      canvas.requestRenderAll();
+      console.log('[AdvancedToolsPanel] Canvas renderizado correctamente');
+    } else {
+      console.warn('[AdvancedToolsPanel] Contexto perdido, usando store safeRender...');
+      // Usar el método seguro del store
+      useEditorStore.getState().safeRender();
+    }
+  } else {
+    console.warn('[AdvancedToolsPanel] Canvas no disponible para renderizado');
+  }
+};
 
 // Constantes del tema
 const THEME_COLORS = {
@@ -204,9 +223,19 @@ const AdvancedToolsPanel = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [expandedAccordion, setExpandedAccordion] = useState('basic-tools');
 
+  // Hook de gestión de fuentes
+  const {
+    fonts,
+    googleFontsLoaded,
+    isLoading: fontsLoading,
+    loadGoogleFonts,
+    isFontAvailable
+  } = useFontManager();
+
   // Store del editor
   const {
     canvas,
+    isCanvasInitialized,
     activeTool,
     setActiveTool,
     selectedObjects,
@@ -214,8 +243,19 @@ const AdvancedToolsPanel = () => {
     updateToolProperties,
     deleteSelectedObjects,
     duplicateSelectedObjects,
-    addNotification
+    addNotification,
+    saveToHistory
   } = useEditorStore();
+
+  // Debug del estado del canvas
+  React.useEffect(() => {
+    console.log('[AdvancedToolsPanel] Canvas state changed:', {
+      canvas: !!canvas,
+      isCanvasInitialized,
+      canvasType: canvas?.constructor?.name,
+      lowerCanvasEl: !!canvas?.lowerCanvasEl
+    });
+  }, [canvas, isCanvasInitialized]);
 
   // ==================== HERRAMIENTAS BÁSICAS ====================
 
@@ -226,7 +266,7 @@ const AdvancedToolsPanel = () => {
     if (!canvas) return;
 
     try {
-      const text = new fabric.IText('Texto de ejemplo', {
+      const text = new fabric.IText('Haz doble clic para editar', {
         left: canvas.width / 2,
         top: canvas.height / 2,
         originX: 'center',
@@ -235,18 +275,56 @@ const AdvancedToolsPanel = () => {
         fontSize: toolProperties.text.fontSize,
         fill: toolProperties.text.fill,
         fontWeight: toolProperties.text.fontWeight,
-        fontStyle: toolProperties.text.fontStyle
+        fontStyle: toolProperties.text.fontStyle,
+        // Configuraciones adicionales para edición
+        editable: true,
+        selectable: true,
+        evented: true,
+        // Datos personalizados
+        data: {
+          type: 'text',
+          id: `text_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          isCustomElement: true
+        }
+      });
+
+      // Configurar eventos de edición de texto
+      text.on('editing:entered', () => {
+        console.log('📝 [Editor] Entrando en modo edición de texto');
+        canvas.setActiveObject(text);
+        canvas.selection = false; // Deshabilitar selección durante edición
+      });
+
+      text.on('editing:exited', () => {
+        console.log('📝 [Editor] Saliendo del modo edición de texto');
+        canvas.selection = true; // Rehabilitar selección
+        // Guardar en historial cuando se termina de editar
+        saveToHistory('Texto editado');
+      });
+
+      // Configurar doble clic para editar - usar el evento del canvas
+      text.on('mousedown', (e) => {
+        // Solo procesar si es doble clic
+        if (e.e && e.e.detail === 2) {
+          console.log('📝 [Editor] Doble clic detectado en texto');
+          setTimeout(() => {
+            text.enterEditing();
+            canvas.setActiveObject(text);
+          }, 100);
+        }
       });
 
       canvas.add(text);
       canvas.setActiveObject(text);
-      canvas.requestRenderAll();
+      
+      // Renderizado seguro
+      safeRenderAll(canvas);
       
       setActiveTool('text');
       addNotification({
         type: 'success',
         title: 'Texto agregado',
-        message: 'Se agregó un nuevo elemento de texto'
+        message: 'Haz doble clic en el texto para editarlo'
       });
     } catch (error) {
       console.error('Error agregando texto:', error);
@@ -256,7 +334,7 @@ const AdvancedToolsPanel = () => {
         message: 'No se pudo agregar el texto'
       });
     }
-  }, [canvas, toolProperties.text, setActiveTool, addNotification]);
+  }, [canvas, toolProperties.text, setActiveTool, addNotification, saveToHistory]);
 
   /**
    * Agrega una forma básica al canvas
@@ -317,7 +395,9 @@ const AdvancedToolsPanel = () => {
 
       canvas.add(shape);
       canvas.setActiveObject(shape);
-      canvas.requestRenderAll();
+      
+      // Renderizado seguro
+      safeRenderAll(canvas);
       
       setActiveTool('shapes');
       addNotification({
@@ -338,27 +418,94 @@ const AdvancedToolsPanel = () => {
   /**
    * Maneja la subida de imágenes
    */
-  const handleImageUpload = useCallback((images) => {
-    if (!canvas || !images.length) return;
+  const handleImageUpload = useCallback(async (images) => {
+    console.log('[AdvancedToolsPanel] handleImageUpload llamado con:', images);
+    
+    // Obtener canvas directamente del store para asegurar sincronización
+    const currentCanvas = useEditorStore.getState().canvas;
+    const currentIsInitialized = useEditorStore.getState().isCanvasInitialized;
+    
+    console.log('[AdvancedToolsPanel] Estado del canvas (hook):', !!canvas);
+    console.log('[AdvancedToolsPanel] Estado del canvas (store):', !!currentCanvas);
+    console.log('[AdvancedToolsPanel] isCanvasInitialized:', currentIsInitialized);
+    console.log('[AdvancedToolsPanel] Canvas lowerCanvasEl (hook):', !!canvas?.lowerCanvasEl);
+    console.log('[AdvancedToolsPanel] Canvas lowerCanvasEl (store):', !!currentCanvas?.lowerCanvasEl);
+    
+    if (!currentCanvas) {
+      console.error('[AdvancedToolsPanel] Canvas no está disponible en el store');
+      addNotification({
+        type: 'error',
+        title: 'Error de Canvas',
+        message: 'El canvas no está disponible. Espera a que el editor se inicialice completamente.'
+      });
+      return;
+    }
+    
+    // Usar el canvas del store en lugar del hook
+    const workingCanvas = currentCanvas;
+    
+    // Verificar que el canvas esté completamente inicializado
+    if (!workingCanvas.lowerCanvasEl) {
+      console.warn('[AdvancedToolsPanel] Canvas lowerCanvasEl no disponible, esperando...');
+      
+      // Esperar hasta que el canvas esté listo
+      let retries = 0;
+      while (!workingCanvas.lowerCanvasEl && retries < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+        console.log(`[AdvancedToolsPanel] Reintento ${retries}/10 esperando lowerCanvasEl`);
+      }
+      
+      if (!workingCanvas.lowerCanvasEl) {
+        console.error('[AdvancedToolsPanel] Canvas no se pudo inicializar completamente');
+        addNotification({
+          type: 'error',
+          title: 'Error de Canvas',
+          message: 'El canvas no se pudo inicializar completamente. Inténtalo de nuevo.'
+        });
+        return;
+      }
+    }
+    
+    if (!images.length) {
+      console.warn('[AdvancedToolsPanel] No hay imágenes para procesar');
+      return;
+    }
 
     images.forEach((imageData, index) => {
+      console.log(`[AdvancedToolsPanel] Procesando imagen ${index + 1}:`, imageData);
       fabric.Image.fromURL(imageData.processedUrl || imageData.originalUrl, (img) => {
+        console.log(`[AdvancedToolsPanel] Imagen ${index + 1} cargada:`, img);
         // Escalar imagen si es muy grande
         const maxSize = 300;
         const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
         
         img.set({
-          left: canvas.width / 2 + (index * 20),
-          top: canvas.height / 2 + (index * 20),
+          left: workingCanvas.width / 2 + (index * 20),
+          top: workingCanvas.height / 2 + (index * 20),
           originX: 'center',
           originY: 'center',
           scaleX: scale,
-          scaleY: scale
+          scaleY: scale,
+          // Guardar datos de la imagen para la conversión
+          data: {
+            ...img.data,
+            type: 'image',
+            imageUrl: imageData.processedUrl || imageData.originalUrl,
+            originalSrc: imageData.originalUrl,
+            src: imageData.processedUrl || imageData.originalUrl,
+            processedUrl: imageData.processedUrl,
+            originalUrl: imageData.originalUrl
+          }
         });
 
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        canvas.requestRenderAll();
+        workingCanvas.add(img);
+        workingCanvas.setActiveObject(img);
+        console.log(`[AdvancedToolsPanel] Imagen ${index + 1} agregada al canvas`);
+        
+        // Renderizado seguro
+        safeRenderAll(workingCanvas);
+        console.log(`[AdvancedToolsPanel] Imagen ${index + 1} renderizada`);
       });
     });
 
@@ -368,7 +515,7 @@ const AdvancedToolsPanel = () => {
       title: 'Imágenes agregadas',
       message: `Se agregaron ${images.length} imagen${images.length === 1 ? '' : 'es'}`
     });
-  }, [canvas, setActiveTool, addNotification]);
+  }, [setActiveTool, addNotification]);
 
   // ==================== EFECTOS Y TRANSFORMACIONES ====================
 
@@ -442,25 +589,67 @@ const AdvancedToolsPanel = () => {
    */
   const updateSelectedObjectsProperty = useCallback(
     debounce((property, value) => {
-      if (!canvas || selectedObjects.length === 0) return;
+      console.log(`🎨 [Editor] updateSelectedObjectsProperty llamado`);
+      console.log(`🎨 [Editor] property:`, property);
+      console.log(`🎨 [Editor] value:`, value);
+      console.log(`🎨 [Editor] canvas disponible:`, !!canvas);
+      console.log(`🎨 [Editor] selectedObjects.length:`, selectedObjects?.length || 0);
+      
+      if (!canvas || selectedObjects.length === 0) {
+        console.warn(`🎨 [Editor] No se puede actualizar - canvas o objetos no disponibles`);
+        return;
+      }
+
+      console.log(`🎨 [Editor] Actualizando propiedad ${property} con valor:`, value);
 
       selectedObjects.forEach(obj => {
-        if (property === 'fontSize' && obj.type === 'i-text') {
-          obj.set({ fontSize: value });
-        } else if (property === 'fill') {
-          obj.set({ fill: value });
-        } else if (property === 'stroke') {
-          obj.set({ stroke: value });
-        } else if (property === 'strokeWidth') {
-          obj.set({ strokeWidth: value });
-        } else if (property === 'opacity') {
-          obj.set({ opacity: value });
+        try {
+          if (property === 'fontSize' && obj.type === 'i-text') {
+            obj.set({ fontSize: value });
+            console.log(`📝 [Editor] Tamaño de fuente actualizado: ${value}`);
+          } else if (property === 'fill') {
+            obj.set({ fill: value });
+            console.log(`🎨 [Editor] Color de relleno actualizado: ${value}`);
+          } else if (property === 'stroke') {
+            obj.set({ stroke: value });
+            console.log(`🖌️ [Editor] Color de borde actualizado: ${value}`);
+          } else if (property === 'strokeWidth') {
+            obj.set({ strokeWidth: value });
+            console.log(`📏 [Editor] Grosor de borde actualizado: ${value}`);
+          } else if (property === 'opacity') {
+            obj.set({ opacity: value });
+            console.log(`👁️ [Editor] Opacidad actualizada: ${value}`);
+          } else if (property === 'fontFamily' && obj.type === 'i-text') {
+            console.log(`🔤 [Editor] Aplicando fuente ${value} a objeto i-text`);
+            console.log(`🔤 [Editor] Objeto antes del cambio:`, {
+              type: obj.type,
+              fontFamily: obj.fontFamily,
+              text: obj.text
+            });
+            obj.set({ fontFamily: value });
+            console.log(`🔤 [Editor] Objeto después del cambio:`, {
+              type: obj.type,
+              fontFamily: obj.fontFamily,
+              text: obj.text
+            });
+            console.log(`🔤 [Editor] Fuente actualizada: ${value}`);
+          }
+        } catch (error) {
+          console.error(`❌ [Editor] Error actualizando propiedad ${property}:`, error);
         }
       });
 
+      // Forzar renderizado inmediato
+      console.log(`🎨 [Editor] Forzando renderizado del canvas`);
       canvas.requestRenderAll();
-    }, 300),
-    [canvas, selectedObjects]
+      console.log(`🎨 [Editor] Canvas renderizado`);
+      
+      // Guardar en historial
+      console.log(`🎨 [Editor] Guardando en historial: Propiedad ${property} actualizada`);
+      saveToHistory(`Propiedad ${property} actualizada`);
+      console.log(`🎨 [Editor] updateSelectedObjectsProperty completado`);
+    }, 100), // Reducir debounce para mejor respuesta
+    [canvas, selectedObjects, saveToHistory]
   );
 
   // ==================== UTILIDADES CON LODASH ====================
@@ -621,14 +810,16 @@ const AdvancedToolsPanel = () => {
         fill: obj.fill === acc.fill ? acc.fill : 'mixed',
         opacity: obj.opacity === acc.opacity ? acc.opacity : 'mixed',
         stroke: obj.stroke === acc.stroke ? acc.stroke : 'mixed',
-        strokeWidth: obj.strokeWidth === acc.strokeWidth ? acc.strokeWidth : 'mixed'
+        strokeWidth: obj.strokeWidth === acc.strokeWidth ? acc.strokeWidth : 'mixed',
+        fontFamily: obj.fontFamily === acc.fontFamily ? acc.fontFamily : 'mixed'
       };
     }, {
       fontSize: selectedObjects[0].fontSize || 24,
       fill: selectedObjects[0].fill || '#000000',
       opacity: selectedObjects[0].opacity || 1,
       stroke: selectedObjects[0].stroke || 'transparent',
-      strokeWidth: selectedObjects[0].strokeWidth || 0
+      strokeWidth: selectedObjects[0].strokeWidth || 0,
+      fontFamily: selectedObjects[0].fontFamily || 'Arial'
     });
 
     return commonProps;
@@ -830,6 +1021,18 @@ const AdvancedToolsPanel = () => {
                         step={0.5}
                       />
                     </Box>
+
+                    {/* Selector de fuente para texto */}
+                    {selectedObjects.some(obj => obj.type === 'i-text') && (
+                      <FontSelector
+                        value={selectedObjectProperties.fontFamily || 'Arial'}
+                        onChange={(fontFamily) => updateSelectedObjectsProperty('fontFamily', fontFamily)}
+                        size="small"
+                        showGoogleFonts={true}
+                        showSystemFonts={true}
+                        showCustomFonts={true}
+                      />
+                    )}
                   </Stack>
                 </AccordionDetails>
               </StyledAccordion>

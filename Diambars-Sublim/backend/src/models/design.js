@@ -5,7 +5,12 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 const designElementSchema = new mongoose.Schema({
   type: { 
     type: String, 
-    enum: ['text', 'image', 'shape', 'path', 'group'], 
+    enum: [
+      'text', 'image', 'shape', 'path', 'group', 
+      'triangle', 'rect', 'circle', 'ellipse', 'line', 'polygon',
+      'star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon',
+      'arrow', 'cross', 'plus', 'minus', 'square', 'rectangle'
+    ], 
     required: [true, 'El tipo de elemento es obligatorio']
   },
   areaId: { 
@@ -92,7 +97,7 @@ const designElementSchema = new mongoose.Schema({
     },
     textDecoration: { 
       type: String,
-      enum: ['', 'underline', 'line-through', 'overline'],
+      enum: ['', 'none', 'underline', 'line-through', 'overline'],
       default: ''
     },
     align: { 
@@ -297,7 +302,7 @@ const designSchema = new mongoose.Schema({
   }],
   status: { 
     type: String, 
-    enum: ['draft', 'pending', 'quoted', 'approved', 'rejected', 'completed', 'archived'],
+    enum: ['draft', 'pending', 'quoted', 'approved', 'rejected', 'completed', 'archived', 'cancelled'],
     default: 'pending',
     index: true
   },
@@ -379,6 +384,13 @@ const designSchema = new mongoose.Schema({
     type: String,
     maxlength: [500, 'El motivo de rechazo no puede exceder 500 caracteres']
   },
+  cancelledAt: { 
+    type: Date 
+  },
+  cancellationReason: { 
+    type: String,
+    maxlength: [500, 'El motivo de cancelación no puede exceder 500 caracteres']
+  },
   completedAt: {
     type: Date
   },
@@ -386,7 +398,7 @@ const designSchema = new mongoose.Schema({
   history: [{
     action: {
       type: String,
-      enum: ['created', 'updated', 'status_changed', 'quoted', 'approved', 'rejected'],
+      enum: ['created', 'updated', 'status_changed', 'quoted', 'approved', 'rejected', 'cancelled'],
       required: true
     },
     changedBy: {

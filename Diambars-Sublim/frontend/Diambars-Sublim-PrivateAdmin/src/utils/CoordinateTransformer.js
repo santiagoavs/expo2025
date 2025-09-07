@@ -1,70 +1,106 @@
-// src/utils/CoordinateTransformer.js - Utilidad para mapear entre Konva y Fabric
+// src/utils/CoordinateTransformer.js - CORREGIDO PARA EVITAR PÉRDIDA DE CANVAS
 
 export const CoordinateTransformer = {
-  // Convierte un área de Konva (con base en producto) a límites en Fabric
-  // Espera un objeto de área tipo { id, x, y, width, height, rotation?, scaleX?, scaleY?, stroke?, fill?, name? }
-  konvaAreaToFabric(konvaArea) {
-    if (!konvaArea) return null;
+  /**
+   * Convierte canvas de Fabric a datos de diseño SIN DESTRUIR el canvas
+   */
+  fabricCanvasToDesignData(fabricCanvas) {
+    if (!fabricCanvas) {
+      console.warn('❌ Canvas no disponible para conversión');
+      return null;
+    }
 
-    const left = Number(konvaArea.x || 0);
-    const top = Number(konvaArea.y || 0);
-    const width = Number(konvaArea.width || 0);
-    const height = Number(konvaArea.height || 0);
-    const rotation = Number(konvaArea.rotation || 0);
+    try {
+      // CRÍTICO: Filtrar objetos ANTES de procesarlos
+      const allObjects = fabricCanvas.getObjects();
+      
+      // Solo procesar objetos de diseño (NO áreas, NO imagen del producto)
+      const designObjects = allObjects.filter(obj => {
+        return !obj.isAreaMarker && 
+               !obj.isProductImage && 
+               !obj.isProductBackground &&
+               !obj.data?.isArea &&
+               !obj.data?.isProductImage &&
+               obj.type !== 'areaLabel';
+      });
 
-    return {
-      id: konvaArea.id || konvaArea._id || String(Date.now()),
-      boundaries: {
-        left,
-        top,
-        width,
-        height,
-        rotation
-      },
-      visualConfig: {
-        fill: 'rgba(31, 100, 191, 0.06)',
-        stroke: '#1F64BF',
-        strokeWidth: 1,
-        rx: 8,
-        ry: 8,
-        strokeDashArray: [6, 6]
-      }
-    };
+      console.log('🔍 Objetos encontrados:', {
+        total: allObjects.length,
+        design: designObjects.length,
+        areas: allObjects.filter(obj => obj.isAreaMarker).length,
+        product: allObjects.filter(obj => obj.isProductImage).length
+      });
+
+      // Convertir solo objetos de diseño
+      const elements = designObjects.map((obj, index) => {
+        try {
+          return this.fabricObjectToDesignElement(obj, index);
+        } catch (error) {
+          console.error(`Error procesando objeto ${index}:`, error);
+          return null;
+        }
+      }).filter(element => element !== null);
+
+      const canvasData = {
+        width: fabricCanvas.getWidth(),
+        height: fabricCanvas.getHeight(),
+        backgroundColor: fabricCanvas.backgroundColor || '#ffffff',
+        // NO incluir objects aquí para evitar serialización problemática
+        version: fabricCanvas.version || '5.3.0'
+      };
+
+      const result = {
+        elements,
+        canvasData,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          objectsCount: designObjects.length,
+          canvasSize: { 
+            width: fabricCanvas.getWidth(), 
+            height: fabricCanvas.getHeight() 
+          }
+        }
+      };
+
+      console.log('✅ Conversión exitosa:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error en fabricCanvasToDesignData:', error);
+      return null;
+    }
   },
 
-  // Convierte un objeto Fabric a formato compatible con BD (similar a esquema actual de elementos)
-  // fabricObject: instancia de fabric.Object (IText, Image, Rect, Path, etc.)
-  fabricElementToKonva(fabricObject) {
+  /**
+   * Convierte objeto de Fabric a elemento de diseño
+   */
+  fabricObjectToDesignElement(fabricObject, index = 0) {
     if (!fabricObject) return null;
 
-    const base = {
-      type: this._mapFabricTypeToGeneric(fabricObject.type),
-      areaId: fabricObject?.data?.areaId || null,
-      konvaAttrs: {
-        x: Math.round(fabricObject.left || 0),
-        y: Math.round(fabricObject.top || 0),
-        width: Math.round(fabricObject.width || fabricObject.getScaledWidth?.() || 0),
-        height: Math.round(fabricObject.height || fabricObject.getScaledHeight?.() || 0),
-        rotation: Math.round(fabricObject.angle || 0),
-        scaleX: fabricObject.scaleX || 1,
-        scaleY: fabricObject.scaleY || 1,
-        opacity: fabricObject.opacity ?? 1,
-        visible: fabricObject.visible ?? true,
-        draggable: true,
-        name: fabricObject.name || undefined,
-      },
-      metadata: {
-        tags: fabricObject?.data?.tags || [],
-      },
-      zIndex: typeof fabricObject.zIndex === 'number' ? fabricObject.zIndex : undefined,
-    };
-
-    if (fabricObject.type === 'i-text' || fabricObject.type === 'textbox' || fabricObject.type === 'text') {
-      return {
-        ...base,
-        type: 'text',
+    try {
+      const baseElement = {
+        type: this._getFabricObjectType(fabricObject),
+        areaId: fabricObject.areaId || null,
         konvaAttrs: {
-          ...base.konvaAttrs,
+          x: Math.round(fabricObject.left || 0),
+          y: Math.round(fabricObject.top || 0),
+          width: Math.round(fabricObject.getScaledWidth?.() || fabricObject.width || 0),
+          height: Math.round(fabricObject.getScaledHeight?.() || fabricObject.height || 0),
+          rotation: Math.round(fabricObject.angle || 0),
+          scaleX: fabricObject.scaleX || 1,
+          scaleY: fabricObject.scaleY || 1,
+          opacity: fabricObject.opacity ?? 1,
+          visible: fabricObject.visible ?? true
+        },
+        metadata: {
+          originalType: fabricObject.type,
+          index: index
+        }
+      };
+
+      // Propiedades específicas por tipo
+      if (this._isTextObject(fabricObject)) {
+        baseElement.konvaAttrs = {
+          ...baseElement.konvaAttrs,
           text: fabricObject.text || '',
           fontFamily: fabricObject.fontFamily || 'Arial',
           fontSize: fabricObject.fontSize || 24,
@@ -73,112 +109,265 @@ export const CoordinateTransformer = {
           fontStyle: fabricObject.fontStyle || 'normal',
           textAlign: fabricObject.textAlign || 'left',
           underline: !!fabricObject.underline,
-          linethrough: !!fabricObject.linethrough,
-          overline: !!fabricObject.overline,
-        }
-      };
-    }
+          linethrough: !!fabricObject.linethrough
+        };
+      }
 
-    if (fabricObject.type === 'image') {
-      return {
-        ...base,
-        type: 'image',
-        konvaAttrs: {
-          ...base.konvaAttrs,
-          imageUrl: fabricObject.getSrc?.() || fabricObject?.data?.originalSrc || '',
-          opacity: fabricObject.opacity ?? 1,
-        }
-      };
-    }
+      if (fabricObject.type === 'image') {
+        baseElement.konvaAttrs = {
+          ...baseElement.konvaAttrs,
+          image: fabricObject.getSrc?.() || fabricObject.src || '',
+          // Preservar filtros aplicados
+          filters: fabricObject.filters ? this._serializeFilters(fabricObject.filters) : []
+        };
+      }
 
-    // fallback para formas
-    return base;
+      if (this._isShapeObject(fabricObject)) {
+        baseElement.konvaAttrs = {
+          ...baseElement.konvaAttrs,
+          fill: fabricObject.fill || '#ffffff',
+          stroke: fabricObject.stroke || '#000000',
+          strokeWidth: fabricObject.strokeWidth || 0
+        };
+      }
+
+      return baseElement;
+    } catch (error) {
+      console.error('Error convirtiendo objeto de Fabric:', error);
+      return null;
+    }
   },
 
-  // Convierte un elemento almacenado (formato BD/konvaAttrs) a objeto Fabric correspondiente
-  konvaElementToFabric(element) {
-    if (!element || !element.konvaAttrs) return null;
+  /**
+   * Carga diseño en canvas SIN DESTRUIR elementos existentes del producto
+   */
+  async loadDesignDataToFabricCanvas(designData, fabricCanvas, fabric) {
+    if (!designData || !fabricCanvas || !fabric) {
+      console.warn('❌ Datos insuficientes para cargar diseño');
+      return false;
+    }
+
+    try {
+      console.log('📂 Cargando diseño...', designData);
+
+      // CRÍTICO: NO hacer clear() completo, solo remover objetos de diseño
+      const allObjects = fabricCanvas.getObjects();
+      const designObjects = allObjects.filter(obj => 
+        !obj.isAreaMarker && 
+        !obj.isProductImage && 
+        !obj.isProductBackground &&
+        !obj.data?.isArea &&
+        !obj.data?.isProductImage
+      );
+
+      // Remover solo objetos de diseño, preservar producto y áreas
+      designObjects.forEach(obj => {
+        fabricCanvas.remove(obj);
+      });
+
+      // Cargar nuevos elementos de diseño
+      if (designData.elements && Array.isArray(designData.elements)) {
+        for (const element of designData.elements) {
+          try {
+            const fabricObject = await this.designElementToFabricObject(element, fabric);
+            if (fabricObject) {
+              fabricCanvas.add(fabricObject);
+            }
+          } catch (error) {
+            console.error('Error cargando elemento:', error);
+          }
+        }
+      }
+
+      fabricCanvas.requestRenderAll();
+      console.log('✅ Diseño cargado exitosamente');
+      return true;
+    } catch (error) {
+      console.error('❌ Error cargando diseño:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Convierte elemento de diseño a objeto de Fabric
+   */
+  async designElementToFabricObject(element, fabric) {
+    if (!element || !element.konvaAttrs || !fabric) return null;
 
     const attrs = element.konvaAttrs;
-    const common = {
+    
+    const commonProps = {
       left: attrs.x || 0,
       top: attrs.y || 0,
       angle: attrs.rotation || 0,
       opacity: attrs.opacity ?? 1,
+      scaleX: attrs.scaleX || 1,
+      scaleY: attrs.scaleY || 1,
       selectable: true,
       hasControls: true,
-      transparentCorners: true,
+      hasBorders: true,
+      transparentCorners: false,
       cornerColor: '#1F64BF',
-      cornerStyle: 'circle',
-      data: { areaId: element.areaId, type: element.type }
+      cornerSize: 10,
+      areaId: element.areaId,
+      // Marcar como objeto de diseño
+      isDesignObject: true
     };
 
-    if (element.type === 'text') {
-      // No instanciamos aquí fabric.IText directamente para evitar dependencias globales; el editor lo hará
-      return {
-        __fabricType: 'i-text',
-        options: {
-          ...common,
-          text: attrs.text || '',
-          fontFamily: attrs.fontFamily || 'Arial',
-          fontSize: attrs.fontSize || 24,
-          fill: attrs.fill || '#000000',
-          fontWeight: attrs.fontWeight || 'normal',
-          fontStyle: attrs.fontStyle || 'normal',
-          textAlign: attrs.textAlign || 'left',
-          underline: !!attrs.underline,
-          linethrough: !!attrs.linethrough,
-          overline: !!attrs.overline,
-        }
-      };
+    try {
+      switch (element.type) {
+        case 'text':
+          return new fabric.IText(attrs.text || 'Texto', {
+            ...commonProps,
+            fontFamily: attrs.fontFamily || 'Arial',
+            fontSize: attrs.fontSize || 24,
+            fill: attrs.fill || '#000000',
+            fontWeight: attrs.fontWeight || 'normal',
+            fontStyle: attrs.fontStyle || 'normal',
+            textAlign: attrs.textAlign || 'left',
+            underline: !!attrs.underline,
+            linethrough: !!attrs.linethrough
+          });
+
+        case 'image':
+          return new Promise((resolve, reject) => {
+            fabric.Image.fromURL(attrs.image, (img) => {
+              if (img) {
+                img.set({
+                  ...commonProps,
+                  width: attrs.width,
+                  height: attrs.height
+                });
+
+                // Restaurar filtros si existen
+                if (attrs.filters && Array.isArray(attrs.filters)) {
+                  img.filters = this._deserializeFilters(attrs.filters, fabric);
+                  img.applyFilters();
+                }
+
+                resolve(img);
+              } else {
+                reject(new Error('Error cargando imagen'));
+              }
+            });
+          });
+
+        case 'shape':
+        default:
+          // Determinar tipo de forma basado en metadata o crear rectángulo por defecto
+          const shapeType = element.metadata?.originalType || 'rect';
+          
+          switch (shapeType) {
+            case 'circle':
+              return new fabric.Circle({
+                ...commonProps,
+                radius: Math.min(attrs.width, attrs.height) / 2,
+                fill: attrs.fill || '#ffffff',
+                stroke: attrs.stroke || '#000000',
+                strokeWidth: attrs.strokeWidth || 0
+              });
+              
+            case 'triangle':
+              return new fabric.Triangle({
+                ...commonProps,
+                width: attrs.width || 100,
+                height: attrs.height || 100,
+                fill: attrs.fill || '#ffffff',
+                stroke: attrs.stroke || '#000000',
+                strokeWidth: attrs.strokeWidth || 0
+              });
+              
+            default:
+              return new fabric.Rect({
+                ...commonProps,
+                width: attrs.width || 100,
+                height: attrs.height || 100,
+                fill: attrs.fill || '#ffffff',
+                stroke: attrs.stroke || '#000000',
+                strokeWidth: attrs.strokeWidth || 0
+              });
+          }
+      }
+    } catch (error) {
+      console.error('Error creando objeto de Fabric:', error);
+      return null;
     }
-
-    if (element.type === 'image') {
-      return {
-        __fabricType: 'image',
-        options: {
-          ...common,
-          src: attrs.imageUrl || attrs.src || ''
-        }
-      };
-    }
-
-    // fallback
-    return { __fabricType: 'rect', options: { ...common, width: attrs.width || 100, height: attrs.height || 100, fill: '#e5eefb' } };
   },
 
-  // Validar que un objeto (x,y,width,height) quede dentro de un área (left,top,width,height)
-  validateElementBounds(elementRect, areaRect) {
-    if (!elementRect || !areaRect) return false;
-    const withinX = elementRect.left >= areaRect.left && (elementRect.left + elementRect.width) <= (areaRect.left + areaRect.width);
-    const withinY = elementRect.top >= areaRect.top && (elementRect.top + elementRect.height) <= (areaRect.top + areaRect.height);
-    return withinX && withinY;
+  /**
+   * Preservar imagen del producto al limpiar canvas
+   */
+  clearDesignObjectsOnly(fabricCanvas) {
+    if (!fabricCanvas) return;
+
+    const allObjects = fabricCanvas.getObjects();
+    const designObjects = allObjects.filter(obj => 
+      obj.isDesignObject || 
+      (!obj.isAreaMarker && !obj.isProductImage && !obj.isProductBackground)
+    );
+
+    designObjects.forEach(obj => {
+      fabricCanvas.remove(obj);
+    });
+
+    fabricCanvas.requestRenderAll();
   },
 
-  // Sincroniza posiciones entre sistemas, devolviendo un objeto normalizado
-  syncCoordinates(source, target) {
-    // Normaliza coordenadas y tamaños (simple merge con prioridad del source)
-    return {
-      left: Math.round(source.left ?? target.left ?? 0),
-      top: Math.round(source.top ?? target.top ?? 0),
-      width: Math.round(source.width ?? target.width ?? 0),
-      height: Math.round(source.height ?? target.height ?? 0),
-      angle: Math.round(source.angle ?? target.angle ?? 0),
-      scaleX: source.scaleX ?? target.scaleX ?? 1,
-      scaleY: source.scaleY ?? target.scaleY ?? 1,
-    };
-  },
+  // ================ MÉTODOS AUXILIARES ================
 
-  _mapFabricTypeToGeneric(fabricType) {
-    if (!fabricType) return 'group';
-    if (fabricType === 'i-text' || fabricType === 'textbox' || fabricType === 'text') return 'text';
-    if (fabricType === 'image') return 'image';
-    if (fabricType === 'rect' || fabricType === 'circle' || fabricType === 'triangle' || fabricType === 'path') return 'shape';
+  _getFabricObjectType(fabricObject) {
+    if (this._isTextObject(fabricObject)) return 'text';
+    if (fabricObject.type === 'image') return 'image';
+    if (this._isShapeObject(fabricObject)) return 'shape';
     return 'group';
+  },
+
+  _isTextObject(fabricObject) {
+    return ['text', 'i-text', 'textbox'].includes(fabricObject.type);
+  },
+
+  _isShapeObject(fabricObject) {
+    return ['rect', 'circle', 'triangle', 'polygon', 'ellipse'].includes(fabricObject.type);
+  },
+
+  _serializeFilters(filters) {
+    if (!filters || !Array.isArray(filters)) return [];
+    
+    return filters.map(filter => ({
+      type: filter.type,
+      ...filter
+    }));
+  },
+
+  _deserializeFilters(serializedFilters, fabric) {
+    if (!serializedFilters || !Array.isArray(serializedFilters)) return [];
+    
+    return serializedFilters.map(filterData => {
+      try {
+        switch (filterData.type) {
+          case 'Brightness':
+            return new fabric.Image.filters.Brightness(filterData);
+          case 'Contrast':
+            return new fabric.Image.filters.Contrast(filterData);
+          case 'Saturation':
+            return new fabric.Image.filters.Saturation(filterData);
+          case 'Blur':
+            return new fabric.Image.filters.Blur(filterData);
+          case 'Sepia':
+            return new fabric.Image.filters.Sepia();
+          case 'Grayscale':
+            return new fabric.Image.filters.Grayscale();
+          case 'Invert':
+            return new fabric.Image.filters.Invert();
+          default:
+            return null;
+        }
+      } catch (error) {
+        console.error('Error deserializando filtro:', error);
+        return null;
+      }
+    }).filter(filter => filter !== null);
   }
 };
 
 export default CoordinateTransformer;
-
-
-

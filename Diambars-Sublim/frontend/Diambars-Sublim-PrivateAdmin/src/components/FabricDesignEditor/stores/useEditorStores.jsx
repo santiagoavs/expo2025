@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { fabric } from 'fabric';
 import { debounce, throttle } from 'lodash';
+import Swal from 'sweetalert2';
 
 /**
  * Store principal del editor que maneja:
@@ -100,7 +101,24 @@ const useEditorStore = create(
 
             const newCanvas = new fabric.Canvas(canvasElement, {
               ...state.canvasConfig,
-              ...config
+              ...config,
+              // Configuraciones adicionales para evitar errores de contexto
+              enableRetinaScaling: false,
+              skipTargetFind: false,
+              preserveObjectStacking: true,
+              // Configuración de texto para evitar errores de TextBaseline
+              textBaseline: 'alphabetic',
+              // Configuraciones para edición de texto
+              selection: true,
+              selectionColor: 'rgba(31, 100, 191, 0.3)',
+              selectionBorderColor: '#1F64BF',
+              selectionLineWidth: 2,
+              // Configuración de cursor
+              defaultCursor: 'default',
+              moveCursor: 'move',
+              // Configuración de texto
+              textAlign: 'left',
+              textDecoration: 'none'
             });
 
             // Configurar eventos del canvas
@@ -151,13 +169,73 @@ const useEditorStore = create(
               newCanvas.requestRenderAll();
             });
 
+            // Eventos específicos para edición de texto
+            newCanvas.on('text:editing:entered', (e) => {
+              console.log('📝 [EditorStore] Texto entrando en modo edición');
+              // Deshabilitar selección de otros objetos mientras se edita texto
+              newCanvas.selection = false;
+            });
+
+            newCanvas.on('text:editing:exited', (e) => {
+              console.log('📝 [EditorStore] Texto saliendo del modo edición');
+              // Rehabilitar selección
+              newCanvas.selection = true;
+              // Guardar en historial
+              get().saveToHistory('Texto editado');
+            });
+
+            // Evento de doble clic para editar texto
+            newCanvas.on('mouse:dblclick', (e) => {
+              const target = e.target;
+              if (target && target.type === 'i-text') {
+                console.log('📝 [EditorStore] Doble clic en texto, entrando en modo edición');
+                // Usar setTimeout para asegurar que el evento se procese correctamente
+                setTimeout(() => {
+                  target.enterEditing();
+                  newCanvas.setActiveObject(target);
+                }, 50);
+              }
+            });
+
             // Verificar que el canvas esté completamente inicializado
             if (newCanvas && newCanvas.lowerCanvasEl && typeof newCanvas.lowerCanvasEl.getContext === 'function') {
-              state.canvas = newCanvas;
-              state.isCanvasInitialized = true;
-              state.error = null;
-              
-              console.log('✅ [EditorStore] Canvas inicializado correctamente');
+              // Verificar contexto de manera más robusta
+              const context = newCanvas.lowerCanvasEl.getContext('2d');
+              if (context && typeof context.clearRect === 'function') {
+                state.canvas = newCanvas;
+                state.isCanvasInitialized = true;
+                state.error = null;
+                
+                console.log('✅ [EditorStore] Canvas inicializado correctamente');
+                
+                // Forzar un render inicial para estabilizar el contexto
+                setTimeout(() => {
+                  if (newCanvas && newCanvas.lowerCanvasEl) {
+                    try {
+                      // Verificar que el contexto sigue siendo válido antes de renderizar
+                      const currentContext = newCanvas.lowerCanvasEl.getContext('2d');
+                      if (currentContext && typeof currentContext.clearRect === 'function') {
+                        newCanvas.renderAll();
+                      } else {
+                        console.warn('⚠️ [EditorStore] Contexto perdido, reintentando...');
+                        // Reintentar la inicialización
+                        setTimeout(() => {
+                          if (newCanvas && newCanvas.lowerCanvasEl) {
+                            const retryContext = newCanvas.lowerCanvasEl.getContext('2d');
+                            if (retryContext && typeof retryContext.clearRect === 'function') {
+                              newCanvas.renderAll();
+                            }
+                          }
+                        }, 100);
+                      }
+                    } catch (renderError) {
+                      console.warn('⚠️ [EditorStore] Error en render inicial:', renderError);
+                    }
+                  }
+                }, 100);
+              } else {
+                throw new Error('Contexto del canvas no disponible o inválido');
+              }
             } else {
               throw new Error('Canvas no se pudo inicializar correctamente');
             }
@@ -314,6 +392,49 @@ const useEditorStore = create(
       },
 
       /**
+       * Renderiza el canvas de forma segura verificando el contexto
+       */
+      safeRender: () => {
+        set((state) => {
+          if (!state.canvas) return;
+          
+          try {
+            // Verificar que el canvas tenga el elemento DOM
+            if (!state.canvas.lowerCanvasEl) {
+              console.warn('[EditorStore] Canvas DOM no disponible para renderizado');
+              return;
+            }
+            
+            // Verificar que el contexto 2D esté disponible
+            const context = state.canvas.lowerCanvasEl.getContext('2d');
+            if (!context || typeof context.clearRect !== 'function') {
+              console.warn('[EditorStore] Contexto 2D no disponible, reintentando...');
+              
+              // Reintentar después de un breve delay
+              setTimeout(() => {
+                if (state.canvas && state.canvas.lowerCanvasEl) {
+                  const retryContext = state.canvas.lowerCanvasEl.getContext('2d');
+                  if (retryContext && typeof retryContext.clearRect === 'function') {
+                    state.canvas.requestRenderAll();
+                    console.log('[EditorStore] Renderizado exitoso en reintento');
+                  } else {
+                    console.error('[EditorStore] No se pudo recuperar el contexto 2D');
+                  }
+                }
+              }, 100);
+              return;
+            }
+            
+            // Renderizar de forma segura
+            state.canvas.requestRenderAll();
+            console.log('[EditorStore] Canvas renderizado correctamente');
+          } catch (error) {
+            console.error('[EditorStore] Error en renderizado seguro:', error);
+          }
+        });
+      },
+
+      /**
        * Alterna la visibilidad de las etiquetas de áreas
        */
       toggleAreaLabels: () => {
@@ -327,7 +448,8 @@ const useEditorStore = create(
             labels.forEach(label => {
               label.set({ visible: state.showAreaLabels });
             });
-            state.canvas.requestRenderAll();
+            // Usar renderizado seguro
+            state.safeRender();
           }
         });
       },
@@ -442,6 +564,14 @@ const useEditorStore = create(
           state.error = error;
           if (error) {
             console.error('❌ [EditorStore] Error:', error);
+            // Mostrar error con SweetAlert
+            Swal.fire({
+              title: '❌ Error en el Editor',
+              text: error,
+              icon: 'error',
+              confirmButtonText: 'Entendido',
+              confirmButtonColor: '#EF4444'
+            });
           }
         });
       },

@@ -1,5 +1,6 @@
 // src/components/CreateDesignModal/CreateDesignModal.jsx - DROPDOWNS ARREGLADOS
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import {
   Dialog,
   DialogTitle,
@@ -54,6 +55,13 @@ const DesignService = {
     }
     
     elements.forEach((element, index) => {
+      // Debug: Log del elemento para validación
+      console.log(`🔍 [CreateDesignModal] Validando elemento ${index + 1}:`, element);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - type:`, element.type);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - src:`, element.src);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.image:`, element.konvaAttrs?.image);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.imageUrl:`, element.konvaAttrs?.imageUrl);
+      
       if (!element.type) {
         errors.push(`Elemento ${index + 1}: tipo no definido`);
       }
@@ -958,6 +966,13 @@ const CreateDesignModal = ({
 
   const handleOpenEditor = useCallback(() => {
     if (!designData.productId) {
+      Swal.fire({
+        title: '⚠️ Producto Requerido',
+        text: 'Debe seleccionar un producto antes de abrir el editor',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#F59E0B'
+      });
       setErrors({ productId: 'Debe seleccionar un producto primero' });
       return;
     }
@@ -968,31 +983,47 @@ const CreateDesignModal = ({
     setShowEditor(false);
   }, []);
 
-  const handleSaveDesign = useCallback((canvasData, productColorFilter) => {
-    console.log('💾 Guardando datos del canvas:', canvasData);
-    console.log('🎨 Filtro de color del producto:', productColorFilter);
+  const handleSaveDesign = useCallback((designDataFromEditor) => {
+    console.log('💾 [CreateDesignModal] Recibiendo datos del editor:', designDataFromEditor);
     
-    let elements = [];
+    // El editor ya envía los elementos en formato correcto
+    const elements = designDataFromEditor.elements || [];
+    const productColorFilter = designDataFromEditor.productColorFilter;
+    const canvasData = designDataFromEditor.canvasData;
     
-    if (canvasData && canvasData.canvas) {
-      elements = canvasData.canvas.objects || [];
-      console.log('📋 Elementos extraídos del canvas:', elements);
-    } else if (Array.isArray(canvasData)) {
-      elements = canvasData;
-    }
+    console.log('📋 [CreateDesignModal] Elementos recibidos:', elements.length);
+    console.log('🎨 [CreateDesignModal] Filtro de color:', productColorFilter);
     
+    // Validar elementos
     const validation = DesignService.validateElementsForSubmission(elements);
     if (!validation.isValid) {
+      console.error('❌ [CreateDesignModal] Elementos inválidos:', validation.errors);
+      Swal.fire({
+        title: '❌ Elementos Inválidos',
+        html: `
+          <p>Los elementos del diseño tienen errores:</p>
+          <ul style="text-align: left; margin: 10px 0;">
+            ${validation.errors.map(error => `<li>${error}</li>`).join('')}
+          </ul>
+        `,
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
       setErrors({ elements: validation.errors.join('; ') });
       return;
     }
 
+    // Actualizar estado con los datos del editor
     const finalDesignData = {
       ...designData,
       elements: elements,
       canvasData: canvasData,
-      productColorFilter: productColorFilter || null
+      productColorFilter: productColorFilter || null,
+      metadata: designDataFromEditor.metadata || {}
     };
+
+    console.log('✅ [CreateDesignModal] Datos finales preparados:', finalDesignData);
 
     setDesignData(finalDesignData);
     setDesignElements(elements);
@@ -1006,6 +1037,13 @@ const CreateDesignModal = ({
 
   const handlePreviewDesign = useCallback(() => {
     if (designElements.length === 0) {
+      Swal.fire({
+        title: '⚠️ Diseño Vacío',
+        text: 'Debe crear el diseño primero antes de previsualizarlo',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#F59E0B'
+      });
       setErrors({ elements: 'Debe crear el diseño primero' });
       return;
     }
@@ -1021,6 +1059,7 @@ const CreateDesignModal = ({
     
     try {
       setLoading(true);
+      setErrors({}); // Limpiar errores previos
       
       const finalDesignData = {
         ...designData,
@@ -1028,19 +1067,63 @@ const CreateDesignModal = ({
         productColorFilter: designData.productColorFilter || null
       };
       
+      console.log('📤 [CreateDesignModal] Enviando diseño:', finalDesignData);
+      
+      // Validar que el producto esté activo
+      const selectedProduct = products.find(p => p.id === designData.productId || p._id === designData.productId);
+      if (!selectedProduct) {
+        console.error('❌ [CreateDesignModal] Producto no encontrado');
+        Swal.fire({
+          title: '❌ Producto No Encontrado',
+          text: 'El producto seleccionado no existe o fue eliminado',
+          icon: 'error',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
+        setErrors({ productId: 'Producto no encontrado' });
+        setLoading(false);
+        return;
+      }
+      
+      if (!selectedProduct.isActive) {
+        console.error('❌ [CreateDesignModal] Producto inactivo:', selectedProduct.name);
+        Swal.fire({
+          title: '⚠️ Producto Desactivado',
+          text: `El producto "${selectedProduct.name}" está desactivado y no se puede usar para crear diseños`,
+          icon: 'warning',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#F59E0B'
+        });
+        setErrors({ productId: 'Este producto está desactivado y no se puede usar para crear diseños' });
+        setLoading(false);
+        return;
+      }
+      
+      // Validación de elementos antes de enviar
       const validation = DesignService.validateElementsForSubmission(designElements);
       if (!validation.isValid) {
+        console.error('❌ [CreateDesignModal] Validación fallida:', validation.errors);
         setErrors({ elements: validation.errors.join('; ') });
+        setLoading(false); // Importante: detener loading
+        
+        // Mostrar error con SweetAlert2
+        Swal.fire({
+          title: '❌ Elementos Inválidos',
+          html: validation.errors.map(error => `<div>• ${error}</div>`).join(''),
+          icon: 'error',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#EF4444'
+        });
         return;
       }
 
-      console.log('📤 Enviando diseño:', finalDesignData);
       await onCreateDesign(finalDesignData);
+      console.log('✅ [CreateDesignModal] Diseño creado exitosamente');
     } catch (error) {
-      console.error('Error submitting design:', error);
-      setErrors({ submit: error.message });
+      console.error('❌ [CreateDesignModal] Error submitting design:', error);
+      setErrors({ submit: error.message || 'Error al crear el diseño' });
     } finally {
-      setLoading(false);
+      setLoading(false); // Asegurar que siempre se detenga el loading
     }
   }, [designData, designElements, onCreateDesign, validateStep]);
 
@@ -1117,7 +1200,12 @@ const CreateDesignModal = ({
                   error={!!errors.productId}
                   helperText={errors.productId || 'Seleccionar producto base para personalizar'}
                   renderOption={(option) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      opacity: option.isActive ? 1 : 0.6
+                    }}>
                       {(option.mainImage || option.images?.main) && (
                         <img
                           src={option.mainImage || option.images?.main}
@@ -1130,9 +1218,27 @@ const CreateDesignModal = ({
                           }}
                         />
                       )}
-                      <div>
-                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
                           {option.name}
+                          {!option.isActive && (
+                            <span style={{
+                              fontSize: '12px',
+                              color: '#f44336',
+                              fontWeight: '500',
+                              background: '#ffebee',
+                              padding: '2px 6px',
+                              borderRadius: '4px'
+                            }}>
+                              INACTIVO
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: '14px', color: '#666' }}>
                           {option.formattedPrice || `${option.basePrice}` || 'Precio no disponible'}
@@ -1393,6 +1499,8 @@ const CreateDesignModal = ({
         onClose={handleClose}
         maxWidth={false}
         fullWidth
+        disableEnforceFocus
+        disableAutoFocus
       >
         <ModalHeader>
           <HeaderTitle>

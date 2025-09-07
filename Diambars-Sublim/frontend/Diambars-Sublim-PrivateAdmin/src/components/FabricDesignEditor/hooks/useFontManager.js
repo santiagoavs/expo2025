@@ -1,7 +1,7 @@
 // src/components/FabricDesignEditor/hooks/useFontManager.js
 import { useState, useEffect, useCallback } from 'react';
 import WebFont from 'webfontloader';
-import { FontService } from '../../../services/FontService';
+import fontService from '../../../services/FontService';
 
 export const useFontManager = () => {
   const [fonts, setFonts] = useState({
@@ -22,7 +22,7 @@ export const useFontManager = () => {
   const initializeFonts = useCallback(async () => {
     try {
       // Cargar fuentes del sistema
-      const systemFonts = FontService.getSystemFonts();
+      const systemFonts = fontService.getSystemFonts();
       
       // Cargar fuentes personalizadas si existen
       const customFonts = await loadCustomFonts();
@@ -34,8 +34,7 @@ export const useFontManager = () => {
         all: [...systemFonts, ...customFonts]
       });
 
-      // Intentar cargar fuentes de Google automáticamente
-      await loadGoogleFonts();
+      console.log('✅ [FontManager] Fuentes del sistema cargadas:', systemFonts.length);
     } catch (error) {
       console.error('Error inicializando fuentes:', error);
       setError('Error cargando fuentes del sistema');
@@ -52,35 +51,20 @@ export const useFontManager = () => {
     setError(null);
 
     try {
-      const googleFontsList = FontService.getGoogleFonts();
+      const googleFontsList = fontService.getGoogleFonts();
       
-      // Cargar usando WebFontLoader
-      await new Promise((resolve, reject) => {
-        WebFont.load({
-          google: {
-            families: googleFontsList
-          },
-          active: () => {
-            console.log('✅ Google Fonts cargadas exitosamente');
-            resolve();
-          },
-          inactive: () => {
-            console.warn('⚠️ Algunas Google Fonts no se pudieron cargar');
-            resolve(); // Resolver aunque algunas fallen
-          },
-          timeout: 10000 // 10 segundos de timeout
-        });
-      });
+      // Cargar usando el FontService
+      const loadedFonts = await fontService.loadGoogleFonts(googleFontsList);
 
       // Actualizar estado
       setGoogleFontsLoaded(true);
       setFonts(prev => ({
         ...prev,
-        google: googleFontsList.map(font => font.split(':')[0]),
-        all: [...prev.system, ...prev.custom, ...googleFontsList.map(font => font.split(':')[0])]
+        google: loadedFonts,
+        all: [...prev.system, ...prev.custom, ...loadedFonts]
       }));
 
-      console.log('✅ Google Fonts cargadas y estado actualizado');
+      console.log('✅ Google Fonts cargadas y estado actualizado:', loadedFonts.length);
     } catch (error) {
       console.error('❌ Error cargando Google Fonts:', error);
       setError('Error cargando fuentes de Google');
@@ -117,7 +101,7 @@ export const useFontManager = () => {
 
     try {
       // Usar el servicio de fuentes
-      const loadedFontName = await FontService.loadCustomFont(fontFile, fontName);
+      const loadedFontName = await fontService.loadCustomFont(fontFile, fontName);
       
       // Guardar en localStorage
       const savedFonts = JSON.parse(localStorage.getItem('customFonts') || '[]');
@@ -153,7 +137,7 @@ export const useFontManager = () => {
   const removeCustomFont = useCallback(async (fontName) => {
     try {
       // Remover usando el servicio
-      const success = FontService.removeCustomFont(fontName);
+      const success = fontService.removeCustomFont(fontName);
       
       if (success) {
         // Remover de localStorage
@@ -182,12 +166,12 @@ export const useFontManager = () => {
 
   // ================ VERIFICACIÓN DE FUENTES ================
   const isFontAvailable = useCallback((fontName) => {
-    return fonts.all.includes(fontName) || FontService.isFontAvailable(fontName);
+    return fonts.all.includes(fontName) || fontService.isFontAvailable(fontName);
   }, [fonts.all]);
 
   // ================ OBTENER INFORMACIÓN DE FUENTE ================
   const getFontInfo = useCallback((fontName) => {
-    return FontService.getFontInfo(fontName);
+    return fontService.getFontInfo(fontName);
   }, []);
 
   // ================ OBTENER FUENTES POR CATEGORÍA ================
@@ -222,7 +206,7 @@ export const useFontManager = () => {
   const clearCustomFonts = useCallback(async () => {
     try {
       // Limpiar usando el servicio
-      FontService.clearCustomFonts();
+      fontService.clearCustomFonts();
       
       // Limpiar localStorage
       localStorage.removeItem('customFonts');

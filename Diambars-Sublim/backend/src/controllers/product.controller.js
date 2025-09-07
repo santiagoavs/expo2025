@@ -23,7 +23,8 @@ productController.getAllProducts = async (req, res) => {
       isActive, 
       search,
       sort = 'newest',
-      featured
+      featured,
+      includeInactive = false
     } = req.query;
 
     // Validar parámetros de paginación
@@ -52,8 +53,19 @@ productController.getAllProducts = async (req, res) => {
       }
     }
     
-    if (isActive !== undefined && isActive !== '') {
-      filter.isActive = isActive === 'true';
+    // Solo filtrar por isActive si no se solicita incluir inactivos
+    if (includeInactive !== 'true') {
+      if (isActive !== undefined && isActive !== '') {
+        filter.isActive = isActive === 'true';
+      } else {
+        // Por defecto, solo mostrar productos activos
+        filter.isActive = true;
+      }
+    } else {
+      // Si se solicita incluir inactivos, usar el filtro isActive si se proporciona
+      if (isActive !== undefined && isActive !== '') {
+        filter.isActive = isActive === 'true';
+      }
     }
     
     if (featured !== undefined && featured !== '') {

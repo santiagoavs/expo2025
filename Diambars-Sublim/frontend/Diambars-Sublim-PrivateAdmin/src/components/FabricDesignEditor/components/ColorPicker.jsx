@@ -218,9 +218,20 @@ const ColorPicker = ({
    * Abre el selector de color
    */
   const handleOpenPicker = useCallback((event) => {
-    if (disabled) return;
+    console.log('🎨 [ColorPicker] handleOpenPicker llamado');
+    console.log('🎨 [ColorPicker] disabled:', disabled);
+    console.log('🎨 [ColorPicker] currentcolor:', currentcolor);
+    console.log('🎨 [ColorPicker] event:', event);
+    
+    if (disabled) {
+      console.log('🎨 [ColorPicker] ColorPicker está deshabilitado, no abriendo');
+      return;
+    }
+    
+    console.log('🎨 [ColorPicker] Abriendo selector de color');
     setAnchorEl(event.currentTarget);
     setTempColor(currentcolor);
+    console.log('🎨 [ColorPicker] anchorEl y tempColor establecidos');
   }, [disabled, currentcolor]);
 
   /**
@@ -234,17 +245,30 @@ const ColorPicker = ({
    * Maneja el cambio de color con debounce
    */
   const handleColorChange = useCallback((color) => {
+    console.log('🎨 [ColorPicker] handleColorChange llamado');
+    console.log('🎨 [ColorPicker] color recibido:', color);
+    console.log('🎨 [ColorPicker] onChange function:', !!onChange);
+    
     const colorValue = color.hex || color;
+    console.log('🎨 [ColorPicker] colorValue extraído:', colorValue);
+    
     setTempColor(colorValue);
+    console.log('🎨 [ColorPicker] tempColor actualizado a:', colorValue);
     
     // Debounce para optimizar rendimiento
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
+      console.log('🎨 [ColorPicker] Timeout anterior limpiado');
     }
     
     debounceTimeoutRef.current = setTimeout(() => {
+      console.log('🎨 [ColorPicker] Ejecutando onChange con:', colorValue);
       if (onChange) {
+        console.log('🎨 [ColorPicker] Llamando onChange function');
         onChange(colorValue, color);
+        console.log('🎨 [ColorPicker] onChange ejecutado');
+      } else {
+        console.warn('🎨 [ColorPicker] onChange no está definido');
       }
     }, 100);
   }, [onChange]);
@@ -432,10 +456,14 @@ const ColorPicker = ({
           horizontal: 'left',
         }}
         PaperProps={{
-          elevation: 0,
+          elevation: 8,
           sx: { 
-            backgroundColor: 'transparent',
-            overflow: 'visible'
+            backgroundColor: THEME_COLORS.background,
+            border: `1px solid ${THEME_COLORS.border}`,
+            borderRadius: '12px',
+            overflow: 'visible',
+            minWidth: 280,
+            maxWidth: 320
           }
         }}
       >

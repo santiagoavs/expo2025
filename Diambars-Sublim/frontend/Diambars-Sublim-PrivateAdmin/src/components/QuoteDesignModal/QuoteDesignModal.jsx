@@ -1,5 +1,6 @@
 // src/components/QuoteDesignModal/QuoteDesignModal.jsx - MODAL COTIZACIÓN DE DISEÑOS
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import {
   Dialog,
   DialogTitle,
@@ -382,6 +383,19 @@ const QuoteDesignModal = ({
     }
     
     setErrors(newErrors);
+    
+    // Mostrar errores con SweetAlert si hay validaciones fallidas
+    if (Object.keys(newErrors).length > 0) {
+      const errorMessages = Object.values(newErrors).join('\n');
+      Swal.fire({
+        title: '⚠️ Datos Inválidos',
+        text: errorMessages,
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#F59E0B'
+      });
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -416,6 +430,13 @@ const QuoteDesignModal = ({
       await onSubmitQuote(finalQuoteData);
     } catch (error) {
       console.error('Error submitting quote:', error);
+      Swal.fire({
+        title: '❌ Error al Enviar Cotización',
+        text: error.message || 'No se pudo enviar la cotización. Inténtalo de nuevo.',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
     } finally {
       setLoading(false);
     }

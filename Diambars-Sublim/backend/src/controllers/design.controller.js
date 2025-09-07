@@ -288,9 +288,16 @@ designController.createDesign = async (req, res) => {
  */
 designController.createDesignForClient = async (req, res) => {
   try {
+    console.log('🔍 [createDesignForClient] Request body:', req.body);
+    console.log('🔍 [createDesignForClient] User:', req.user);
+    
     const { userId, productId, elements, productOptions, clientNotes, name, mode = 'simple', productColorFilter } = req.body;
     const adminId = req.user._id;
     const adminRoles = req.user.roles || [];
+    
+    console.log('🔍 [createDesignForClient] Parsed data:', {
+      userId, productId, name, elements: elements?.length, productOptions: productOptions?.length
+    });
 
     if (!adminRoles.includes('admin') && !adminRoles.includes('manager')) {
       return res.status(403).json({ 
@@ -414,6 +421,23 @@ designController.createDesignForClient = async (req, res) => {
 
   } catch (error) {
     console.error("Error en createDesignForClient:", error);
+    
+    // Manejar errores de validación de Mongoose específicamente
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación en los datos del diseño",
+        errors: validationErrors,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+    
     res.status(500).json({ 
       success: false,
       message: "Error al crear el diseño para el cliente",
@@ -523,9 +547,12 @@ designController.getDesignById = async (req, res) => {
  */
 designController.submitQuote = async (req, res) => {
   try {
+    console.log('📧 [submitQuote] Iniciando cotización:', req.params.id);
     const { id } = req.params;
     const { price, productionDays, adminNotes } = req.body;
     const adminId = req.user._id;
+    
+    console.log('📧 [submitQuote] Datos recibidos:', { id, price, productionDays, adminNotes });
 
     const idValidation = validators.mongoId(id, 'ID de diseño');
     if (!idValidation.isValid) {
@@ -552,17 +579,21 @@ designController.submitQuote = async (req, res) => {
       });
     }
 
+    console.log('📧 [submitQuote] Buscando diseño:', idValidation.cleaned);
     const design = await Design.findById(idValidation.cleaned)
       .populate('product', 'basePrice name')
       .populate('user', 'email name');
 
     if (!design) {
+      console.log('❌ [submitQuote] Diseño no encontrado:', idValidation.cleaned);
       return res.status(404).json({ 
         success: false,
         message: "Diseño no encontrado",
         error: 'DESIGN_NOT_FOUND'
       });
     }
+    
+    console.log('✅ [submitQuote] Diseño encontrado:', design._id, 'Estado:', design.status);
 
     if (design.status !== 'pending') {
       return res.status(400).json({ 
@@ -574,6 +605,8 @@ designController.submitQuote = async (req, res) => {
 
     const { price: validPrice, productionDays: validDays, adminNotes: validNotes } = quoteValidation.cleaned;
     
+    console.log('📧 [submitQuote] Actualizando diseño con cotización:', { validPrice, validDays, validNotes });
+    
     design.price = validPrice;
     design.productionDays = validDays;
     design.adminNotes = validNotes || "";
@@ -581,7 +614,9 @@ designController.submitQuote = async (req, res) => {
     design.quotedAt = new Date();
     
     await design.save();
+    console.log('✅ [submitQuote] Diseño actualizado y guardado');
 
+    // Intentar enviar notificación (no crítico si falla)
     try {
       await notificationService.sendCustomNotification({
         to: design.user.email,
@@ -592,12 +627,16 @@ designController.submitQuote = async (req, res) => {
           <p>Precio: <strong>$${design.price}</strong></p>
           <p>Días de producción: <strong>${design.productionDays}</strong></p>
           <p>Producto: ${design.product.name}</p>
+          ${validNotes ? `<p>Notas del administrador: ${validNotes}</p>` : ''}
         `
       });
+      console.log('✅ Notificación de cotización enviada a:', design.user.email);
     } catch (notificationError) {
-      console.error('Error enviando notificación:', notificationError);
+      console.error('⚠️ Error enviando notificación (no crítico):', notificationError.message);
+      // No fallar la cotización por error de email
     }
 
+    console.log('✅ [submitQuote] Enviando respuesta exitosa');
     res.status(200).json({
       success: true,
       message: "Cotización enviada al cliente",

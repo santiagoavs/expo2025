@@ -101,7 +101,15 @@ const useDesigns = () => {
       // Formatear diseños
       const formattedDesigns = response.data.designs
         .map(formatDesign)
-        .filter(design => design !== null);
+        .filter(design => design !== null)
+        // Excluir diseños cancelados por defecto, a menos que se esté filtrando específicamente por "cancelled"
+        .filter(design => {
+          if (queryParams.status === 'cancelled') {
+            return design.status === 'cancelled';
+          }
+          // Si no se está filtrando por "cancelled", excluir los cancelados
+          return design.status !== 'cancelled';
+        });
       
       setDesigns(formattedDesigns);
       
@@ -378,6 +386,10 @@ const updateProductColor = useCallback(async (id, color) => {
       const response = await DesignService.submitQuote(id, quoteData);
       
       if (!response.success) {
+        // Manejar errores específicos
+        if (response.message?.includes('No se puede cotizar un diseño en estado')) {
+          throw new Error('Este diseño ya ha sido cotizado anteriormente');
+        }
         throw new Error(response.message || 'Error al enviar cotización');
       }
       

@@ -704,7 +704,7 @@ updateProductColor: async (id, color) => {
       }
       
       if (element.type === 'image') {
-        if (!element.konvaAttrs?.image) {
+        if (!element.konvaAttrs?.image && !element.konvaAttrs?.imageUrl) {
           errors.push(`Elemento ${index + 1}: Imagen requerida`);
         }
       }

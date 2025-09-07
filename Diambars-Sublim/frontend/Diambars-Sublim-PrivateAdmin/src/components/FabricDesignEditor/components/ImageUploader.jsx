@@ -237,23 +237,37 @@ const ImageUploader = ({
         const file = files[i];
         setProcessingProgress(((i + 1) / files.length) * 100);
 
+        console.log('[ImageUploader] Procesando archivo:', file.name, file.type, file.size);
+        
         // Validar archivo
         const validation = ImageUtils.validateImageFile(file);
+        console.log('[ImageUploader] Validación:', validation);
         if (!validation.isValid) {
           throw new Error(validation.error);
         }
 
         // Cargar imagen
+        console.log('[ImageUploader] Cargando imagen...');
         const imageElement = await ImageUtils.loadImageFromFile(file);
+        console.log('[ImageUploader] Imagen cargada:', imageElement);
         
         // Auto-optimizar si está habilitado
         let finalImageUrl = URL.createObjectURL(file);
         if (autoOptimize) {
-          finalImageUrl = await ImageUtils.optimizeForWeb(imageElement, {
-            maxWidth: 1200,
-            maxHeight: 1200,
-            quality: 0.85
-          });
+          try {
+            const optimizedDataURL = await ImageUtils.optimizeForWeb(imageElement, {
+              maxWidth: 1200,
+              maxHeight: 1200,
+              quality: 0.85
+            });
+            // Convertir dataURL a blob para crear URL
+            const response = await fetch(optimizedDataURL);
+            const blob = await response.blob();
+            finalImageUrl = URL.createObjectURL(blob);
+          } catch (error) {
+            console.warn('[ImageUploader] Error optimizando imagen, usando original:', error);
+            // Mantener la URL original si falla la optimización
+          }
         }
 
         const imageData = {

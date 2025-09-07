@@ -97,10 +97,10 @@ const useProducts = () => {
         throw new Error("Formato de respuesta inválido");
       }
 
-      // Formatear productos
+      // Formatear productos y filtrar solo los activos
       const formattedProducts = response.data.products
         .map(formatProduct)
-        .filter(product => product !== null);
+        .filter(product => product !== null && product.isActive === true);
       
       setProducts(formattedProducts);
       
@@ -118,6 +118,47 @@ const useProducts = () => {
     } catch (error) {
       handleError(error, 'Error al cargar productos');
       setProducts([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, formatProduct, handleError]);
+
+  // Obtener todos los productos (incluyendo inactivos) - para casos especiales
+  const fetchAllProducts = useCallback(async (params = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔍 [useProducts] Obteniendo todos los productos (incluyendo inactivos):', params);
+      
+      // Combinar parámetros con filtros actuales
+      const queryParams = {
+        ...filters,
+        ...params,
+        includeInactive: true // Parámetro especial para incluir inactivos
+      };
+      
+      const response = await productService.getAll(queryParams);
+      
+      if (!response.success || !Array.isArray(response.data?.products)) {
+        throw new Error("Formato de respuesta inválido");
+      }
+
+      // Formatear productos sin filtrar por estado
+      const formattedProducts = response.data.products
+        .map(formatProduct)
+        .filter(product => product !== null);
+      
+      console.log('✅ [useProducts] Todos los productos cargados:', {
+        count: formattedProducts.length,
+        active: formattedProducts.filter(p => p.isActive).length,
+        inactive: formattedProducts.filter(p => !p.isActive).length
+      });
+      
+      return formattedProducts;
+    } catch (error) {
+      handleError(error, 'Error al cargar todos los productos');
       return [];
     } finally {
       setLoading(false);
@@ -619,6 +660,7 @@ const useProducts = () => {
 
     // Funciones principales CRUD
     fetchProducts,
+    fetchAllProducts, // Nueva función para obtener todos los productos
     createProduct,
     updateProduct,
     deleteProduct,

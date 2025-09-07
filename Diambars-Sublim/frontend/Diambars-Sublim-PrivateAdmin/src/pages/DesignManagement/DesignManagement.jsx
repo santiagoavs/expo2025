@@ -1016,10 +1016,18 @@ const DesignManagement = () => {
       const designData = await getDesignById(designId);
       if (designData) {
         // Verificar que el diseño se puede cotizar
-        if (!designData.canQuote) {
+        if (designData.status !== 'pending') {
+          const statusMessages = {
+            'quoted': 'Este diseño ya ha sido cotizado anteriormente',
+            'approved': 'Este diseño ya fue aprobado por el cliente',
+            'rejected': 'Este diseño fue rechazado por el cliente',
+            'completed': 'Este diseño ya fue completado',
+            'archived': 'Este diseño está archivado'
+          };
+          
           Swal.fire({
             title: 'No se puede cotizar',
-            text: 'Este diseño no se puede cotizar en su estado actual',
+            text: statusMessages[designData.status] || 'Este diseño no se puede cotizar en su estado actual',
             icon: 'warning',
             confirmButtonColor: '#F59E0B'
           });
@@ -1052,7 +1060,14 @@ const DesignManagement = () => {
       }
     } catch (error) {
       console.error('Error en handleQuoteSubmitted:', error);
-      // El error ya se maneja en el hook useDesigns
+      // Mostrar error específico al usuario
+      await Swal.fire({
+        title: 'Error al cotizar',
+        text: error.message || 'No se pudo enviar la cotización',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#dc3545'
+      });
     } finally {
       setActionLoading(false);
     }
@@ -1474,6 +1489,12 @@ const DesignManagement = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <CheckCircle size={14} />
                       Completados
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="cancelled">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <XCircle size={14} />
+                      Cancelados
                     </Box>
                   </MenuItem>
                 </Select>
