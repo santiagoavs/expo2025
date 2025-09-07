@@ -83,7 +83,7 @@ export default function Navbar() {
           >
             <div className="sidebar-header">
               <img src="/images/navbar/logo.png" alt="Logo" className="sidebar-logo" />
-              <button onClick={closeSidebar} className="close-btn">✖</button>
+              <button onClick={closeSidebar} className="close-btn-navbar">✖</button>
             </div>
             <ul className="sidebar-links">
               {navItems.map((item) => (
@@ -92,12 +92,16 @@ export default function Navbar() {
                     to={item.path}
                     className={({ isActive }) => 'sidebar-item ' + (isActive ? 'active' : '')}
                   >
-                    <img
-                      src={item.icon}
-                      alt={item.name}
-                      className="nav-icon-img"
-                    />
-                    <span>{item.name}</span>
+                    {({ isActive }) => (
+                      <>
+                        <img
+                          src={isActive ? item.iconActive : item.icon}
+                          alt={item.name}
+                          className="nav-icon-img"
+                        />
+                        <span>{item.name}</span>
+                      </>
+                    )}
                   </NavLink>
                 </li>
               ))}
