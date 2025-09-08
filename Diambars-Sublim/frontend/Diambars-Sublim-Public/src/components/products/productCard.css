@@ -70,7 +70,7 @@
   width: 200px;
   margin: 30px 0 0;
   font-size: 1.1rem;
-  font-family: 'DiambarsFont', italic;
+  font-family: 'Mona Sans', sans-serif;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: none;

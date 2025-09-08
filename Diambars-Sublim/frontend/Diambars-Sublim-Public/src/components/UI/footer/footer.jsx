@@ -33,12 +33,6 @@ const Footer = () => {
             </div>
             </div>
           <p className="footer-tagline">Calidad superior en sublimación</p>
-          <p className="footer-description">
-            En Diambars Sublim eres
-            tú el que decide lo que quiere, desde qué material utilizaremos para fabricar tu producto, hasta las ideas más únicas
-            para la personalización de los mismos. No te quedes con las ganas, coméntanos hasta el más mínimo detalle, nosotros 
-            hacemos el resto.
-          </p>
           <div className="footer-contact">
             <div className="contact-item">
               <span className="contact-label-footer">Teléfono:</span>
@@ -105,23 +99,6 @@ const Footer = () => {
             >
               <FontAwesomeIcon icon={faGithub} />
             </a>
-          </div>
-          
-          <div className="newsletter">
-            <p>Introducte tu correo para recibir notificaciones de ofertas exclusivas y novedades.</p>
-            <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
-              <input
-                type="email"
-                className="newsletter-input"
-                placeholder="Tu email aquí"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <button type="submit" className="newsletter-btn">
-                Recibir notificaciones
-              </button>
-            </form>
           </div>
         </div>
       </div>

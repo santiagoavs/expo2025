@@ -255,15 +255,14 @@ const ShippingAddresses = () => {
               <div className="address-info">
                 <p>
                   <strong>
-                    {address.isDefault ? 'Activa actualmente' : 'Dirección registrada'}
+                    {address.isDefault ? 'Activa actualmente' : 'Registrada - Inactiva'}
                   </strong>
-                  {address.label && address.label !== 'Mi dirección' && (
+                  <br />
+                    {address.label && address.label !== 'Mi dirección' && (
                     <span className="address-label">
-                      {' '}({address.label})
+                    {' '}{address.label}
                     </span>
                   )}
-                  <br />
-                  {address.address}
                 </p>
               </div>
               
