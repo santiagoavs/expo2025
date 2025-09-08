@@ -108,7 +108,7 @@
 }
 
 .verify-card h1 {
-  font-family: 'DiambarsFont', sans-serif;
+  font-family: 'Mona Sans', sans-serif;
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   color: #3F2724;
@@ -132,7 +132,7 @@
   color: #FFF1D0;
   border-radius: 15px;
   padding: 12px 32px;
-  font-family: 'DiambarsFont', italic;
+  font-family: 'Mona Sans', sans-serif;
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -237,7 +237,7 @@
   margin: 15px 0px; 
   width: 190px;
   font-size: 1.1rem;
-  font-family: 'DiambarsFont', italic;
+  font-family: 'Mona Sans', sans-serif;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: none;

@@ -246,10 +246,8 @@ const PaymentMethods = () => {
           methods.map((method) => (
             <div key={method._id} className={`payment-method ${method.active ? 'active' : 'inactive'}`}>
               <p>
-                {method.active ? 'Activa actualmente' : 'Registrada - Inactiva'}<br />
-                {method.nickname && <strong>{method.nickname}</strong>}<br />
-                {formatIssuerName(method.issuer)} terminada en {method.lastFourDigits}<br />
-                <small>Expira: {method.expiry}</small>
+                <strong>{method.active ? 'Activa actualmente' : 'Registrada - Inactiva'}</strong>
+                <br />{formatIssuerName(method.issuer)} terminada en {method.lastFourDigits}<br />
               </p>
               <div className="payment-buttons">
                 <button

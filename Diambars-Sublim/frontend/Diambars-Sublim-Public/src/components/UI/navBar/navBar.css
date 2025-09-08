@@ -169,13 +169,14 @@
 }
 
 .nav-text {
-    font-weight: bold;
-    font-size: 1.25rem;
-    font-family: 'Spectral', sans-serif;
-    letter-spacing: -1.9px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    font-family: 'Mona Sans', sans-serif;
+    /* letter-spacing: -1.9px; */
     margin-left: 5px;
     align-items: center;
     line-height: 1;
+    font-style: normal !important;
 }
 
 .nav-item.active .nav-text {
@@ -351,7 +352,7 @@
         align-items: center;
         gap: 12px;
         color: #3F2724;
-        font-family: 'DiambarsFont', sans-serif;
+        font-family: 'Mona Sans', sans-serif;
         font-size: 1.2rem;
         text-decoration: none;
     }

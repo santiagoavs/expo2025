@@ -37,8 +37,7 @@
   padding: 0.8rem;
   font-size: 1.5rem;
   font-weight: bold;
-  font-family: 'Spectral';
-  letter-spacing: -2.2px;
+  font-family: 'Mona Sans', sans-serif;
   font-style: italic;
   background: none;
   border: none;
@@ -174,7 +173,7 @@
   border-radius: 15px;
   color: #721c24;
   font-size: 0.85rem;
-  font-family: 'DiambarsFont', italic;
+  font-family: 'Mona Sans', sans-serif;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1);
@@ -185,7 +184,7 @@
   cursor: pointer;
   text-decoration: underline;
   font-weight: 600;
-  font-family: 'DiambarsFont';
+  font-family: 'Mona Sans', sans-serif;
   transition: all 0.3s ease;
 }
 
@@ -246,7 +245,7 @@
   width: 445px;
   margin: 6px auto 0;
   font-size: 1.1rem;
-  font-family: 'DiambarsFont', italic;
+  font-family: 'Mona Sans', sans-serif;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: none;
