@@ -24,7 +24,8 @@ import {
   InputLabel,
   Chip,
   Card,
-  CardContent
+  CardContent,
+  Alert
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -62,6 +63,7 @@ import { fabric } from 'fabric';
 import ColorPicker from './ColorPicker';
 import ImageUploader from './ImageUploader';
 import FontSelector from './FontSelector';
+import KonvaShapesModal from './KonvaShapesModal';
 import useEditorStore from '../stores/useEditorStores';
 import { useFontManager } from '../hooks/useFontManager';
 
@@ -247,6 +249,19 @@ const AdvancedToolsPanel = () => {
     saveToHistory
   } = useEditorStore();
 
+  // Selectores directos para formas vectoriales (evita bucles infinitos)
+  const vectorShapes = useEditorStore((state) => state.vectorShapes);
+  const vectorEditMode = useEditorStore((state) => state.vectorEditMode);
+  const konvaShapesModalOpen = useEditorStore((state) => state.konvaShapesModalOpen);
+  const openKonvaShapesModal = useEditorStore((state) => state.openKonvaShapesModal);
+  const closeKonvaShapesModal = useEditorStore((state) => state.closeKonvaShapesModal);
+  const addVectorShape = useEditorStore((state) => state.addVectorShape);
+  const updateVectorShapesList = useEditorStore((state) => state.updateVectorShapesList);
+  
+  // Valores computados
+  const hasVectorContent = vectorShapes.length > 0;
+  const vectorShapesCount = vectorShapes.length;
+
   // Debug del estado del canvas
   React.useEffect(() => {
     console.log('[AdvancedToolsPanel] Canvas state changed:', {
@@ -256,6 +271,16 @@ const AdvancedToolsPanel = () => {
       lowerCanvasEl: !!canvas?.lowerCanvasEl
     });
   }, [canvas, isCanvasInitialized]);
+
+  // Debug del estado del modal
+  React.useEffect(() => {
+    console.log('🎨 [AdvancedToolsPanel] Modal state changed:', {
+      konvaShapesModalOpen,
+      openKonvaShapesModal: !!openKonvaShapesModal,
+      closeKonvaShapesModal: !!closeKonvaShapesModal
+    });
+  }, [konvaShapesModalOpen, openKonvaShapesModal, closeKonvaShapesModal]);
+
 
   // ==================== HERRAMIENTAS BÁSICAS ====================
 
@@ -943,6 +968,100 @@ const AdvancedToolsPanel = () => {
               </AccordionDetails>
             </StyledAccordion>
 
+            {/* Formas Vectoriales */}
+            <StyledAccordion>
+              <AccordionSummary expandIcon={<CaretDown />}>
+                <Typography sx={{ color: THEME_COLORS.text, fontWeight: 600 }}>
+                  Formas Vectoriales
+                </Typography>
+                {vectorShapes.length > 0 && (
+                  <Chip 
+                    label={vectorShapes.length} 
+                    size="small" 
+                    sx={{ 
+                      ml: 1, 
+                      backgroundColor: THEME_COLORS.primary,
+                      color: 'white',
+                      fontSize: '0.75rem'
+                    }} 
+                  />
+                )}
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={2}>
+                  <Typography variant="body2" sx={{ color: THEME_COLORS.text, opacity: 0.8 }}>
+                    Formas personalizables como Figma
+                  </Typography>
+                  
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      console.log('🎨 [AdvancedToolsPanel] Botón clickeado, abriendo modal...');
+                      console.log('🎨 [AdvancedToolsPanel] openKonvaShapesModal es:', typeof openKonvaShapesModal);
+                      console.log('🎨 [AdvancedToolsPanel] Estado actual del modal:', konvaShapesModalOpen);
+                      openKonvaShapesModal();
+                      console.log('🎨 [AdvancedToolsPanel] openKonvaShapesModal ejecutado');
+                    }}
+                    startIcon={<Sparkle size={20} />}
+                    sx={{
+                      background: `linear-gradient(135deg, ${THEME_COLORS.primary}, ${THEME_COLORS.primaryDark})`,
+                      borderRadius: '12px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      py: 1.5,
+                      boxShadow: '0 4px 16px rgba(31, 100, 191, 0.3)',
+                      '&:hover': {
+                        background: `linear-gradient(135deg, ${THEME_COLORS.primaryDark}, ${THEME_COLORS.accent})`,
+                        boxShadow: '0 6px 20px rgba(31, 100, 191, 0.4)'
+                      }
+                    }}
+                  >
+                    Crear Forma Personalizada
+                  </Button>
+
+                  {vectorShapes.length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ color: THEME_COLORS.text, mb: 1 }}>
+                        Formas disponibles:
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {vectorShapes.map((shape, index) => (
+                          <Chip
+                            key={shape.id || index}
+                            label={shape.type}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              borderColor: THEME_COLORS.primary,
+                              color: THEME_COLORS.primary,
+                              '&:hover': {
+                                backgroundColor: 'rgba(31, 100, 191, 0.1)'
+                              }
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+
+                  {vectorEditMode && (
+                    <Alert 
+                      severity="info" 
+                      sx={{ 
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(31, 100, 191, 0.1)',
+                        border: `1px solid ${THEME_COLORS.primary}`
+                      }}
+                    >
+                      <Typography variant="body2">
+                        Modo edición vectorial activo
+                      </Typography>
+                    </Alert>
+                  )}
+                </Stack>
+              </AccordionDetails>
+            </StyledAccordion>
+
             {/* Subida de imágenes */}
             <StyledAccordion>
               <AccordionSummary expandIcon={<CaretDown />}>
@@ -1308,6 +1427,12 @@ const AdvancedToolsPanel = () => {
           </Stack>
         )}
       </Box>
+
+      {/* Modal de Formas Vectoriales */}
+      <KonvaShapesModal
+        open={konvaShapesModalOpen}
+        onClose={closeKonvaShapesModal}
+      />
     </ToolsPanel>
   );
 };

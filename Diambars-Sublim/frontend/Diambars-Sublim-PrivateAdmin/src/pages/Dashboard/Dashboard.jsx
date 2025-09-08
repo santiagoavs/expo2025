@@ -761,6 +761,12 @@ const Dashboard = () => {
       onClose={() => setChartSettingsOpen(false)}
       maxWidth="sm"
       fullWidth
+      style={{ zIndex: 9999 }} // Z-index alto para estar por encima del editor
+      PaperProps={{
+        sx: {
+          zIndex: 10000 // Z-index adicional en el paper
+        }
+      }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Gear size={24} />

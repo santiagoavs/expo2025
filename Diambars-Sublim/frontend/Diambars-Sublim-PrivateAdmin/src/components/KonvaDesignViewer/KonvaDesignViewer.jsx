@@ -40,6 +40,7 @@ import useImage from 'use-image';
 
 // ================ ESTILOS MODERNOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
+  zIndex: 1000, // Z-index bajo para estar debajo del editor
   '& .MuiDialog-paper': {
     borderRadius: '24px',
     background: 'white',
@@ -49,7 +50,11 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
     maxHeight: '95vh',
     width: '1200px',
     margin: '16px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    zIndex: 1001 // Z-index bajo en el paper
+  },
+  '& .MuiBackdrop-root': {
+    zIndex: 999 // Backdrop con z-index bajo
   }
 }));
 

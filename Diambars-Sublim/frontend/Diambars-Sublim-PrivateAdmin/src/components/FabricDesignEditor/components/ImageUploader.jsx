@@ -785,12 +785,14 @@ const ImageUploader = ({
         onClose={() => setEditDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        style={{ zIndex: 9999 }} // Z-index alto para estar por encima del editor
         PaperProps={{
           sx: {
             background: 'rgba(242, 242, 242, 0.95)',
             backdropFilter: 'blur(25px)',
             borderRadius: '20px',
-            border: '1px solid rgba(31, 100, 191, 0.2)'
+            border: '1px solid rgba(31, 100, 191, 0.2)',
+            zIndex: 10000 // Z-index adicional en el paper
           }
         }}
       >

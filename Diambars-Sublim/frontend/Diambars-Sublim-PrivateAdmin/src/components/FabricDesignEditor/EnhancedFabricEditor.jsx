@@ -291,6 +291,11 @@ const EnhancedFabricEditor = ({
     setSelectedAreaData
   } = useEditorStore();
 
+  // Selectores directos para formas vectoriales (evita bucles infinitos)
+  const vectorShapes = useEditorStore((state) => state.vectorShapes);
+  const vectorEditMode = useEditorStore((state) => state.vectorEditMode);
+  const hasVectorContent = useEditorStore((state) => state.vectorShapes.length > 0);
+
   // Refs
   const canvasRef = useRef();
   const canvasContainerRef = useRef();
@@ -1389,6 +1394,50 @@ const EnhancedFabricEditor = ({
               </Typography>
             </Box>
           )}
+
+          {/* Indicador de formas vectoriales */}
+          {hasVectorContent && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #1F64BF20 0%, #032CA610 100%)',
+                border: '1px solid #1F64BF40',
+                color: '#1F64BF'
+              }}
+            >
+              <Star size={12} />
+              <Typography variant="caption" fontWeight="600">
+                {vectorShapes.length} Vector{vectorShapes.length !== 1 ? 'es' : ''}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Indicador de modo edición vectorial */}
+          {vectorEditMode && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #F59E0B20 0%, #D9770610 100%)',
+                border: '1px solid #F59E0B40',
+                color: '#D97706'
+              }}
+            >
+              <Lightbulb size={12} />
+              <Typography variant="caption" fontWeight="600">
+                Editando Vector
+              </Typography>
+            </Box>
+          )}
         </FloatingNavbar>
 
         {/* Canvas */}
@@ -1475,13 +1524,15 @@ const EnhancedFabricEditor = ({
         onClose={() => setSuggestionsModalOpen(false)}
         maxWidth="md"
         fullWidth
+        style={{ zIndex: 9999 }} // Z-index alto para estar por encima del editor
         PaperProps={{
           sx: {
             borderRadius: '16px',
             background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(31, 100, 191, 0.2)',
-            boxShadow: '0 20px 40px rgba(1, 3, 38, 0.15)'
+            boxShadow: '0 20px 40px rgba(1, 3, 38, 0.15)',
+            zIndex: 10000 // Z-index adicional en el paper
           }
         }}
       >

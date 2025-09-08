@@ -5,6 +5,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { fabric } from 'fabric';
 import { debounce, throttle } from 'lodash';
 import Swal from 'sweetalert2';
+import KonvaFabricConverter from '../utils/KonvaFabricConverter';
 
 /**
  * Store principal del editor que maneja:
@@ -65,6 +66,12 @@ const useEditorStore = create(
       objectHistory: [],
       currentHistoryIndex: -1,
       maxHistorySteps: 50,
+
+      // ==================== FORMAS VECTORIALES ====================
+      vectorShapes: [],
+      selectedVectorShape: null,
+      vectorEditMode: false,
+      konvaShapesModalOpen: false,
 
       // ==================== ESTADOS DE UI ====================
       isLoading: false,
@@ -662,8 +669,246 @@ const useEditorStore = create(
           canUndo: state.currentHistoryIndex > 0,
           canRedo: state.currentHistoryIndex < state.objectHistory.length - 1,
           areasCount: state.customizationAreas.length,
-          hasSelectedArea: !!state.selectedArea
+          hasSelectedArea: !!state.selectedArea,
+          vectorShapesCount: state.vectorShapes.length,
+          hasVectorContent: state.vectorShapes.length > 0
         };
+      },
+
+      // ==================== GESTIÓN DE FORMAS VECTORIALES ====================
+
+      /**
+       * Abre el modal de formas vectoriales
+       */
+      openKonvaShapesModal: () => {
+        console.log('🎨 [EditorStore] openKonvaShapesModal ejecutándose...');
+        set((state) => {
+          console.log('🎨 [EditorStore] Cambiando konvaShapesModalOpen de', state.konvaShapesModalOpen, 'a true');
+          state.konvaShapesModalOpen = true;
+          console.log('🎨 [EditorStore] Estado actualizado:', state.konvaShapesModalOpen);
+        });
+        console.log('🎨 [EditorStore] openKonvaShapesModal completado');
+      },
+
+      /**
+       * Cierra el modal de formas vectoriales
+       */
+      closeKonvaShapesModal: () => {
+        set((state) => {
+          state.konvaShapesModalOpen = false;
+        });
+      },
+
+      /**
+       * Agrega una forma vectorial al canvas
+       * @param {fabric.Path} vectorShape - Forma vectorial de Fabric.js
+       */
+      addVectorShape: (vectorShape) => {
+        set((state) => {
+          if (state.canvas && vectorShape) {
+            state.canvas.add(vectorShape);
+            state.canvas.setActiveObject(vectorShape);
+            state.canvas.requestRenderAll();
+            
+            // Actualizar lista de formas vectoriales
+            state.vectorShapes.push({
+              id: vectorShape.data?.id,
+              type: vectorShape.data?.konvaAttrs?.shapeType,
+              object: vectorShape
+            });
+            
+            // Guardar en historial
+            get().saveToHistory(`Forma vectorial ${vectorShape.data?.konvaAttrs?.shapeType} agregada`);
+          }
+        });
+      },
+
+      /**
+       * Actualiza la lista de formas vectoriales
+       */
+      updateVectorShapesList: () => {
+        set((state) => {
+          if (state.canvas) {
+            const vectorObjects = state.canvas.getObjects().filter(obj => 
+              obj.data?.konvaAttrs?.isVectorShape
+            );
+            
+            const newVectorShapes = vectorObjects.map(obj => ({
+              id: obj.data?.id,
+              type: obj.data?.konvaAttrs?.shapeType,
+              object: obj
+            }));
+            
+            // Solo actualizar si hay cambios
+            if (JSON.stringify(newVectorShapes) !== JSON.stringify(state.vectorShapes)) {
+              state.vectorShapes = newVectorShapes;
+            }
+          }
+        });
+      },
+
+      /**
+       * Selecciona una forma vectorial
+       * @param {string} shapeId - ID de la forma vectorial
+       */
+      selectVectorShape: (shapeId) => {
+        set((state) => {
+          const shape = state.vectorShapes.find(s => s.id === shapeId);
+          if (shape) {
+            state.selectedVectorShape = shape;
+            state.vectorEditMode = true;
+            
+            if (state.canvas) {
+              state.canvas.setActiveObject(shape.object);
+              state.canvas.requestRenderAll();
+            }
+          }
+        });
+      },
+
+      /**
+       * Sale del modo de edición vectorial
+       */
+      exitVectorEditMode: () => {
+        set((state) => {
+          state.vectorEditMode = false;
+          state.selectedVectorShape = null;
+          
+          if (state.canvas) {
+            state.canvas.discardActiveObject();
+            state.canvas.requestRenderAll();
+          }
+        });
+      },
+
+      /**
+       * Convierte datos del canvas a formato compatible con backend
+       * @param {string} areaId - ID del área de personalización
+       * @returns {Array} Array de elementos para el backend
+       */
+      getCanvasDataForBackend: (areaId = null) => {
+        const { canvas } = get();
+        if (!canvas) return [];
+
+        const objects = canvas.getObjects().filter(obj => 
+          !obj.data?.isProductImage && 
+          !obj.data?.isArea && 
+          obj.data?.type !== 'areaLabel'
+        );
+
+        return objects.map(obj => {
+          if (obj.data?.konvaAttrs?.isVectorShape) {
+            return KonvaFabricConverter.fabricToBackend(obj, areaId);
+          } else {
+            // Para objetos no vectoriales, crear estructura básica
+            const bounds = obj.getBoundingRect();
+            return {
+              type: obj.type,
+              areaId: areaId,
+              konvaAttrs: {
+                x: obj.left || 0,
+                y: obj.top || 0,
+                width: bounds.width,
+                height: bounds.height,
+                rotation: obj.angle || 0,
+                scaleX: obj.scaleX || 1,
+                scaleY: obj.scaleY || 1,
+                opacity: obj.opacity || 1,
+                fill: obj.fill || '#1F64BF',
+                stroke: obj.stroke || '#032CA6',
+                strokeWidth: obj.strokeWidth || 2
+              },
+              metadata: {
+                originalFileName: `fabric_${obj.type}_${Date.now()}`,
+                fileSize: 0,
+                source: 'fabric-basic',
+                tags: ['basic', obj.type]
+              }
+            };
+          }
+        }).filter(Boolean);
+      },
+
+      /**
+       * Carga elementos desde el backend al canvas
+       * @param {Array} elements - Array de elementos del backend
+       */
+      loadElementsFromBackend: async (elements) => {
+        const { canvas } = get();
+        if (!canvas || !Array.isArray(elements)) return;
+
+        try {
+          // Limpiar objetos existentes (excepto imagen de producto y áreas)
+          const objectsToRemove = canvas.getObjects().filter(obj => 
+            !obj.data?.isProductImage && 
+            !obj.data?.isArea && 
+            obj.data?.type !== 'areaLabel'
+          );
+          objectsToRemove.forEach(obj => canvas.remove(obj));
+
+          // Cargar elementos del backend
+          for (const element of elements) {
+            if (element.konvaAttrs?.isVectorShape) {
+              const vectorShape = await KonvaFabricConverter.backendToFabric(element);
+              if (vectorShape) {
+                canvas.add(vectorShape);
+              }
+            } else {
+              const basicShape = KonvaFabricConverter.createBasicShapeFromBackend(element);
+              if (basicShape) {
+                canvas.add(basicShape);
+              }
+            }
+          }
+
+          canvas.requestRenderAll();
+          get().updateObjectsList();
+          get().updateVectorShapesList();
+          
+          console.log(`✅ [EditorStore] Cargados ${elements.length} elementos desde backend`);
+        } catch (error) {
+          console.error('❌ [EditorStore] Error cargando elementos:', error);
+          get().setError(`Error cargando elementos: ${error.message}`);
+        }
+      },
+
+      /**
+       * Migra una forma básica a vectorial
+       * @param {fabric.Object} fabricObject - Objeto a migrar
+       * @param {string} shapeType - Tipo de forma vectorial
+       * @param {Object} vectorParams - Parámetros de la forma
+       */
+      migrateToVector: async (fabricObject, shapeType, vectorParams = {}) => {
+        const { canvas } = get();
+        if (!canvas || !fabricObject) return;
+
+        try {
+          const vectorShape = await KonvaFabricConverter.migrateToVector(
+            fabricObject, 
+            shapeType, 
+            vectorParams
+          );
+
+          if (vectorShape) {
+            // Reemplazar objeto original
+            canvas.remove(fabricObject);
+            canvas.add(vectorShape);
+            canvas.setActiveObject(vectorShape);
+            canvas.requestRenderAll();
+
+            get().updateVectorShapesList();
+            get().saveToHistory(`Forma migrada a vectorial: ${shapeType}`);
+            
+            get().addNotification({
+              type: 'success',
+              title: 'Migración exitosa',
+              message: `Forma convertida a ${shapeType} vectorial`
+            });
+          }
+        } catch (error) {
+          console.error('❌ [EditorStore] Error migrando a vector:', error);
+          get().setError(`Error migrando forma: ${error.message}`);
+        }
       }
     }))
   )
@@ -723,6 +968,25 @@ export const useUIState = () => useEditorStore((state) => ({
   addNotification: state.addNotification,
   removeNotification: state.removeNotification,
   togglePanel: state.togglePanel
+}));
+
+export const useVectorShapesState = () => useEditorStore((state) => ({
+  vectorShapes: state.vectorShapes,
+  selectedVectorShape: state.selectedVectorShape,
+  vectorEditMode: state.vectorEditMode,
+  konvaShapesModalOpen: state.konvaShapesModalOpen,
+  openKonvaShapesModal: state.openKonvaShapesModal,
+  closeKonvaShapesModal: state.closeKonvaShapesModal,
+  addVectorShape: state.addVectorShape,
+  updateVectorShapesList: state.updateVectorShapesList,
+  selectVectorShape: state.selectVectorShape,
+  exitVectorEditMode: state.exitVectorEditMode,
+  migrateToVector: state.migrateToVector
+}));
+
+export const useBackendIntegration = () => useEditorStore((state) => ({
+  getCanvasDataForBackend: state.getCanvasDataForBackend,
+  loadElementsFromBackend: state.loadElementsFromBackend
 }));
 
 export default useEditorStore;

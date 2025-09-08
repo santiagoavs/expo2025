@@ -152,6 +152,7 @@ const QUALITY_PRESETS = {
 
 // Diálogo principal con glassmorphism
 const ExportDialog = styled(Dialog)(({ theme }) => ({
+  zIndex: 9999, // Z-index alto para estar por encima del editor
   '& .MuiDialog-paper': {
     background: 'rgba(242, 242, 242, 0.95)',
     backdropFilter: 'blur(25px)',
@@ -163,7 +164,11 @@ const ExportDialog = styled(Dialog)(({ theme }) => ({
       inset 0 1px 0 rgba(242, 242, 242, 0.9)
     `,
     minWidth: '600px',
-    maxWidth: '800px'
+    maxWidth: '800px',
+    zIndex: 10000 // Z-index adicional en el paper
+  },
+  '& .MuiBackdrop-root': {
+    zIndex: 9998 // Backdrop también con z-index alto
   }
 }));
 

@@ -455,6 +455,7 @@ const ColorPicker = ({
           vertical: 'top',
           horizontal: 'left',
         }}
+        style={{ zIndex: 9999 }} // Z-index alto para estar por encima del editor
         PaperProps={{
           elevation: 8,
           sx: { 
@@ -463,7 +464,8 @@ const ColorPicker = ({
             borderRadius: '12px',
             overflow: 'visible',
             minWidth: 280,
-            maxWidth: 320
+            maxWidth: 320,
+            zIndex: 10000 // Z-index adicional en el paper
           }
         }}
       >

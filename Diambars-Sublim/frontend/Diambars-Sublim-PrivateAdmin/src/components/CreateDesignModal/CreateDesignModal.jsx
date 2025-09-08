@@ -151,6 +151,7 @@ const CustomPopper = styled(Popper)(({ theme }) => ({
 
 // ================ ESTILOS MODERNOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
+  zIndex: 1000, // Z-index bajo para estar debajo del editor
   '& .MuiDialog-paper': {
     borderRadius: '40px', // Más redondeado
     background: 'linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%)',
@@ -163,6 +164,10 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
     margin: '24px',
     overflow: 'hidden',
     animation: 'modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    zIndex: 1001, // Z-index bajo en el paper
+  },
+  '& .MuiBackdrop-root': {
+    zIndex: 999 // Backdrop con z-index bajo
   },
   '@keyframes modalSlideIn': {
     '0%': {
