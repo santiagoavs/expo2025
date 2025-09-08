@@ -14,7 +14,7 @@ import { X as CloseIcon, Download } from '@phosphor-icons/react';
 
 // IMPORTACIÓN CORRECTA PARA FABRIC V5.3.0
 import { fabric } from 'fabric';
-import CoordinateTransformer from '../../utils/CoordinateTransformer';
+import KonvaFabricConverter from '../FabricDesignEditor/utils/KonvaFabricConverter';
 
 const FabricDesignViewer = ({ 
   isOpen, 
@@ -23,13 +23,19 @@ const FabricDesignViewer = ({
   product, 
   enableDownload = true 
 }) => {
+  console.log('🎨 [FabricDesignViewer] Componente montado con props:', { isOpen, design, product });
+  
   const canvasRef = useRef();
   const canvasInst = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [renderError, setRenderError] = useState(null);
 
   useEffect(() => {
+    console.log('🎨 [FabricDesignViewer] useEffect ejecutado:', { isOpen, design: !!design, product: !!product });
+    
     if (!isOpen) {
+      console.log('🎨 [FabricDesignViewer] Modal cerrado, limpiando canvas...');
       // Limpiar canvas cuando se cierra el dialog
       if (canvasInst.current) {
         try {
@@ -42,7 +48,13 @@ const FabricDesignViewer = ({
       return;
     }
 
-    initializeViewer();
+    console.log('🎨 [FabricDesignViewer] Modal abierto, inicializando viewer...');
+    
+    // Esperar un poco para asegurar que el canvas esté disponible
+    setTimeout(() => {
+      console.log('🎨 [FabricDesignViewer] Timeout ejecutado, canvasRef.current:', canvasRef.current);
+      initializeViewer();
+    }, 100);
 
     return () => {
       if (canvasInst.current) {
@@ -57,12 +69,24 @@ const FabricDesignViewer = ({
   }, [isOpen, design, product]);
 
   const initializeViewer = async () => {
-    if (!canvasRef.current) return;
+    console.log('🎨 [FabricDesignViewer] initializeViewer llamado');
+    console.log('🎨 [FabricDesignViewer] canvasRef.current:', canvasRef.current);
+    
+    if (!canvasRef.current) {
+      console.error('❌ [FabricDesignViewer] canvasRef.current no está disponible');
+      setError('Canvas no disponible');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('🎨 [FabricDesignViewer] Inicializando viewer...');
+      console.log('🎨 [FabricDesignViewer] Design recibido:', design);
+      console.log('🎨 [FabricDesignViewer] Product recibido:', product);
+      console.log('🎨 [FabricDesignViewer] Elementos del diseño:', design?.elements);
+
       // Limpiar canvas anterior si existe
       if (canvasInst.current) {
         canvasInst.current.dispose();
@@ -76,13 +100,20 @@ const FabricDesignViewer = ({
         canvasElement.className = '';
       }
 
-      console.log('Inicializando viewer de Fabric...');
+      console.log('🎨 [FabricDesignViewer] Canvas limpiado, creando nuevo canvas...');
 
       // Crear canvas estático para vista previa
+      // Usar las mismas dimensiones que el editor para mantener consistencia
+      const canvasWidth = product?.editorConfig?.stageWidth || 800;
+      const canvasHeight = product?.editorConfig?.stageHeight || 600;
+      
+      console.log('📐 [FabricDesignViewer] Tamaño del canvas:', { width: canvasWidth, height: canvasHeight });
+      
       const canvas = new fabric.StaticCanvas(canvasRef.current, {
-        width: 900,
-        height: 600,
+        width: canvasWidth,
+        height: canvasHeight,
         backgroundColor: 'transparent',
+        preserveObjectStacking: true,
         renderOnAddRemove: false,
         skipTargetFind: true,
         selection: false,
@@ -231,98 +262,122 @@ const FabricDesignViewer = ({
     const elements = design?.elements || [];
     
     if (elements.length === 0) {
-      console.log('No hay elementos de diseño para cargar');
+      console.log('🎨 [FabricDesignViewer] No hay elementos de diseño para cargar');
       return;
     }
 
-    console.log('Cargando elementos del diseño:', elements.length);
+    console.log('🎨 [FabricDesignViewer] Cargando elementos del diseño:', elements.length);
+    console.log('🎨 [FabricDesignViewer] Elementos detallados:', elements);
 
-    // Cargar elementos uno por uno para manejar async correctamente
+    let loadedCount = 0;
+
+    // Cargar elementos usando el converter correcto
     for (const element of elements) {
-      await loadSingleElement(canvas, element);
+      try {
+        console.log('🎨 [FabricDesignViewer] Procesando elemento:', element);
+        console.log('🎨 [FabricDesignViewer] Elemento konvaAttrs:', element.konvaAttrs);
+        console.log('🎨 [FabricDesignViewer] Elemento type:', element.type);
+        
+        // Usar el converter para crear objetos Fabric
+        const canvasDimensions = {
+          width: canvas.getWidth(),
+          height: canvas.getHeight()
+        };
+        const fabricObject = await KonvaFabricConverter.backendToFabric(element, canvasDimensions);
+        
+        if (fabricObject) {
+          // Configurar para vista previa (no interactivo)
+          fabricObject.set({
+            selectable: false,
+            evented: false,
+            hoverCursor: 'default',
+            moveCursor: 'default'
+          });
+          
+          canvas.add(fabricObject);
+          loadedCount++;
+          console.log('✅ [FabricDesignViewer] Elemento cargado:', element.type || 'unknown');
+        } else {
+          console.warn('⚠️ [FabricDesignViewer] No se pudo cargar elemento con converter, intentando fallback:', element.type || 'unknown');
+          // Fallback: crear elemento básico
+          const fallbackObject = createFallbackElement(element);
+          if (fallbackObject) {
+            canvas.add(fallbackObject);
+            loadedCount++;
+            console.log('✅ [FabricDesignViewer] Elemento cargado con fallback:', element.type || 'unknown');
+          }
+        }
+      } catch (error) {
+        console.error('❌ [FabricDesignViewer] Error cargando elemento:', element, error);
+        // Intentar fallback en caso de error
+        try {
+          const fallbackObject = createFallbackElement(element);
+          if (fallbackObject) {
+            canvas.add(fallbackObject);
+            loadedCount++;
+            console.log('✅ [FabricDesignViewer] Elemento cargado con fallback después de error:', element.type || 'unknown');
+          }
+        } catch (fallbackError) {
+          console.error('❌ [FabricDesignViewer] Error en fallback también:', fallbackError);
+        }
+      }
+    }
+    
+    // Renderizar todo
+    canvas.requestRenderAll();
+    console.log(`✅ [FabricDesignViewer] ${loadedCount}/${elements.length} elementos cargados exitosamente`);
+  };
+
+  // Función de respaldo para crear elementos básicos
+  const createFallbackElement = (element) => {
+    try {
+      const attrs = element.konvaAttrs || {};
+      
+      if (element.type === 'text' || element.type === 'i-text') {
+        return new fabric.IText(attrs.text || 'Texto', {
+          left: attrs.x || 100,
+          top: attrs.y || 100,
+          fontSize: attrs.fontSize || 24,
+          fontFamily: attrs.fontFamily || 'Arial',
+          fill: attrs.fill || '#000000',
+          selectable: false,
+          evented: false
+        });
+      } else if (element.type === 'image') {
+        // Para imágenes, crear un rectángulo placeholder
+        return new fabric.Rect({
+          left: attrs.x || 100,
+          top: attrs.y || 100,
+          width: attrs.width || 100,
+          height: attrs.height || 100,
+          fill: '#f0f0f0',
+          stroke: '#ccc',
+          strokeWidth: 2,
+          selectable: false,
+          evented: false
+        });
+      } else if (element.type === 'shape') {
+        // Para formas, crear un rectángulo básico
+        return new fabric.Rect({
+          left: attrs.x || 100,
+          top: attrs.y || 100,
+          width: attrs.width || 100,
+          height: attrs.height || 100,
+          fill: attrs.fill || '#1F64BF',
+          stroke: attrs.stroke || '#032CA6',
+          strokeWidth: attrs.strokeWidth || 2,
+          selectable: false,
+          evented: false
+        });
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ [FabricDesignViewer] Error creando elemento fallback:', error);
+      return null;
     }
   };
 
-  const loadSingleElement = (canvas, element) => {
-    return new Promise((resolve) => {
-      try {
-        const fabricConfig = CoordinateTransformer.konvaElementToFabric(element);
-        
-        if (!fabricConfig) {
-          console.warn('No se pudo convertir elemento:', element);
-          resolve();
-          return;
-        }
-
-        if (fabricConfig.__fabricType === 'i-text') {
-          // Elemento de texto
-          const textObj = new fabric.IText(fabricConfig.options.text || '', {
-            ...fabricConfig.options,
-            selectable: false,
-            evented: false,
-            data: { 
-              type: 'text',
-              elementId: element.id || element._id
-            }
-          });
-
-          canvas.add(textObj);
-          console.log('Texto agregado:', fabricConfig.options.text);
-          resolve();
-
-        } else if (fabricConfig.__fabricType === 'image' && fabricConfig.options.src) {
-          // Elemento de imagen
-          fabric.Image.fromURL(fabricConfig.options.src, (img) => {
-            img.set({
-              ...fabricConfig.options,
-              selectable: false,
-              evented: false,
-              data: { 
-                type: 'image',
-                elementId: element.id || element._id
-              }
-            });
-
-            canvas.add(img);
-            console.log('Imagen agregada');
-            canvas.requestRenderAll();
-            resolve();
-
-          }, { 
-            crossOrigin: 'anonymous',
-            onerror: () => {
-              console.warn('Error cargando imagen del elemento:', fabricConfig.options.src);
-              resolve();
-            }
-          });
-
-        } else if (fabricConfig.__fabricType === 'rect') {
-          // Elemento de forma rectangular
-          const rect = new fabric.Rect({
-            ...fabricConfig.options,
-            selectable: false,
-            evented: false,
-            data: { 
-              type: 'shape',
-              elementId: element.id || element._id
-            }
-          });
-
-          canvas.add(rect);
-          console.log('Rectángulo agregado');
-          resolve();
-
-        } else {
-          console.warn('Tipo de elemento no soportado:', fabricConfig.__fabricType);
-          resolve();
-        }
-
-      } catch (error) {
-        console.error('Error cargando elemento individual:', element, error);
-        resolve(); // Continuar con otros elementos
-      }
-    });
-  };
 
   const applyProductColorFilter = (imageObj, color, canvas) => {
     try {
@@ -437,12 +492,15 @@ const FabricDesignViewer = ({
     onClose();
   };
 
+  console.log('🎨 [FabricDesignViewer] Renderizando componente:', { isOpen, isLoading, error, renderError });
+  
   return (
     <Dialog 
       open={isOpen} 
       onClose={handleClose} 
       maxWidth={false} 
       fullWidth
+      style={{ zIndex: 1600 }} // Z-index muy alto para estar por encima del modal de creación
       PaperProps={{
         sx: {
           width: '95vw',
@@ -450,7 +508,8 @@ const FabricDesignViewer = ({
           maxWidth: '1200px',
           maxHeight: '800px',
           borderRadius: '16px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          zIndex: 1601 // Z-index adicional en el paper
         }
       }}
     >
@@ -551,6 +610,27 @@ const FabricDesignViewer = ({
             </Box>
           )}
 
+          {!isLoading && !error && (!design?.elements || design.elements.length === 0) && (
+            <Box 
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                textAlign: 'center',
+                color: 'text.secondary',
+                p: 4
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                No hay elementos en este diseño
+              </Typography>
+              <Typography variant="body2">
+                Los elementos del diseño aparecerán aquí cuando estén disponibles
+              </Typography>
+            </Box>
+          )}
+
           <canvas 
             ref={canvasRef}
             style={{
@@ -583,6 +663,21 @@ const FabricDesignViewer = ({
                 {design?.elements && (
                   <Typography variant="caption" color="text.secondary">
                     {design.elements.length} elemento(s) de diseño
+                  </Typography>
+                )}
+                {design?.name && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Diseño: {design.name}
+                  </Typography>
+                )}
+                {design?.user?.name && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Cliente: {design.user.name}
+                  </Typography>
+                )}
+                {design?.status && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Estado: {design.status}
                   </Typography>
                 )}
               </Box>

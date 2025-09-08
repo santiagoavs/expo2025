@@ -50,7 +50,7 @@ import {
 import DesignCard from '../../components/DesignCard/DesignCard';
 import CreateDesignModal from '../../components/CreateDesignModal/CreateDesignModal';
 import QuoteDesignModal from '../../components/QuoteDesignModal/QuoteDesignModal';
-import KonvaDesignViewer from '../../components/KonvaDesignViewer/KonvaDesignViewer';
+import FabricDesignViewer from '../../components/FabricDesignViewer/FabricDesignViewer';
 
 // Importar hooks personalizados
 import useDesigns from '../../hooks/useDesigns';
@@ -1453,6 +1453,12 @@ const DesignManagement = () => {
                       <Funnel size={16} weight="bold" color="#032CA6" />
                     </InputAdornment>
                   }
+                  MenuProps={{
+                    style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
+                    PaperProps: {
+                      style: { zIndex: 10001 } // Z-index adicional en el paper del menú
+                    }
+                  }}
                 >
                   <MenuItem value="">Todos los estados</MenuItem>
                   <MenuItem value="draft">
@@ -1511,6 +1517,12 @@ const DesignManagement = () => {
                       <Package size={16} weight="bold" color="#032CA6" />
                     </InputAdornment>
                   }
+                  MenuProps={{
+                    style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
+                    PaperProps: {
+                      style: { zIndex: 10001 } // Z-index adicional en el paper del menú
+                    }
+                  }}
                 >
                   <MenuItem value="">
                     {loadingProducts ? 'Cargando productos...' : 'Todos los productos'}
@@ -1551,6 +1563,12 @@ const DesignManagement = () => {
                       <Users size={16} weight="bold" color="#032CA6" />
                     </InputAdornment>
                   }
+                  MenuProps={{
+                    style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
+                    PaperProps: {
+                      style: { zIndex: 10001 } // Z-index adicional en el paper del menú
+                    }
+                  }}
                 >
                   <MenuItem value="">
                     {loadingUsers ? 'Cargando clientes...' : 'Todos los clientes'}
@@ -1906,14 +1924,12 @@ const DesignManagement = () => {
 
       {/* Modal de visualización de diseño */}
       {showViewerModal && viewingDesign && (
-        <KonvaDesignViewer
+        <FabricDesignViewer
           isOpen={showViewerModal}
           onClose={handleCloseViewerModal}
           design={viewingDesign}
           product={viewingDesign.product}
-          showInfo={true}
           enableDownload={true}
-          enableZoom={true}
         />
       )}
     </DesignPageContainer>

@@ -848,16 +848,17 @@ const useEditorStore = create(
 
           // Cargar elementos del backend
           for (const element of elements) {
-            if (element.konvaAttrs?.isVectorShape) {
-              const vectorShape = await KonvaFabricConverter.backendToFabric(element);
-              if (vectorShape) {
-                canvas.add(vectorShape);
-              }
+            console.log('🔄 [EditorStore] Cargando elemento:', element);
+            console.log('🔄 [EditorStore] Es forma vectorial:', element.konvaAttrs?.isVectorShape);
+            console.log('🔄 [EditorStore] Tipo:', element.type);
+            
+            // Usar el converter unificado que maneja todos los tipos
+            const fabricObject = await KonvaFabricConverter.backendToFabric(element);
+            if (fabricObject) {
+              canvas.add(fabricObject);
+              console.log('✅ [EditorStore] Elemento cargado:', element.type);
             } else {
-              const basicShape = KonvaFabricConverter.createBasicShapeFromBackend(element);
-              if (basicShape) {
-                canvas.add(basicShape);
-              }
+              console.warn('⚠️ [EditorStore] No se pudo cargar elemento:', element.type);
             }
           }
 

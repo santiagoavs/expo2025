@@ -774,15 +774,26 @@ const EnhancedFabricEditor = ({
     if (!canvas || !initialDesign) return;
 
     try {
+      console.log('🎨 [Editor] Cargando diseño inicial:', initialDesign);
+      
       if (initialDesign.elements && Array.isArray(initialDesign.elements)) {
-        // Cargar elementos del diseño
-        initialDesign.elements.forEach(element => {
-          // Lógica para recrear objetos Fabric desde datos guardados
-          // Esto dependerá del formato de tus datos guardados
-        });
+        console.log('🎨 [Editor] Cargando', initialDesign.elements.length, 'elementos');
+        
+        // Limpiar canvas antes de cargar
+        canvas.clear();
+        
+        // Cargar elementos del diseño usando el store
+        const { loadElementsFromBackend } = useEditorStore.getState();
+        await loadElementsFromBackend(initialDesign.elements);
+        
+        // Renderizar canvas
+        canvas.renderAll();
+        
+        console.log('✅ [Editor] Diseño inicial cargado exitosamente');
       }
     } catch (error) {
-      console.error('Error cargando diseño inicial:', error);
+      console.error('❌ [Editor] Error cargando diseño inicial:', error);
+      toast.error('Error al cargar el diseño inicial');
     }
   }, [canvas, initialDesign]);
 
@@ -859,6 +870,34 @@ const EnhancedFabricEditor = ({
         console.log('🔍 [Editor] FontFamily original:', fabricObj.fontFamily);
         console.log('🔍 [Editor] FontFamily normalizada:', normalizeFontFamily(fabricObj.fontFamily));
         
+        // Verificar si es una forma vectorial
+        const isVectorShape = fabricObj.data?.konvaAttrs?.isVectorShape || false;
+        const shapeType = fabricObj.data?.konvaAttrs?.shapeType;
+        const pathData = fabricObj.data?.konvaAttrs?.pathData;
+        
+        console.log('🔍 [Editor] Es forma vectorial:', isVectorShape, 'Tipo:', shapeType, 'PathData:', pathData);
+        
+        // Normalizar coordenadas a 800x600 para consistencia
+        const canvasWidth = canvas.getWidth();
+        const canvasHeight = canvas.getHeight();
+        const standardWidth = 800;
+        const standardHeight = 600;
+        
+        // Calcular escala
+        const scaleX = standardWidth / canvasWidth;
+        const scaleY = standardHeight / canvasHeight;
+        
+        // Normalizar coordenadas
+        const elementX = (fabricObj.left || 0) * scaleX;
+        const elementY = (fabricObj.top || 0) * scaleY;
+        const elementWidth = (fabricObj.width || obj.getScaledWidth?.() || 0) * scaleX;
+        const elementHeight = (fabricObj.height || obj.getScaledHeight?.() || 0) * scaleY;
+        
+        console.log('📐 [Editor] Canvas actual:', { width: canvasWidth, height: canvasHeight });
+        console.log('📐 [Editor] Escala:', { x: scaleX, y: scaleY });
+        console.log('📐 [Editor] Coordenadas originales:', { x: fabricObj.left, y: fabricObj.top, width: fabricObj.width, height: fabricObj.height });
+        console.log('📐 [Editor] Coordenadas normalizadas:', { x: elementX, y: elementY, width: elementWidth, height: elementHeight });
+        
         // Convertir a formato Konva.js esperado por el backend
         const konvaElement = {
           id: fabricObj.data?.id || `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -869,10 +908,10 @@ const EnhancedFabricEditor = ({
         // Para imágenes - poner la URL en el nivel raíz también (con fallback a obj._element.src)
         src: fabricObj.data?.imageUrl || fabricObj.data?.originalSrc || fabricObj.data?.src || obj._element?.src || obj.getSrc?.() || null,
           konvaAttrs: {
-            x: fabricObj.left || 0,
-            y: fabricObj.top || 0,
-            width: fabricObj.width || obj.getScaledWidth?.(),
-            height: fabricObj.height || obj.getScaledHeight?.(),
+            x: elementX,
+            y: elementY,
+            width: elementWidth,
+            height: elementHeight,
             rotation: fabricObj.angle || 0,
             scaleX: fabricObj.scaleX || 1,
             scaleY: fabricObj.scaleY || 1,
@@ -893,6 +932,14 @@ const EnhancedFabricEditor = ({
             imageUrl: fabricObj.data?.imageUrl || fabricObj.data?.originalSrc || fabricObj.data?.src || obj._element?.src || obj.getSrc?.() || null,
             // Para formas
             cornerRadius: fabricObj.rx || 0,
+            // Datos vectoriales específicos
+            ...(isVectorShape && {
+              isVectorShape: true,
+              shapeType: shapeType,
+              pathData: pathData,
+              vectorParams: fabricObj.data?.konvaAttrs?.vectorParams || {},
+              konvaOrigin: true
+            }),
             // Datos personalizados
             ...fabricObj.data
           },

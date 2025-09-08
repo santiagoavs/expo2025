@@ -6,7 +6,7 @@ const designElementSchema = new mongoose.Schema({
   type: { 
     type: String, 
     enum: [
-      'text', 'image', 'shape', 'path', 'group', 
+      'text', 'i-text', 'image', 'shape', 'path', 'group', 
       'triangle', 'rect', 'circle', 'ellipse', 'line', 'polygon',
       'star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon',
       'arrow', 'cross', 'plus', 'minus', 'square', 'rectangle'

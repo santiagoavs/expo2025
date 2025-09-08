@@ -834,6 +834,12 @@ const Dashboard = () => {
                 value={refreshInterval}
                 label="Intervalo de Actualización"
                 onChange={(e) => setRefreshInterval(e.target.value)}
+                MenuProps={{
+                  style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
+                  PaperProps: {
+                    style: { zIndex: 10001 } // Z-index adicional en el paper del menú
+                  }
+                }}
               >
                 <MenuItem value={15}>15 segundos</MenuItem>
                 <MenuItem value={30}>30 segundos</MenuItem>

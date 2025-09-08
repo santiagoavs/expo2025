@@ -263,7 +263,7 @@ const ShapeGenerators = {
 /**
  * Modal para crear formas vectoriales personalizadas con Konva
  */
-const KonvaShapesModal = ({ open, onClose }) => {
+const KonvaShapesModal = React.memo(({ open, onClose }) => {
   // Debug del modal
   console.log('🎨 [KonvaShapesModal] Renderizando con props:', { open, onClose: !!onClose });
   
@@ -318,7 +318,7 @@ const KonvaShapesModal = ({ open, onClose }) => {
 
   // Generar preview cuando cambian los parámetros
   useEffect(() => {
-    if (selectedShape && ShapeGenerators[selectedShape]) {
+    if (selectedShape && ShapeGenerators[selectedShape] && Object.keys(currentParams).length > 0) {
       try {
         const path = ShapeGenerators[selectedShape](currentParams);
         setPreviewPath(path);
@@ -326,7 +326,7 @@ const KonvaShapesModal = ({ open, onClose }) => {
         console.error('Error generando preview:', error);
       }
     }
-  }, [selectedShape, JSON.stringify(currentParams)]);
+  }, [selectedShape, currentParams]);
 
   // ==================== HANDLERS ====================
 
@@ -367,7 +367,7 @@ const KonvaShapesModal = ({ open, onClose }) => {
         evented: true,
         // Metadatos para compatibilidad con backend
         data: {
-          type: 'shape',
+          type: 'path',
           areaId: null, // Se asignará cuando se coloque en un área
           konvaAttrs: {
             x: canvas.getWidth() / 2,
@@ -729,6 +729,8 @@ const KonvaShapesModal = ({ open, onClose }) => {
       </DialogActions>
     </KonvaModal>
   );
-};
+});
+
+KonvaShapesModal.displayName = 'KonvaShapesModal';
 
 export default KonvaShapesModal;

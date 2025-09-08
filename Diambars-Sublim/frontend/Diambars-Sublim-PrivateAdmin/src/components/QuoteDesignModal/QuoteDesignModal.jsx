@@ -38,7 +38,7 @@ import {
 
 // ================ ESTILOS MODERNOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
-  zIndex: 1000, // Z-index bajo para estar debajo del editor
+  zIndex: 1500, // Z-index alto para estar por encima del navbar
   '& .MuiDialog-paper': {
     borderRadius: '24px',
     background: 'white',
@@ -49,10 +49,10 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
     maxHeight: '90vh',
     margin: '16px',
     overflow: 'hidden',
-    zIndex: 1001 // Z-index bajo en el paper
+    zIndex: 1501 // Z-index alto en el paper
   },
   '& .MuiBackdrop-root': {
-    zIndex: 999 // Backdrop con z-index bajo
+    zIndex: 1499 // Backdrop con z-index alto
   }
 }));
 

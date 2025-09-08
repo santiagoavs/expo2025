@@ -231,6 +231,12 @@ const FontSelector = ({
           onChange={(e) => handleFontChange(e.target.value)}
           disabled={disabled || isLoadingFont}
           displayEmpty
+          MenuProps={{
+            style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
+            PaperProps: {
+              style: { zIndex: 10001 } // Z-index adicional en el paper del menú
+            }
+          }}
         >
           {filteredFonts.map((font) => {
             const isGoogleFont = fonts.google.includes(font);
