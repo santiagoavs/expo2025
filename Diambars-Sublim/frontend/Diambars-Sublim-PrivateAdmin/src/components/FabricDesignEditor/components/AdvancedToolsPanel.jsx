@@ -305,11 +305,35 @@ const AdvancedToolsPanel = () => {
         editable: true,
         selectable: true,
         evented: true,
-        // Datos personalizados
+        // Datos personalizados con konvaAttrs para compatibilidad
         data: {
           type: 'text',
           id: `text_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          isCustomElement: true
+          isCustomElement: true,
+          // ✅ AGREGADO: Metadatos konvaAttrs para compatibilidad con KonvaFabricConverter
+          konvaAttrs: {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 200, // Se calculará automáticamente
+            height: 50, // Se calculará automáticamente
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            opacity: 1,
+            fill: toolProperties.text.fill,
+            stroke: null,
+            strokeWidth: 0,
+            fontSize: toolProperties.text.fontSize,
+            fontFamily: toolProperties.text.fontFamily,
+            fontWeight: toolProperties.text.fontWeight,
+            fontStyle: toolProperties.text.fontStyle,
+            textAlign: 'left',
+            text: 'Haz doble clic para editar',
+            // Identificadores para formas básicas
+            isBasicShape: true,
+            shapeType: 'text',
+            konvaOrigin: true
+          }
         }
       });
 
@@ -380,41 +404,81 @@ const AdvancedToolsPanel = () => {
         opacity: toolProperties.shape.opacity
       };
 
+      // ✅ AGREGADO: Metadatos konvaAttrs para todas las formas básicas
+      const konvaAttrs = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        width: 100,
+        height: 100,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        opacity: toolProperties.shape.opacity,
+        fill: toolProperties.shape.fill,
+        stroke: toolProperties.shape.stroke,
+        strokeWidth: toolProperties.shape.strokeWidth,
+        // Identificadores para formas básicas
+        isBasicShape: true,
+        shapeType: shapeType,
+        konvaOrigin: true
+      };
+
       switch (shapeType) {
         case 'rectangle':
           shape = new fabric.Rect({
             width: 100,
             height: 100,
-            ...baseOptions
+            ...baseOptions,
+            // ✅ AGREGADO: Metadatos konvaAttrs
+            data: {
+              type: 'rect',
+              id: `rect_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              isCustomElement: true,
+              konvaAttrs: konvaAttrs
+            }
           });
           break;
         case 'circle':
+          konvaAttrs.width = 100; // Diámetro
+          konvaAttrs.height = 100; // Diámetro
           shape = new fabric.Circle({
             radius: 50,
-            ...baseOptions
+            ...baseOptions,
+            // ✅ AGREGADO: Metadatos konvaAttrs
+            data: {
+              type: 'circle',
+              id: `circle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              isCustomElement: true,
+              konvaAttrs: konvaAttrs
+            }
           });
           break;
         case 'triangle':
           shape = new fabric.Triangle({
             width: 100,
             height: 100,
-            ...baseOptions
-          });
-          break;
-        case 'star':
-          // Crear estrella personalizada usando path
-          const starPath = 'M 50 0 L 61 35 L 98 35 L 68 57 L 79 91 L 50 70 L 21 91 L 32 57 L 2 35 L 39 35 Z';
-          shape = new fabric.Path(starPath, {
             ...baseOptions,
-            scaleX: 0.8,
-            scaleY: 0.8
+            // ✅ AGREGADO: Metadatos konvaAttrs
+            data: {
+              type: 'triangle',
+              id: `triangle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              isCustomElement: true,
+              konvaAttrs: konvaAttrs
+            }
           });
           break;
         default:
           shape = new fabric.Rect({
             width: 100,
             height: 100,
-            ...baseOptions
+            ...baseOptions,
+            // ✅ AGREGADO: Metadatos konvaAttrs
+            data: {
+              type: 'rect',
+              id: `rect_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              isCustomElement: true,
+              konvaAttrs: konvaAttrs
+            }
           });
       }
 
@@ -941,16 +1005,6 @@ const AdvancedToolsPanel = () => {
                         fullWidth
                       >
                         <Triangle size={20} />
-                      </ToolButton>
-                    </Tooltip>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Tooltip title="Estrella">
-                      <ToolButton 
-                        onClick={() => addShape('star')}
-                        fullWidth
-                      >
-                        <Star size={20} />
                       </ToolButton>
                     </Tooltip>
                   </Grid>

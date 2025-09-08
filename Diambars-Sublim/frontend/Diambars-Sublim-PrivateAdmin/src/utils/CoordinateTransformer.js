@@ -1,4 +1,5 @@
 // src/utils/CoordinateTransformer.js - CORREGIDO PARA EVITAR PÉRDIDA DE CANVAS
+import CoordinateConverter from './CoordinateConverter';
 
 export const CoordinateTransformer = {
   /**
@@ -73,18 +74,26 @@ export const CoordinateTransformer = {
   /**
    * Convierte objeto de Fabric a elemento de diseño
    */
-  fabricObjectToDesignElement(fabricObject, index = 0) {
+  fabricObjectToDesignElement(fabricObject, index = 0, canvasDimensions = { width: 800, height: 600 }) {
     if (!fabricObject) return null;
 
     try {
+      // Normalizar coordenadas usando el sistema unificado
+      const normalizedCoords = CoordinateConverter.toStandard({
+        x: fabricObject.left || 0,
+        y: fabricObject.top || 0,
+        width: fabricObject.getScaledWidth?.() || fabricObject.width || 0,
+        height: fabricObject.getScaledHeight?.() || fabricObject.height || 0
+      }, canvasDimensions);
+      
       const baseElement = {
         type: this._getFabricObjectType(fabricObject),
         areaId: fabricObject.areaId || null,
         konvaAttrs: {
-          x: Math.round(fabricObject.left || 0),
-          y: Math.round(fabricObject.top || 0),
-          width: Math.round(fabricObject.getScaledWidth?.() || fabricObject.width || 0),
-          height: Math.round(fabricObject.getScaledHeight?.() || fabricObject.height || 0),
+          x: normalizedCoords.x,
+          y: normalizedCoords.y,
+          width: normalizedCoords.width,
+          height: normalizedCoords.height,
           rotation: Math.round(fabricObject.angle || 0),
           scaleX: fabricObject.scaleX || 1,
           scaleY: fabricObject.scaleY || 1,
@@ -120,6 +129,52 @@ export const CoordinateTransformer = {
           // Preservar filtros aplicados
           filters: fabricObject.filters ? this._serializeFilters(fabricObject.filters) : []
         };
+      }
+
+      // ✅ NUEVO: Manejar objetos de tipo 'path' (formas vectoriales)
+      if (fabricObject.type === 'path') {
+        console.log('🔄 [CoordinateTransformer] Procesando objeto path:', fabricObject);
+        console.log('🔄 [CoordinateTransformer] Path data:', fabricObject.path);
+        console.log('🔄 [CoordinateTransformer] Data object:', fabricObject.data);
+        console.log('🔄 [CoordinateTransformer] ShapeType:', fabricObject.data?.konvaAttrs?.shapeType);
+        console.log('🔄 [CoordinateTransformer] IsVectorShape:', fabricObject.data?.konvaAttrs?.isVectorShape);
+        
+        // Obtener pathData del objeto o de sus metadatos
+        let pathData = null;
+        if (fabricObject.path && Array.isArray(fabricObject.path)) {
+          pathData = fabricObject.path.join(' ');
+          console.log('🔄 [CoordinateTransformer] PathData desde fabricObject.path:', pathData);
+        } else if (fabricObject.data?.konvaAttrs?.pathData) {
+          pathData = fabricObject.data.konvaAttrs.pathData;
+          console.log('🔄 [CoordinateTransformer] PathData desde data.konvaAttrs:', pathData);
+        }
+        
+        if (!pathData) {
+          console.error('❌ [CoordinateTransformer] NO HAY PATH DATA para el objeto path!');
+          console.error('❌ [CoordinateTransformer] fabricObject.path:', fabricObject.path);
+          console.error('❌ [CoordinateTransformer] fabricObject.data:', fabricObject.data);
+        }
+        
+        baseElement.konvaAttrs = {
+          ...baseElement.konvaAttrs,
+          fill: fabricObject.fill || '#ffffff',
+          stroke: fabricObject.stroke || '#000000',
+          strokeWidth: fabricObject.strokeWidth || 0,
+          // Preservar datos vectoriales
+          pathData: pathData,
+          isVectorShape: fabricObject.data?.konvaAttrs?.isVectorShape || false,
+          shapeType: fabricObject.data?.konvaAttrs?.shapeType || 'path',
+          vectorParams: fabricObject.data?.konvaAttrs?.vectorParams || {}
+        };
+        
+        // Actualizar metadata para indicar que es una forma vectorial
+        baseElement.metadata = {
+          ...baseElement.metadata,
+          isVectorShape: true,
+          shapeType: fabricObject.data?.konvaAttrs?.shapeType || 'path'
+        };
+        
+        console.log('✅ [CoordinateTransformer] Elemento path creado:', baseElement);
       }
 
       if (this._isShapeObject(fabricObject)) {
@@ -191,14 +246,22 @@ export const CoordinateTransformer = {
   /**
    * Convierte elemento de diseño a objeto de Fabric
    */
-  async designElementToFabricObject(element, fabric) {
+  async designElementToFabricObject(element, fabric, canvasDimensions = { width: 800, height: 600 }) {
     if (!element || !element.konvaAttrs || !fabric) return null;
 
     const attrs = element.konvaAttrs;
     
+    // Desnormalizar coordenadas desde formato estándar (800x600) al canvas actual
+    const denormalizedCoords = CoordinateConverter.fromStandard({
+      x: attrs.x || 0,
+      y: attrs.y || 0,
+      width: attrs.width || 100,
+      height: attrs.height || 100
+    }, canvasDimensions);
+    
     const commonProps = {
-      left: attrs.x || 0,
-      top: attrs.y || 0,
+      left: denormalizedCoords.x,
+      top: denormalizedCoords.y,
       angle: attrs.rotation || 0,
       opacity: attrs.opacity ?? 1,
       scaleX: attrs.scaleX || 1,
@@ -235,8 +298,8 @@ export const CoordinateTransformer = {
               if (img) {
                 img.set({
                   ...commonProps,
-                  width: attrs.width,
-                  height: attrs.height
+                  width: denormalizedCoords.width,
+                  height: denormalizedCoords.height
                 });
 
                 // Restaurar filtros si existen
@@ -252,6 +315,54 @@ export const CoordinateTransformer = {
             });
           });
 
+        // ✅ NUEVO: Manejar objetos de tipo 'path' (formas vectoriales)
+        case 'path':
+          console.log('🔄 [CoordinateTransformer] Creando objeto path desde elemento:', element);
+          console.log('🔄 [CoordinateTransformer] PathData:', attrs.pathData);
+          console.log('🔄 [CoordinateTransformer] ShapeType:', attrs.shapeType);
+          console.log('🔄 [CoordinateTransformer] IsVectorShape:', attrs.isVectorShape);
+          
+          if (!attrs.pathData) {
+            console.error('❌ [CoordinateTransformer] No hay pathData para crear objeto path');
+            console.error('❌ [CoordinateTransformer] Attrs completos:', attrs);
+            return new fabric.Rect({
+              ...commonProps,
+              width: denormalizedCoords.width,
+              height: denormalizedCoords.height,
+              fill: attrs.fill || '#ffffff',
+              stroke: attrs.stroke || '#000000',
+              strokeWidth: attrs.strokeWidth || 0
+            });
+          }
+          
+          const pathObject = new fabric.Path(attrs.pathData, {
+            ...commonProps,
+            width: denormalizedCoords.width,
+            height: denormalizedCoords.height,
+            fill: attrs.fill || '#ffffff',
+            stroke: attrs.stroke || '#000000',
+            strokeWidth: attrs.strokeWidth || 0,
+            originX: 'center',
+            originY: 'center',
+            data: {
+              type: 'path',
+              areaId: element.areaId,
+              konvaAttrs: {
+                ...attrs,
+                isVectorShape: attrs.isVectorShape || false,
+                shapeType: attrs.shapeType || 'path',
+                pathData: attrs.pathData,
+                vectorParams: attrs.vectorParams || {}
+              },
+              isCustomElement: true,
+              id: `restored_${attrs.shapeType || 'path'}_${Date.now()}`
+            }
+          });
+          
+          console.log('✅ [CoordinateTransformer] Objeto path creado:', pathObject);
+          console.log('✅ [CoordinateTransformer] Path del objeto creado:', pathObject.path);
+          return pathObject;
+
         case 'shape':
         default:
           // Determinar tipo de forma basado en metadata o crear rectángulo por defecto
@@ -261,7 +372,7 @@ export const CoordinateTransformer = {
             case 'circle':
               return new fabric.Circle({
                 ...commonProps,
-                radius: Math.min(attrs.width, attrs.height) / 2,
+                radius: Math.min(denormalizedCoords.width, denormalizedCoords.height) / 2,
                 fill: attrs.fill || '#ffffff',
                 stroke: attrs.stroke || '#000000',
                 strokeWidth: attrs.strokeWidth || 0
@@ -270,8 +381,8 @@ export const CoordinateTransformer = {
             case 'triangle':
               return new fabric.Triangle({
                 ...commonProps,
-                width: attrs.width || 100,
-                height: attrs.height || 100,
+                width: denormalizedCoords.width,
+                height: denormalizedCoords.height,
                 fill: attrs.fill || '#ffffff',
                 stroke: attrs.stroke || '#000000',
                 strokeWidth: attrs.strokeWidth || 0
@@ -280,8 +391,8 @@ export const CoordinateTransformer = {
             default:
               return new fabric.Rect({
                 ...commonProps,
-                width: attrs.width || 100,
-                height: attrs.height || 100,
+                width: denormalizedCoords.width,
+                height: denormalizedCoords.height,
                 fill: attrs.fill || '#ffffff',
                 stroke: attrs.stroke || '#000000',
                 strokeWidth: attrs.strokeWidth || 0
@@ -318,6 +429,7 @@ export const CoordinateTransformer = {
   _getFabricObjectType(fabricObject) {
     if (this._isTextObject(fabricObject)) return 'text';
     if (fabricObject.type === 'image') return 'image';
+    if (fabricObject.type === 'path') return 'path'; // ✅ NUEVO: Reconocer objetos path
     if (this._isShapeObject(fabricObject)) return 'shape';
     return 'group';
   },

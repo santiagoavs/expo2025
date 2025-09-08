@@ -295,7 +295,7 @@ const StatCard = styled(ModernCard)(({ theme, variant }) => {
   const variants = {
     primary: {
       background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-      color: 'white',
+      color: 'white',    
       border: 'none',
     },
     success: {

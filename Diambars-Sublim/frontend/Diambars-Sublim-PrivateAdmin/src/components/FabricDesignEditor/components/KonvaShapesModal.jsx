@@ -174,13 +174,14 @@ const ShapeGenerators = {
     const scale = size / 100;
     const c = curve;
     
-    return `M 0,${15 * scale * c} 
-            C 0,${5 * scale * c} ${10 * scale},${-5 * scale * c} ${25 * scale},${5 * scale * c}
-            C ${40 * scale},${-5 * scale * c} ${50 * scale},${5 * scale * c} ${50 * scale},${15 * scale * c}
-            C ${50 * scale},${25 * scale * c} ${25 * scale},${50 * scale * c} 0,${70 * scale * c}
-            C ${-25 * scale},${50 * scale * c} ${-50 * scale},${25 * scale * c} ${-50 * scale},${15 * scale * c}
-            C ${-50 * scale},${5 * scale * c} ${-40 * scale},${-5 * scale * c} ${-25 * scale},${5 * scale * c}
-            C ${-10 * scale},${-5 * scale * c} 0,${5 * scale * c} 0,${15 * scale * c} Z`;
+    // Corregir el path del corazón para que se vea correctamente
+    return `M 0,${20 * scale * c} 
+            C 0,${10 * scale * c} ${15 * scale},${0 * scale * c} ${30 * scale},${10 * scale * c}
+            C ${45 * scale},${0 * scale * c} ${60 * scale},${10 * scale * c} ${60 * scale},${20 * scale * c}
+            C ${60 * scale},${35 * scale * c} ${30 * scale},${60 * scale * c} 0,${80 * scale * c}
+            C ${-30 * scale},${60 * scale * c} ${-60 * scale},${35 * scale * c} ${-60 * scale},${20 * scale * c}
+            C ${-60 * scale},${10 * scale * c} ${-45 * scale},${0 * scale * c} ${-30 * scale},${10 * scale * c}
+            C ${-15 * scale},${0 * scale * c} 0,${10 * scale * c} 0,${20 * scale * c} Z`;
   },
 
   arrow: (params) => {
@@ -223,21 +224,25 @@ const ShapeGenerators = {
     const { height = 150, zigzag = 4, width = 60 } = params;
     const step = height / zigzag;
     const halfWidth = width / 2;
-    let path = `M ${-halfWidth * 0.3},0`;
     
+    // Crear un rayo más simétrico y realista
+    let path = `M ${-halfWidth * 0.2},0`;
+    
+    // Lado izquierdo del rayo
     for (let i = 1; i <= zigzag; i++) {
       const y = step * i;
-      const x = i % 2 === 1 ? halfWidth : -halfWidth;
-      path += ` L ${x * 0.7},${y}`;
+      const x = i % 2 === 1 ? -halfWidth * 0.8 : -halfWidth * 0.3;
+      path += ` L ${x},${y}`;
     }
     
-    path += ` L ${halfWidth * 0.3},${height}`;
-    path += ` L 0,${height * 0.8}`;
-    path += ` L ${-halfWidth * 0.7},${height}`;
+    // Punta inferior
+    path += ` L ${-halfWidth * 0.1},${height}`;
+    path += ` L ${halfWidth * 0.1},${height}`;
     
+    // Lado derecho del rayo (simétrico)
     for (let i = zigzag - 1; i >= 1; i--) {
       const y = step * i;
-      const x = i % 2 === 1 ? -halfWidth * 0.5 : halfWidth * 0.5;
+      const x = i % 2 === 1 ? halfWidth * 0.3 : halfWidth * 0.8;
       path += ` L ${x},${y}`;
     }
     
@@ -250,9 +255,12 @@ const ShapeGenerators = {
     const angle = (2 * Math.PI) / sides;
     let path = '';
     
+    // Asegurar que el radio sea un número válido
+    const validRadius = Math.max(10, Math.min(500, radius || 100));
+    
     for (let i = 0; i < sides; i++) {
-      const x = Math.cos(i * angle - Math.PI / 2) * radius;
-      const y = Math.sin(i * angle - Math.PI / 2) * radius;
+      const x = Math.cos(i * angle - Math.PI / 2) * validRadius;
+      const y = Math.sin(i * angle - Math.PI / 2) * validRadius;
       path += (i === 0 ? 'M' : 'L') + ` ${x} ${y}`;
     }
     path += 'Z';

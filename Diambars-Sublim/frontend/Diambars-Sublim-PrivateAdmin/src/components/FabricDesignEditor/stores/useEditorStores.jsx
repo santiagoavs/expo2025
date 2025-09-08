@@ -853,7 +853,11 @@ const useEditorStore = create(
             console.log('🔄 [EditorStore] Tipo:', element.type);
             
             // Usar el converter unificado que maneja todos los tipos
-            const fabricObject = await KonvaFabricConverter.backendToFabric(element);
+            const canvasDimensions = {
+              width: canvas.getWidth(),
+              height: canvas.getHeight()
+            };
+            const fabricObject = await KonvaFabricConverter.backendToFabric(element, canvasDimensions);
             if (fabricObject) {
               canvas.add(fabricObject);
               console.log('✅ [EditorStore] Elemento cargado:', element.type);

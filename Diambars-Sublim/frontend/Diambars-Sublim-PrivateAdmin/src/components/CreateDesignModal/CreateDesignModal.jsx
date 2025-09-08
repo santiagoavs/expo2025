@@ -45,6 +45,73 @@ import {
 import EnhancedFabricEditor from '../FabricDesignEditor/EnhancedFabricEditor';
 import FabricDesignViewer from '../FabricDesignViewer/FabricDesignViewer';
 
+// ================ HOOK SIMPLIFICADO PARA SCROLL ================
+const useScroll = () => {
+  // ✅ SIMPLIFICADO: Solo retornar props vacías para mantener compatibilidad
+  // El scroll funciona automáticamente con overflowY: 'auto'
+  return {
+    scrollProps: {}
+  };
+};
+
+// ================ HOOK PARA PERSISTENCIA DE CANVAS ================
+const useCanvasPersistence = () => {
+  const [canvasData, setCanvasData] = useState(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const saveCanvasData = useCallback((data) => {
+    console.log('💾 [CanvasPersistence] Guardando datos del canvas:', data);
+    setCanvasData(data);
+  }, []);
+
+  const loadCanvasData = useCallback(() => {
+    console.log('📂 [CanvasPersistence] Cargando datos del canvas:', canvasData);
+    return canvasData;
+  }, [canvasData]);
+
+  // ✅ NUEVO: Función para obtener datos actuales sin dependencias
+  const getCurrentCanvasData = useCallback(() => {
+    return canvasData;
+  }, [canvasData]);
+
+  const openEditor = useCallback((initialData = null) => {
+    console.log('🎨 [CanvasPersistence] Abriendo editor con datos:', initialData);
+    if (initialData) {
+      setCanvasData(initialData);
+    }
+    setIsEditorOpen(true);
+  }, []);
+
+  const closeEditor = useCallback(() => {
+    console.log('❌ [CanvasPersistence] Cerrando editor');
+    setIsEditorOpen(false);
+  }, []);
+
+  const openPreview = useCallback(() => {
+    console.log('👁️ [CanvasPersistence] Abriendo vista previa');
+    setIsPreviewOpen(true);
+  }, []);
+
+  const closePreview = useCallback(() => {
+    console.log('❌ [CanvasPersistence] Cerrando vista previa');
+    setIsPreviewOpen(false);
+  }, []);
+
+  return {
+    canvasData,
+    isEditorOpen,
+    isPreviewOpen,
+    saveCanvasData,
+    loadCanvasData,
+    getCurrentCanvasData,
+    openEditor,
+    closeEditor,
+    openPreview,
+    closePreview
+  };
+};
+
 // ================ SERVICIO DE VALIDACIÓN INTEGRADO ================
 const DesignService = {
   validateElementsForSubmission: (elements) => {
@@ -287,6 +354,10 @@ const ModalContent = styled(DialogContent)(({ theme }) => ({
   borderRadius: '0 0 40px 40px', // Más redondeado
   position: 'relative',
   overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  flex: '1',
+  minHeight: 0, // ✅ AÑADIDO: Permitir que el contenido se colapse
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -339,7 +410,8 @@ const StepperContainer = styled(Box)(({ theme }) => ({
 }));
 
 const StepContent = styled(Box)({
-  minHeight: '500px',
+  minHeight: '400px',
+  maxHeight: '500px',
   display: 'flex',
   flexDirection: 'column',
   gap: '32px',
@@ -349,6 +421,28 @@ const StepContent = styled(Box)({
   backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.3)',
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  flex: '1',
+  // ✅ MEJORADO: Scrollbar personalizado más robusto
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: '4px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: 'rgba(31, 100, 191, 0.4)',
+    borderRadius: '4px',
+    '&:hover': {
+      background: 'rgba(31, 100, 191, 0.6)',
+    },
+  },
+  // ✅ MEJORADO: Scroll suave
+  scrollBehavior: 'smooth',
+  // ✅ MEJORADO: Mejor rendimiento
+  willChange: 'scroll-position',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   '&:hover': {
     boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
@@ -845,6 +939,20 @@ const CreateDesignModal = ({
     productColorFilter: null
   });
 
+  // ==================== CANVAS PERSISTENCE HOOK ====================
+  const {
+    canvasData,
+    isEditorOpen,
+    isPreviewOpen,
+    saveCanvasData,
+    loadCanvasData,
+    getCurrentCanvasData,
+    openEditor,
+    closeEditor,
+    openPreview,
+    closePreview
+  } = useCanvasPersistence();
+
   // ==================== EFECTOS ====================
   // Agregar CSS para spinner de loading
   useEffect(() => {
@@ -864,7 +972,7 @@ const CreateDesignModal = ({
 
   useEffect(() => {
     if (editMode && designToEdit) {
-      setDesignData({
+      const editData = {
         name: designToEdit.name || '',
         userId: designToEdit.user?.id || designToEdit.user?._id || '',
         productId: designToEdit.product?.id || designToEdit.product?._id || '',
@@ -873,8 +981,22 @@ const CreateDesignModal = ({
         clientNotes: designToEdit.clientNotes || '',
         mode: designToEdit.metadata?.mode || 'simple',
         productColorFilter: designToEdit.productColorFilter || null
-      });
+      };
+      
+      setDesignData(editData);
       setDesignElements(designToEdit.elements || []);
+      
+      // ✅ NUEVO: Guardar datos del diseño en canvasData para el editor
+      const canvasDataForEdit = {
+        elements: designToEdit.elements || [],
+        productColorFilter: designToEdit.productColorFilter || null,
+        canvasData: designToEdit.canvasData || null,
+        metadata: designToEdit.metadata || {}
+      };
+      
+      console.log('🔄 [CreateDesignModal] Preparando datos para reedición:', canvasDataForEdit);
+      saveCanvasData(canvasDataForEdit);
+      
     } else {
       // Resetear para modo creación
       setDesignData({
@@ -888,13 +1010,16 @@ const CreateDesignModal = ({
         productColorFilter: null
       });
       setDesignElements([]);
+      
+      // ✅ NUEVO: Limpiar canvasData para modo creación
+      saveCanvasData(null);
     }
     
     setActiveStep(0);
     setErrors({});
     setShowEditor(false);
     setShowPreview(false);
-  }, [editMode, designToEdit, isOpen]);
+  }, [editMode, designToEdit, isOpen, saveCanvasData]);
 
   // ==================== STEPS CONFIGURATION ====================
   const steps = [
@@ -981,14 +1106,27 @@ const CreateDesignModal = ({
       setErrors({ productId: 'Debe seleccionar un producto primero' });
       return;
     }
-    setShowEditor(true);
-  }, [designData.productId]);
+    
+    // ✅ CORREGIDO: Usar datos persistidos si existen, sino usar elementos actuales
+    const savedData = loadCanvasData();
+    const initialData = savedData || { elements: designElements };
+    
+    console.log('🎨 [CreateDesignModal] Abriendo editor con:', {
+      tieneDataGuardado: !!savedData,
+      elementosEnData: savedData?.elements?.length || 0,
+      elementosEnEstado: designElements.length,
+      filtroColor: savedData?.productColorFilter || null
+    });
+    
+    openEditor(initialData);
+  }, [designData.productId, designElements, loadCanvasData, openEditor]);
 
   const handleCloseEditor = useCallback(() => {
-    setShowEditor(false);
-  }, []);
+    closeEditor();
+  }, [closeEditor]);
 
   const handleSaveDesign = useCallback((designDataFromEditor) => {
+    console.log('🔍 [CreateDesignModal] handleSaveDesign llamado con:', designDataFromEditor);
     console.log('💾 [CreateDesignModal] Recibiendo datos del editor:', designDataFromEditor);
     
     // El editor ya envía los elementos en formato correcto
@@ -998,6 +1136,9 @@ const CreateDesignModal = ({
     
     console.log('📋 [CreateDesignModal] Elementos recibidos:', elements.length);
     console.log('🎨 [CreateDesignModal] Filtro de color:', productColorFilter);
+    
+    // ✅ MEJORADO: Persistir datos del canvas
+    saveCanvasData(designDataFromEditor);
     
     // Validar elementos
     const validation = DesignService.validateElementsForSubmission(elements);
@@ -1032,32 +1173,35 @@ const CreateDesignModal = ({
 
     setDesignData(finalDesignData);
     setDesignElements(elements);
-    setShowEditor(false);
+    closeEditor(); // ✅ CORREGIDO: Usar closeEditor() en lugar de setShowEditor(false)
     setErrors(prev => ({ ...prev, elements: undefined }));
     
     if (activeStep === 1) {
       setActiveStep(2);
     }
-  }, [activeStep, designData]);
+  }, [activeStep, designData, closeEditor]);
 
   const handlePreviewDesign = useCallback(() => {
-    if (designElements.length === 0) {
+    // ✅ CORREGIDO: Verificar que haya un diseño guardado
+    const savedDesign = loadCanvasData();
+    if (!savedDesign || !savedDesign.elements || savedDesign.elements.length === 0) {
       Swal.fire({
         title: '⚠️ Diseño Vacío',
-        text: 'Debe crear el diseño primero antes de previsualizarlo',
+        text: 'Debe guardar el diseño primero antes de previsualizarlo',
         icon: 'warning',
         confirmButtonText: 'Entendido',
         confirmButtonColor: '#F59E0B'
       });
-      setErrors({ elements: 'Debe crear el diseño primero' });
+      setErrors({ elements: 'Debe guardar el diseño primero' });
       return;
     }
-    setShowPreview(true);
-  }, [designElements]);
+    // ✅ CORREGIDO: Usar el diseño guardado para la vista previa
+    openPreview();
+  }, [loadCanvasData, openPreview]);
 
   const handleClosePreview = useCallback(() => {
-    setShowPreview(false);
-  }, []);
+    closePreview();
+  }, [closePreview]);
 
   const handleSubmit = useCallback(async () => {
     if (!validateStep(2)) return;
@@ -1145,131 +1289,168 @@ const CreateDesignModal = ({
   const isLastStep = activeStep === steps.length - 1;
   const hasDesignElements = designElements.length > 0;
 
+  // ==================== SCROLL HOOK ====================
+  const { scrollProps } = useScroll();
+
   // ==================== RENDER STEPS ====================
   const renderStepContent = () => {
     switch (activeStep) {
       case 0:
         return (
-          <StepContent>
-            <SectionCard>
-              <SectionTitle component="div">
-                <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                 <Palette size={16} weight="bold" />
-                 <span>Información básica</span>
-               </Box>
-              </SectionTitle>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <ModernTextField
-                  label="Nombre del diseño"
-                  value={designData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                  fullWidth
-                  placeholder="Ej: Logo para camiseta promocional"
-                />
+          <Box
+            sx={{
+              minHeight: '400px',
+              maxHeight: '500px',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              padding: '24px',
+              background: 'rgba(255, 255, 255, 0.6)',
+              borderRadius: '20px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
+              // ✅ Scrollbar personalizado
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.05)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(31, 100, 191, 0.4)',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: 'rgba(31, 100, 191, 0.6)',
+                },
+              },
+              scrollBehavior: 'smooth',
+            }}
+          >
+            {/* ✅ Título simplificado */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              marginBottom: '24px'
+            }}>
+              <Palette size={16} weight="bold" />
+              <Typography variant="h6" fontWeight={600} color="#1F64BF">
+                Información básica
+              </Typography>
+            </Box>
+            
+            {/* ✅ Formulario simplificado */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <ModernTextField
+                label="Nombre del diseño"
+                value={designData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                error={!!errors.name}
+                helperText={errors.name}
+                fullWidth
+                placeholder="Ej: Logo para camiseta promocional"
+              />
 
-                <CustomDropdown
-                  options={users}
-                  getOptionLabel={(option) => `${option.name} (${option.email})`}
-                  value={selectedUser}
-                  onChange={(option) => {
-                    handleInputChange('userId', option?.id || option?._id || '');
-                  }}
-                  loading={loadingUsers}
-                  placeholder="Buscar cliente por nombre o email"
-                  error={!!errors.userId}
-                  helperText={errors.userId || 'Buscar cliente por nombre o email'}
-                  renderOption={(option) => (
-                    <div>
-                      <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+              <CustomDropdown
+                options={users}
+                getOptionLabel={(option) => `${option.name} (${option.email})`}
+                value={selectedUser}
+                onChange={(option) => {
+                  handleInputChange('userId', option?.id || option?._id || '');
+                }}
+                loading={loadingUsers}
+                placeholder="Buscar cliente por nombre o email"
+                error={!!errors.userId}
+                helperText={errors.userId || 'Buscar cliente por nombre o email'}
+                renderOption={(option) => (
+                  <div>
+                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                      {option.name}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#666' }}>
+                      {option.email}
+                    </div>
+                  </div>
+                )}
+              />
+
+              <CustomDropdown
+                options={products}
+                getOptionLabel={(option) => option.name}
+                value={selectedProduct}
+                onChange={(option) => {
+                  handleInputChange('productId', option?.id || option?._id || '');
+                }}
+                loading={loadingProducts}
+                placeholder="Seleccionar producto base para personalizar"
+                error={!!errors.productId}
+                helperText={errors.productId || 'Seleccionar producto base para personalizar'}
+                renderOption={(option) => (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px',
+                    opacity: option.isActive ? 1 : 0.6
+                  }}>
+                    {(option.mainImage || option.images?.main) && (
+                      <img
+                        src={option.mainImage || option.images?.main}
+                        alt={option.name}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '8px',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
                         {option.name}
+                        {!option.isActive && (
+                          <span style={{
+                            fontSize: '12px',
+                            color: '#f44336',
+                            fontWeight: '500',
+                            background: '#ffebee',
+                            padding: '2px 6px',
+                            borderRadius: '4px'
+                          }}>
+                            INACTIVO
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '14px', color: '#666' }}>
-                        {option.email}
+                        {option.formattedPrice || `${option.basePrice}` || 'Precio no disponible'}
                       </div>
                     </div>
-                  )}
-                />
+                  </div>
+                )}
+              />
 
-                <CustomDropdown
-                  options={products}
-                  getOptionLabel={(option) => option.name}
-                  value={selectedProduct}
-                  onChange={(option) => {
-                    handleInputChange('productId', option?.id || option?._id || '');
-                  }}
-                  loading={loadingProducts}
-                  placeholder="Seleccionar producto base para personalizar"
-                  error={!!errors.productId}
-                  helperText={errors.productId || 'Seleccionar producto base para personalizar'}
-                  renderOption={(option) => (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '12px',
-                      opacity: option.isActive ? 1 : 0.6
-                    }}>
-                      {(option.mainImage || option.images?.main) && (
-                        <img
-                          src={option.mainImage || option.images?.main}
-                          alt={option.name}
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ 
-                          fontWeight: '600', 
-                          marginBottom: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}>
-                          {option.name}
-                          {!option.isActive && (
-                            <span style={{
-                              fontSize: '12px',
-                              color: '#f44336',
-                              fontWeight: '500',
-                              background: '#ffebee',
-                              padding: '2px 6px',
-                              borderRadius: '4px'
-                            }}>
-                              INACTIVO
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '14px', color: '#666' }}>
-                          {option.formattedPrice || `${option.basePrice}` || 'Precio no disponible'}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                />
-
-                <ModernTextField
-                  label="Notas para el cliente (opcional)"
-                  value={designData.clientNotes}
-                  onChange={(e) => handleInputChange('clientNotes', e.target.value)}
-                  multiline
-                  rows={3}
-                  fullWidth
-                  placeholder="Instrucciones especiales o detalles adicionales..."
-                />
-              </Box>
-            </SectionCard>
-          </StepContent>
+              <ModernTextField
+                label="Notas para el cliente (opcional)"
+                value={designData.clientNotes}
+                onChange={(e) => handleInputChange('clientNotes', e.target.value)}
+                multiline
+                rows={3}
+                fullWidth
+                placeholder="Instrucciones especiales o detalles adicionales..."
+              />
+            </Box>
+          </Box>
         );
 
       case 1:
         return (
-          <StepContent>
+          <StepContent {...scrollProps}>
          <SectionCard>
                  <SectionTitle component="div">
                    <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1368,7 +1549,7 @@ const CreateDesignModal = ({
 
       case 2:
         return (
-          <StepContent>
+          <StepContent {...scrollProps}>
             <SectionCard>
               <SectionTitle component="div">
   <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1506,6 +1687,8 @@ const CreateDesignModal = ({
         fullWidth
         disableEnforceFocus
         disableAutoFocus
+        disableScrollLock={false}
+        keepMounted={false}
       >
         <ModalHeader>
           <HeaderTitle>
@@ -1586,25 +1769,46 @@ const CreateDesignModal = ({
         </ModalActions>
       </StyledDialog>
 
-      {/* Editor Fabric Simplificado */}
-      {showEditor && selectedProduct && (
-        <EnhancedFabricEditor
-          isOpen={showEditor}
-          onClose={handleCloseEditor}
-          product={selectedProduct}
-          initialDesign={{ elements: designElements }}
-          onSave={handleSaveDesign}
-        />
+      {/* ✅ EDITOR: Solo para edición */}
+      {isEditorOpen && selectedProduct && (
+        <>
+          {console.log('🎨 [CreateDesignModal] Abriendo editor con:', { 
+            canvasData: loadCanvasData(), 
+            designElements: designElements.length,
+            selectedProduct: !!selectedProduct 
+          })}
+          <EnhancedFabricEditor
+            isOpen={isEditorOpen}
+            onClose={handleCloseEditor}
+            product={selectedProduct}
+            initialDesign={(() => {
+              const savedData = getCurrentCanvasData();
+              const fallbackData = { elements: designElements };
+              console.log('🔄 [CreateDesignModal] Datos para editor:', {
+                savedData: savedData,
+                fallbackData: fallbackData,
+                hasElements: savedData?.elements?.length || 0,
+                fallbackElements: fallbackData.elements.length
+              });
+              return savedData || fallbackData;
+            })()}
+            onSave={handleSaveDesign}
+            onTogglePreview={handlePreviewDesign}
+          />
+        </>
       )}
 
-      {/* Vista previa (Fabric) */}
-      {showPreview && selectedProduct && hasDesignElements && (
+      {/* ✅ VISTA PREVIA: Usar FabricDesignViewer para vista previa */}
+      {isPreviewOpen && selectedProduct && (
         <FabricDesignViewer
-          isOpen={showPreview}
+          isOpen={isPreviewOpen}
           onClose={handleClosePreview}
-          design={{ name: designData.name, elements: designElements, user: selectedUser, status: 'draft' }}
+          design={{
+            elements: loadCanvasData()?.elements || designElements,
+            productColorFilter: loadCanvasData()?.productColorFilter || null,
+            metadata: loadCanvasData()?.metadata || {}
+          }}
           product={selectedProduct}
-          enableDownload
         />
       )}
     </>

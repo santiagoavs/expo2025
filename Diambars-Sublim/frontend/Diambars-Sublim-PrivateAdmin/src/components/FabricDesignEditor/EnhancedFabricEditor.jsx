@@ -318,7 +318,10 @@ const EnhancedFabricEditor = ({
         height: product?.editorConfig?.stageHeight || 600,
         backgroundColor: '#ffffff',
         selection: true,
-        preserveObjectStacking: true
+        preserveObjectStacking: true,
+        enablePointerEvents: true,
+        allowTouchScrolling: true,
+        skipTargetFind: false
       };
 
       // Inicializar canvas
@@ -343,6 +346,15 @@ const EnhancedFabricEditor = ({
       }
 
       console.log('[Editor] Canvas inicializado correctamente');
+
+      // ✅ VERIFICAR: Contexto del canvas después de la inicialización
+      const context = currentCanvas.lowerCanvasEl.getContext('2d');
+      if (!context || typeof context.clearRect !== 'function') {
+        console.error('[Editor] Contexto del canvas no es válido después de la inicialización');
+        return;
+      }
+
+      console.log('✅ [Editor] Canvas inicializado correctamente con contexto válido');
 
       // Verificar que el canvas esté realmente disponible
       if (!currentCanvas || !currentCanvas.lowerCanvasEl) {
@@ -379,9 +391,16 @@ const EnhancedFabricEditor = ({
         console.log('[Editor] Canvas renderizado completamente');
       }
 
-      // Cargar diseño inicial si existe
-      if (initialDesign) {
-        await loadInitialDesign();
+      // Cargar diseño inicial si existe (solo después de que el canvas esté completamente listo)
+      if (initialDesign && canvas && canvas.lowerCanvasEl) {
+        // Esperar un poco más para asegurar que el canvas esté completamente inicializado
+        setTimeout(async () => {
+          try {
+            await loadInitialDesign();
+          } catch (error) {
+            console.error('❌ [Editor] Error cargando diseño inicial en initializeEditor:', error);
+          }
+        }, 100);
       }
 
       // Guardar estado inicial
@@ -779,8 +798,26 @@ const EnhancedFabricEditor = ({
       if (initialDesign.elements && Array.isArray(initialDesign.elements)) {
         console.log('🎨 [Editor] Cargando', initialDesign.elements.length, 'elementos');
         
+        // ✅ VERIFICAR: Canvas completamente inicializado antes de limpiar
+        if (!canvas || !canvas.lowerCanvasEl) {
+          console.warn('⚠️ [Editor] Canvas no completamente inicializado para limpiar');
+          return;
+        }
+        
+        // Verificar que el contexto del canvas esté disponible
+        const context = canvas.lowerCanvasEl.getContext('2d');
+        if (!context) {
+          console.warn('⚠️ [Editor] Contexto del canvas no disponible');
+          return;
+        }
+        
         // Limpiar canvas antes de cargar
-        canvas.clear();
+        try {
+          canvas.clear();
+        } catch (error) {
+          console.warn('⚠️ [Editor] Error al limpiar canvas:', error);
+          return;
+        }
         
         // Cargar elementos del diseño usando el store
         const { loadElementsFromBackend } = useEditorStore.getState();
@@ -803,7 +840,12 @@ const EnhancedFabricEditor = ({
    * Maneja el guardado del diseño
    */
   const handleSave = useCallback(async () => {
-    if (!canvas || !onSave) return;
+    console.log('🔍 [Editor] handleSave llamado - canvas:', !!canvas, 'onSave:', !!onSave);
+    
+    if (!canvas || !onSave) {
+      console.warn('⚠️ [Editor] Canvas o onSave no disponible para guardar');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -1096,12 +1138,20 @@ const EnhancedFabricEditor = ({
   // Cargar diseño inicial cuando el canvas esté listo
   useEffect(() => {
     if (!isOpen) return;
-    if (isCanvasInitialized && initialDesign && !initialDesignLoadedRef.current) {
-      loadInitialDesign()
-        .then(() => { initialDesignLoadedRef.current = true; })
-        .catch((e) => console.error('Error en loadInitialDesign:', e));
+    if (isCanvasInitialized && initialDesign && !initialDesignLoadedRef.current && canvas && canvas.lowerCanvasEl) {
+      // Esperar un poco más para asegurar que el canvas esté completamente listo
+      const timer = setTimeout(async () => {
+        try {
+          await loadInitialDesign();
+          initialDesignLoadedRef.current = true;
+        } catch (e) {
+          console.error('❌ [Editor] Error en loadInitialDesign useEffect:', e);
+        }
+      }, 150);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, isCanvasInitialized, initialDesign, loadInitialDesign]);
+  }, [isOpen, isCanvasInitialized, initialDesign, loadInitialDesign, canvas]);
 
   // Controlar visibilidad de las áreas customizables y sus etiquetas
   useEffect(() => {
@@ -1284,7 +1334,10 @@ const EnhancedFabricEditor = ({
           <Tooltip title="Guardar" arrow>
             <NavButton 
               variant="primary" 
-              onClick={handleSave}
+              onClick={() => {
+                console.log('🔍 [Editor] Botón guardar clickeado - isSaving:', isSaving, 'canvas:', !!canvas);
+                handleSave();
+              }}
               disabled={isSaving || !canvas}
             >
               <FloppyDisk size={18} />

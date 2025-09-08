@@ -144,16 +144,13 @@ export const generateDesignPreview = async (design, product) => {
   try {
     console.log('🎨 Generando vista previa del diseño:', design._id);
     
-    // Esta función debería usar una librería como Fabric.js o similar
-    // para renderizar el diseño sobre la imagen del producto
-    // Por ahora devolvemos una URL simulada
+    // Verificar que el diseño tenga elementos
+    if (!design.elements || design.elements.length === 0) {
+      console.warn('⚠️ Diseño sin elementos, usando imagen del producto');
+      return product.images?.main || null;
+    }
     
-    // En una implementación real, podrías:
-    // 1. Cargar la imagen base del producto
-    // 2. Superponer los elementos del diseño
-    // 3. Renderizar a una nueva imagen
-    // 4. Subir la imagen resultante a Cloudinary
-    
+    // Generar vista previa usando Canvas API
     const previewUrl = await createDesignComposite(design, product);
     
     console.log('✅ Vista previa generada:', previewUrl);
@@ -161,24 +158,211 @@ export const generateDesignPreview = async (design, product) => {
     
   } catch (error) {
     console.error('❌ Error generando vista previa:', error);
-    return null;
+    return product.images?.main || null;
   }
 };
 
 /**
- * Función simulada para crear composición de diseño
+ * Función para crear composición de diseño usando Canvas API
  */
 async function createDesignComposite(design, product) {
-  // Esta función debería implementar la lógica real de composición
-  // Por ahora retornamos la imagen del producto como placeholder
+  try {
+    // Crear canvas temporal
+    const canvas = require('canvas');
+    const { createCanvas, loadImage } = canvas;
+    
+    // Dimensiones estándar para la vista previa
+    const previewWidth = 400;
+    const previewHeight = 300;
+    
+    // Crear canvas
+    const previewCanvas = createCanvas(previewWidth, previewHeight);
+    const ctx = previewCanvas.getContext('2d');
+    
+    // Cargar imagen del producto
+    let productImage;
+    try {
+      productImage = await loadImage(product.images?.main || product.images?.mainImage);
+    } catch (error) {
+      console.warn('⚠️ No se pudo cargar imagen del producto:', error.message);
+      // Crear fondo blanco si no hay imagen
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, previewWidth, previewHeight);
+    }
+    
+    // Dibujar imagen del producto si está disponible
+    if (productImage) {
+      // Escalar imagen para que quepa en el canvas manteniendo proporción
+      const scale = Math.min(previewWidth / productImage.width, previewHeight / productImage.height);
+      const scaledWidth = productImage.width * scale;
+      const scaledHeight = productImage.height * scale;
+      const x = (previewWidth - scaledWidth) / 2;
+      const y = (previewHeight - scaledHeight) / 2;
+      
+      ctx.drawImage(productImage, x, y, scaledWidth, scaledHeight);
+    }
+    
+    // Dibujar elementos del diseño
+    const scaleX = previewWidth / 800; // Escalar desde 800x600 estándar
+    const scaleY = previewHeight / 600;
+    
+    for (const element of design.elements) {
+      try {
+        await drawDesignElement(ctx, element, scaleX, scaleY);
+      } catch (error) {
+        console.warn('⚠️ Error dibujando elemento:', error.message);
+      }
+    }
+    
+    // Convertir canvas a buffer y luego a base64
+    const buffer = previewCanvas.toBuffer('image/png');
+    const base64 = buffer.toString('base64');
+    
+    return `data:image/png;base64,${base64}`;
+    
+  } catch (error) {
+    console.error('❌ Error en createDesignComposite:', error);
+    return product.images?.main || null;
+  }
+}
+
+/**
+ * Dibuja un elemento de diseño en el canvas
+ */
+async function drawDesignElement(ctx, element, scaleX, scaleY) {
+  const attrs = element.konvaAttrs || {};
   
-  // En una implementación real usarías:
-  // - Canvas API
-  // - Sharp (para Node.js)
-  // - Fabric.js
-  // - Otra librería de manipulación de imágenes
+  // Aplicar transformaciones
+  ctx.save();
   
-  return product.images.main;
+  // Posición escalada
+  const x = (attrs.x || 0) * scaleX;
+  const y = (attrs.y || 0) * scaleY;
+  const width = (attrs.width || 100) * scaleX;
+  const height = (attrs.height || 100) * scaleY;
+  
+  // Rotación
+  if (attrs.rotation) {
+    ctx.translate(x + width/2, y + height/2);
+    ctx.rotate((attrs.rotation * Math.PI) / 180);
+    ctx.translate(-width/2, -height/2);
+  }
+  
+  // Opacidad
+  ctx.globalAlpha = attrs.opacity || 1;
+  
+  // Colores
+  ctx.fillStyle = attrs.fill || '#1F64BF';
+  ctx.strokeStyle = attrs.stroke || '#032CA6';
+  ctx.lineWidth = (attrs.strokeWidth || 2) * Math.min(scaleX, scaleY);
+  
+  // Dibujar según el tipo
+  switch (element.type) {
+    case 'text':
+      drawTextElement(ctx, attrs, x, y, width, height);
+      break;
+    case 'image':
+      await drawImageElement(ctx, attrs, x, y, width, height);
+      break;
+    case 'path':
+      drawPathElement(ctx, attrs, x, y, width, height);
+      break;
+    case 'shape':
+    default:
+      drawShapeElement(ctx, attrs, x, y, width, height);
+      break;
+  }
+  
+  ctx.restore();
+}
+
+/**
+ * Dibuja elemento de texto
+ */
+function drawTextElement(ctx, attrs, x, y, width, height) {
+  ctx.font = `${attrs.fontSize || 24}px ${attrs.fontFamily || 'Arial'}`;
+  ctx.textAlign = attrs.textAlign || 'left';
+  ctx.fillStyle = attrs.fill || '#000000';
+  
+  const text = attrs.text || 'Texto';
+  const lines = text.split('\n');
+  const lineHeight = (attrs.fontSize || 24) * 1.2;
+  
+  lines.forEach((line, index) => {
+    ctx.fillText(line, x, y + (index + 1) * lineHeight);
+  });
+}
+
+/**
+ * Dibuja elemento de imagen
+ */
+async function drawImageElement(ctx, attrs, x, y, width, height) {
+  if (!attrs.image) return;
+  
+  try {
+    const { loadImage } = require('canvas');
+    const img = await loadImage(attrs.image);
+    ctx.drawImage(img, x, y, width, height);
+  } catch (error) {
+    console.warn('⚠️ Error cargando imagen:', error.message);
+  }
+}
+
+/**
+ * Dibuja elemento de path (formas vectoriales)
+ */
+function drawPathElement(ctx, attrs, x, y, width, height) {
+  if (!attrs.pathData) return;
+  
+  try {
+    // Crear un path SVG simple (esto es una implementación básica)
+    // En una implementación real, usarías una librería como fabric.js o similar
+    ctx.beginPath();
+    
+    // Dibujar un rectángulo como placeholder para paths complejos
+    ctx.rect(x, y, width, height);
+    
+    if (attrs.fill) {
+      ctx.fill();
+    }
+    if (attrs.stroke) {
+      ctx.stroke();
+    }
+  } catch (error) {
+    console.warn('⚠️ Error dibujando path:', error.message);
+  }
+}
+
+/**
+ * Dibuja elemento de forma básica
+ */
+function drawShapeElement(ctx, attrs, x, y, width, height) {
+  const shapeType = attrs.shapeType || 'rect';
+  
+  ctx.beginPath();
+  
+  switch (shapeType) {
+    case 'circle':
+      const radius = Math.min(width, height) / 2;
+      ctx.arc(x + width/2, y + height/2, radius, 0, 2 * Math.PI);
+      break;
+    case 'triangle':
+      ctx.moveTo(x + width/2, y);
+      ctx.lineTo(x, y + height);
+      ctx.lineTo(x + width, y + height);
+      ctx.closePath();
+      break;
+    default: // rect
+      ctx.rect(x, y, width, height);
+      break;
+  }
+  
+  if (attrs.fill) {
+    ctx.fill();
+  }
+  if (attrs.stroke) {
+    ctx.stroke();
+  }
 }
 
 /**
