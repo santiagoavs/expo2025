@@ -26,7 +26,7 @@
     180% 180%, 
     100% 100%;
   animation: backgroundFlow 25s ease-in-out infinite alternate;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Mona Sans', sans-serif;
   position: relative;
   overflow-x: hidden;
   z-index: 0;
@@ -168,19 +168,15 @@
 }
 
 .contact-form-container h4 {
-  font-family: 'Spectral';
-  font-style: italic;
+  font-family: 'Mona Sans', sans-serif;
   color: #3F2724;
   margin: 0;
-  letter-spacing: -1.2px;
 }
 
 .contact-info-content h3 {
-  font-family: 'Spectral';
-  font-style: italic;
+  font-family: 'Mona Sans', sans-serif;
   color: #3F2724;
   margin: 0;
-  letter-spacing: -1.6px;
 }
 
 .contact-info-content p {
