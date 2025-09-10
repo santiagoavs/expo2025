@@ -403,7 +403,10 @@ const useEditorStore = create(
        */
       safeRender: () => {
         set((state) => {
-          if (!state.canvas) return;
+          if (!state.canvas) {
+            console.warn('[EditorStore] Canvas no disponible para renderizado');
+            return;
+          }
           
           try {
             // Verificar que el canvas tenga el elemento DOM
@@ -432,8 +435,20 @@ const useEditorStore = create(
               return;
             }
             
-            // Renderizar de forma segura
+            // Renderizar de forma segura con múltiples intentos
             state.canvas.requestRenderAll();
+            
+            // Verificar si hay imagen de fondo y forzar renderizado adicional
+            if (state.canvas.backgroundImage) {
+              console.log('[EditorStore] Detectada imagen de fondo, forzando renderizado adicional');
+              const canvasRef = state.canvas;
+              setTimeout(() => {
+                if (canvasRef && canvasRef.requestRenderAll) {
+                  canvasRef.requestRenderAll();
+                }
+              }, 50);
+            }
+            
             console.log('[EditorStore] Canvas renderizado correctamente');
           } catch (error) {
             console.error('[EditorStore] Error en renderizado seguro:', error);
