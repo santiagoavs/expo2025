@@ -829,7 +829,7 @@ const DROPDOWN_MENUS = {
         description: "Organización de productos"
       },
       {
-        to: "/reviews",
+        to: "/ReviewsManagement",
         label: "Reseñas",
         icon: <Star size={18} weight="duotone" />,
         description: "Opiniones de clientes"
