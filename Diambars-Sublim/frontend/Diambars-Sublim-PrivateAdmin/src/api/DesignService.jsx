@@ -133,21 +133,25 @@ const DesignService = {
         throw new Error('Debe incluir al menos un elemento en el diseño');
       }
 
-      // Validar formato de elementos
+      // Validar y normalizar elementos antes del envío
       const validationResult = DesignService.validateElementsForSubmission(designData.elements);
       if (!validationResult.isValid) {
         throw new Error(`Elementos inválidos: ${validationResult.errors.join('; ')}`);
       }
+
+      // Normalizar elementos para asegurar formato correcto
+      const normalizedElements = DesignService.normalizeElementsArray(designData.elements);
 
       // Preparar datos para envío - FORMATO CORREGIDO
       const payload = {
         userId: designData.userId, // Campo específico para admin
         productId: designData.productId,
         name: designData.name || `Diseño personalizado - ${new Date().toLocaleDateString()}`,
-        elements: designData.elements,
+        elements: normalizedElements,
         productOptions: designData.productOptions || [],
         clientNotes: designData.clientNotes || '',
-        mode: designData.mode || 'simple'
+        mode: designData.mode || 'simple',
+        productColorFilter: designData.productColorFilter || null
       };
 
       console.log('📤 [DesignService] Payload preparado:', payload);
@@ -681,31 +685,52 @@ updateProductColor: async (id, color) => {
       // Validar estructura básica
       if (!element.type) {
         errors.push(`Elemento ${index + 1}: Tipo de elemento requerido`);
+        return; // Saltar validaciones adicionales si no hay tipo
       }
       
       if (!element.konvaAttrs) {
         errors.push(`Elemento ${index + 1}: Configuración de posición requerida`);
-      } else {
-        // Validar posición básica
-        if (typeof element.konvaAttrs.x !== 'number') {
-          errors.push(`Elemento ${index + 1}: Posición X requerida`);
-        }
-        
-        if (typeof element.konvaAttrs.y !== 'number') {
-          errors.push(`Elemento ${index + 1}: Posición Y requerida`);
-        }
+        return; // Saltar validaciones adicionales si no hay konvaAttrs
+      }
+      
+      // Validar posición básica - Asegurar que sean números
+      if (typeof element.konvaAttrs.x !== 'number' || isNaN(element.konvaAttrs.x)) {
+        errors.push(`Elemento ${index + 1}: Posición X debe ser un número válido`);
+      }
+      
+      if (typeof element.konvaAttrs.y !== 'number' || isNaN(element.konvaAttrs.y)) {
+        errors.push(`Elemento ${index + 1}: Posición Y debe ser un número válido`);
       }
       
       // Validaciones específicas por tipo
       if (element.type === 'text') {
-        if (!element.konvaAttrs?.text || element.konvaAttrs.text.trim() === '') {
+        if (!element.konvaAttrs.text || element.konvaAttrs.text.trim() === '') {
           errors.push(`Elemento ${index + 1}: El texto no puede estar vacío`);
+        }
+        
+        // Asegurar propiedades de texto por defecto
+        if (!element.konvaAttrs.fontSize || isNaN(element.konvaAttrs.fontSize)) {
+          element.konvaAttrs.fontSize = 24;
+        }
+        if (!element.konvaAttrs.fontFamily) {
+          element.konvaAttrs.fontFamily = 'Arial';
+        }
+        if (!element.konvaAttrs.fill) {
+          element.konvaAttrs.fill = '#000000';
         }
       }
       
       if (element.type === 'image') {
-        if (!element.konvaAttrs?.image && !element.konvaAttrs?.imageUrl) {
+        if (!element.konvaAttrs.image && !element.konvaAttrs.imageUrl) {
           errors.push(`Elemento ${index + 1}: Imagen requerida`);
+        }
+        
+        // Asegurar dimensiones por defecto para imágenes
+        if (!element.konvaAttrs.width || isNaN(element.konvaAttrs.width)) {
+          element.konvaAttrs.width = 200;
+        }
+        if (!element.konvaAttrs.height || isNaN(element.konvaAttrs.height)) {
+          element.konvaAttrs.height = 150;
         }
       }
       
@@ -833,20 +858,28 @@ updateProductColor: async (id, color) => {
       type: element.type || 'text',
       areaId: element.areaId || '',
       konvaAttrs: {
-        x: element.konvaAttrs.x || 0,
-        y: element.konvaAttrs.y || 0,
+        x: Number(element.konvaAttrs.x) || 0,
+        y: Number(element.konvaAttrs.y) || 0,
         width: element.konvaAttrs.width,
         height: element.konvaAttrs.height,
         ...element.konvaAttrs
       }
     };
 
+    // Asegurar que x e y sean números válidos
+    if (isNaN(normalized.konvaAttrs.x)) {
+      normalized.konvaAttrs.x = 0;
+    }
+    if (isNaN(normalized.konvaAttrs.y)) {
+      normalized.konvaAttrs.y = 0;
+    }
+
     // Validaciones específicas por tipo
     if (normalized.type === 'text') {
       if (!normalized.konvaAttrs.text) {
         normalized.konvaAttrs.text = 'Texto vacío';
       }
-      if (!normalized.konvaAttrs.fontSize) {
+      if (!normalized.konvaAttrs.fontSize || isNaN(normalized.konvaAttrs.fontSize)) {
         normalized.konvaAttrs.fontSize = 24;
       }
       if (!normalized.konvaAttrs.fontFamily) {
@@ -858,19 +891,34 @@ updateProductColor: async (id, color) => {
     }
 
     if (normalized.type === 'image') {
-      if (!normalized.konvaAttrs.image) {
+      if (!normalized.konvaAttrs.image && !normalized.konvaAttrs.imageUrl) {
         console.warn('Elemento de imagen sin URL');
         return null;
       }
-      if (!normalized.konvaAttrs.width) {
+      if (!normalized.konvaAttrs.width || isNaN(normalized.konvaAttrs.width)) {
         normalized.konvaAttrs.width = 200;
       }
-      if (!normalized.konvaAttrs.height) {
+      if (!normalized.konvaAttrs.height || isNaN(normalized.konvaAttrs.height)) {
         normalized.konvaAttrs.height = 150;
       }
     }
 
     return normalized;
+  },
+
+  /**
+   * Normalizar array de elementos para envío al backend
+   * @param {Array} elements - Array de elementos
+   * @returns {Array} Array de elementos normalizados
+   */
+  normalizeElementsArray: (elements) => {
+    if (!Array.isArray(elements)) {
+      return [];
+    }
+
+    return elements
+      .map(element => DesignService.normalizeElement(element))
+      .filter(element => element !== null);
   }
 };
 

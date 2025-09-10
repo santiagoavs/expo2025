@@ -39,12 +39,12 @@ const validateDesignElements = (elements, customizationAreas = []) => {
       return;
     }
     
-    if (typeof element.konvaAttrs.x !== 'number') {
-      errors.push(`Elemento ${index + 1}: Posición X requerida`);
+    if (typeof element.konvaAttrs.x !== 'number' || isNaN(element.konvaAttrs.x)) {
+      errors.push(`Elemento ${index + 1}: Posición X debe ser un número válido`);
     }
     
-    if (typeof element.konvaAttrs.y !== 'number') {
-      errors.push(`Elemento ${index + 1}: Posición Y requerida`);
+    if (typeof element.konvaAttrs.y !== 'number' || isNaN(element.konvaAttrs.y)) {
+      errors.push(`Elemento ${index + 1}: Posición Y debe ser un número válido`);
     }
     
     switch (element.type) {
@@ -356,11 +356,17 @@ designController.createDesignForClient = async (req, res) => {
 
     const elementsValidation = validateDesignElements(elements, product.customizationAreas);
     if (!elementsValidation.isValid) {
+      console.error('❌ [createDesignForClient] Elementos inválidos:', elementsValidation.errors);
+      console.error('❌ [createDesignForClient] Elementos recibidos:', JSON.stringify(elements, null, 2));
       return res.status(400).json({ 
         success: false,
         message: "Elementos de diseño no válidos",
         errors: elementsValidation.errors,
-        error: 'INVALID_DESIGN_ELEMENTS'
+        error: 'INVALID_DESIGN_ELEMENTS',
+        details: {
+          receivedElements: elements.length,
+          validationErrors: elementsValidation.errors
+        }
       });
     }
 
