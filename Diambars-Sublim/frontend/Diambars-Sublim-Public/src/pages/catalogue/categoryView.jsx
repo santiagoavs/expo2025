@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
 import SidebarFilters from '../../components/filters/sidebarFilters';
-import ProductCard from '../../components/products/ProductCard';
+import ProductCard from '../../components/products/productCard';
 import Footer from '../../components/UI/footer/footer';
 import './categoryView.css';
 

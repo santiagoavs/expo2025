@@ -322,8 +322,150 @@ export async function sendContactEmail(contactData) {
   }
 }
 
+// NUEVA FUNCIÓN: Enviar correo de solicitud de sublimación
+export async function sendSublimationRequestEmail(requestData) {
+  const { subject, email, message } = requestData;
+  
+  console.log('📧 Enviando email de solicitud de sublimación...');
+  
+  try {
+    const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:5173';
+    const logoUrl = `${baseUrl}/logo.png`;
+    const currentYear = new Date().getFullYear();
+    
+    const html = `
+    <div style="background: #f8f9fa; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e9ecef;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #E5446D 0%, #8B1538 100%); color: white; padding: 40px 30px 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">Nueva Solicitud de Sublimación</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Proyecto Personalizado - Diambars</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+          <!-- Información del Cliente -->
+          <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #E5446D;">
+            <h2 style="color: #8B1538; margin: 0 0 20px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
+              📋 Información del Cliente
+            </h2>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #8B1538; width: 140px;">Tipo de Proyecto:</td>
+                <td style="padding: 8px 0; color: #495057; font-weight: 500;">${subject}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #8B1538;">Email:</td>
+                <td style="padding: 8px 0;">
+                  <a href="mailto:${email}" style="color: #E5446D; text-decoration: none; font-weight: 500;">${email}</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: 600; color: #8B1538;">Fecha:</td>
+                <td style="padding: 8px 0; color: #495057;">
+                  ${new Date().toLocaleString('es-ES', {
+                    timeZone: 'America/El_Salvador',
+                    year: 'numeric',
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Detalles del Proyecto -->
+          <div style="background: linear-gradient(135deg, rgba(229, 68, 109, 0.05) 0%, #ffffff 100%); border-radius: 12px; padding: 25px; border-left: 4px solid #8B1538;">
+            <h2 style="color: #8B1538; margin: 0 0 15px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
+              🎨 Detalles del Proyecto
+            </h2>
+            
+            <div style="background: rgba(255, 246, 226, 0.8); padding: 20px; border-radius: 8px; border: 1px solid rgba(229, 68, 109, 0.2); font-size: 16px; line-height: 1.6; color: #593D3B; white-space: pre-wrap;">${message}</div>
+          </div>
+
+          <!-- Acciones Rápidas -->
+          <div style="text-align: center; margin-top: 30px; padding: 25px; background: linear-gradient(135deg, rgba(229, 68, 109, 0.1), rgba(255, 241, 208, 0.1)); border-radius: 12px;">
+            <h3 style="color: #8B1538; margin: 0 0 20px; font-size: 18px;">🚀 Acciones Rápidas</h3>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;"> 
+              <a href="mailto:${email}?subject=Re: ${subject} - Diambars&body=Hola,%0A%0AGracias por contactarnos sobre tu proyecto de sublimación:%0A%0A"${subject}"%0A%0AHemos revisado tu solicitud y..." style="display: inline-block; background: linear-gradient(135deg, #E5446D 0%, #8B1538 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(229,68,109,0.3); margin: 5px;">
+                📧 Responder por Email
+              </a>
+              
+              <a href="tel:+50370164304" style="display: inline-block; background: linear-gradient(135deg, #8B1538 0%, #E5446D 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(139,21,56,0.3); margin: 5px;">
+                📞 Llamar Cliente
+              </a>
+            </div>
+          </div>
+
+          <!-- Información Adicional -->
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #E5446D;">
+            <h3 style="color: #8B1538; margin: 0 0 15px; font-size: 16px; font-weight: 600;">💡 Próximos Pasos Recomendados:</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.6;">
+              <li>Revisar los detalles del proyecto y evaluar viabilidad</li>
+              <li>Preparar cotización basada en especificaciones</li>
+              <li>Contactar al cliente para aclarar dudas adicionales</li>
+              <li>Enviar propuesta detallada con tiempos de entrega</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f8f9fa; padding: 25px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="margin: 0 0 10px; color: #6c757d; font-size: 13px;">
+            Este correo fue generado automáticamente desde el formulario de solicitud de sublimación de <strong>Diambars</strong>
+          </p>
+          <p style="margin: 0; color: #6c757d; font-size: 13px; opacity: 0.8;">
+            Para responder, usa los botones de acción rápida o contesta directamente a este correo
+          </p>
+          <div style="margin-top: 15px;">
+            <p style="font-size: 13px; color: #6c757d; margin: 0;">
+              &copy; ${currentYear} Diambars. Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+
+    const mailOptions = {
+      from: config.email.from,
+      to: "diambars.sublim@gmail.com", // Email de destino fijo
+      replyTo: email, // Para poder responder directamente al usuario
+      subject: `🎨 Nueva Solicitud: ${subject} - Diambars`,
+      html,
+      text: `
+        Nueva Solicitud de Sublimación - Diambars
+        
+        Tipo de Proyecto: ${subject}
+        Email del Cliente: ${email}
+        Fecha: ${new Date().toLocaleString('es-ES', { timeZone: 'America/El_Salvador' })}
+        
+        Detalles del Proyecto:
+        ${message}
+        
+        Responde directamente a este email para contactar al cliente.
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Email de solicitud de sublimación enviado exitosamente:', result.messageId);
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Error enviando email de solicitud de sublimación:', error);
+    throw new Error(`Error al enviar email de solicitud de sublimación: ${error.message}`);
+  }
+}
+
 export default {
   sendVerificationEmail,
   sendWelcomeEmail,
-  sendContactEmail
+  sendContactEmail,
+  sendSublimationRequestEmail
 };

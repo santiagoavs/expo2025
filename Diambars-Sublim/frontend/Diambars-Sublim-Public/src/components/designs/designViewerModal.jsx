@@ -1,6 +1,6 @@
 // src/components/designs/DesignViewerModal.jsx - MODAL PARA VER DISEÑOS
 import React, { useState, useCallback } from 'react';
-import './DesignViewerModal.css';
+import './designViewerModal.css';
 
 const DesignViewerModal = ({
   isOpen,
