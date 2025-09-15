@@ -7,19 +7,20 @@ export const useDataReviews = () => {
     const [comment, setComment] = useState(""); 
     const [isActive, setIsActive] = useState(true);
     const [success, setSuccess] = useState(false);
-    const [reviews, setReviews] = useState([]); // Inicializado como array vacío
+    const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Base URL del backend (usa la misma que tienes configurada)
+    // Base URL del backend
     const API_BASE_URL = 'http://localhost:4000/api';
 
+    // IMPORTANTE: Cambiar a la ruta pública para obtener solo reseñas aprobadas
     const fetchReviews = async () => {
         setLoading(true);
         setError(null);
         
         try {
-            const response = await fetch(`${API_BASE_URL}/reviews`, {
+            const response = await fetch(`${API_BASE_URL}/reviews/public`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -33,20 +34,20 @@ export const useDataReviews = () => {
             
             const result = await response.json();
             
-            // El backend ahora devuelve { success: true, data: [...] }
+            // El backend devuelve { success: true, data: [...] }
             const reviewsData = result.success ? result.data : result;
             
             // VALIDACIÓN CRÍTICA: Asegurar que reviewsData es un array
             const validReviews = Array.isArray(reviewsData) ? reviewsData : [];
             setReviews(validReviews);
             
-            console.log("Reseñas obtenidas:", validReviews);
+            console.log("Reseñas aprobadas obtenidas:", validReviews);
             return validReviews;
             
         } catch (error) {
             console.error('Error al obtener las reseñas:', error);
             setError('Error al cargar las reseñas');
-            setReviews([]); // Fallback seguro
+            setReviews([]);
             return [];
         } finally {
             setLoading(false);
@@ -79,7 +80,6 @@ export const useDataReviews = () => {
             userId: user.id,
             rating: Number(rating),
             comment: comment.trim(),
-            isActive,
         };
 
         try {
@@ -99,18 +99,21 @@ export const useDataReviews = () => {
             }
 
             if (result.success) {
-                // Actualizar la lista de reviews
-                await fetchReviews();
-                
                 // Limpiar formulario
                 setComment("");
                 setRating(0);
                 setSuccess(true);
                 
-                // Limpiar mensaje de éxito después de 3 segundos
-                setTimeout(() => setSuccess(false), 3000);
+                // Mensaje personalizado sobre la aprobación
+                setTimeout(() => {
+                    setSuccess(false);
+                    setError(null);
+                }, 4000);
                 
-                console.log("Reseña creada exitosamente");
+                console.log("Reseña creada exitosamente y está pendiente de aprobación");
+                
+                // NOTA: No refrescamos las reseñas aquí porque la nueva reseña
+                // está pendiente de aprobación y no aparecerá en /public hasta ser aprobada
             }
 
         } catch (error) {
@@ -132,7 +135,7 @@ export const useDataReviews = () => {
         setComment,
         isActive,
         setIsActive,
-        reviews, // Siempre será un array
+        reviews, // Solo reseñas aprobadas
         setReviews,
         handleSubmit,
         success, 

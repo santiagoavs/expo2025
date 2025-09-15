@@ -19,6 +19,11 @@ const reviewSchema = new mongoose.Schema(
       required: [true, "El comentario es obligatorio"],
       maxlength: [1000, "El comentario no puede exceder los 1000 caracteres"],
     },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -30,8 +35,12 @@ const reviewSchema = new mongoose.Schema(
     toObject: { virtuals: true }
   }
 );
+
+// Índice para mejorar rendimiento en consultas comunes
+reviewSchema.index({ status: 1, isActive: 1 });
+reviewSchema.index({ userId: 1 });
+reviewSchema.index({ createdAt: -1 });
  
 const Review = mongoose.model("Reviews", reviewSchema);
  
 export default Review;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

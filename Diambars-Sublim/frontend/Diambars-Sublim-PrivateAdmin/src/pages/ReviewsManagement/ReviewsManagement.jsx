@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
+import React from 'react';
+import useAdminReviews from '../../hooks/useAdminReviews'; // Ajusta la ruta según tu estructura
 import {
   Box,
   Button,
@@ -9,7 +9,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  CircularProgress,
   Chip,
   Paper,
   Rating,
@@ -24,216 +23,37 @@ import {
   Check,
   X,
   MagnifyingGlass,
-  Funnel,
   ArrowsClockwise,
   GridNine,
   Broom,
   Star,
-  ChartLine,
   Clock,
   CheckCircle,
   XCircle
 } from '@phosphor-icons/react';
 
 const ReviewsManagement = () => {
-  // Estados principales
-  const [reviews, setReviews] = useState([]);
-  const [filteredReviews, setFilteredReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('pending');
-  const [sortOption, setSortOption] = useState('newest');
-  const [showOnlyHighRating, setShowOnlyHighRating] = useState(false);
-
-  // Datos mock simples
-  const mockReviews = [
-    {
-      id: 1,
-      userName: 'María González',
-      userEmail: 'maria@example.com',
-      rating: 5,
-      comment: 'Excelente servicio de sublimación. La calidad de la camiseta quedó perfecta.',
-      productName: 'Camiseta Personalizada Premium',
-      status: 'pending',
-      createdAt: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: 2,
-      userName: 'Carlos Mendoza',
-      userEmail: 'carlos@example.com',
-      rating: 4,
-      comment: 'Buen trabajo en general. El producto llegó a tiempo y la calidad es buena.',
-      productName: 'Polo Corporativo',
-      status: 'approved',
-      createdAt: '2024-01-14T15:20:00Z'
-    },
-    {
-      id: 3,
-      userName: 'Ana Rodríguez',
-      userEmail: 'ana@example.com',
-      rating: 5,
-      comment: 'Increíble trabajo! La taza personalizada quedó exactamente como la quería.',
-      productName: 'Taza Personalizada',
-      status: 'pending',
-      createdAt: '2024-01-13T09:15:00Z'
-    },
-    {
-      id: 4,
-      userName: 'Roberto Silva',
-      userEmail: 'roberto@example.com',
-      rating: 3,
-      comment: 'El producto está bien pero esperaba un poco más de calidad por el precio.',
-      productName: 'Gorra Bordada',
-      status: 'rejected',
-      createdAt: '2024-01-12T14:45:00Z'
-    }
-  ];
-
-  // Cargar datos
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setReviews(mockReviews);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  // Filtrar reseñas
-  useEffect(() => {
-    let filtered = reviews.filter(review => {
-      const matchesSearch = 
-        review.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        review.comment.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        review.productName.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesFilter = selectedFilter === 'all' || review.status === selectedFilter;
-      const matchesRating = !showOnlyHighRating || review.rating >= 4;
-
-      return matchesSearch && matchesFilter && matchesRating;
-    });
-
-    // Ordenar
-    filtered.sort((a, b) => {
-      switch (sortOption) {
-        case 'newest':
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        case 'oldest':
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'rating_high':
-          return b.rating - a.rating;
-        case 'rating_low':
-          return a.rating - b.rating;
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredReviews(filtered);
-  }, [reviews, searchQuery, selectedFilter, sortOption, showOnlyHighRating]);
-
-  // Estadísticas
-  const getStats = () => {
-    const total = reviews.length;
-    const pending = reviews.filter(r => r.status === 'pending').length;
-    const approved = reviews.filter(r => r.status === 'approved').length;
-    const avgRating = reviews.length > 0 
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : '0.0';
-
-    return { total, pending, approved, avgRating };
-  };
+  const {
+    reviews,
+    filteredReviews,
+    loading,
+    searchQuery,
+    setSearchQuery,
+    selectedFilter,
+    setSelectedFilter,
+    sortOption,
+    setSortOption,
+    showOnlyHighRating,
+    setShowOnlyHighRating,
+    handleApproveReview,
+    handleRejectReview,
+    handleViewReview,
+    handleClearFilters,
+    fetchAllReviews,
+    getStats
+  } = useAdminReviews();
 
   const stats = getStats();
-
-  // Manejadores
-  const handleApproveReview = async (reviewId) => {
-    const review = reviews.find(r => r.id === reviewId);
-    
-    const result = await Swal.fire({
-      title: '¿Aprobar reseña?',
-      text: `¿Aprobar la reseña de ${review?.userName}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Sí, aprobar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-      setReviews(prev => prev.map(r => 
-        r.id === reviewId ? { ...r, status: 'approved' } : r
-      ));
-
-      Swal.fire({
-        title: '¡Aprobada!',
-        text: 'La reseña ha sido aprobada',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    }
-  };
-
-  const handleRejectReview = async (reviewId) => {
-    const review = reviews.find(r => r.id === reviewId);
-    
-    const result = await Swal.fire({
-      title: '¿Rechazar reseña?',
-      text: `¿Rechazar la reseña de ${review?.userName}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Sí, rechazar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-      setReviews(prev => prev.map(r => 
-        r.id === reviewId ? { ...r, status: 'rejected' } : r
-      ));
-
-      Swal.fire({
-        title: '¡Rechazada!',
-        text: 'La reseña ha sido rechazada',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    }
-  };
-
-  const handleViewReview = (review) => {
-    Swal.fire({
-      title: `Reseña de ${review.userName}`,
-      html: `
-        <div style="text-align: left; padding: 20px;">
-          <p><strong>Producto:</strong> ${review.productName}</p>
-          <p><strong>Cliente:</strong> ${review.userName}</p>
-          <p><strong>Email:</strong> ${review.userEmail}</p>
-          <p><strong>Calificación:</strong> ${'⭐'.repeat(review.rating)} (${review.rating}/5)</p>
-          <p><strong>Fecha:</strong> ${new Date(review.createdAt).toLocaleDateString('es-ES')}</p>
-          <div style="margin-top: 16px;">
-            <strong>Comentario:</strong>
-            <div style="margin-top: 8px; padding: 12px; background: #f8fafc; border-radius: 8px;">
-              "${review.comment}"
-            </div>
-          </div>
-        </div>
-      `,
-      confirmButtonText: 'Cerrar',
-      confirmButtonColor: '#1F64BF',
-      width: 600
-    });
-  };
-
-  const handleClearFilters = () => {
-    setSearchQuery('');
-    setSelectedFilter('all');
-    setSortOption('newest');
-    setShowOnlyHighRating(false);
-  };
 
   const getStatusText = (status) => {
     const statusTexts = {
@@ -369,12 +189,7 @@ const ReviewsManagement = () => {
                   boxShadow: '0 4px 12px rgba(31, 100, 191, 0.3)'
                 }
               }}
-              onClick={() => {
-                setLoading(true);
-                setTimeout(() => {
-                  setLoading(false);
-                }, 1000);
-              }}
+              onClick={fetchAllReviews}
             >
               Refrescar
             </Button>
@@ -384,7 +199,7 @@ const ReviewsManagement = () => {
         {/* Estadísticas */}
         <Box sx={{ 
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
           gap: 3,
           marginBottom: 4
         }}>
@@ -411,11 +226,18 @@ const ReviewsManagement = () => {
               delay: '0.6s'
             },
             { 
+              value: stats.rejected, 
+              label: 'Rechazadas', 
+              icon: XCircle,
+              color: '#ef4444',
+              delay: '0.8s'
+            },
+            { 
               value: stats.avgRating, 
               label: 'Rating Promedio', 
               icon: Star,
               color: '#1F64BF',
-              delay: '0.8s'
+              delay: '1s'
             }
           ].map((stat, index) => (
             <Paper 
@@ -499,7 +321,7 @@ const ReviewsManagement = () => {
           }}>
             <TextField
               fullWidth
-              placeholder="Buscar por cliente, comentario o producto..."
+              placeholder="Buscar por cliente, comentario o email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
@@ -647,7 +469,7 @@ const ReviewsManagement = () => {
           }}>
             {filteredReviews.map((review, index) => (
               <Paper
-                key={review.id}
+                key={review._id}
                 sx={{ 
                   padding: 3,
                   borderRadius: '16px',
@@ -681,11 +503,11 @@ const ReviewsManagement = () => {
                       height: 40,
                       fontWeight: 700
                     }}>
-                      {review.userName.charAt(0)}
+                      {(review.userId?.name || 'A').charAt(0).toUpperCase()}
                     </Avatar>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#010326' }}>
-                        {review.userName}
+                        {review.userId?.name || 'Usuario Anónimo'}
                       </Typography>
                       <Typography variant="caption" sx={{ color: '#64748b' }}>
                         {new Date(review.createdAt).toLocaleDateString('es-ES')}
@@ -711,15 +533,6 @@ const ReviewsManagement = () => {
                     {review.rating}/5
                   </Typography>
                 </Box>
-
-                {/* Producto */}
-                <Typography variant="body2" sx={{ 
-                  fontWeight: 600,
-                  color: '#1F64BF',
-                  marginBottom: 2
-                }}>
-                  {review.productName}
-                </Typography>
 
                 {/* Comentario */}
                 <Typography variant="body2" sx={{ 
@@ -762,7 +575,7 @@ const ReviewsManagement = () => {
                     <>
                       <Button
                         variant="contained"
-                        onClick={() => handleApproveReview(review.id)}
+                        onClick={() => handleApproveReview(review._id)}
                         startIcon={<Check size={16} />}
                         sx={{
                           flex: 1,
@@ -782,7 +595,7 @@ const ReviewsManagement = () => {
                       </Button>
                       <Button
                         variant="contained"
-                        onClick={() => handleRejectReview(review.id)}
+                        onClick={() => handleRejectReview(review._id)}
                         startIcon={<X size={16} />}
                         sx={{
                           flex: 1,

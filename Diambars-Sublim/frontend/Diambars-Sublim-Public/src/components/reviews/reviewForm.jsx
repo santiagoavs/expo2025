@@ -18,12 +18,13 @@ const ReviewForm = ({
 }) => {
 
   const onFormSubmit = (e) => {
-    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-    handleSubmit(e); // Llamar a la función handleSubmit original
+    e.preventDefault();
+    handleSubmit(e);
   };
+
   const onButtonClick = (e) => {
-    e.preventDefault(); // Prevenir cualquier comportamiento por defecto
-    handleSubmit(e); // Llamar a la función handleSubmit original
+    e.preventDefault();
+    handleSubmit(e);
   };
 
   return (
@@ -88,7 +89,7 @@ const ReviewForm = ({
         </motion.div>
       )}
 
-      {/* Mensaje de éxito */}
+      {/* Mensaje de éxito con información sobre aprobación */}
       {success && (
         <motion.div
           className="success-message"
@@ -96,8 +97,22 @@ const ReviewForm = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5 }}
+          style={{
+            marginTop: '1rem',
+            color: '#10b981',
+            textAlign: 'center',
+            padding: '0.8rem',
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #10b981',
+            borderRadius: '8px'
+          }}
         >
-          ¡Reseña publicada! 🎉
+          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            ¡Reseña enviada exitosamente! 🎉
+          </div>
+          <div style={{ fontSize: '0.9rem', color: '#059669' }}>
+            Tu reseña está pendiente de aprobación y será visible una vez revisada por nuestro equipo.
+          </div>
         </motion.div>
       )}
 

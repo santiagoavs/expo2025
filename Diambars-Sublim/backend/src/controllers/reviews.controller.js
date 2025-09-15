@@ -1,9 +1,9 @@
 import Review from "../models/reviews.js";
  
-// Crear una nueva reseña
+// Crear una nueva reseña (siempre pendiente al inicio)
 export const createReview = async (req, res) => {
   try {
-    const { userId, rating, comment, isActive = true } = req.body;
+    const { userId, rating, comment } = req.body;
 
     // Validaciones del backend
     if (!userId || !rating || !comment) {
@@ -20,11 +20,13 @@ export const createReview = async (req, res) => {
       });
     }
 
+    // IMPORTANTE: Las nuevas reseñas siempre empiezan como "pending"
     const review = new Review({ 
       userId, 
       rating: Number(rating), 
       comment: comment.trim(),
-      isActive 
+      status: 'pending', // Estado inicial
+      isActive: true 
     });
     
     const savedReview = await review.save();
@@ -34,7 +36,7 @@ export const createReview = async (req, res) => {
 
     res.status(201).json({ 
       success: true,
-      message: "Reseña creada correctamente", 
+      message: "Reseña creada correctamente y está pendiente de aprobación", 
       review: savedReview 
     });
   } catch (error) {
@@ -47,20 +49,43 @@ export const createReview = async (req, res) => {
   }
 };
  
-// Obtener todas las reseñas
-export const getAllReviews = async (req, res) => {
+// Obtener reseñas para CLIENTES (solo aprobadas y activas)
+export const getPublicReviews = async (req, res) => {
   try {
-    // CRÍTICO: Filtrar solo reviews activas y popular userId
-    const reviews = await Review.find({ isActive: true })
+    const reviews = await Review.find({ 
+      status: 'approved',  // Solo reseñas aprobadas
+      isActive: true       // Y activas
+    })
       .populate("userId", "name email")
-      .sort({ createdAt: -1 }); // Más recientes primero
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       data: reviews
     });
   } catch (error) {
-    console.error('Error al obtener reseñas:', error);
+    console.error('Error al obtener reseñas públicas:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener reseñas", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Obtener TODAS las reseñas para ADMINISTRADORES
+export const getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ isActive: true })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: reviews
+    });
+  } catch (error) {
+    console.error('Error al obtener todas las reseñas:', error);
     res.status(500).json({ 
       success: false,
       message: "Error al obtener reseñas", 
@@ -91,6 +116,72 @@ export const getReviewById = async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: "Error al obtener la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// NUEVA FUNCIÓN: Aprobar una reseña
+export const approveReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const approvedReview = await Review.findByIdAndUpdate(
+      id,
+      { status: 'approved' },
+      { new: true, runValidators: true }
+    ).populate("userId", "name email");
+ 
+    if (!approvedReview) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Reseña no encontrada" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Reseña aprobada exitosamente", 
+      review: approvedReview 
+    });
+  } catch (error) {
+    console.error('Error al aprobar reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al aprobar la reseña", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// NUEVA FUNCIÓN: Rechazar una reseña
+export const rejectReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const rejectedReview = await Review.findByIdAndUpdate(
+      id,
+      { status: 'rejected' },
+      { new: true, runValidators: true }
+    ).populate("userId", "name email");
+ 
+    if (!rejectedReview) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Reseña no encontrada" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true,
+      message: "Reseña rechazada", 
+      review: rejectedReview 
+    });
+  } catch (error) {
+    console.error('Error al rechazar reseña:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al rechazar la reseña", 
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
