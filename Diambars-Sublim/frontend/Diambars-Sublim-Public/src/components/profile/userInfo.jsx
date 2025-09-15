@@ -1,6 +1,6 @@
 // src/components/profile/UserInfo.jsx
 import { useState, useEffect } from 'react';
-import './UserInfo.css';
+import './userInfo.css';
 import { useAuth } from '../../context/authContext';
 import { updateUserProfile } from '../../api/updateProfileService';
 import { resendVerificationEmail } from '../../api/resendVerificatonService';

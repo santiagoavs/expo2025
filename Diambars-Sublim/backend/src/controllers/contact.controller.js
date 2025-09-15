@@ -1,4 +1,4 @@
-import { sendContactEmail } from "../services/email.service.js";
+import { sendContactEmail, sendSublimationRequestEmail } from "../services/email.service.js";
 
 const contactController = {};
 
@@ -156,17 +156,33 @@ contactController.sendContactForm = async (req, res) => {
       });
     }
 
-    const { fullName, email, message, _metadata } = req.body;
+    const { fullName, email, message, projectType, description, _metadata } = req.body;
     const clientIP = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
+    // Detect if this is a product proposal (sublimation request) or regular contact
+    const isProductProposal = projectType && description;
 
     // 2. Validaciones básicas mejoradas
-    if (!fullName?.trim() || !email?.trim() || !message?.trim()) {
-      console.log('⚠️ Campos faltantes:', { fullName, email, message });
-      return res.status(400).json({ 
-        success: false,
-        message: "Todos los campos son obligatorios.",
-        error: 'MISSING_FIELDS'
-      });
+    if (isProductProposal) {
+      // For product proposals, validate projectType, email, and description
+      if (!projectType?.trim() || !email?.trim() || !description?.trim()) {
+        console.log('⚠️ Campos faltantes en propuesta de producto:', { projectType, email, description });
+        return res.status(400).json({ 
+          success: false,
+          message: "Todos los campos son obligatorios.",
+          error: 'MISSING_FIELDS'
+        });
+      }
+    } else {
+      // For regular contact, validate fullName, email, and message
+      if (!fullName?.trim() || !email?.trim() || !message?.trim()) {
+        console.log('⚠️ Campos faltantes en contacto regular:', { fullName, email, message });
+        return res.status(400).json({ 
+          success: false,
+          message: "Todos los campos son obligatorios.",
+          error: 'MISSING_FIELDS'
+        });
+      }
     }
 
     // 3. Validación de email estricta
@@ -194,22 +210,39 @@ contactController.sendContactForm = async (req, res) => {
     }
 
     // 5. Validación de contenido spam
-    const spamCheck = {
-      name: detectSpamContent(fullName),
-      message: detectSpamContent(message)
-    };
-
-    if (spamCheck.name.isSpam || spamCheck.message.isSpam) {
-      console.log('🚫 Spam detectado (contenido):', spamCheck);
-      return res.status(400).json({
-        success: false,
-        message: "El contenido del mensaje no cumple con nuestras políticas.",
-        error: 'SPAM_CONTENT',
-        details: {
-          nameReasons: spamCheck.name.reasons,
-          messageReasons: spamCheck.message.reasons
-        }
-      });
+    let spamCheck;
+    if (isProductProposal) {
+      spamCheck = {
+        description: detectSpamContent(description)
+      };
+      if (spamCheck.description.isSpam) {
+        console.log('🚫 Spam detectado (propuesta de producto):', spamCheck);
+        return res.status(400).json({
+          success: false,
+          message: "El contenido de la descripción no cumple con nuestras políticas.",
+          error: 'SPAM_CONTENT',
+          details: {
+            descriptionReasons: spamCheck.description.reasons
+          }
+        });
+      }
+    } else {
+      spamCheck = {
+        name: detectSpamContent(fullName),
+        message: detectSpamContent(message)
+      };
+      if (spamCheck.name.isSpam || spamCheck.message.isSpam) {
+        console.log('🚫 Spam detectado (contacto regular):', spamCheck);
+        return res.status(400).json({
+          success: false,
+          message: "El contenido del mensaje no cumple con nuestras políticas.",
+          error: 'SPAM_CONTENT',
+          details: {
+            nameReasons: spamCheck.name.reasons,
+            messageReasons: spamCheck.message.reasons
+          }
+        });
+      }
     }
 
     // 6. Validación de timing
@@ -225,37 +258,64 @@ contactController.sendContactForm = async (req, res) => {
       });
     }
 
-    // 7. Procesamiento seguro del mensaje
-    const cleanData = {
-      fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      message: message.trim(),
-      ip: clientIP,
-      userAgent: req.headers['user-agent'],
-      timestamp: new Date()
-    };
-
-    console.log('📩 Mensaje limpio recibido:', { 
-      email: cleanData.email, 
-      nameLength: cleanData.fullName.length,
-      messageLength: cleanData.message.length 
-    });
+    // 7. Procesamiento seguro de los datos
+    let cleanData;
+    if (isProductProposal) {
+      cleanData = {
+        projectType: projectType.trim(),
+        email: email.trim().toLowerCase(),
+        description: description.trim(),
+        ip: clientIP,
+        userAgent: req.headers['user-agent'],
+        timestamp: new Date()
+      };
+      console.log('📋 Propuesta de producto recibida:', { 
+        email: cleanData.email, 
+        projectType: cleanData.projectType,
+        descriptionLength: cleanData.description.length 
+      });
+    } else {
+      cleanData = {
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        message: message.trim(),
+        ip: clientIP,
+        userAgent: req.headers['user-agent'],
+        timestamp: new Date()
+      };
+      console.log('📩 Mensaje de contacto recibido:', { 
+        email: cleanData.email, 
+        nameLength: cleanData.fullName.length,
+        messageLength: cleanData.message.length 
+      });
+    }
 
     // 8. Envío de email con manejo explícito de errores
     try {
-      await sendContactEmail(cleanData);
-      console.log('✅ Email enviado exitosamente a:', cleanData.email);
+      if (isProductProposal) {
+        await sendSublimationRequestEmail(cleanData);
+        console.log('✅ Email de propuesta de producto enviado exitosamente');
+      } else {
+        await sendContactEmail(cleanData);
+        console.log('✅ Email de contacto enviado exitosamente');
+      }
     } catch (emailError) {
       console.error('❌ Error al enviar email:', emailError);
       throw new Error("Error al procesar tu mensaje. Por favor, intenta nuevamente.");
     }
 
     // 9. Respuesta exitosa
+    const successMessage = isProductProposal 
+      ? "¡Gracias por tu propuesta de producto! Te contactaremos pronto para discutir tu proyecto."
+      : "¡Gracias por contactarnos! Te responderemos pronto.";
+      
     return res.status(200).json({
       success: true,
-      message: "¡Gracias por contactarnos! Te responderemos pronto.",
+      message: successMessage,
       data: {
-        receivedAt: cleanData.timestamp.toISOString()
+        receivedAt: cleanData.timestamp.toISOString(),
+        type: isProductProposal ? 'product_proposal' : 'contact',
+        ...(isProductProposal && { projectType: cleanData.projectType })
       }
     });
 
