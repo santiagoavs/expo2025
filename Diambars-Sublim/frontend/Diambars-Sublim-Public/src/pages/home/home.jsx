@@ -224,7 +224,7 @@ export default function Home() {
     setSublimationMessage('');
 
     try {
-      const response = await fetch('/api/contact/send', {
+      const response = await fetch('https://expo2025-8bjn.onrender.com/api/contact/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

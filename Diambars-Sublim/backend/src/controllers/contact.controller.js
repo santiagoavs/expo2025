@@ -142,7 +142,7 @@ const checkRateLimit = (ip) => {
 };
 
 /**
- * Procesa el formulario de contacto con validaciones anti-spam
+ * Procesa formularios de contacto y solicitudes de sublimación con validaciones anti-spam
  */
 contactController.sendContactForm = async (req, res) => {
   try {
@@ -156,17 +156,34 @@ contactController.sendContactForm = async (req, res) => {
       });
     }
 
-    const { fullName, email, message, projectType, description, _metadata } = req.body;
+    const { fullName, email, message, subject, _metadata } = req.body;
     const clientIP = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     
-    // Detect if this is a product proposal (sublimation request) or regular contact
-    const isProductProposal = projectType && description;
+    // Detectar tipo de formulario basado en los campos presentes
+    const isSublimatioRequest = subject && !fullName;
+    const isContactForm = fullName && !subject;
+    
+    console.log('📝 Tipo de formulario detectado:', {
+      isSublimatioRequest,
+      isContactForm,
+      fields: { fullName: !!fullName, subject: !!subject, email: !!email, message: !!message }
+    });
 
-    // 2. Validaciones básicas mejoradas
-    if (isProductProposal) {
-      // For product proposals, validate projectType, email, and description
-      if (!projectType?.trim() || !email?.trim() || !description?.trim()) {
-        console.log('⚠️ Campos faltantes en propuesta de producto:', { projectType, email, description });
+    // 2. Validaciones básicas según el tipo de formulario
+    if (isSublimatioRequest) {
+      // Validación para solicitud de sublimación
+      if (!subject?.trim() || !email?.trim() || !message?.trim()) {
+        console.log('⚠️ Campos faltantes en solicitud:', { subject, email, message });
+        return res.status(400).json({ 
+          success: false,
+          message: "Todos los campos son obligatorios.",
+          error: 'MISSING_FIELDS'
+        });
+      }
+    } else if (isContactForm) {
+      // Validación para formulario de contacto
+      if (!fullName?.trim() || !email?.trim() || !message?.trim()) {
+        console.log('⚠️ Campos faltantes en contacto:', { fullName, email, message });
         return res.status(400).json({ 
           success: false,
           message: "Todos los campos son obligatorios.",
@@ -174,15 +191,13 @@ contactController.sendContactForm = async (req, res) => {
         });
       }
     } else {
-      // For regular contact, validate fullName, email, and message
-      if (!fullName?.trim() || !email?.trim() || !message?.trim()) {
-        console.log('⚠️ Campos faltantes en contacto regular:', { fullName, email, message });
-        return res.status(400).json({ 
-          success: false,
-          message: "Todos los campos son obligatorios.",
-          error: 'MISSING_FIELDS'
-        });
-      }
+      // No se puede determinar el tipo de formulario
+      console.log('⚠️ Tipo de formulario no reconocido:', req.body);
+      return res.status(400).json({ 
+        success: false,
+        message: "Formato de formulario no reconocido.",
+        error: 'UNKNOWN_FORM_TYPE'
+      });
     }
 
     // 3. Validación de email estricta
@@ -196,7 +211,7 @@ contactController.sendContactForm = async (req, res) => {
       });
     }
 
-    // 4. Validaciones anti-spam (se mantienen las existentes pero con mejor manejo de errores)
+    // 4. Validaciones anti-spam
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
       console.log('🚫 Spam detectado (email):', emailValidation);
@@ -211,18 +226,18 @@ contactController.sendContactForm = async (req, res) => {
 
     // 5. Validación de contenido spam
     let spamCheck;
-    if (isProductProposal) {
+    if (isSublimatioRequest) {
       spamCheck = {
-        description: detectSpamContent(description)
+        message: detectSpamContent(message)
       };
-      if (spamCheck.description.isSpam) {
-        console.log('🚫 Spam detectado (propuesta de producto):', spamCheck);
+      if (spamCheck.message.isSpam) {
+        console.log('🚫 Spam detectado (solicitud):', spamCheck);
         return res.status(400).json({
           success: false,
           message: "El contenido de la descripción no cumple con nuestras políticas.",
           error: 'SPAM_CONTENT',
           details: {
-            descriptionReasons: spamCheck.description.reasons
+            messageReasons: spamCheck.message.reasons
           }
         });
       }
@@ -232,7 +247,7 @@ contactController.sendContactForm = async (req, res) => {
         message: detectSpamContent(message)
       };
       if (spamCheck.name.isSpam || spamCheck.message.isSpam) {
-        console.log('🚫 Spam detectado (contacto regular):', spamCheck);
+        console.log('🚫 Spam detectado (contacto):', spamCheck);
         return res.status(400).json({
           success: false,
           message: "El contenido del mensaje no cumple con nuestras políticas.",
@@ -260,19 +275,20 @@ contactController.sendContactForm = async (req, res) => {
 
     // 7. Procesamiento seguro de los datos
     let cleanData;
-    if (isProductProposal) {
+    if (isSublimatioRequest) {
       cleanData = {
-        projectType: projectType.trim(),
+        subject: subject.trim(),
         email: email.trim().toLowerCase(),
-        description: description.trim(),
+        message: message.trim(),
         ip: clientIP,
         userAgent: req.headers['user-agent'],
         timestamp: new Date()
       };
-      console.log('📋 Propuesta de producto recibida:', { 
+      
+      console.log('📋 Solicitud de sublimación recibida:', { 
         email: cleanData.email, 
-        projectType: cleanData.projectType,
-        descriptionLength: cleanData.description.length 
+        subject: cleanData.subject,
+        messageLength: cleanData.message.length 
       });
     } else {
       cleanData = {
@@ -283,6 +299,7 @@ contactController.sendContactForm = async (req, res) => {
         userAgent: req.headers['user-agent'],
         timestamp: new Date()
       };
+      
       console.log('📩 Mensaje de contacto recibido:', { 
         email: cleanData.email, 
         nameLength: cleanData.fullName.length,
@@ -292,9 +309,9 @@ contactController.sendContactForm = async (req, res) => {
 
     // 8. Envío de email con manejo explícito de errores
     try {
-      if (isProductProposal) {
+      if (isSublimatioRequest) {
         await sendSublimationRequestEmail(cleanData);
-        console.log('✅ Email de propuesta de producto enviado exitosamente');
+        console.log('✅ Email de solicitud de sublimación enviado exitosamente');
       } else {
         await sendContactEmail(cleanData);
         console.log('✅ Email de contacto enviado exitosamente');
@@ -305,8 +322,8 @@ contactController.sendContactForm = async (req, res) => {
     }
 
     // 9. Respuesta exitosa
-    const successMessage = isProductProposal 
-      ? "¡Gracias por tu propuesta de producto! Te contactaremos pronto para discutir tu proyecto."
+    const successMessage = isSublimatioRequest 
+      ? "¡Gracias por tu solicitud! Te contactaremos pronto para discutir tu proyecto."
       : "¡Gracias por contactarnos! Te responderemos pronto.";
       
     return res.status(200).json({
@@ -314,8 +331,8 @@ contactController.sendContactForm = async (req, res) => {
       message: successMessage,
       data: {
         receivedAt: cleanData.timestamp.toISOString(),
-        type: isProductProposal ? 'product_proposal' : 'contact',
-        ...(isProductProposal && { projectType: cleanData.projectType })
+        type: isSublimatioRequest ? 'sublimation_request' : 'contact',
+        ...(isSublimatioRequest && { subject: cleanData.subject })
       }
     });
 
@@ -325,7 +342,133 @@ contactController.sendContactForm = async (req, res) => {
       success: false,
       message: error.message || "Error interno del servidor",
       error: 'INTERNAL_SERVER_ERROR',
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
+  }
+};
+
+/**
+ * Procesa el formulario de solicitud de sublimación con validaciones anti-spam
+ */
+contactController.sendSublimationRequest = async (req, res) => {
+  try {
+    // 1. Verificar que el body se parseó correctamente
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('❌ Error: Body no parseado correctamente');
+      return res.status(400).json({ 
+        success: false,
+        message: "Error en el formato de la solicitud",
+        error: 'INVALID_REQUEST_FORMAT'
+      });
+    }
+
+    const { subject, email, message, _metadata } = req.body;
+    const clientIP = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
+    // 2. Validaciones básicas para solicitud de sublimación
+    if (!subject?.trim() || !email?.trim() || !message?.trim()) {
+      console.log('⚠️ Campos faltantes en solicitud:', { subject, email, message });
+      return res.status(400).json({ 
+        success: false,
+        message: "Todos los campos son obligatorios.",
+        error: 'MISSING_FIELDS'
+      });
+    }
+
+    // 3. Validación de email estricta
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('⚠️ Email inválido:', email);
+      return res.status(400).json({ 
+        success: false,
+        message: "Por favor, ingresa un correo electrónico válido.",
+        error: 'INVALID_EMAIL'
+      });
+    }
+
+    // 4. Validaciones anti-spam
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      console.log('🚫 Spam detectado (email):', emailValidation);
+      return res.status(400).json({
+        success: false,
+        message: emailValidation.isTempEmail 
+          ? "Por favor, usa un correo electrónico permanente."
+          : "El formato del correo electrónico parece sospechoso.",
+        error: 'SUSPICIOUS_EMAIL'
+      });
+    }
+
+    // 5. Validación de contenido spam
+    const spamCheck = {
+      message: detectSpamContent(message)
+    };
+    if (spamCheck.message.isSpam) {
+      console.log('🚫 Spam detectado (solicitud):', spamCheck);
+      return res.status(400).json({
+        success: false,
+        message: "El contenido de la descripción no cumple con nuestras políticas.",
+        error: 'SPAM_CONTENT',
+        details: {
+          messageReasons: spamCheck.message.reasons
+        }
+      });
+    }
+
+    // 6. Validación de timing
+    const timingValidation = validateTimingBehavior(_metadata);
+    if (!timingValidation.isValid) {
+      console.log('⚠️ Comportamiento temporal sospechoso:', timingValidation);
+      return res.status(400).json({
+        success: false,
+        message: timingValidation.tooFast 
+          ? "Por favor, tómate tu tiempo para completar el formulario."
+          : "La sesión ha expirado. Por favor, recarga la página.",
+        error: 'SUSPICIOUS_TIMING'
+      });
+    }
+
+    // 7. Procesamiento seguro de los datos
+    const cleanData = {
+      subject: subject.trim(),
+      email: email.trim().toLowerCase(),
+      message: message.trim(),
+      ip: clientIP,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date()
+    };
+    
+    console.log('📋 Solicitud de sublimación recibida:', { 
+      email: cleanData.email, 
+      subject: cleanData.subject,
+      messageLength: cleanData.message.length 
+    });
+
+    // 8. Envío de email con manejo explícito de errores
+    try {
+      await sendSublimationRequestEmail(cleanData);
+      console.log('✅ Email de solicitud de sublimación enviado exitosamente');
+    } catch (emailError) {
+      console.error('❌ Error al enviar email:', emailError);
+      throw new Error("Error al procesar tu solicitud. Por favor, intenta nuevamente.");
+    }
+
+    // 9. Respuesta exitosa
+    return res.status(200).json({
+      success: true,
+      message: "¡Gracias por tu solicitud! Te contactaremos pronto para discutir tu proyecto.",
+      data: {
+        receivedAt: cleanData.timestamp.toISOString(),
+        type: 'sublimation_request',
+        subject: cleanData.subject
+      }
+    });
+
+  } catch (error) {
+    console.error('💥 Error crítico en el controlador:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Error interno del servidor",
+      error: 'INTERNAL_SERVER_ERROR'
     });
   }
 };
