@@ -127,7 +127,6 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(135deg, #fff6e20d, #fff6e259);
   transform: translateY(10px) scale(0.95);
   filter: blur(17px);
   opacity: 0.8;
@@ -217,7 +216,6 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(135deg, #fff6e20d, #fff6e259);
   transform: translateY(10px) scale(0.95);
   filter: blur(17px);
   opacity: 0.8;

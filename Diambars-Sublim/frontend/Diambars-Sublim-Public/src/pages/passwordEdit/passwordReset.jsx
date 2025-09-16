@@ -76,7 +76,7 @@ export default function PasswordReset() {
     setMessage({ text: '', isError: false });
 
     try {
-      const response = await fetch('http://localhost:4000/api/password-recovery/reset-password', {
+      const response = await fetch('https://expo2025-8bjn.onrender.com/api/password-recovery/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

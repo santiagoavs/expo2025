@@ -3,8 +3,7 @@
   border-radius: 20px;
   max-width: 450px;
   margin: 120px auto;
-  font-family: 'Inter', sans-serif;
-  font-style: italic;
+  font-family: 'Mona Sans', sans-serif;
   z-index: 2;
   background: rgba(255, 246, 226, 0.1);
   backdrop-filter: blur(12px);
@@ -20,7 +19,6 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: linear-gradient(135deg, #fff6e20d, #fff6e259);
   transform: translateY(10px) scale(0.95);
   filter: blur(17px);
   opacity: 0.8;
@@ -38,7 +36,6 @@
   font-size: 1.5rem;
   font-weight: bold;
   font-family: 'Mona Sans', sans-serif;
-  font-style: italic;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
@@ -57,7 +54,8 @@
 }
 
 .form-content h2 {
-  font-family: 'DiambarsFont', cursive;
+  font-family: 'Mona Sans', sans-serif;
+  font-weight: 900;
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   color: #3F2724;

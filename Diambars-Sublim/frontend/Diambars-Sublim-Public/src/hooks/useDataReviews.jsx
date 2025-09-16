@@ -12,7 +12,7 @@ export const useDataReviews = () => {
     const [error, setError] = useState(null);
 
     // Base URL del backend
-    const API_BASE_URL = 'http://localhost:4000/api';
+    const API_BASE_URL = 'https://expo2025-8bjn.onrender.com/api';
 
     // IMPORTANTE: Cambiar a la ruta pública para obtener solo reseñas aprobadas
     const fetchReviews = async () => {

@@ -332,7 +332,7 @@
     }
   }
   
-  /* Content Section */
+  /* Sección de contenido */
   .content-section {
     width: 100%;
     max-width: 1200px;
@@ -999,68 +999,6 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .tshirt-template-section {
-    padding: 4rem 1rem;
-  }
-  
-  .tshirt-title {
-    font-size: 2.5rem;
-  }
-  
-  .tshirt-customization-area {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    text-align: center;
-  }
-  
-  .customization-text {
-    order: 2;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-  }
-  
-  .left-text, .right-text {
-    justify-self: center;
-    text-align: center;
-  }
-  
-  .tshirt-template {
-    max-width: 400px;
-    height: 300px;
-    order: 1;
-  }
-  
-  .custom-text-item {
-    font-size: 1.3rem;
-  }
-  
-  .custom-text-item:hover,
-  .left-text .custom-text-item:hover {
-    transform: translateY(-4px);
-  }
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  .home-page-wrapper,
-  .home-page-wrapper::before,
-  .hero-carousel-track,
-  .hero-cta-button,
-  .custom-text-item,
-  .design-image {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  .hero-carousel-track:hover {
-    animation-play-state: running;
-  }
-}
 
 /* Sublimation Request Section */
 .sublimation-request-section {
@@ -1069,7 +1007,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 0rem 2rem;
   margin: 4rem 0;
   position: relative;
   --light-zone-opacity: 0.8;
@@ -1365,53 +1303,324 @@
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-/* Media queries básicas */
-@media (max-width: 768px) {
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Large Tablet Landscape */
+@media (max-width: 1335px) {
   .hero-container {
-    padding: 3rem 2rem;
-    margin: 0 1rem;
+    max-width: 85%;
+    padding: 3.5rem 2.5rem;
+  }
+  
+  .sublimation-container {
+    max-width: 85%;
+    padding: 3.5rem 2.5rem;
+  }
+
+  .content-section {
+    max-width: 95%;
+    padding: 2rem 1rem;
+    margin: 0;
+  }
+
+  .content-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 1063px) {
+  .content-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 919px) {
+  .content-grid {
+    grid-template-columns: repeat(1, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/* Tablet Landscape */
+@media (max-width: 1024px) {
+  .hero-container {
+    max-width: 85%;
+    padding: 3.5rem 2.5rem;
+  }
+  
+  .sublimation-container {
+    max-width: 85%;
+    padding: 3.5rem 2.5rem;
+  }
+}
+
+@media (max-width: 855px) {
+  .design-image {
+    width: 80%; 
+  }
+}
+/* Tablet Portrait */
+@media (max-width: 768px) {
+  .home-page-wrapper {
+    padding-top: 50px;
+  }
+  
+  .hero-section {
+    padding: 1.5rem;
+    min-height: calc(100vh - 80px);
+  }
+  
+  .hero-container {
+    max-width: 85%;
+    padding: 2.5rem 2rem;
+    margin: 0 auto;
+  }
+  
+  .hero-logo {
+    width: 120px;
   }
   
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
   
   .hero-subtitle {
     font-size: 1.2rem;
   }
   
-  .content-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
   .hero-carousel {
     margin-top: 2rem;
     padding: 1rem 0;
   }
-
+  
   .hero-carousel-item {
     width: 240px;
-    height: 135px;
+    height: 140px;
   }
+  
+  .content-section {
+    margin:  0 auto;
+    padding: 0 1rem;
+  }
+  
+  .content-grid {
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  
+  .tshirt-template-section {
+    padding: 4rem 1rem;
+  }
+  
+  .tshirt-title {
+    font-size: 2.8rem;
+  }
+  
+  .tshirt-customization-area {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .customization-text {
+    order: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+  
+  .left-text, .right-text {
+    justify-self: center;
+    text-align: center;
+    align-self: center;
+    gap: 4rem;
+  }
+  
+  .tshirt-template {
+    max-width: 400px;
+    height: 300px;
+    order: 1;
+  }
+  
+  .custom-text-item {
+    font-size: 1.4rem;
+  }
+  
+  .custom-text-item:hover,
+  .left-text .custom-text-item:hover {
+    transform: translateY(-4px);
+  }
+  
+  .sublimation-request-section {
+    padding: 0rem 1rem;
+  }
+  
+  .sublimation-container {
+    max-width: 85%;
+    padding: 3rem 2rem;
+    margin: 0 auto;
+  }
+  
+  .sublimation-title {
+    font-size: 2.5rem;
+  }
+  
+  .sublimation-subtitle {
+    font-size: 1.2rem;
+  }
+}
 
-  .hero-carousel-track {
+@media (max-width: 639px) {
+  .left-text, .right-text {
+    justify-self: center;
+    text-align: center;
+    align-self: flex-end;
+    gap: 3.2rem;
+  }
+} 
+
+@media (max-width: 613px) {
+  .left-text, .right-text {
+    justify-self: center;
+    text-align: center;
+    align-self: flex-end;
     gap: 1rem;
   }
 
-  @keyframes heroCarouselMove {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(calc(-240px * 8 - 1rem * 8));
-    }
+  .left-text {
+    margin-top: 120px;
+  }
+} 
+
+@media (max-width: 525px) {
+  .hero-container {
+    max-width: 85%;
+    padding: 2rem 1.5rem;
+    margin: 0 auto;
   }
 
-  /* Sublimation section mobile styles */
   .sublimation-container {
+    max-width: 85%;
+    padding: 2rem 1.5rem;
+    margin: 0 auto;
+  }
+}
+
+/* Mobile Large - Content cards start changing shape */
+@media (max-width: 480px) {
+  .home-page-wrapper {
+    padding-top: 70px;
+  }
+  
+  .hero-section {
+    padding: 1rem;
+    min-height: calc(100vh - 70px);
+  }
+  
+  .hero-container {
+    max-width: 84%;
+    padding: 2rem 1.5rem;
+    margin: 0 auto;
+  }
+  
+  .hero-logo {
+    width: 100px;
+  }
+  
+  .hero-title {
+    font-size: 2.2rem;
+    line-height: 1.1;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .hero-cta-button {
+    padding: 10px 28px;
+    font-size: 1rem;
+  }
+  
+  .slots-indicator {
+    font-size: 0.85rem;
+  }
+  
+  .products-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .hero-carousel-item {
+    width: 200px;
+    height: 120px;
+  }
+  
+  .content-section {
+    margin: 2rem auto;
+    padding: 0 0.5rem;
+  }
+  
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .content-card {
+    padding: 1.8rem 1.2rem;
+  }
+  
+  .content-card h3 {
+    font-size: 1.3rem;
+  }
+  
+  .content-card p {
+    font-size: 0.95rem;
+  }
+  
+  .tshirt-template-section {
+    padding: 2.5rem 0.5rem;
+  }
+  
+  .tshirt-title {
+    font-size: 2.2rem;
+  }
+  
+  .tshirt-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .customization-text {
+    gap: 1.5rem;
+  }
+  
+  .tshirt-template {
+    max-width: 320px;
+    height: 250px;
+  }
+
+  .design-image {
+    width: 80%; 
+  }
+  
+  .custom-text-item {
+    font-size: 1.2rem;
+  }
+  
+  .sublimation-request-section {
+    padding: 0rem 0.5rem;
+    margin: 0;
+  }
+  
+  .sublimation-container {
+    max-width: 84%;
     padding: 2.5rem 1.5rem;
-    margin: 0 1rem;
+    margin: 0 auto;
   }
   
   .sublimation-title {
@@ -1422,14 +1631,10 @@
     font-size: 1.1rem;
   }
   
-  .sublimation-form {
-    gap: 1.5rem;
-  }
-  
   .form-input,
   .form-select,
   .form-textarea {
-    padding: 0.875rem 1.25rem;
+    padding: 0.8rem 1.2rem;
     font-size: 0.95rem;
   }
   
@@ -1438,3 +1643,82 @@
     font-size: 1rem;
   }
 }
+
+/* Mobile Medium - Further optimization */
+@media (max-width: 360px) {
+  .hero-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .hero-logo {
+    width: 80px;
+  }
+  
+  .hero-title {
+    font-size: 1.9rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .hero-cta-button {
+    padding: 8px 24px;
+    font-size: 0.95rem;
+  }
+  
+  .hero-carousel-item {
+    width: 180px;
+    height: 100px;
+  }
+  
+  .content-card {
+    padding: 1.5rem 1rem;
+  }
+  
+  .content-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .content-card p {
+    font-size: 0.9rem;
+  }
+  
+  .tshirt-title {
+    font-size: 1.9rem;
+  }
+  
+  .tshirt-template {
+    max-width: 280px;
+    height: 220px;
+  }
+  
+  .custom-text-item {
+    font-size: 1.1rem;
+  }
+  
+  .sublimation-container {
+    padding: 2rem 1rem;
+  }
+  
+  .sublimation-title {
+    font-size: 1.9rem;
+  }
+  
+  .sublimation-subtitle {
+    font-size: 1rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .sublimation-submit-btn {
+    padding: 12px 28px;
+    font-size: 0.95rem;
+  }
+}
+

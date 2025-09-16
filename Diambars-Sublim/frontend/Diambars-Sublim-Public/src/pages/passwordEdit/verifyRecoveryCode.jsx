@@ -40,7 +40,7 @@ export default function VerifyRecoveryCode() {
     setMessage({ text: '', isError: false });
 
     try {
-      const response = await fetch('http://localhost:4000/api/password-recovery/verify-code', {
+      const response = await fetch('https://expo2025-8bjn.onrender.com/api/password-recovery/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

@@ -24,7 +24,7 @@ export default function VerificationResultPage({ debug }) {
         console.log('[VerificationResult] Verificando token:', token);
         
         // Usar el endpoint correcto del backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/verify-email/${token}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://expo2025-8bjn.onrender.com/api'}/verify-email/${token}`, {
           method: 'GET',
           credentials: 'include', // Importante para cookies
           headers: {

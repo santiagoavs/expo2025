@@ -30,7 +30,7 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/users/${user.id}/password`, {
+      const response = await fetch(`https://expo2025-8bjn.onrender.com/api/users/${user.id}/password`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

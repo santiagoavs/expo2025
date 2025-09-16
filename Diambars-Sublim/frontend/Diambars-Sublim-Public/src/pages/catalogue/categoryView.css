@@ -189,7 +189,7 @@
   
   .product-grid {
     grid-template-columns: repeat(3, minmax(280px, 1fr));
-    gap: 0.1rem;
+    gap: 1rem 0.1rem;
     max-width: 1400px;
   }
   
