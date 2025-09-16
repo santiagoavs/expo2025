@@ -1,5 +1,5 @@
 // src/components/filters/sidebarFilters.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './sidebarFilters.css';
 
 const FilterSidebar = ({ onFiltersChange, activeFilters = {} }) => {
@@ -8,10 +8,73 @@ const FilterSidebar = ({ onFiltersChange, activeFilters = {} }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const sidebarRef = useRef(null);
 
   // Cargar categorías al montar el componente
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  // Enhanced scroll behavior for floating sidebar
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Calculate scroll progress (0 to 1)
+      const maxScroll = documentHeight - windowHeight;
+      const progress = Math.min(scrollTop / maxScroll, 1);
+      setScrollProgress(progress);
+      
+      // Enhanced visibility logic
+      const shouldBeVisible = scrollTop > 50; // Show after scrolling past header
+      setIsVisible(shouldBeVisible);
+      
+      // Apply dynamic positioning based on scroll
+      if (sidebarRef.current) {
+        const sidebar = sidebarRef.current;
+        const opacity = shouldBeVisible ? 1 : 0.7;
+        const scale = shouldBeVisible ? 1 : 0.95;
+        const translateY = shouldBeVisible ? 0 : 10;
+        
+        sidebar.style.opacity = opacity;
+        sidebar.style.transform = `translateY(${translateY}px) scale(${scale})`;
+        
+        // Dynamic blur and shadow based on scroll speed
+        const scrollSpeed = Math.abs(scrollTop - (sidebar.dataset.lastScroll || 0));
+        sidebar.dataset.lastScroll = scrollTop;
+        
+        if (scrollSpeed > 5) {
+          sidebar.style.backdropFilter = 'blur(25px)';
+          sidebar.style.webkitBackdropFilter = 'blur(25px)';
+        } else {
+          sidebar.style.backdropFilter = 'blur(20px)';
+          sidebar.style.webkitBackdropFilter = 'blur(20px)';
+        }
+      }
+    };
+    
+    // Throttled scroll handler for better performance
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    handleScroll(); // Initial call
+    
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+    };
   }, []);
 
   const fetchCategories = async () => {
@@ -176,7 +239,13 @@ const FilterSidebar = ({ onFiltersChange, activeFilters = {} }) => {
   }
 
   return (
-    <aside className="filter-sidebar">
+    <aside 
+      ref={sidebarRef}
+      className={`filter-sidebar ${isVisible ? 'visible' : 'hidden'}`}
+      style={{
+        '--scroll-progress': scrollProgress,
+      }}
+    >
       <div className="filter-header">
         <h3 className="filter-title">Filtros</h3>
         {Object.keys(activeFilters).length > 0 && (
@@ -184,6 +253,14 @@ const FilterSidebar = ({ onFiltersChange, activeFilters = {} }) => {
             Limpiar
           </button>
         )}
+      </div>
+      
+      {/* Scroll progress indicator */}
+      <div className="scroll-progress-indicator">
+        <div 
+          className="scroll-progress-bar" 
+          style={{ width: `${scrollProgress * 100}%` }}
+        />
       </div>
 
       {/* Filtros activos */}

@@ -7,17 +7,19 @@ export const usePaymentMethods = () => {
   const [methods, setMethods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  // Cargar métodos de pago cuando el usuario esté autenticado
+  // Cargar métodos de pago solo una vez cuando el usuario esté autenticado
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !hasLoaded) {
       loadPaymentMethods();
-    } else {
+    } else if (!isAuthenticated || !user) {
       // Si no hay usuario, limpiar los métodos
       setMethods([]);
       setError(null);
+      setHasLoaded(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user?.id, hasLoaded]);
 
   const loadPaymentMethods = async () => {
     try {
@@ -29,10 +31,12 @@ export const usePaymentMethods = () => {
       console.log('✅ [usePaymentMethods] Métodos cargados:', userMethods);
       
       setMethods(Array.isArray(userMethods) ? userMethods : []);
+      setHasLoaded(true);
     } catch (err) {
       console.error('❌ [usePaymentMethods] Error cargando métodos:', err);
       setError(err.message || 'Error cargando métodos de pago');
       setMethods([]);
+      setHasLoaded(true); // Mark as loaded even on error to prevent infinite retries
     } finally {
       setLoading(false);
     }
@@ -214,6 +218,11 @@ export const usePaymentMethods = () => {
     }
   };
 
+  const refreshMethods = async () => {
+    setHasLoaded(false);
+    await loadPaymentMethods();
+  };
+
   return {
     methods,
     loading,
@@ -222,7 +231,7 @@ export const usePaymentMethods = () => {
     updatePaymentMethod,
     deletePaymentMethod,
     togglePaymentMethod,
-    refreshMethods: loadPaymentMethods,
+    refreshMethods,
     clearError: () => setError(null)
   };
 };

@@ -233,18 +233,12 @@
   font-weight: 600;
 }
 
-.product-price {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0 0 4px;
-  font-weight: 600;
-}
 
-.product-category {
+/* .product-category {
   color: #888;
   font-size: 0.8rem;
   margin: 0;
-}
+} */
 
 .not-customizable {
   color: #EF4444;

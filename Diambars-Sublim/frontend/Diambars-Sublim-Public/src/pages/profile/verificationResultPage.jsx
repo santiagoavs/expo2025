@@ -1,6 +1,8 @@
 // src/pages/verifyEmail/verificationResultPage.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
+import { useAuth } from '../../context/authContext';
 import './verificationResultPage.css';
 
 export default function VerificationResultPage({ debug }) {
@@ -8,6 +10,7 @@ export default function VerificationResultPage({ debug }) {
   const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error'
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     if (debug) {
@@ -23,37 +26,23 @@ export default function VerificationResultPage({ debug }) {
       try {
         console.log('[VerificationResult] Verificando token:', token);
         
-        // Usar el endpoint correcto del backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://expo2025-8bjn.onrender.com/api'}/verify-email/${token}`, {
-          method: 'GET',
-          credentials: 'include', // Importante para cookies
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('[VerificationResult] Respuesta del servidor:', response.status);
-        
-        const data = await response.json();
+        const data = await apiClient.get(`/verify-email/${token}`);
         console.log('[VerificationResult] Datos de respuesta:', data);
 
-        if (response.ok) {
-          setStatus('success');
-          setMessage(data.message || 'Tu correo ha sido verificado correctamente.');
-          
-          // Opcional: Redirigir automáticamente después de unos segundos
-          setTimeout(() => {
-            navigate('/profile');
-          }, 3000);
-        } else {
-          setStatus('error');
-          setMessage(data.message || 'Error al verificar el correo electrónico.');
-        }
+        setStatus('success');
+        setMessage(data.message || 'Tu correo ha sido verificado correctamente.');
+        
+        // Refrescar los datos del usuario después de la verificación exitosa
+        await refreshUser();
+        
+        // Opcional: Redirigir automáticamente después de unos segundos
+        setTimeout(() => {
+          navigate('/profile');
+        }, 3000);
       } catch (error) {
         console.error('[VerificationResult] Error de conexión:', error);
         setStatus('error');
-        setMessage('Error de conexión. Por favor, intenta más tarde.');
+        setMessage(error.message || 'Error de conexión. Por favor, intenta más tarde.');
       }
     };
 
@@ -88,7 +77,10 @@ export default function VerificationResultPage({ debug }) {
         {status === 'success' ? (
           <div className="verification-actions">
             <button 
-              onClick={() => navigate('/profile')} 
+              onClick={async () => {
+                await refreshUser();
+                navigate('/profile');
+              }} 
               className="success-button"
             >
               Ir al perfil
