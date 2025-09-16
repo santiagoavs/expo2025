@@ -326,7 +326,7 @@ export async function sendContactEmail(contactData) {
 export async function sendSublimationRequestEmail(requestData) {
   const { subject, email, message } = requestData;
   
-  console.log('📧 Enviando email de solicitud de sublimación...');
+  console.log('Enviando email de solicitud...');
   
   try {
     const baseUrl = process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:5173';
@@ -381,7 +381,7 @@ export async function sendSublimationRequestEmail(requestData) {
           <!-- Detalles del Proyecto -->
           <div style="background: linear-gradient(135deg, rgba(229, 68, 109, 0.05) 0%, #ffffff 100%); border-radius: 12px; padding: 25px; border-left: 4px solid #8B1538;">
             <h2 style="color: #8B1538; margin: 0 0 15px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
-              🎨 Detalles del Proyecto
+              Detalles del Proyecto
             </h2>
             
             <div style="background: rgba(255, 246, 226, 0.8); padding: 20px; border-radius: 8px; border: 1px solid rgba(229, 68, 109, 0.2); font-size: 16px; line-height: 1.6; color: #593D3B; white-space: pre-wrap;">${message}</div>
@@ -389,22 +389,18 @@ export async function sendSublimationRequestEmail(requestData) {
 
           <!-- Acciones Rápidas -->
           <div style="text-align: center; margin-top: 30px; padding: 25px; background: linear-gradient(135deg, rgba(229, 68, 109, 0.1), rgba(255, 241, 208, 0.1)); border-radius: 12px;">
-            <h3 style="color: #8B1538; margin: 0 0 20px; font-size: 18px;">🚀 Acciones Rápidas</h3>
+            <h3 style="color: #8B1538; margin: 0 0 20px; font-size: 18px;">Acciones Rápidas</h3>
             
             <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;"> 
               <a href="mailto:${email}?subject=Re: ${subject} - Diambars&body=Hola,%0A%0AGracias por contactarnos sobre tu proyecto de sublimación:%0A%0A"${subject}"%0A%0AHemos revisado tu solicitud y..." style="display: inline-block; background: linear-gradient(135deg, #E5446D 0%, #8B1538 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(229,68,109,0.3); margin: 5px;">
-                📧 Responder por Email
-              </a>
-              
-              <a href="tel:+50370164304" style="display: inline-block; background: linear-gradient(135deg, #8B1538 0%, #E5446D 100%); color: white; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(139,21,56,0.3); margin: 5px;">
-                📞 Llamar Cliente
+                Responder por Email
               </a>
             </div>
           </div>
 
           <!-- Información Adicional -->
           <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #E5446D;">
-            <h3 style="color: #8B1538; margin: 0 0 15px; font-size: 16px; font-weight: 600;">💡 Próximos Pasos Recomendados:</h3>
+            <h3 style="color: #8B1538; margin: 0 0 15px; font-size: 16px; font-weight: 600;">Próximos Pasos Recomendados:</h3>
             <ul style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.6;">
               <li>Revisar los detalles del proyecto y evaluar viabilidad</li>
               <li>Preparar cotización basada en especificaciones</li>
@@ -436,7 +432,7 @@ export async function sendSublimationRequestEmail(requestData) {
       from: config.email.from,
       to: "diambars.sublim@gmail.com", // Email de destino fijo
       replyTo: email, // Para poder responder directamente al usuario
-      subject: `🎨 Nueva Solicitud: ${subject} - Diambars`,
+      subject: `Nueva Solicitud: ${subject} - Diambars`,
       html,
       text: `
         Nueva Solicitud de Sublimación - Diambars
@@ -453,12 +449,12 @@ export async function sendSublimationRequestEmail(requestData) {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    console.log('✅ Email de solicitud de sublimación enviado exitosamente:', result.messageId);
+    console.log('Email de solicitud de sublimación enviado exitosamente:', result.messageId);
     
     return result;
     
   } catch (error) {
-    console.error('❌ Error enviando email de solicitud de sublimación:', error);
+    console.error('Error enviando email de solicitud de sublimación:', error);
     throw new Error(`Error al enviar email de solicitud de sublimación: ${error.message}`);
   }
 }

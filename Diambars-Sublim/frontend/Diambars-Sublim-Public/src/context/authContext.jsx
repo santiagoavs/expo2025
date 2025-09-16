@@ -87,7 +87,18 @@ export const AuthProvider = ({ children }) => {
       // Limpiar cualquier dato obsoleto en localStorage
       localStorage.removeItem('user');
       
-      console.log('✅ [AuthContext] Sesión cerrada localmente');
+      // Limpiar cualquier cache del navegador relacionado con la sesión
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            if (name.includes('auth') || name.includes('user')) {
+              caches.delete(name);
+            }
+          });
+        });
+      }
+      
+      console.log('✅ [AuthContext] Sesión cerrada localmente y cache limpiado');
     }
   };
 
@@ -99,22 +110,29 @@ export const AuthProvider = ({ children }) => {
 
   // Método para refrescar datos del usuario
   const refreshUser = async () => {
-    if (!isAuthenticated) return;
-    
     try {
       console.log('🔄 [AuthContext] Refrescando datos del usuario...');
       const response = await apiClient.get('/auth/checkAuth');
       
       if (response.authenticated && response.user) {
+        console.log('🔄 [AuthContext] Usuario actualizado desde servidor:', response.user);
         setUser(response.user);
-        console.log('✅ [AuthContext] Datos del usuario actualizados');
+        setIsAuthenticated(true);
+        console.log('✅ [AuthContext] Datos del usuario actualizados correctamente');
+      } else {
+        console.log('❌ [AuthContext] No hay usuario autenticado en refresh');
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('❌ [AuthContext] Error refrescando usuario:', error);
       
       // Si hay error 401, cerrar sesión
       if (error.response?.status === 401) {
-        logout();
+        console.log('🚪 [AuthContext] Error 401 - cerrando sesión');
+        setUser(null);
+        setIsAuthenticated(false);
+        clearAuthCookies();
       }
     }
   };
