@@ -15,7 +15,7 @@ const reportService = {
         params: filters
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo dashboard:', error);
       throw this.handleError(error);
@@ -38,7 +38,7 @@ const reportService = {
         }
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo reporte ventas:', error);
       throw this.handleError(error);
@@ -61,7 +61,7 @@ const reportService = {
         }
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo productos top:', error);
       throw this.handleError(error);
@@ -85,7 +85,7 @@ const reportService = {
         }
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo clientes top:', error);
       throw this.handleError(error);
@@ -108,7 +108,7 @@ const reportService = {
         }
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo reporte producción:', error);
       throw this.handleError(error);
@@ -126,7 +126,7 @@ const reportService = {
         params: filters
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo reporte personalizado:', error);
       throw this.handleError(error);
@@ -204,7 +204,7 @@ const reportService = {
       
       const response = await apiClient.get('/orders/reports/filter-options');
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo opciones:', error);
       throw this.handleError(error);

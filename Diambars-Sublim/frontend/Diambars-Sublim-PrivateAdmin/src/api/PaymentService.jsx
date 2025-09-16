@@ -13,7 +13,7 @@ const paymentService = {
       
       const response = await apiClient.get('/orders/payment/config');
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error obteniendo configuración:', error);
       throw this.handleError(error);
@@ -29,7 +29,7 @@ const paymentService = {
       
       const response = await apiClient.get('/orders/payment/status');
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error verificando estado:', error);
       throw this.handleError(error);
@@ -47,7 +47,7 @@ const paymentService = {
         params: filters
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error obteniendo estadísticas:', error);
       throw this.handleError(error);
@@ -65,7 +65,7 @@ const paymentService = {
         customerData
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error procesando pago digital:', error);
       throw this.handleError(error);
@@ -81,7 +81,7 @@ const paymentService = {
       
       const response = await apiClient.post(`/orders/${orderId}/payment/cash`, cashData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error registrando pago efectivo:', error);
       throw this.handleError(error);
@@ -97,7 +97,7 @@ const paymentService = {
       
       const response = await apiClient.post(`/orders/${orderId}/payment/confirm`, paymentData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error confirmando pago:', error);
       throw this.handleError(error);
@@ -115,7 +115,7 @@ const paymentService = {
         status
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error simulando pago:', error);
       throw this.handleError(error);
@@ -133,7 +133,7 @@ const paymentService = {
       
       const response = await apiClient.get('/payment-methods');
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error obteniendo métodos:', error);
       throw this.handleError(error);
@@ -149,7 +149,7 @@ const paymentService = {
       
       const response = await apiClient.post('/payment-methods', paymentMethodData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error creando método:', error);
       throw this.handleError(error);
@@ -165,7 +165,7 @@ const paymentService = {
       
       const response = await apiClient.put(`/payment-methods/${methodId}`, updateData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error actualizando método:', error);
       throw this.handleError(error);
@@ -181,7 +181,7 @@ const paymentService = {
       
       const response = await apiClient.delete(`/payment-methods/${methodId}`);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error eliminando método:', error);
       throw this.handleError(error);
@@ -199,7 +199,7 @@ const paymentService = {
         active
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [paymentService] Error cambiando estado:', error);
       throw this.handleError(error);

@@ -751,7 +751,7 @@ const Orders = () => {
         value: inProductionOrders,
         change: "Órdenes activas",
         trend: "up",
-        icon: Truck,
+        icon: ShippingIcon,
         variant: "secondary"
       },
       {

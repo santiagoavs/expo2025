@@ -21,8 +21,14 @@ router.get('/',
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isString(),
-  query('deliveryType').optional().isIn(['delivery', 'meetup']),
-  query('paymentStatus').optional().isIn(['pending', 'paid', 'failed']),
+  query('deliveryType').optional().custom((value) => {
+    if (value === '' || value === undefined || value === null) return true;
+    return ['delivery', 'meetup'].includes(value);
+  }),
+  query('paymentStatus').optional().custom((value) => {
+    if (value === '' || value === undefined || value === null) return true;
+    return ['pending', 'paid', 'failed'].includes(value);
+  }),
   query('search').optional().isString(),
   query('userId').optional().isMongoId(),
   query('startDate').optional().isISO8601(),

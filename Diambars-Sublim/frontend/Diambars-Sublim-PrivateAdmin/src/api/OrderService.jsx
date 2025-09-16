@@ -19,7 +19,7 @@ const orderService = {
         }
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error obteniendo órdenes:', error);
       throw this.handleError(error);
@@ -35,7 +35,7 @@ const orderService = {
       
       const response = await apiClient.get(`/orders/${orderId}`);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error obteniendo orden:', error);
       throw this.handleError(error);
@@ -51,7 +51,7 @@ const orderService = {
       
       const response = await apiClient.post('/orders', orderData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error creando orden:', error);
       throw this.handleError(error);
@@ -67,7 +67,7 @@ const orderService = {
       
       const response = await apiClient.post(`/orders/${orderId}/quote`, quoteData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error enviando cotización:', error);
       throw this.handleError(error);
@@ -86,7 +86,7 @@ const orderService = {
         notes
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error actualizando estado:', error);
       throw this.handleError(error);
@@ -104,7 +104,7 @@ const orderService = {
         reason
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error cancelando orden:', error);
       throw this.handleError(error);
@@ -120,7 +120,7 @@ const orderService = {
       
       const response = await apiClient.get(`/orders/${orderId}/tracking`);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error obteniendo tracking:', error);
       throw this.handleError(error);
@@ -147,7 +147,7 @@ const orderService = {
         },
       });
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error subiendo foto:', error);
       throw this.handleError(error);
@@ -163,7 +163,7 @@ const orderService = {
       
       const response = await apiClient.patch(`/orders/${orderId}/items/${itemId}/progress`, stageData);
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ [orderService] Error actualizando progreso:', error);
       throw this.handleError(error);

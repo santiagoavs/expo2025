@@ -48,8 +48,8 @@ export const useOrders = (initialFilters = {}) => {
         setOrders(response.data.orders || []);
         setPagination(prev => ({
           ...prev,
-          total: response.data.total || 0,
-          totalPages: response.data.totalPages || 0
+          total: response.data.pagination?.total || 0,
+          totalPages: response.data.pagination?.totalPages || 0
         }));
       } else {
         throw new Error(response.message || 'Error cargando órdenes');
