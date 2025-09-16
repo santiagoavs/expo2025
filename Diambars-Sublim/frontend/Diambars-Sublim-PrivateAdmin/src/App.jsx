@@ -19,6 +19,8 @@ import Orders from './pages/Orders/Orders';
 import Employees from './pages/Employees/Employees';
 import Profile from './pages/Profile/Profile';
 import ReviewsManagement from './pages/ReviewsManagement/ReviewsManagement';
+import ReportsPage from './pages/ReportsPage/ReportsPage';
+import PaymentMethods from './pages/PaymentsMethods/PaymentMethods';
 //Ruta catch-all
 import NotFound404 from './pages/NotFound404/NotFound404';
 
@@ -126,6 +128,30 @@ const AppContent = () => {
           isAuthenticated ? (
             <AuthenticatedLayout>
               <ReviewsManagement/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/reports" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <ReportsPage/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/payment-methods" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <PaymentMethods/>
             </AuthenticatedLayout>
           ) : (
             <Navigate to="/login" replace />

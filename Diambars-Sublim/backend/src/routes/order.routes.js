@@ -14,6 +14,32 @@ router.post('/webhook/wompi', paymentController.wompiWebhook);
 
 // ==================== RUTAS DE PEDIDOS ====================
 
+// ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación)
+router.get('/',
+  authRequired,
+  roleRequired(['admin', 'manager']), // Solo admins pueden ver todas las órdenes
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('status').optional().isString(),
+  query('deliveryType').optional().isIn(['delivery', 'meetup']),
+  query('paymentStatus').optional().isIn(['pending', 'paid', 'failed']),
+  query('search').optional().isString(),
+  query('userId').optional().isMongoId(),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('sort').optional().isString(),
+  query('order').optional().isIn(['asc', 'desc']),
+  validateRequest,
+  orderController.getAllOrders
+);
+
+// Obtener orden específica por ID
+router.get('/:id',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderById
+);
+
 // Crear nuevo pedido
 router.post('/',
   authRequired,
@@ -47,6 +73,27 @@ router.post('/:id/quote',
   body('notes').optional().isLength({ max: 500 }),
   validateRequest,
   orderController.submitQuote
+);
+
+// Actualizar estado de orden
+router.patch('/:id/status',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('id'),
+  body('status').isIn([
+    'pending_approval',
+    'quoted', 
+    'approved',
+    'rejected',
+    'in_production',
+    'ready_for_delivery',
+    'delivered',
+    'completed',
+    'cancelled'
+  ]),
+  body('notes').optional().isLength({ max: 500 }),
+  validateRequest,
+  orderController.updateOrderStatus
 );
 
 // Registrar pago en efectivo

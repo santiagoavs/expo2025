@@ -110,12 +110,7 @@ const ReviewsManagement = () => {
       paddingBottom: '40px',
       paddingX: { xs: 2, sm: 3, md: 4 },
       backgroundColor: '#ffffff',
-      opacity: 0,
-      animation: 'fadeIn 0.6s ease-out forwards',
-      '@keyframes fadeIn': {
-        '0%': { opacity: 0, transform: 'translateY(20px)' },
-        '100%': { opacity: 1, transform: 'translateY(0)' }
-      }
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     }}>
       <Box sx={{ maxWidth: '1600px', margin: '0 auto' }}>
         
@@ -124,16 +119,13 @@ const ReviewsManagement = () => {
           padding: { xs: 3, md: 5 },
           marginBottom: 4,
           borderRadius: '16px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-          transition: 'all 0.2s ease-in-out',
-          animation: 'slideInDown 0.8s ease-out',
-          '@keyframes slideInDown': {
-            '0%': { transform: 'translateY(-30px)', opacity: 0 },
-            '100%': { transform: 'translateY(0)', opacity: 1 }
-          },
+          background: 'white',
+          border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+          boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
-            transform: 'translateY(-2px)'
+            boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+            transform: 'translateY(-1px)'
           }
         }}>
           <Box sx={{ 
@@ -247,18 +239,13 @@ const ReviewsManagement = () => {
                 borderRadius: '16px',
                 background: stat.gradient || 'white',
                 color: stat.gradient ? 'white' : '#010326',
-                transition: 'all 0.2s ease-in-out',
+                border: stat.gradient ? 'none' : `1px solid ${alpha('#1F64BF', 0.08)}`,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-                opacity: 0,
-                animation: `slideInUp 0.6s ease-out ${stat.delay} forwards`,
-                '@keyframes slideInUp': {
-                  '0%': { transform: 'translateY(30px)', opacity: 0 },
-                  '100%': { transform: 'translateY(0)', opacity: 1 }
-                },
+                boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
                 '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)'
                 }
               }}
             >
@@ -305,12 +292,13 @@ const ReviewsManagement = () => {
           padding: 3,
           marginBottom: 4,
           borderRadius: '16px',
-          transition: 'all 0.2s ease-in-out',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-          opacity: 0,
-          animation: 'slideInUp 0.8s ease-out 1s forwards',
+          background: 'white',
+          border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
           '&:hover': {
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+            boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+            transform: 'translateY(-1px)'
           }
         }}>
           <Box sx={{ 
@@ -430,13 +418,7 @@ const ReviewsManagement = () => {
           gap: 1,
           marginBottom: 3,
           paddingBottom: 2,
-          borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
-          opacity: 0,
-          animation: 'fadeInLeft 0.8s ease-out 1.2s forwards',
-          '@keyframes fadeInLeft': {
-            '0%': { transform: 'translateX(-30px)', opacity: 0 },
-            '100%': { transform: 'translateX(0)', opacity: 1 }
-          }
+          borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`
         }}>
           <Box sx={{
             padding: 1,
@@ -473,19 +455,21 @@ const ReviewsManagement = () => {
                 sx={{ 
                   padding: 3,
                   borderRadius: '16px',
+                  background: 'white',
                   borderLeft: `4px solid ${getStatusColor(review.status)}`,
-                  transition: 'all 0.2s ease-in-out',
+                  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
                   opacity: 0,
-                  animation: `fadeInUp 0.6s ease-out ${1.4 + (index * 0.1)}s forwards`,
-                  '@keyframes fadeInUp': {
+                  animation: 'slideUp 0.6s ease-out 0.5s forwards',
+                  '@keyframes slideUp': {
                     '0%': { transform: 'translateY(30px)', opacity: 0 },
                     '100%': { transform: 'translateY(0)', opacity: 1 }
                   },
                   '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)'
                   }
                 }}
               >
@@ -624,15 +608,14 @@ const ReviewsManagement = () => {
             padding: 8,
             textAlign: 'center',
             borderRadius: '16px',
+            background: 'white',
             border: `2px dashed ${alpha('#1F64BF', 0.2)}`,
-            transition: 'all 0.2s ease-in-out',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-            opacity: 0,
-            animation: 'fadeIn 0.8s ease-out 1.4s forwards',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
             '&:hover': {
               borderColor: alpha('#1F64BF', 0.4),
-              transform: 'translateY(-2px)',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)'
             }
           }}>
             <Box sx={{
