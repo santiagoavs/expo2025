@@ -41,7 +41,7 @@ export default function LoginForm() {
           Registrarse
         </button>
         <button className={isLogin ? 'active' : ''} onClick={() => handleTabSwitch(true)}>
-          Iniciar Sesión
+          Iniciar sesión
         </button>
       </div>
 

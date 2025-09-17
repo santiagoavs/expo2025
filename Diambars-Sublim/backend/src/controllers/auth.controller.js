@@ -157,12 +157,17 @@ authController.login = async (req, res) => {
     });
 
     // Enviar token en cookie segura
-    res.cookie("authToken", token, {
+    // Configuración de cookie optimizada para móviles
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 días
-    });
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
+      path: "/", // Asegurar que la cookie esté disponible en toda la app
+      domain: process.env.NODE_ENV === "production" ? undefined : undefined // No especificar dominio para mejor compatibilidad móvil
+    };
+
+    res.cookie("authToken", token, cookieOptions);
 
     console.log('🍪 [authController.login] Cookie configurada:', {
       secure: process.env.NODE_ENV === "production",
