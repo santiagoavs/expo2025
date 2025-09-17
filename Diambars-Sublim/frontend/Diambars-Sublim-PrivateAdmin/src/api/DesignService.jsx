@@ -141,13 +141,16 @@ const DesignService = {
 
       // Normalizar elementos para asegurar formato correcto
       const normalizedElements = DesignService.normalizeElementsArray(designData.elements);
+      
+      // Asignar área de personalización automáticamente si no está presente
+      const elementsWithAreas = DesignService.assignDefaultAreas(normalizedElements, designData.productId);
 
       // Preparar datos para envío - FORMATO CORREGIDO
       const payload = {
         userId: designData.userId, // Campo específico para admin
         productId: designData.productId,
         name: designData.name || `Diseño personalizado - ${new Date().toLocaleDateString()}`,
-        elements: normalizedElements,
+        elements: elementsWithAreas,
         productOptions: designData.productOptions || [],
         clientNotes: designData.clientNotes || '',
         mode: designData.mode || 'simple',
@@ -607,8 +610,9 @@ updateProductColor: async (id, color) => {
           errors.push(`Elemento ${index + 1}: Tipo de elemento requerido`);
         }
         
+        // Área de personalización es opcional (se puede asignar automáticamente)
         if (!element.areaId) {
-          errors.push(`Elemento ${index + 1}: Área de personalización requerida`);
+          console.warn(`Elemento ${index + 1}: Sin área de personalización asignada, se usará la primera disponible`);
         }
         
         if (!element.konvaAttrs) {
@@ -620,8 +624,14 @@ updateProductColor: async (id, color) => {
           errors.push(`Elemento ${index + 1}: El texto no puede estar vacío`);
         }
         
-        if (element.type === 'image' && !element.konvaAttrs?.image) {
-          errors.push(`Elemento ${index + 1}: Imagen requerida`);
+        if (element.type === 'image') {
+          // Validar que tenga al menos una fuente de imagen
+          const hasImage = element.konvaAttrs?.image;
+          const hasImageUrl = element.konvaAttrs?.imageUrl;
+          
+          if (!hasImage && !hasImageUrl) {
+            errors.push(`Elemento ${index + 1}: Imagen requerida`);
+          }
         }
         if (designData.productColorFilter) {
         if (!/^#[0-9A-F]{6}$/i.test(designData.productColorFilter)) {
@@ -891,8 +901,22 @@ updateProductColor: async (id, color) => {
     }
 
     if (normalized.type === 'image') {
+      // Log de depuración para imágenes
+      console.log('🖼️ [DesignService] Normalizando elemento de imagen:', {
+        id: element.id,
+        hasImage: !!normalized.konvaAttrs.image,
+        hasImageUrl: !!normalized.konvaAttrs.imageUrl,
+        imageUrlPreview: normalized.konvaAttrs.imageUrl?.substring(0, 50) + '...',
+        originalName: normalized.konvaAttrs.originalName,
+        width: normalized.konvaAttrs.width,
+        height: normalized.konvaAttrs.height
+      });
+      
       if (!normalized.konvaAttrs.image && !normalized.konvaAttrs.imageUrl) {
-        console.warn('Elemento de imagen sin URL');
+        console.warn('❌ [DesignService] Elemento de imagen sin URL:', {
+          id: element.id,
+          konvaAttrs: normalized.konvaAttrs
+        });
         return null;
       }
       if (!normalized.konvaAttrs.width || isNaN(normalized.konvaAttrs.width)) {
@@ -901,6 +925,31 @@ updateProductColor: async (id, color) => {
       if (!normalized.konvaAttrs.height || isNaN(normalized.konvaAttrs.height)) {
         normalized.konvaAttrs.height = 150;
       }
+    }
+
+    // Validaciones para formas
+    if (['triangle', 'star', 'customShape', 'line'].includes(normalized.type)) {
+      console.log('🔷 [DesignService] Normalizando elemento de forma:', {
+        id: element.id,
+        type: normalized.type,
+        hasPoints: !!normalized.konvaAttrs.points,
+        pointsLength: normalized.konvaAttrs.points?.length || 0
+      });
+      
+      if (!normalized.konvaAttrs.points || normalized.konvaAttrs.points.length === 0) {
+        console.warn('❌ [DesignService] Elemento de forma sin puntos:', {
+          id: element.id,
+          type: normalized.type,
+          konvaAttrs: normalized.konvaAttrs
+        });
+        return null;
+      }
+      
+      // Asegurar que los puntos sean números válidos
+      normalized.konvaAttrs.points = normalized.konvaAttrs.points.map(point => {
+        const num = Number(point);
+        return isNaN(num) ? 0 : num;
+      });
     }
 
     return normalized;
@@ -916,9 +965,47 @@ updateProductColor: async (id, color) => {
       return [];
     }
 
-    return elements
+    console.log('📦 [DesignService] Normalizando array de elementos:', {
+      totalElements: elements.length,
+      elements: elements.map(el => ({
+        id: el.id,
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasImageUrl: !!el.konvaAttrs?.imageUrl,
+        hasImage: !!el.konvaAttrs?.image
+      }))
+    });
+
+    const normalized = elements
       .map(element => DesignService.normalizeElement(element))
       .filter(element => element !== null);
+
+    console.log('✅ [DesignService] Elementos normalizados:', {
+      originalCount: elements.length,
+      normalizedCount: normalized.length,
+      filteredOut: elements.length - normalized.length
+    });
+
+    return normalized;
+  },
+
+  /**
+   * Asignar área de personalización por defecto a elementos que no la tengan
+   * @param {Array} elements - Array de elementos
+   * @param {string} productId - ID del producto
+   * @returns {Array} Array de elementos con áreas asignadas
+   */
+  assignDefaultAreas: (elements, productId) => {
+    if (!Array.isArray(elements)) {
+      return [];
+    }
+
+    // Por ahora, asignar un área por defecto vacía
+    // En el futuro se puede implementar lógica más sofisticada
+    return elements.map(element => ({
+      ...element,
+      areaId: element.areaId || 'default-area'
+    }));
   }
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva';
 import useImage from 'use-image';
+import { CANVAS_CONFIG, calculateScaledDimensions } from '../KonvaDesignEditor/constants/canvasConfig';
 import Swal from 'sweetalert2';
 import {
   Box,
@@ -272,8 +273,11 @@ const KonvaAreaEditor = ({
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(null);
   const [stageScale, setStageScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
-  // ✅ CORREGIDO: Stage dimensions SIEMPRE fijas a 800x600 para mantener consistencia con MongoDB
-  const [stageDimensions] = useState({ width: 800, height: 600 });
+  // ✅ CORREGIDO: Stage dimensions SIEMPRE fijas usando constantes compartidas
+  const [stageDimensions] = useState({ 
+    width: CANVAS_CONFIG.width, 
+    height: CANVAS_CONFIG.height 
+  });
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   
@@ -288,16 +292,16 @@ const KonvaAreaEditor = ({
       const containerWidth = container.offsetWidth - 40;
       const containerHeight = container.offsetHeight - 40;
       
-      // ✅ CORREGIDO: Calcular zoom para que el stage 800x600 quepa en el contenedor
-      const scaleX = containerWidth / 800;
-      const scaleY = containerHeight / 600;
+      // ✅ CORREGIDO: Calcular zoom para que el stage quepa en el contenedor
+      const scaleX = containerWidth / CANVAS_CONFIG.width;
+      const scaleY = containerHeight / CANVAS_CONFIG.height;
       const initialScale = Math.min(scaleX, scaleY, 1); // No ampliar, solo reducir si es necesario
       
       setStageScale(initialScale);
       
       // ✅ CORREGIDO: Centrar el stage en el contenedor
-      const scaledWidth = 800 * initialScale;
-      const scaledHeight = 600 * initialScale;
+      const scaledWidth = CANVAS_CONFIG.width * initialScale;
+      const scaledHeight = CANVAS_CONFIG.height * initialScale;
       const centerX = (containerWidth - scaledWidth) / 2;
       const centerY = (containerHeight - scaledHeight) / 2;
       
@@ -641,15 +645,26 @@ const KonvaAreaEditor = ({
                   </>
                 )}
                 
-                {/* Background image */}
-                {image && (
-                  <KonvaImage
-                    image={image}
-                    width={stageDimensions.width}
-                    height={stageDimensions.height}
-                    listening={false}
-                  />
-                )}
+                {/* Background image - Usar misma lógica que KonvaDesignEditor */}
+                {image && (() => {
+                  // Calcular dimensiones escaladas y centradas usando la función compartida
+                  const scaleX = CANVAS_CONFIG.width / image.width;
+                  const scaleY = CANVAS_CONFIG.height / image.height;
+                  const scale = Math.min(scaleX, scaleY) * CANVAS_CONFIG.productScale;
+                  const scaledDimensions = calculateScaledDimensions(image.width, image.height, scale);
+                  
+                  return (
+                    <KonvaImage
+                      image={image}
+                      x={scaledDimensions.x}
+                      y={scaledDimensions.y}
+                      width={scaledDimensions.width}
+                      height={scaledDimensions.height}
+                      listening={false}
+                      opacity={0.8}
+                    />
+                  );
+                })()}
                 
                 {/* Areas */}
                 {areas.map((area, index) => (

@@ -50,7 +50,7 @@ import {
 import DesignCard from '../../components/DesignCard/DesignCard';
 import CreateDesignModal from '../../components/CreateDesignModal/CreateDesignModal';
 import QuoteDesignModal from '../../components/QuoteDesignModal/QuoteDesignModal';
-import FabricDesignViewer from '../../components/FabricDesignViewer/FabricDesignViewer';
+import KonvaDesignViewer from '../../components/KonvaDesignEditor/Components/KonvaDesignViewer';
 
 // Importar hooks personalizados
 import useDesigns from '../../hooks/useDesigns';
@@ -1924,7 +1924,7 @@ const DesignManagement = () => {
 
       {/* Modal de visualización de diseño */}
       {showViewerModal && viewingDesign && (
-        <FabricDesignViewer
+        <KonvaDesignViewer
           isOpen={showViewerModal}
           onClose={handleCloseViewerModal}
           design={viewingDesign}

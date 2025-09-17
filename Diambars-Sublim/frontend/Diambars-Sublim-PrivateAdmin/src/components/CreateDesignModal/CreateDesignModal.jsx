@@ -1,5 +1,5 @@
 // src/components/CreateDesignModal/CreateDesignModal.jsx - DROPDOWNS ARREGLADOS
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import {
   Dialog,
@@ -42,8 +42,8 @@ import {
 } from '@phosphor-icons/react';
 
 // Importar componentes
-import EnhancedFabricEditor from '../FabricDesignEditor/EnhancedFabricEditor';
-import FabricDesignViewer from '../FabricDesignViewer/FabricDesignViewer';
+import KonvaDesignEditor from '../KonvaDesignEditor/KonvaDesignEditor';
+import KonvaDesignViewer from '../KonvaDesignEditor/Components/KonvaDesignViewer';
 
 // ================ HOOK SIMPLIFICADO PARA SCROLL ================
 const useScroll = () => {
@@ -128,6 +128,9 @@ const DesignService = {
       console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - src:`, element.src);
       console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.image:`, element.konvaAttrs?.image);
       console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.imageUrl:`, element.konvaAttrs?.imageUrl);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.points:`, element.konvaAttrs?.points);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.width:`, element.konvaAttrs?.width);
+      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.height:`, element.konvaAttrs?.height);
       
       if (!element.type) {
         errors.push(`Elemento ${index + 1}: tipo no definido`);
@@ -141,8 +144,15 @@ const DesignService = {
         errors.push(`Elemento de texto ${index + 1}: texto vacío`);
       }
       
-      if (element.type === 'image' && !element.konvaAttrs?.image) {
-        errors.push(`Elemento de imagen ${index + 1}: URL de imagen no definida`);
+      if (element.type === 'image') {
+        // Validar que tenga al menos una fuente de imagen
+        const hasImageUrl = element.konvaAttrs?.imageUrl || element.imageUrl;
+        const hasImage = element.konvaAttrs?.image || element.image;
+        const hasSrc = element.src;
+        
+        if (!hasImageUrl && !hasImage && !hasSrc) {
+          errors.push(`Elemento de imagen ${index + 1}: URL de imagen no definida`);
+        }
       }
       
       // Validación para el nuevo sistema Fabric.js
@@ -150,13 +160,19 @@ const DesignService = {
         errors.push(`Elemento de texto ${index + 1}: texto vacío`);
       }
       
-      if (element.type === 'image' && !element.src) {
-        errors.push(`Elemento de imagen ${index + 1}: imagen no definida`);
+      // Validaciones para formas básicas
+      if (element.type === 'rect' || element.type === 'circle') {
+        if (element.konvaAttrs?.width === 0 || element.konvaAttrs?.height === 0) {
+          errors.push(`Elemento de forma ${index + 1}: dimensiones inválidas`);
+        }
       }
       
-      if (element.type === 'rect' || element.type === 'circle' || element.type === 'triangle') {
-        if (element.width === 0 || element.height === 0) {
-          errors.push(`Elemento de forma ${index + 1}: dimensiones inválidas`);
+      // Validaciones para formas con puntos
+      if (element.type === 'triangle' || element.type === 'star' || element.type === 'customShape' || element.type === 'line') {
+        if (!element.konvaAttrs?.points || element.konvaAttrs.points.length === 0) {
+          errors.push(`Elemento de forma ${index + 1}: puntos no definidos`);
+        } else if (element.konvaAttrs.points.length < 6) {
+          errors.push(`Elemento de forma ${index + 1}: debe tener al menos 3 puntos (6 coordenadas)`);
         }
       }
     });
@@ -1292,6 +1308,18 @@ const CreateDesignModal = ({
   // ==================== SCROLL HOOK ====================
   const { scrollProps } = useScroll();
 
+  // ==================== DATOS MEMOIZADOS PARA VISTA PREVIA ====================
+  const previewDesign = useMemo(() => {
+    if (!isPreviewOpen) return null;
+    
+    const canvasData = loadCanvasData();
+    return {
+      elements: canvasData?.elements || designElements,
+      productColorFilter: canvasData?.productColorFilter || null,
+      metadata: canvasData?.metadata || {}
+    };
+  }, [isPreviewOpen, canvasData, designElements]);
+
   // ==================== RENDER STEPS ====================
   const renderStepContent = () => {
     switch (activeStep) {
@@ -1777,14 +1805,14 @@ const CreateDesignModal = ({
             designElements: designElements.length,
             selectedProduct: !!selectedProduct 
           })}
-          <EnhancedFabricEditor
+          <KonvaDesignEditor
             isOpen={isEditorOpen}
             onClose={handleCloseEditor}
             product={selectedProduct}
             initialDesign={(() => {
               const savedData = getCurrentCanvasData();
               const fallbackData = { elements: designElements };
-              console.log('🔄 [CreateDesignModal] Datos para editor:', {
+              console.log('🔄 [CreateDesignModal] Datos para editor Konva:', {
                 savedData: savedData,
                 fallbackData: fallbackData,
                 hasElements: savedData?.elements?.length || 0,
@@ -1793,21 +1821,17 @@ const CreateDesignModal = ({
               return savedData || fallbackData;
             })()}
             onSave={handleSaveDesign}
-            onTogglePreview={handlePreviewDesign}
+            onBack={handleCloseEditor}
           />
         </>
       )}
 
-      {/* ✅ VISTA PREVIA: Usar FabricDesignViewer para vista previa */}
-      {isPreviewOpen && selectedProduct && (
-        <FabricDesignViewer
+      {/* ✅ VISTA PREVIA: Usar KonvaDesignViewer para vista previa */}
+      {isPreviewOpen && selectedProduct && previewDesign && (
+        <KonvaDesignViewer
           isOpen={isPreviewOpen}
           onClose={handleClosePreview}
-          design={{
-            elements: loadCanvasData()?.elements || designElements,
-            productColorFilter: loadCanvasData()?.productColorFilter || null,
-            metadata: loadCanvasData()?.metadata || {}
-          }}
+          design={previewDesign}
           product={selectedProduct}
         />
       )}
