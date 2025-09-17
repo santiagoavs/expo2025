@@ -36,11 +36,19 @@ const useGeolocation = () => {
       if (result) {
         setLastGeocodedAddress(result);
         console.log('✅ [useGeolocation] Geocoding successful:', result);
+        
+        // Mostrar advertencia si es una ubicación aproximada
+        if (result.isApproximate) {
+          const warningMsg = `Ubicación aproximada encontrada (${result.searchStrategy})`;
+          console.warn('⚠️ [useGeolocation]', warningMsg);
+          toast.error(warningMsg);
+        }
+        
         return result;
       } else {
-        const errorMsg = 'No se pudo encontrar la ubicación exacta';
+        const errorMsg = 'No se pudo encontrar la ubicación. Intenta con una dirección más específica.';
         setError(errorMsg);
-        toast.warning(errorMsg);
+        toast.error(errorMsg);
         return null;
       }
     } catch (error) {
@@ -67,7 +75,7 @@ const useGeolocation = () => {
     }
 
     if (!geocodingService.isWithinElSalvador(lat, lng)) {
-      toast.warning('Las coordenadas están fuera de El Salvador');
+      toast.error('Las coordenadas están fuera de El Salvador');
       return null;
     }
 
@@ -85,7 +93,7 @@ const useGeolocation = () => {
       } else {
         const errorMsg = 'No se pudo obtener información de la ubicación';
         setError(errorMsg);
-        toast.warning(errorMsg);
+        toast.error(errorMsg);
         return null;
       }
     } catch (error) {

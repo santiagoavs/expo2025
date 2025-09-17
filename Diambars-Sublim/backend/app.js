@@ -70,18 +70,10 @@ app.options('*', cors(corsOptions));
 // ==================== RATE LIMITING ====================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 3000, // límite de requests
+  max: 10000, // límite de requests
   message: 'Demasiadas solicitudes desde esta IP, intente más tarde',
   standardHeaders: true,
   legacyHeaders: false,
-});
-
-// Rate limit más estricto para auth
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Demasiados intentos de autenticación, intente más tarde',
-  skipSuccessfulRequests: true
 });
 
 // ==================== MIDDLEWARES GENERALES ====================
@@ -315,6 +307,23 @@ app.get("/api/config/wompi", (req, res) => {
 
 // Ruta optimizada para obtener departamentos y municipios de El Salvador
 app.get("/api/config/locations", (req, res) => {
+  try {
+    const locationData = getLocationData();
+    res.json({
+      success: true,
+      data: locationData
+    });
+  } catch (error) {
+    console.error('❌ Error al obtener ubicaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener datos de ubicaciones'
+    });
+  }
+});
+
+// Ruta alternativa para compatibilidad con el frontend
+app.get("/api/locations/data", (req, res) => {
   try {
     const locationData = getLocationData();
     res.json({

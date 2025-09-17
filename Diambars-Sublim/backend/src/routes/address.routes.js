@@ -122,6 +122,25 @@ router.patch('/:id/set-default',
   addressController.setDefaultAddress
 );
 
+// Crear ubicación predeterminada desde coordenadas (para AddressMapPicker)
+router.post('/set-default-location',
+  [
+    body('coordinates.lat')
+      .isFloat({ min: 13.0, max: 14.5 }).withMessage('Latitud inválida para El Salvador'),
+    body('coordinates.lng')
+      .isFloat({ min: -90.0, max: -87.5 }).withMessage('Longitud inválida para El Salvador'),
+    body('department')
+      .notEmpty().withMessage('El departamento es requerido'),
+    body('municipality')
+      .notEmpty().withMessage('El municipio es requerido'),
+    body('userId')
+      .optional()
+      .isMongoId().withMessage('ID de usuario inválido')
+  ],
+  validateRequest,
+  addressController.setDefaultLocationFromCoordinates
+);
+
 // ==================== RUTAS AUXILIARES ====================
 
 // Validar dirección

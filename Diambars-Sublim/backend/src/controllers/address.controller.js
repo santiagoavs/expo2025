@@ -342,6 +342,78 @@ addressController.setDefaultAddress = async (req, res) => {
 };
 
 /**
+ * Crea una ubicación predeterminada desde coordenadas (para AddressMapPicker)
+ */
+addressController.setDefaultLocationFromCoordinates = async (req, res) => {
+  try {
+    const { coordinates, department, municipality, userId: targetUserId } = req.body;
+    const currentUserId = req.user._id;
+    
+    // Determinar el usuario objetivo (admin puede establecer para otros usuarios)
+    const userId = targetUserId || currentUserId;
+    
+    // Validar que el usuario tenga permisos para establecer dirección para este usuario
+    if (targetUserId && targetUserId !== currentUserId) {
+      // Verificar si el usuario actual es admin/empleado
+      // Aquí podrías agregar lógica para verificar roles de admin
+      console.log(`Admin ${currentUserId} estableciendo dirección predeterminada para usuario ${targetUserId}`);
+    }
+    
+    // Validar departamento y municipio
+    const validation = validateDepartmentAndMunicipality(department, municipality);
+    if (!validation.isValid) {
+      return res.status(400).json({ 
+        success: false,
+        message: validation.message,
+        error: validation.error,
+        validMunicipalities: validation.validMunicipalities
+      });
+    }
+    
+    // Crear nueva dirección predeterminada
+    const newAddress = new Address({
+      user: userId,
+      label: "Mi Ubicación Predeterminada",
+      recipient: "Usuario Principal",
+      phoneNumber: "71234567", // Número por defecto, se puede actualizar después
+      department,
+      municipality,
+      address: `Ubicación seleccionada en ${municipality}, ${department}`,
+      additionalDetails: "Ubicación establecida desde el mapa",
+      location: {
+        type: "Point",
+        coordinates: [coordinates.lng, coordinates.lat] // GeoJSON format: [lng, lat]
+      },
+      isDefault: true // Se establecerá como predeterminada
+    });
+    
+    await newAddress.save();
+    
+    res.status(201).json({
+      success: true,
+      message: "Ubicación establecida como predeterminada exitosamente",
+      data: { 
+        address: newAddress,
+        coordinates: {
+          lat: coordinates.lat,
+          lng: coordinates.lng
+        },
+        department,
+        municipality
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en setDefaultLocationFromCoordinates:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al establecer la ubicación predeterminada",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
  * Valida una dirección con coordenadas
  */
 addressController.validateAddress = async (req, res) => {

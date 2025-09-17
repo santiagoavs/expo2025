@@ -18,7 +18,10 @@ import {
   MagnifyingGlass as SearchIcon,
   Target as CrosshairIcon,
   Check as ConfirmIcon,
-  ArrowsOut as FullscreenIcon
+  ArrowsOut as FullscreenIcon,
+  ArrowsIn as ExitFullscreenIcon,
+  Star as StarIcon,
+  X as CloseIcon
 } from '@phosphor-icons/react';
 
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
@@ -26,6 +29,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import useGeolocation from '../../../hooks/useGeolocation';
+import addressService from '../../../api/AddressService';
+import geocodingService from '../../../api/GeocodingService';
 
 // Fix para iconos de Leaflet en React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -36,34 +41,76 @@ L.Icon.Default.mergeOptions({
 });
 
 // ================ ESTILOS STYLED COMPONENTS ================
-const AddressMapPickerContainer = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  width: '100%',
-  height: '100%',
-  borderRadius: '12px',
+const AddressMapPickerContainer = styled(Box)(({ theme, isFullscreen }) => ({
+  position: isFullscreen ? 'fixed' : 'relative',
+  top: isFullscreen ? 0 : 'auto',
+  left: isFullscreen ? 0 : 'auto',
+  width: isFullscreen ? '100vw' : '100%',
+  height: isFullscreen ? '100vh' : '100%',
+  borderRadius: isFullscreen ? 0 : '12px',
   overflow: 'hidden',
   fontFamily: "'Mona Sans'",
+  zIndex: isFullscreen ? 9999 : 'auto',
+  backgroundColor: isFullscreen ? '#f8fafc' : 'transparent',
+  display: 'flex',
+  flexDirection: 'column',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    height: isFullscreen ? '100vh' : '300px',
+    borderRadius: isFullscreen ? 0 : '8px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    height: isFullscreen ? '100vh' : '400px',
+  },
+  [theme.breakpoints.up('md')]: {
+    height: isFullscreen ? '100vh' : '500px',
+  },
+  [theme.breakpoints.up('lg')]: {
+    height: isFullscreen ? '100vh' : '600px',
+  },
   '& .leaflet-container': {
     width: '100%',
-    height: '100%',
-    borderRadius: '12px',
+    height: isFullscreen ? 'calc(100vh - 60px)' : '100%',
+    borderRadius: isFullscreen ? 0 : '12px',
     fontFamily: "'Mona Sans'",
+    flex: 1,
   },
   '& .leaflet-control-zoom': {
     border: 'none',
     borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    boxShadow: isFullscreen ? '0 8px 24px rgba(0, 0, 0, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+    marginTop: isFullscreen ? '80px' : '120px', // Más abajo para centrado vertical
+    marginLeft: isFullscreen ? '20px' : '10px',
+    // Responsive positioning
+    [theme.breakpoints.down('xs')]: {
+      marginTop: isFullscreen ? '70px' : '100px', // Ajustado para móviles
+      marginLeft: isFullscreen ? '16px' : '8px',
+    },
+    [theme.breakpoints.up('sm')]: {
+      marginTop: isFullscreen ? '75px' : '110px',
+    },
+    [theme.breakpoints.up('md')]: {
+      marginTop: isFullscreen ? '80px' : '120px',
+    },
   },
   '& .leaflet-control-zoom a': {
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     color: '#1F64BF',
     border: 'none',
     borderRadius: '0',
     fontWeight: 'bold',
-    fontSize: '16px',
-    lineHeight: '26px',
+    fontSize: isFullscreen ? '20px' : '16px',
+    lineHeight: isFullscreen ? '32px' : '26px',
     textAlign: 'center',
     fontFamily: "'Mona Sans'",
+    width: isFullscreen ? '40px' : '30px',
+    height: isFullscreen ? '40px' : '30px',
+    // Responsive sizing
+    [theme.breakpoints.down('xs')]: {
+      fontSize: isFullscreen ? '18px' : '14px',
+      width: isFullscreen ? '36px' : '28px',
+      height: isFullscreen ? '36px' : '28px',
+    },
     '&:hover': {
       backgroundColor: alpha('#1F64BF', 0.1),
       color: '#1F64BF',
@@ -76,9 +123,14 @@ const AddressMapPickerContainer = styled(Box)(({ theme }) => ({
     },
   },
   '& .leaflet-control-attribution': {
-    fontSize: '10px',
-    backgroundColor: alpha('white', 0.8),
+    fontSize: isFullscreen ? '12px' : '10px',
+    backgroundColor: alpha('#ffffff', 0.9),
     fontFamily: "'Mona Sans'",
+    padding: isFullscreen ? '8px 12px' : '4px 8px',
+    [theme.breakpoints.down('xs')]: {
+      fontSize: isFullscreen ? '10px' : '8px',
+      padding: isFullscreen ? '6px 10px' : '3px 6px',
+    },
   },
 }));
 
@@ -95,24 +147,36 @@ const AddressMapOverlay = styled(Box)(({ theme }) => ({
   fontFamily: "'Mona Sans'",
 }));
 
-const AddressMapHeader = styled(Paper)(({ theme }) => ({
+const AddressMapHeader = styled(Paper)(({ theme, isFullscreen }) => ({
   position: 'absolute',
-  top: '12px',
-  left: '12px',
-  right: '12px',
-  padding: '12px 16px',
-  backgroundColor: alpha('white', 0.95),
+  top: isFullscreen ? '0' : '12px',
+  left: isFullscreen ? '0' : '12px',
+  right: isFullscreen ? '0' : '12px',
+  padding: isFullscreen ? '8px 20px' : '12px 16px',
+  backgroundColor: isFullscreen ? alpha('#ffffff', 0.98) : alpha('#ffffff', 0.95),
   backdropFilter: 'blur(10px)',
-  borderRadius: '12px',
-  border: `1px solid ${alpha('#1F64BF', 0.1)}`,
-  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+  borderRadius: isFullscreen ? '0' : '12px',
+  border: isFullscreen ? 'none' : `1px solid ${alpha('#1F64BF', 0.1)}`,
+  borderBottom: isFullscreen ? '1px solid rgba(0, 0, 0, 0.1)' : 'none',
+  boxShadow: isFullscreen ? '0 2px 8px rgba(0, 0, 0, 0.1)' : '0 4px 16px rgba(0, 0, 0, 0.1)',
   pointerEvents: 'auto',
   zIndex: 1001,
-  [theme.breakpoints.down('sm')]: {
-    top: '8px',
-    left: '8px',
-    right: '8px',
-    padding: '10px 12px',
+  height: isFullscreen ? '60px' : 'auto',
+  minHeight: isFullscreen ? '60px' : 'auto',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    top: isFullscreen ? '0' : '8px',
+    left: isFullscreen ? '0' : '8px',
+    right: isFullscreen ? '0' : '8px',
+    padding: isFullscreen ? '6px 12px' : '8px 10px',
+    height: isFullscreen ? '50px' : 'auto',
+    minHeight: isFullscreen ? '50px' : 'auto',
+  },
+  [theme.breakpoints.up('sm')]: {
+    padding: isFullscreen ? '8px 18px' : '10px 14px',
+  },
+  [theme.breakpoints.up('md')]: {
+    padding: isFullscreen ? '8px 20px' : '12px 16px',
   }
 }));
 
@@ -121,10 +185,20 @@ const AddressMapHeaderContent = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '12px',
-  [theme.breakpoints.down('sm')]: {
+  width: '100%',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: '8px',
+    gap: '6px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  [theme.breakpoints.up('md')]: {
+    gap: '12px',
   }
 }));
 
@@ -136,8 +210,17 @@ const AddressMapTitle = styled(Typography)(({ theme }) => ({
   alignItems: 'center',
   gap: '8px',
   fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.8rem',
+  flex: 1,
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    fontSize: '0.75rem',
+    gap: '6px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.85rem',
+  },
+  [theme.breakpoints.up('md')]: {
+    fontSize: '0.9rem',
   }
 }));
 
@@ -145,9 +228,18 @@ const AddressMapControls = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
-  [theme.breakpoints.down('sm')]: {
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    gap: '4px',
+    flexWrap: 'wrap',
+    alignSelf: 'flex-end',
+  },
+  [theme.breakpoints.up('sm')]: {
     gap: '6px',
     alignSelf: 'flex-end',
+  },
+  [theme.breakpoints.up('md')]: {
+    gap: '8px',
   }
 }));
 
@@ -162,9 +254,22 @@ const AddressMapControlButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: alpha('#1F64BF', 0.15),
     transform: 'translateY(-1px)',
   },
-  [theme.breakpoints.down('sm')]: {
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    width: '24px',
+    height: '24px',
+    '& svg': {
+      width: '14px',
+      height: '14px',
+    }
+  },
+  [theme.breakpoints.up('sm')]: {
     width: '28px',
     height: '28px',
+  },
+  [theme.breakpoints.up('md')]: {
+    width: '32px',
+    height: '32px',
   }
 }));
 
@@ -174,31 +279,54 @@ const AddressMapFooter = styled(Paper)(({ theme }) => ({
   left: '12px',
   right: '12px',
   padding: '16px',
-  backgroundColor: alpha('white', 0.95),
+  backgroundColor: alpha('#ffffff', 0.95),
   backdropFilter: 'blur(10px)',
   borderRadius: '12px',
   border: `1px solid ${alpha('#1F64BF', 0.1)}`,
   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
   pointerEvents: 'auto',
   zIndex: 1001,
-  [theme.breakpoints.down('sm')]: {
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
     bottom: '8px',
     left: '8px',
     right: '8px',
     padding: '12px',
+    borderRadius: '8px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    bottom: '10px',
+    left: '10px',
+    right: '10px',
+    padding: '14px',
+  },
+  [theme.breakpoints.up('md')]: {
+    bottom: '12px',
+    left: '12px',
+    right: '12px',
+    padding: '16px',
   }
 }));
 
 const AddressCoordinatesInfo = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'space-between',
   gap: '12px',
   marginBottom: '12px',
-  [theme.breakpoints.down('sm')]: {
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
     flexDirection: 'column',
     alignItems: 'flex-start',
     gap: '8px',
+    marginBottom: '10px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    gap: '10px',
+  },
+  [theme.breakpoints.up('md')]: {
+    gap: '12px',
   }
 }));
 
@@ -207,8 +335,17 @@ const AddressCoordinatesText = styled(Typography)(({ theme }) => ({
   color: '#032CA6',
   fontWeight: 500,
   fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('sm')]: {
+  marginBottom: '4px',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    fontSize: '0.75rem',
+    marginBottom: '3px',
+  },
+  [theme.breakpoints.up('sm')]: {
     fontSize: '0.8rem',
+  },
+  [theme.breakpoints.up('md')]: {
+    fontSize: '0.85rem',
   }
 }));
 
@@ -228,6 +365,41 @@ const AddressConfirmButton = styled(Button)(({ theme }) => ({
   },
   '&:disabled': {
     background: alpha('#1F64BF', 0.3),
+    boxShadow: 'none',
+  },
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    width: '100%',
+    padding: '8px 12px',
+    fontSize: '0.75rem',
+  },
+  [theme.breakpoints.up('sm')]: {
+    width: 'auto',
+    padding: '8px 14px',
+    fontSize: '0.8rem',
+  },
+  [theme.breakpoints.up('md')]: {
+    padding: '8px 16px',
+    fontSize: '0.85rem',
+  }
+}));
+
+const AddressSetDefaultButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+  color: 'white',
+  borderRadius: '8px',
+  padding: '8px 16px',
+  fontSize: '0.85rem',
+  fontWeight: 600,
+  textTransform: 'none',
+  fontFamily: "'Mona Sans'",
+  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)',
+    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+  },
+  '&:disabled': {
+    background: alpha('#F59E0B', 0.3),
     boxShadow: 'none',
   },
   [theme.breakpoints.down('sm')]: {
@@ -253,7 +425,7 @@ const AddressLoadingOverlay = styled(Box)(({ theme }) => ({
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: alpha('white', 0.8),
+  backgroundColor: alpha('#ffffff', 0.8),
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -279,6 +451,188 @@ const AddressErrorAlert = styled(Alert)(({ theme }) => ({
   }
 }));
 
+const AddressLocationStatus = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '8px 12px',
+  borderRadius: '8px',
+  backgroundColor: alpha('#10B981', 0.1),
+  border: `1px solid ${alpha('#10B981', 0.2)}`,
+  marginBottom: '8px',
+  fontFamily: "'Mona Sans'",
+}));
+
+const AddressLocationStatusText = styled(Typography)(({ theme }) => ({
+  fontSize: '0.8rem',
+  color: '#059669',
+  fontWeight: 600,
+  fontFamily: "'Mona Sans'",
+}));
+
+const AddressValidationStatus = styled(Box)(({ theme, status }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '6px 10px',
+  borderRadius: '6px',
+  fontSize: '0.75rem',
+  fontFamily: "'Mona Sans'",
+  fontWeight: 500,
+  backgroundColor: status === 'valid' ? alpha('#10B981', 0.1) : 
+                   status === 'invalid' ? alpha('#EF4444', 0.1) : 
+                   alpha('#F59E0B', 0.1),
+  color: status === 'valid' ? '#059669' : 
+         status === 'invalid' ? '#DC2626' : 
+         '#D97706',
+  border: `1px solid ${status === 'valid' ? alpha('#10B981', 0.2) : 
+                       status === 'invalid' ? alpha('#EF4444', 0.2) : 
+                       alpha('#F59E0B', 0.2)}`,
+}));
+
+const AddressButtonStatus = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  fontSize: '0.7rem',
+  fontFamily: "'Mona Sans'",
+  fontWeight: 500,
+  backgroundColor: alpha('#6B7280', 0.1),
+  color: '#6B7280',
+  border: `1px solid ${alpha('#6B7280', 0.2)}`,
+  marginTop: '4px',
+}));
+
+const FullscreenInfoPanel = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '80px',
+  right: '20px',
+  backgroundColor: alpha('#ffffff', 0.95),
+  backdropFilter: 'blur(10px)',
+  borderRadius: '12px',
+  padding: '16px',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+  border: `1px solid ${alpha('#1F64BF', 0.1)}`,
+  zIndex: 1000,
+  minWidth: '280px',
+  fontFamily: "'Mona Sans'",
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    top: '60px',
+    right: '12px',
+    left: '12px',
+    minWidth: 'auto',
+    padding: '12px',
+    borderRadius: '8px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    top: '70px',
+    right: '16px',
+    minWidth: '260px',
+  },
+  [theme.breakpoints.up('md')]: {
+    top: '80px',
+    right: '20px',
+    minWidth: '280px',
+  }
+}));
+
+const FullscreenCoordinates = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  marginBottom: '16px',
+}));
+
+const FullscreenCoordinateItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  fontSize: '0.875rem',
+  color: '#374151',
+}));
+
+const FullscreenControls = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+}));
+
+const FullscreenControlButton = styled(Button)(({ theme }) => ({
+  minWidth: 'auto',
+  padding: '8px 12px',
+  fontSize: '0.875rem',
+  fontWeight: '500',
+  borderRadius: '8px',
+  textTransform: 'none',
+  fontFamily: "'Mona Sans'",
+}));
+
+const FullscreenZoomIndicator = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  bottom: '20px',
+  left: '20px',
+  backgroundColor: alpha('#ffffff', 0.95),
+  backdropFilter: 'blur(10px)',
+  borderRadius: '8px',
+  padding: '8px 12px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  border: `1px solid ${alpha('#1F64BF', 0.1)}`,
+  zIndex: 1000,
+  fontFamily: "'Mona Sans'",
+  fontSize: '0.875rem',
+  color: '#374151',
+  fontWeight: '500',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    bottom: '12px',
+    left: '12px',
+    padding: '6px 10px',
+    fontSize: '0.75rem',
+  },
+  [theme.breakpoints.up('sm')]: {
+    bottom: '16px',
+    left: '16px',
+  },
+  [theme.breakpoints.up('md')]: {
+    bottom: '20px',
+    left: '20px',
+  }
+}));
+
+const LocationConfirmationToast = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  backgroundColor: alpha('#ffffff', 0.98),
+  backdropFilter: 'blur(10px)',
+  borderRadius: '12px',
+  padding: '16px 20px',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+  border: `1px solid ${alpha('#10B981', 0.2)}`,
+  zIndex: 2000,
+  fontFamily: "'Mona Sans'",
+  textAlign: 'center',
+  minWidth: '280px',
+  // Responsive breakpoints
+  [theme.breakpoints.down('xs')]: {
+    minWidth: '240px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+  },
+  [theme.breakpoints.up('sm')]: {
+    minWidth: '260px',
+    padding: '14px 18px',
+  },
+  [theme.breakpoints.up('md')]: {
+    minWidth: '280px',
+    padding: '16px 20px',
+  }
+}));
+
 // ================ COMPONENTES AUXILIARES ================
 
 // Componente para manejar clicks en el mapa
@@ -296,15 +650,39 @@ const AddressMapClickHandler = ({ onLocationSelect, crosshairMode }) => {
   return null;
 };
 
+// Componente para manejar el zoom del mapa
+const AddressMapZoomHandler = ({ onZoomChange }) => {
+  useMapEvents({
+    zoomend: (e) => {
+      onZoomChange(e.target.getZoom());
+    }
+  });
+  return null;
+};
+
 // Componente para centrar el mapa
-const AddressMapCenterController = ({ center, shouldCenter }) => {
+const AddressMapCenterController = ({ center, shouldCenter, zoom = 15 }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (shouldCenter && center) {
-      map.setView([center.lat, center.lng], map.getZoom());
+    if (shouldCenter && center && map) {
+      console.log('🗺️ [AddressMapCenterController] Centrando mapa en:', center, 'con zoom:', zoom);
+      
+      // Verificar que el mapa esté listo
+      if (map.getContainer()) {
+        map.setView([center.lat, center.lng], zoom, {
+          animate: true,
+          duration: 1.0,
+          easeLinearity: 0.1
+        });
+        
+        // Forzar invalidación del tamaño del mapa
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      }
     }
-  }, [map, center, shouldCenter]);
+  }, [map, center, shouldCenter, zoom]);
   
   return null;
 };
@@ -316,7 +694,16 @@ const AddressMapPicker = ({
   onLocationSelect,
   selectedLocation = null,
   disabled = false,
-  height = '100%'
+  height = '100%',
+  // Nuevas props para funcionalidad de ubicación predeterminada
+  onSetAsDefault = null,
+  isDefaultLocation = false,
+  showSetDefaultButton = false,
+  userId = null,
+  // Nuevas props para centrado automático por departamento/municipio
+  selectedDepartment = null,
+  selectedMunicipality = null,
+  autoCenterOnLocationChange = true
 }) => {
   const theme = useTheme();
   
@@ -336,6 +723,11 @@ const AddressMapPicker = ({
   const [error, setError] = useState(null);
   const [shouldCenter, setShouldCenter] = useState(false);
   const [addressInfo, setAddressInfo] = useState(null);
+  const [settingAsDefault, setSettingAsDefault] = useState(false);
+  const [showLocationPanel, setShowLocationPanel] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(13);
+  const [showConfirmationToast, setShowConfirmationToast] = useState(false);
 
   const mapRef = useRef(null);
 
@@ -346,6 +738,61 @@ const AddressMapPicker = ({
       setCrosshairMode(false);
     }
   }, [selectedLocation]);
+
+  // Efecto para centrar automáticamente el mapa cuando cambien departamento/municipio
+  useEffect(() => {
+    const centerMap = async () => {
+      if (autoCenterOnLocationChange && (selectedDepartment || selectedMunicipality)) {
+        let newCenter = null;
+        
+        // Priorizar municipio si está disponible
+        if (selectedMunicipality && selectedDepartment) {
+          // Primero intentar con la base de datos local
+          newCenter = geocodingService.getMunicipalityCenter(selectedMunicipality, selectedDepartment);
+          
+          // Si no se encuentra en la base local, intentar búsqueda online
+          if (!newCenter || (newCenter.lat === 13.8667 && newCenter.lng === -88.6333)) {
+            console.log('🗺️ [AddressMapPicker] Municipio no encontrado en base local, buscando online...');
+            newCenter = await geocodingService.searchMunicipalityOnline(selectedMunicipality, selectedDepartment);
+          }
+        } else if (selectedDepartment) {
+          newCenter = geocodingService.getDepartmentCenter(selectedDepartment);
+        }
+        
+        if (newCenter) {
+          console.log('🗺️ [AddressMapPicker] Centrando mapa en:', { 
+            department: selectedDepartment, 
+            municipality: selectedMunicipality, 
+            coordinates: newCenter 
+          });
+          
+          setCurrentLocation(newCenter);
+          setCrosshairMode(false);
+          setShowLocationPanel(true); // Mostrar panel para confirmar ubicación
+          
+          // Forzar centrado del mapa con un pequeño delay
+          setTimeout(() => {
+            setShouldCenter(true);
+            setTimeout(() => setShouldCenter(false), 100);
+          }, 100);
+          
+          // Limpiar información anterior para forzar nueva búsqueda
+          setAddressInfo(null);
+        }
+      }
+    };
+
+    centerMap();
+  }, [selectedDepartment, selectedMunicipality, autoCenterOnLocationChange]);
+
+  // Efecto para centrar automáticamente cuando cambie currentLocation
+  useEffect(() => {
+    if (currentLocation && !crosshairMode) {
+      console.log('🗺️ [AddressMapPicker] Centrando automáticamente en nueva ubicación:', currentLocation);
+      setShouldCenter(true);
+      setTimeout(() => setShouldCenter(false), 100);
+    }
+  }, [currentLocation, crosshairMode]);
 
   // Auto reverse geocoding cuando se selecciona una ubicación
   useEffect(() => {
@@ -366,6 +813,20 @@ const AddressMapPicker = ({
     return () => clearTimeout(timeoutId);
   }, [currentLocation, crosshairMode, reverseGeocode]);
 
+  // Efecto para manejar tecla Escape en pantalla completa
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isFullscreen]);
+
   // ==================== MANEJADORES ====================
   const handleLocationSelect = useCallback((location) => {
     // Validar que esté dentro de El Salvador
@@ -377,17 +838,91 @@ const AddressMapPicker = ({
     setCurrentLocation(location);
     setCrosshairMode(false);
     setError(null);
+    setShowLocationPanel(true); // Mostrar panel cuando se selecciona nueva ubicación
+    
+    // Limpiar información de dirección anterior para forzar nueva búsqueda
+    setAddressInfo(null);
   }, [isWithinElSalvador]);
 
   const handleConfirmLocation = () => {
     if (currentLocation && onLocationSelect) {
       onLocationSelect(currentLocation);
+      setShowLocationPanel(false); // Ocultar panel después de confirmar
+      
+      // Mostrar toast de confirmación
+      setShowConfirmationToast(true);
+      setTimeout(() => {
+        setShowConfirmationToast(false);
+      }, 3000); // Ocultar después de 3 segundos
+    }
+  };
+
+  const handleSetAsDefault = async () => {
+    if (!currentLocation || !userId) {
+      setError('No se puede establecer como predeterminada: faltan datos necesarios');
+      return;
+    }
+
+    setSettingAsDefault(true);
+    setError(null);
+
+    try {
+      // Si no tenemos addressInfo, intentar obtenerlo primero
+      let finalAddressInfo = addressInfo;
+      if (!finalAddressInfo) {
+        console.log('🗺️ [AddressMapPicker] Obteniendo información de ubicación...');
+        const result = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+        if (result) {
+          finalAddressInfo = result.addressComponents;
+          setAddressInfo(finalAddressInfo);
+        }
+      }
+
+      // Crear objeto con la información de la ubicación
+      const locationData = {
+        coordinates: {
+          lat: currentLocation.lat,
+          lng: currentLocation.lng
+        },
+        department: finalAddressInfo?.department || selectedDepartment || 'Desconocido',
+        municipality: finalAddressInfo?.municipality || selectedMunicipality || 'Desconocido',
+        userId: userId
+      };
+
+      console.log('🗺️ [AddressMapPicker] Estableciendo ubicación como predeterminada:', locationData);
+
+      // Llamar al nuevo endpoint del backend
+      const response = await addressService.setDefaultLocationFromCoordinates(locationData);
+      
+      if (response.success) {
+        console.log('✅ Ubicación establecida como predeterminada');
+        
+        // Llamar a la función callback si existe (para notificar al componente padre)
+        if (onSetAsDefault) {
+          await onSetAsDefault({
+            ...locationData,
+            addressComponents: finalAddressInfo,
+            addressId: response.data.address._id
+          });
+        }
+      } else {
+        throw new Error(response.message || 'Error desconocido');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error estableciendo ubicación como predeterminada:', error);
+      setError('Error al establecer como ubicación predeterminada: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setSettingAsDefault(false);
     }
   };
 
   const handleCenterMap = () => {
-    setShouldCenter(true);
-    setTimeout(() => setShouldCenter(false), 100);
+    if (currentLocation) {
+      console.log('🗺️ [handleCenterMap] Centrando mapa en ubicación actual:', currentLocation);
+      setShouldCenter(true);
+      setTimeout(() => setShouldCenter(false), 100);
+    }
   };
 
   const handleEnableCrosshair = () => {
@@ -397,17 +932,45 @@ const AddressMapPicker = ({
 
   const handleCenterToElSalvador = () => {
     const center = getElSalvadorCenter();
-    setCurrentLocation({
+    const newLocation = {
       lat: center[1],
       lng: center[0]
-    });
+    };
+    console.log('🗺️ [handleCenterToElSalvador] Centrando en El Salvador:', newLocation);
+    setCurrentLocation(newLocation);
+    setCrosshairMode(false);
+    setShowLocationPanel(true);
     setShouldCenter(true);
     setTimeout(() => setShouldCenter(false), 100);
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const handleClearLocation = () => {
+    setCurrentLocation(null);
+    setCrosshairMode(true);
+    setAddressInfo(null);
+    setShowLocationPanel(false);
+    setError(null);
   };
 
   // ==================== DATOS CALCULADOS ====================
   const mapCenter = currentLocation ? [currentLocation.lat, currentLocation.lng] : [center.lat, center.lng];
   const bounds = getElSalvadorBounds();
+  const initialZoom = isFullscreen ? 10 : 13; // Zoom más amplio en pantalla completa
+
+  // Validaciones para botones
+  const canConfirmLocation = !disabled && currentLocation;
+  const canSetAsDefault = !disabled && currentLocation && userId && !settingAsDefault;
+  
+  const getButtonStatusMessage = () => {
+    if (disabled) return 'Mapa deshabilitado';
+    if (!currentLocation) return 'Selecciona una ubicación en el mapa';
+    if (showSetDefaultButton && !userId) return 'ID de usuario requerido';
+    return null;
+  };
 
   // Crear icono personalizado para el marcador
   const customIcon = new L.Icon({
@@ -422,15 +985,23 @@ const AddressMapPicker = ({
 
   // ==================== RENDER ====================
   return (
-    <AddressMapPickerContainer style={{ height }}>
+    <AddressMapPickerContainer style={{ height }} isFullscreen={isFullscreen}>
       {/* Overlay con controles */}
       <AddressMapOverlay>
         {/* Header */}
-        <AddressMapHeader>
+        <AddressMapHeader isFullscreen={isFullscreen}>
           <AddressMapHeaderContent>
             <AddressMapTitle>
               <LocationIcon size={16} />
               {crosshairMode ? 'Haz clic para seleccionar ubicación' : 'Ubicación seleccionada'}
+              {isDefaultLocation && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', ml: 1 }}>
+                  <StarIcon size={14} color="#F59E0B" weight="fill" />
+                  <Typography variant="caption" sx={{ color: '#F59E0B', fontWeight: 600 }}>
+                    Predeterminada
+                  </Typography>
+                </Box>
+              )}
             </AddressMapTitle>
             
             <AddressMapControls>
@@ -462,9 +1033,97 @@ const AddressMapPicker = ({
                   </AddressMapControlButton>
                 </Tooltip>
               )}
+              
+              <Tooltip title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}>
+                <AddressMapControlButton
+                  onClick={handleToggleFullscreen}
+                  disabled={disabled}
+                >
+                  {isFullscreen ? <ExitFullscreenIcon size={16} /> : <FullscreenIcon size={16} />}
+                </AddressMapControlButton>
+              </Tooltip>
             </AddressMapControls>
           </AddressMapHeaderContent>
         </AddressMapHeader>
+
+        {/* Panel de información en pantalla completa */}
+        {isFullscreen && currentLocation && (
+          <FullscreenInfoPanel>
+            <Typography variant="h6" sx={{ 
+              fontSize: '1rem', 
+              fontWeight: '600', 
+              color: '#1F2937',
+              marginBottom: '12px',
+              fontFamily: "'Mona Sans'"
+            }}>
+              Información de Ubicación
+            </Typography>
+            
+            <FullscreenCoordinates>
+              <FullscreenCoordinateItem>
+                <span style={{ fontWeight: '500' }}>Latitud:</span>
+                <span style={{ fontFamily: 'monospace', color: '#1F64BF' }}>
+                  {currentLocation.lat.toFixed(6)}
+                </span>
+              </FullscreenCoordinateItem>
+              <FullscreenCoordinateItem>
+                <span style={{ fontWeight: '500' }}>Longitud:</span>
+                <span style={{ fontFamily: 'monospace', color: '#1F64BF' }}>
+                  {currentLocation.lng.toFixed(6)}
+                </span>
+              </FullscreenCoordinateItem>
+              {addressInfo && (
+                <FullscreenCoordinateItem>
+                  <span style={{ fontWeight: '500' }}>Área:</span>
+                  <span style={{ color: '#059669' }}>
+                    {addressInfo.municipality}, {addressInfo.department}
+                  </span>
+                </FullscreenCoordinateItem>
+              )}
+            </FullscreenCoordinates>
+
+            <FullscreenControls>
+              <FullscreenControlButton
+                variant="contained"
+                color="primary"
+                onClick={handleConfirmLocation}
+                disabled={!canConfirmLocation}
+                startIcon={<ConfirmIcon size={16} />}
+                sx={{ 
+                  backgroundColor: '#1F64BF',
+                  '&:hover': { backgroundColor: '#1E5BA8' },
+                  '&:disabled': { backgroundColor: '#9CA3AF' }
+                }}
+              >
+                Confirmar Ubicación
+              </FullscreenControlButton>
+              
+              <FullscreenControlButton
+                variant="outlined"
+                onClick={handleClearLocation}
+                startIcon={<CloseIcon size={16} />}
+                sx={{ 
+                  borderColor: '#6B7280',
+                  color: '#6B7280',
+                  '&:hover': { 
+                    borderColor: '#EF4444',
+                    color: '#EF4444',
+                    backgroundColor: alpha('#EF4444', 0.05)
+                  }
+                }}
+              >
+                Limpiar Ubicación
+              </FullscreenControlButton>
+            </FullscreenControls>
+          </FullscreenInfoPanel>
+        )}
+
+        {/* Indicador de zoom en pantalla completa */}
+        {isFullscreen && (
+          <FullscreenZoomIndicator>
+            Zoom: {currentZoom}
+          </FullscreenZoomIndicator>
+        )}
 
         {/* Error Alert */}
         {error && (
@@ -474,10 +1133,29 @@ const AddressMapPicker = ({
         )}
 
         {/* Footer con información de coordenadas */}
-        {currentLocation && !crosshairMode && (
+        {currentLocation && !crosshairMode && showLocationPanel && (
           <AddressMapFooter>
+            {/* Estado de ubicación */}
+            <AddressLocationStatus>
+              <LocationIcon size={16} color="#059669" weight="fill" />
+              <AddressLocationStatusText>
+                Ubicación seleccionada y lista para confirmar
+              </AddressLocationStatusText>
+              <IconButton
+                size="small"
+                onClick={handleClearLocation}
+                sx={{ 
+                  ml: 'auto',
+                  color: '#6B7280',
+                  '&:hover': { color: '#EF4444' }
+                }}
+              >
+                <CloseIcon size={16} />
+              </IconButton>
+            </AddressLocationStatus>
+
             <AddressCoordinatesInfo>
-              <Box>
+              <Box sx={{ flex: 1 }}>
                 <AddressCoordinatesText>
                   <strong>Coordenadas:</strong> {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
                 </AddressCoordinatesText>
@@ -486,15 +1164,67 @@ const AddressMapPicker = ({
                     <strong>Área:</strong> {addressInfo.municipality || 'Desconocida'}, {addressInfo.department || 'Desconocido'}
                   </AddressCoordinatesText>
                 )}
+                {isDefaultLocation && (
+                  <AddressCoordinatesText sx={{ color: '#F59E0B', fontWeight: 600 }}>
+                    ⭐ Ubicación predeterminada
+                  </AddressCoordinatesText>
+                )}
+                
+                {/* Estado de validación */}
+                <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <AddressValidationStatus status="valid">
+                    <ConfirmIcon size={12} weight="fill" />
+                    Coordenadas válidas
+                  </AddressValidationStatus>
+                  {addressInfo ? (
+                    <AddressValidationStatus status="valid">
+                      <ConfirmIcon size={12} weight="fill" />
+                      Información de ubicación obtenida
+                    </AddressValidationStatus>
+                  ) : (
+                    <AddressValidationStatus status="invalid">
+                      <CrosshairIcon size={12} weight="fill" />
+                      Obteniendo información de ubicación...
+                    </AddressValidationStatus>
+                  )}
+                </Box>
               </Box>
               
-              <AddressConfirmButton
-                onClick={handleConfirmLocation}
-                startIcon={<ConfirmIcon size={16} />}
-                disabled={disabled || !currentLocation}
-              >
-                Confirmar Ubicación
-              </AddressConfirmButton>
+              <Box sx={{ display: 'flex', gap: '8px', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'flex-start' }}>
+                {showSetDefaultButton && !isDefaultLocation && (
+                  <Box>
+                    <AddressSetDefaultButton
+                      onClick={handleSetAsDefault}
+                      startIcon={settingAsDefault ? <CircularProgress size={16} color="inherit" /> : <StarIcon size={16} />}
+                      disabled={!canSetAsDefault}
+                    >
+                      {settingAsDefault ? 'Estableciendo...' : 'Establecer como Predeterminada'}
+                    </AddressSetDefaultButton>
+                    {!canSetAsDefault && (
+                      <AddressButtonStatus>
+                        <CrosshairIcon size={10} />
+                        {!currentLocation ? 'Selecciona ubicación' : !userId ? 'ID de usuario requerido' : 'Procesando...'}
+                      </AddressButtonStatus>
+                    )}
+                  </Box>
+                )}
+                
+                <Box>
+                  <AddressConfirmButton
+                    onClick={handleConfirmLocation}
+                    startIcon={<ConfirmIcon size={16} />}
+                    disabled={!canConfirmLocation}
+                  >
+                    Confirmar Ubicación
+                  </AddressConfirmButton>
+                  {!canConfirmLocation && (
+                    <AddressButtonStatus>
+                      <CrosshairIcon size={10} />
+                      {!currentLocation ? 'Selecciona ubicación en el mapa' : 'Mapa deshabilitado'}
+                    </AddressButtonStatus>
+                  )}
+                </Box>
+              </Box>
             </AddressCoordinatesInfo>
           </AddressMapFooter>
         )}
@@ -504,6 +1234,30 @@ const AddressMapPicker = ({
           <AddressCrosshair>
             <CrosshairIcon size={32} weight="bold" />
           </AddressCrosshair>
+        )}
+
+        {/* Toast de confirmación de ubicación */}
+        {showConfirmationToast && (
+          <LocationConfirmationToast>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', mb: 1 }}>
+              <ConfirmIcon size={20} color="#10B981" weight="fill" />
+              <Typography variant="h6" sx={{ 
+                fontSize: '1rem', 
+                fontWeight: '600', 
+                color: '#10B981',
+                fontFamily: "'Mona Sans'"
+              }}>
+                ¡Ubicación Confirmada!
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ 
+              color: '#6B7280',
+              fontFamily: "'Mona Sans'",
+              fontSize: '0.875rem'
+            }}>
+              La ubicación ha sido guardada exitosamente
+            </Typography>
+          </LocationConfirmationToast>
         )}
       </AddressMapOverlay>
 
@@ -521,14 +1275,14 @@ const AddressMapPicker = ({
       <MapContainer
         ref={mapRef}
         center={mapCenter}
-        zoom={zoom}
+        zoom={initialZoom}
         style={{ width: '100%', height: '100%' }}
         zoomControl={true}
         attributionControl={true}
         maxBounds={bounds}
         maxBoundsViscosity={1.0}
-        minZoom={8}
-        maxZoom={18}
+        minZoom={isFullscreen ? 6 : 8}
+        maxZoom={isFullscreen ? 20 : 18}
         whenReady={() => setMapReady(true)}
       >
         {/* TileLayer */}
@@ -544,10 +1298,16 @@ const AddressMapPicker = ({
           crosshairMode={crosshairMode}
         />
 
+        {/* Controlador de zoom */}
+        <AddressMapZoomHandler 
+          onZoomChange={setCurrentZoom} 
+        />
+
         {/* Controlador de centrado */}
         <AddressMapCenterController 
           center={currentLocation}
           shouldCenter={shouldCenter}
+          zoom={isFullscreen ? 12 : 15}
         />
 
         {/* Marcador de ubicación seleccionada */}
