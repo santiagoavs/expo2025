@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 import './passwordReset.css';
 
 export default function PasswordReset() {
@@ -76,20 +77,10 @@ export default function PasswordReset() {
     setMessage({ text: '', isError: false });
 
     try {
-      const response = await fetch('http://localhost:4000/api/password-recovery/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          newPassword: form.newPassword, 
-          token: state.token 
-        }),
+      const data = await apiClient.post('/password-recovery/reset-password', { 
+        newPassword: form.newPassword, 
+        token: state.token 
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al restablecer la contraseña');
-      }
 
       setMessage({
         text: data.message || 'Contraseña restablecida correctamente',

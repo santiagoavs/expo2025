@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './changePassword.css';
 import { useAuth } from '../../context/authContext';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 
 export default function ChangePasswordPage() {
   const { user } = useAuth();
@@ -30,26 +31,18 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/users/${user.id}/password`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ currentPassword, newPassword }),
+      const data = await apiClient.patch(`/users/${user.id}/password`, {
+        currentPassword,
+        newPassword
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Error al cambiar la contraseña');
-      } else {
-        setMessage(data.message);
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-      }
+      setMessage(data.message || 'Contraseña actualizada correctamente');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err) {
       console.error('Error al cambiar contraseña:', err);
-      setError('Error de conexión con el servidor');
+      setError(err.message || 'Error al cambiar la contraseña');
     } finally {
       setLoading(false);
     }

@@ -829,6 +829,12 @@ const DROPDOWN_MENUS = {
         description: "Organización de productos"
       },
       {
+        to: "/address-management",
+        label: "Direcciones",
+        icon: <MapPin size={18} weight="duotone" />,
+        description: "Gestión de direcciones de envío"
+      },
+      {
         to: "/ReviewsManagement",
         label: "Reseñas",
         icon: <Star size={18} weight="duotone" />,
@@ -865,22 +871,16 @@ const DROPDOWN_MENUS = {
     icon: <ChartBar size={18} weight="duotone" />,
     items: [
       {
-        to: "/payment-dashboard",
-        label: "Dashboard de Pagos",
-        icon: <CreditCard size={18} weight="duotone" />,
-        description: "Control de pagos"
-      },
-      {
         to: "/reports",
         label: "Reportes",
         icon: <FileText size={18} weight="duotone" />,
         description: "Informes detallados"
       },
       {
-        to: "/address-dashboard",
-        label: "Dashboard de Direcciones",
-        icon: <MapPin size={18} weight="duotone" />,
-        description: "Gestión de direcciones"
+        to: "/payment-methods",
+        label: "Métodos de Pago",
+        icon: <CreditCard size={18} weight="duotone" />,
+        description: "Gestión de pagos"
       },
     ]
   }

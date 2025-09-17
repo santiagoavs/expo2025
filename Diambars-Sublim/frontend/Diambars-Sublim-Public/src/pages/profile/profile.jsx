@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/authContext';
 import LoginForm from '../../components/profile/loginForm';
 import UserInfo from '../../components/profile/userInfo';
@@ -9,7 +9,15 @@ import Footer from '../../components/UI/footer/footer';
 import './profile.css';
 
 const Profile = () => {
-  const { user } = useContext(AuthContext); //Verificamos si hay usuario autenticado
+  const { user, refreshUser, isAuthenticated } = useContext(AuthContext); //Verificamos si hay usuario autenticado
+
+  // Refrescar datos del usuario cuando se carga la página de perfil
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔄 [Profile] Refrescando datos del usuario al cargar perfil');
+      refreshUser();
+    }
+  }, [isAuthenticated, refreshUser]);
 
   if (!user) {
     //Si no está autenticado, mostramos el login

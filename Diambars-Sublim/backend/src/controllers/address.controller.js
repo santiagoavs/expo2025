@@ -441,4 +441,117 @@ addressController.getLocationData = async (req, res) => {
   }
 };
 
+/**
+ * Obtiene todas las direcciones para administradores
+ */
+addressController.getAllAddresses = async (req, res) => {
+  try {
+    const {
+      userId,
+      department,
+      municipality,
+      search,
+      isActive,
+      page = 1,
+      limit = 20,
+      sort = 'createdAt_desc'
+    } = req.query;
+
+    // Construir filtros
+    const filters = { isActive: true }; // Solo direcciones activas por defecto
+    
+    if (userId) filters.user = userId;
+    if (department) filters.department = department;
+    if (municipality) filters.municipality = municipality;
+    if (isActive !== undefined) filters.isActive = isActive === 'true';
+    
+    // Filtro de búsqueda
+    if (search) {
+      filters.$or = [
+        { recipient: { $regex: search, $options: 'i' } },
+        { address: { $regex: search, $options: 'i' } },
+        { phoneNumber: { $regex: search, $options: 'i' } },
+        { label: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Configurar paginación
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sortOptions = {};
+    
+    // Configurar ordenamiento
+    if (sort === 'createdAt_desc') sortOptions.createdAt = -1;
+    else if (sort === 'createdAt_asc') sortOptions.createdAt = 1;
+    else if (sort === 'recipient_asc') sortOptions.recipient = 1;
+    else if (sort === 'recipient_desc') sortOptions.recipient = -1;
+    else if (sort === 'department_asc') sortOptions.department = 1;
+    else if (sort === 'department_desc') sortOptions.department = -1;
+
+    // Ejecutar consulta con paginación
+    const [addresses, totalCount] = await Promise.all([
+      Address.find(filters)
+        .populate('user', 'name email')
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Address.countDocuments(filters)
+    ]);
+
+    // Calcular estadísticas
+    const statistics = {
+      total: totalCount,
+      active: await Address.countDocuments({ ...filters, isActive: true }),
+      inactive: await Address.countDocuments({ ...filters, isActive: false }),
+      byDepartment: await Address.aggregate([
+        { $match: filters },
+        { $group: { _id: '$department', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      byUser: await Address.aggregate([
+        { $match: filters },
+        { $group: { _id: '$user', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ])
+    };
+
+    // Información de paginación
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+    const hasNext = parseInt(page) < totalPages;
+    const hasPrev = parseInt(page) > 1;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        addresses,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalItems: totalCount,
+          hasNext,
+          hasPrev,
+          itemsPerPage: parseInt(limit)
+        },
+        statistics,
+        filters: {
+          userId,
+          department,
+          municipality,
+          search,
+          isActive,
+          sort
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getAllAddresses:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener las direcciones",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
 export default addressController;

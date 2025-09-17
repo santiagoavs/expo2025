@@ -20,6 +20,7 @@ productController.getAllProducts = async (req, res) => {
       page = 1, 
       limit = 12, 
       category, 
+      categories,
       isActive, 
       search,
       sort = 'newest',
@@ -46,10 +47,28 @@ productController.getAllProducts = async (req, res) => {
     // Construir filtro
     const filter = {};
     
+    // Filtro por categoría única (para compatibilidad)
     if (category && category.trim() !== '') {
       const categoryValidation = validators.mongoId(category, 'Categoría');
       if (categoryValidation.isValid) {
         filter.category = new mongoose.Types.ObjectId(categoryValidation.cleaned);
+      }
+    }
+    
+    // Filtro por múltiples categorías (nuevo)
+    if (categories && categories.trim() !== '') {
+      const categoryIds = categories.split(',').map(id => id.trim()).filter(id => id);
+      const validCategoryIds = [];
+      
+      for (const categoryId of categoryIds) {
+        const categoryValidation = validators.mongoId(categoryId, 'Categoría');
+        if (categoryValidation.isValid) {
+          validCategoryIds.push(new mongoose.Types.ObjectId(categoryValidation.cleaned));
+        }
+      }
+      
+      if (validCategoryIds.length > 0) {
+        filter.category = { $in: validCategoryIds };
       }
     }
     

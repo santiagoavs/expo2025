@@ -27,8 +27,7 @@
     180% 180%, 
     100% 100%;
   animation: backgroundFlow 25s ease-in-out infinite alternate;
-  font-family: 'Inter', sans-serif;
-  font-style: italic;
+  font-family: 'Mona Sans', sans-serif;
   position: relative;
   overflow: hidden;
 }
@@ -64,6 +63,12 @@
       55% 45%,
       0% 0%;
   }
+}
+
+.reviews-title {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #3F2724;
 }
 
 .verify-card {

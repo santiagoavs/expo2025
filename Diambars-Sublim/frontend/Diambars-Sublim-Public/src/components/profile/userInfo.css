@@ -7,7 +7,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: rgba(255, 246, 226, 0.25);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -23,8 +23,8 @@
   border-radius: 10px;
   background: linear-gradient(
     135deg,
-    rgba(255, 246, 226, 0.5),
-    rgba(245, 231, 198, 0.3)
+    rgba(255, 255, 255, 0.1),
+    rgba(241, 241, 241, 0.1)
   );
   z-index: -1;
   transform: translateY(10px) scale(0.98);

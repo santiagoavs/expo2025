@@ -14,6 +14,7 @@ import ForgotPassword from './pages/passwordEdit/forgotPassword';
 import VerifyRecoveryCode from './pages/passwordEdit/verifyRecoveryCode';
 import PasswordReset from './pages/passwordEdit/passwordReset';
 import NotFoundPage from './pages/notFound/notFound';
+import ComingSoonPage from './pages/comingSoon/comingSoon';
 
 // Nuevos componentes del sistema de diseños
 import DesignHub from '../src/pages/designs/designHub';
@@ -55,34 +56,22 @@ function App() {
           {/* Ruta predefinida para todas las rutas no definidas */}
           <Route path="*" element={<NotFoundPage />} />
 
-          {/* NUEVAS rutas del sistema de diseños */}
+          {/* NUEVAS rutas del sistema de diseños - TEMPORALMENTE PROTEGIDAS */}
           <Route 
             path="/design-hub" 
-            element={
-              <ProtectedRoute>
-                <DesignHubWithProduct />
-              </ProtectedRoute>
-            } 
+            element={<ComingSoonPage />} 
           />
 
-          {/* Ruta para personalizar producto específico */}
+          {/* Ruta para personalizar producto específico - TEMPORALMENTE PROTEGIDA */}
           <Route 
             path="/customize/:productId" 
-            element={
-              <ProtectedRoute>
-                <DesignHub />
-              </ProtectedRoute>
-            } 
+            element={<ComingSoonPage />} 
           />
 
-          {/* Alias para diseños */}
+          {/* Alias para diseños - TEMPORALMENTE PROTEGIDO */}
           <Route 
             path="/designs" 
-            element={
-              <ProtectedRoute>
-                <DesignHubWithProduct />
-              </ProtectedRoute>
-            } 
+            element={<ComingSoonPage />} 
           />
         </Routes>
     </>

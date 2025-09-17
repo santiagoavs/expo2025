@@ -9,7 +9,7 @@ const computeBaseURL = () => {
       return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
     }
   } catch (_) {}
-  // Por defecto, usar ruta relativa para aprovechar el proxy de Vite (/api -> http://localhost:4000)
+  // Por defecto, usar ruta relativa para aprovechar el proxy de Vite (/api -> https://expo2025-8bjn.onrender.com)
   return '/api';
 };
 
@@ -182,7 +182,7 @@ apiClient.interceptors.response.use(
     } else if (error.request) {
       // La solicitud fue hecha pero no hubo respuesta
       console.error('🌐 [apiClient] No response received:', error.request);
-      enhancedError = new Error('Sin respuesta del servidor - Verifica que el backend esté corriendo en http://localhost:4000');
+      enhancedError = new Error('Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com');
       enhancedError.code = 'NETWORK_ERROR';
     } else {
       // Algo más causó el error

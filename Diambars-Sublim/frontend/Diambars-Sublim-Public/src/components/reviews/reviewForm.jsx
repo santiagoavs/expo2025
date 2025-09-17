@@ -62,7 +62,7 @@ const ReviewForm = ({
             ) : (
               <>
                 <span className="submit-icon"></span>
-                Enviar Reseña
+                Enviar
               </>
             )}
           </button>

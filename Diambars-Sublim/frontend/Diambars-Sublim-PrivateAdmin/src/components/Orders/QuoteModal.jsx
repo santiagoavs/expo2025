@@ -167,10 +167,14 @@ import {
 
 // Styled Components
 const StyledDialog = styled(Dialog)(({ theme }) => ({
+  zIndex: 1400, // Z-index alto para estar por encima del navbar
   '& .MuiDialog-paper': {
     borderRadius: '20px',
     maxHeight: '90vh',
   },
+  '& .MuiBackdrop-root': {
+    zIndex: 1399 // Backdrop con z-index alto
+  }
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({

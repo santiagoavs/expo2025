@@ -1,4 +1,3 @@
-// src/pages/catalogue/categoryView.jsx - INTEGRADO CON SISTEMA DE DISEÑOS
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
@@ -193,8 +192,10 @@ export default function CategoryView() {
             activeFilters={activeFilters}
           />
           
-          <div className="product-grid">
-            {renderProducts()}
+          <div className="main-content">
+            <div className="product-grid">
+              {renderProducts()}
+            </div>
           </div>
         </div>
       </div>

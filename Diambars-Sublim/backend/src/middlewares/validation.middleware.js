@@ -16,7 +16,9 @@ export const validateRequest = (req, res, next) => {
       if (!acc[field]) {
         acc[field] = [];
       }
-      acc[field].push(error.msg);
+      // Para errores personalizados, usar el mensaje del error o uno genérico
+      const errorMessage = error.msg || 'Invalid value';
+      acc[field].push(errorMessage);
       return acc;
     }, {});
     

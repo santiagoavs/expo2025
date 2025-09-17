@@ -242,9 +242,6 @@ const ShippingAddresses = () => {
           <div className="empty-state">
             No tienes direcciones registradas.
             <br />
-            <button onClick={() => setIsAddModalOpen(true)}>
-              Añadir tu primera dirección
-            </button>
           </div>
         ) : (
           addresses.map((address) => (

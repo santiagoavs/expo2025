@@ -26,11 +26,7 @@ const ReviewPage = () => {
   return (
     <main className="reviews-page">
       <div className="reviews-content">
-        <img 
-          src="/images/reviews/reviewsTitle.png" 
-          alt="Título reseñas" 
-          className="reviews-title" 
-        />
+        <h1 className="reviews-title"> Reseñas </h1>
         
         {/* Mostrar formulario solo si el usuario está autenticado */}
         {isAuthenticated ? (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { requestRecoveryCode } from '../../api/passwordService';
+import apiClient from '../../api/apiClient';
 import './verifyRecoveryCode.css';
 
 export default function VerifyRecoveryCode() {
@@ -40,20 +41,10 @@ export default function VerifyRecoveryCode() {
     setMessage({ text: '', isError: false });
 
     try {
-      const response = await fetch('http://localhost:4000/api/password-recovery/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: state.email, 
-          code 
-        })
+      const data = await apiClient.post('/password-recovery/verify-code', { 
+        email: state.email, 
+        code 
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al verificar el código');
-      }
 
       if (!data.token) {
         throw new Error('No se recibió el token de verificación del servidor');

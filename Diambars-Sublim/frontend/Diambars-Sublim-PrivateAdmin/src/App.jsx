@@ -19,6 +19,9 @@ import Orders from './pages/Orders/Orders';
 import Employees from './pages/Employees/Employees';
 import Profile from './pages/Profile/Profile';
 import ReviewsManagement from './pages/ReviewsManagement/ReviewsManagement';
+import ReportsPage from './pages/ReportsPage/ReportsPage';
+import PaymentMethods from './pages/PaymentsMethods/PaymentMethods';
+import AddressManagement from './pages/AddressManagement/AddressManagement';
 //Ruta catch-all
 import NotFound404 from './pages/NotFound404/NotFound404';
 
@@ -133,6 +136,30 @@ const AppContent = () => {
         } 
       />
       <Route 
+        path="/reports" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <ReportsPage/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/payment-methods" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <PaymentMethods/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
         path="/catalog-management" 
         element={
           isAuthenticated ? (
@@ -210,6 +237,18 @@ const AppContent = () => {
           isAuthenticated ? (
             <AuthenticatedLayout>
               <Employees />
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/address-management" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <AddressManagement />
             </AuthenticatedLayout>
           ) : (
             <Navigate to="/login" replace />

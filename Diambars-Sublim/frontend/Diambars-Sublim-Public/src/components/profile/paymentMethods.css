@@ -8,7 +8,7 @@
   gap: 5px;
   font-family: 'Inter', sans-serif;
   height: 250px;
-  background: rgba(255, 246, 226, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -22,7 +22,7 @@
   position: absolute;
   inset: 0;
   border-radius: 10px;
-  background: linear-gradient(135deg,rgba(255, 246, 226, 0.5),rgba(245, 231, 198, 0.3));
+
   z-index: -1;
   transform: translateY(8px) scale(0.98);
   filter: blur(10px);
@@ -32,6 +32,12 @@
 .payment-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
   align-items: center;
 }
 

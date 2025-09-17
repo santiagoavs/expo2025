@@ -16,6 +16,7 @@ const PaymentMethods = () => {
     updatePaymentMethod,
     deletePaymentMethod,
     togglePaymentMethod,
+    refreshMethods,
     clearError
   } = usePaymentMethods();
 
@@ -207,13 +208,22 @@ const PaymentMethods = () => {
     <div className="payment-container">
       <div className="payment-header">
         <h3 className="payment-title">Tus métodos de pago</h3>
-        <button 
-          className="btn-add" 
-          onClick={() => setIsModalOpen(true)}
-          disabled={submitting}
-        >
-          Añadir
-        </button>
+        <div className="header-buttons">
+          <button 
+            className="address-button edit"
+            onClick={refreshMethods}
+            disabled={submitting || loading}
+          >
+            Recargar
+          </button>
+          <button 
+            className="btn-add" 
+            onClick={() => setIsModalOpen(true)}
+            disabled={submitting}
+          >
+            Añadir
+          </button>
+        </div>
       </div>
       <div className="payment-underline"></div>
 
