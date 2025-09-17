@@ -136,4 +136,11 @@ router.get('/delivery/fees',
   addressController.getDeliveryFees
 );
 
+// ==================== RUTAS ADMINISTRATIVAS ====================
+
+// Obtener todas las direcciones (admin)
+router.get('/admin/all',
+  addressController.getAllAddresses
+);
+
 export default router;

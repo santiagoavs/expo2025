@@ -42,7 +42,7 @@ Swal.mixin({
   didOpen: () => {
     const container = document.querySelector('.swal-overlay-custom');
     if (container) {
-      container.style.zIndex = '1400';
+      container.style.zIndex = '1500';
     }
   }
 });
@@ -58,7 +58,7 @@ const ModalOverlay = styled(Box)({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  zIndex: 1300,
+  zIndex: 1400,
 });
 
 const ModalContainer = styled(Box)(({ theme }) => ({

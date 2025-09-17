@@ -21,6 +21,7 @@ import Profile from './pages/Profile/Profile';
 import ReviewsManagement from './pages/ReviewsManagement/ReviewsManagement';
 import ReportsPage from './pages/ReportsPage/ReportsPage';
 import PaymentMethods from './pages/PaymentsMethods/PaymentMethods';
+import AddressManagement from './pages/AddressManagement/AddressManagement';
 //Ruta catch-all
 import NotFound404 from './pages/NotFound404/NotFound404';
 
@@ -236,6 +237,18 @@ const AppContent = () => {
           isAuthenticated ? (
             <AuthenticatedLayout>
               <Employees />
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/address-management" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <AddressManagement />
             </AuthenticatedLayout>
           ) : (
             <Navigate to="/login" replace />

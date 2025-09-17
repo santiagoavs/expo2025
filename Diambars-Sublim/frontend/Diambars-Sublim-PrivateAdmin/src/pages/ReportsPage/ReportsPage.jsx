@@ -69,7 +69,7 @@ Swal.mixin({
   didOpen: () => {
     const container = document.querySelector('.swal-overlay-custom');
     if (container) {
-      container.style.zIndex = '2000';
+      container.style.zIndex = '1500';
     }
   }
 });

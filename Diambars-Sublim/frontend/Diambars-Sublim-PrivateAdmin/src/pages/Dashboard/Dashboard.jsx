@@ -23,7 +23,9 @@ import {
   IconButton,
   Tooltip,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   ChartLine,
@@ -93,115 +95,132 @@ ChartJS.register(
 const CHART_TYPES = {
   PRODUCTS_OVERVIEW: {
     id: 'products_overview',
-    name: 'Vista General de Productos',
+    name: 'Productos',
     icon: Package,
     type: 'doughnut',
     description: 'Estado de productos (activos/inactivos)'
   },
   USER_STATS: {
     id: 'user_stats',
-    name: 'Estadísticas de Usuarios',
+    name: 'Usuarios',
     icon: Users,
     type: 'bar',
     description: 'Usuarios por estado y rol'
   },
   EMPLOYEE_DISTRIBUTION: {
     id: 'employee_distribution',
-    name: 'Distribución de Empleados',
+    name: 'Empleados',
     icon: User,
     type: 'pie',
     description: 'Empleados por rol'
   },
   DESIGN_STATUS: {
     id: 'design_status',
-    name: 'Estados de Diseños',
+    name: 'Diseños',
     icon: ChartPie,
     type: 'polarArea',
-    description: 'Diseños por estado de cotización'
-  },
-  PRODUCTS_PERFORMANCE: {
-    id: 'products_performance',
-    name: 'Rendimiento de Productos',
-    icon: TrendUp,
-    type: 'line',
-    description: 'Productos más vistos y vendidos'
-  },
-  DESIGN_TRENDS: {
-    id: 'design_trends',
-    name: 'Tendencias de Diseños',
-    icon: ChartLineUp,
-    type: 'line',
-    description: 'Evolución de cotizaciones por tiempo'
+    description: 'Diseños por estado'
   }
 };
 
-// ================ ESTILOS STYLED COMPONENTS ================
+// ================ ESTILOS STYLED COMPONENTS OPTIMIZADOS ================
 const PageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   background: '#FFFFFF',
   width: '100%',
+  overflowX: 'hidden'
 });
 
 const ContentWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '1920px',
+  maxWidth: '100%', // Cambiado a 100% para usar todo el ancho disponible
   margin: '0 auto',
-  paddingTop: '120px',
-  paddingBottom: '40px',
-  paddingLeft: '24px',
-  paddingRight: '24px',
-  minHeight: 'calc(100vh - 120px)',
-  [theme.breakpoints.down('lg')]: {
-    paddingLeft: '20px',
-    paddingRight: '20px',
+  padding: '100px 24px 20px', // Más padding lateral en PC
+  
+  [theme.breakpoints.up('sm')]: {
+    padding: '110px 28px 24px',
   },
-  [theme.breakpoints.down('md')]: {
-    paddingTop: '110px',
-    paddingLeft: '18px',
-    paddingRight: '18px',
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '120px 32px 28px',
   },
-  [theme.breakpoints.down('sm')]: {
-    paddingTop: '100px',
-    paddingLeft: '16px',
-    paddingRight: '16px',
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '120px 40px 32px', // Más padding en pantallas grandes
+    maxWidth: '100%', // Asegurar que use todo el ancho
+  },
+  
+  [theme.breakpoints.up('xl')]: {
+    padding: '120px 48px 40px', // Aún más padding en pantallas extra grandes
   }
 }));
 
 const ModernCard = styled(Paper)(({ theme }) => ({
   background: '#FFFFFF',
-  borderRadius: '16px',
+  borderRadius: '12px',
   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+  boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  overflow: 'hidden',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  
   '&:hover': {
-    boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
-    transform: 'translateY(-1px)',
-  }
+    boxShadow: '0 4px 16px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-2px)',
+  },
 }));
 
 const WelcomeCard = styled(ModernCard)(({ theme }) => ({
-  padding: '32px',
-  marginBottom: '32px',
+  padding: '20px',
+  marginBottom: '20px',
   background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
   color: '#FFFFFF',
   border: 'none',
   position: 'relative',
   overflow: 'hidden',
+  
   '&::before': {
     content: '""',
     position: 'absolute',
     top: 0,
     right: 0,
-    width: '200px',
-    height: '200px',
+    width: '120px',
+    height: '120px',
     background: 'rgba(255, 255, 255, 0.1)',
     borderRadius: '50%',
-    transform: 'translate(60px, -60px)',
+    transform: 'translate(40px, -40px)',
   },
-  [theme.breakpoints.down('md')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     padding: '24px',
     marginBottom: '24px',
+    
+    '&::before': {
+      width: '150px',
+      height: '150px',
+    }
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '28px',
+    marginBottom: '28px',
+    
+    '&::before': {
+      width: '180px',
+      height: '180px',
+    }
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '32px',
+    
+    '&::before': {
+      width: '200px',
+      height: '200px',
+    }
   }
 }));
 
@@ -209,77 +228,137 @@ const WelcomeContent = styled(Box)(({ theme }) => ({
   position: 'relative',
   zIndex: 2,
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '24px',
-  [theme.breakpoints.down('md')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    textAlign: 'left',
+  flexDirection: 'column',
+  gap: '16px',
+  
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '20px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    gap: '24px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    gap: '32px', // Más espacio en PC
   }
 }));
 
-const WelcomeInfo = styled(Box)({
+const WelcomeInfo = styled(Box)(({ theme }) => ({
   flex: 1,
-});
+}));
 
 const WelcomeTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '2rem',
+  fontSize: '1.5rem',
   fontWeight: 700,
-  marginBottom: '8px',
+  marginBottom: '4px',
   color: '#FFFFFF',
-  [theme.breakpoints.down('md')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     fontSize: '1.75rem',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '2rem',
+    marginBottom: '8px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    fontSize: '2.25rem', // Título más grande en PC
   }
 }));
 
-const WelcomeSubtitle = styled(Typography)({
-  fontSize: '1rem',
+const WelcomeSubtitle = styled(Typography)(({ theme }) => ({
+  fontSize: '0.875rem',
   opacity: 0.9,
-  marginBottom: '16px',
+  marginBottom: '12px',
   color: '#FFFFFF',
-});
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.95rem',
+    marginBottom: '16px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1rem',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    fontSize: '1.1rem', // Subtítulo más grande en PC
+  }
+}));
 
 const QuickActionsContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: '12px',
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    width: '100%',
-    '& button': {
-      width: '100%',
-    }
+  flexDirection: 'column',
+  gap: '8px',
+  width: '100%',
+  
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    width: 'auto',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    gap: '12px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    gap: '16px', // Más espacio entre botones en PC
   }
 }));
 
-const QuickActionButton = styled(Button)({
+const QuickActionButton = styled(Button)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.2)',
   color: '#FFFFFF',
   backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.3)',
-  borderRadius: '12px',
-  padding: '10px 20px',
-  fontSize: '0.875rem',
+  borderRadius: '8px',
+  padding: '8px 12px',
+  fontSize: '0.8rem',
   fontWeight: 600,
   textTransform: 'none',
   transition: 'all 0.3s ease',
+  minWidth: 'auto',
+  
   '&:hover': {
     background: 'rgba(255, 255, 255, 0.3)',
     transform: 'translateY(-1px)',
-  }
-});
-
-const StatsGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '20px',
-  marginBottom: '32px',
-  [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)',
   },
-  [theme.breakpoints.down('sm')]: {
-    gridTemplateColumns: '1fr',
-    gap: '16px',
+  
+  [theme.breakpoints.up('sm')]: {
+    padding: '8px 16px',
+    fontSize: '0.875rem',
+    borderRadius: '10px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '10px 20px',
+    borderRadius: '12px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '12px 24px', // Botones más grandes en PC
+    fontSize: '0.95rem',
+  }
+}));
+
+const StatsGrid = styled(Grid)(({ theme }) => ({
+  marginBottom: '24px',
+  
+  [theme.breakpoints.up('sm')]: {
+    marginBottom: '28px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    marginBottom: '32px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    marginBottom: '36px', // Más espacio en PC
   }
 }));
 
@@ -310,38 +389,64 @@ const StatCard = styled(ModernCard)(({ theme, variant }) => {
   const selectedVariant = variants[variant] || variants.default;
 
   return {
-    padding: '24px',
+    padding: '16px',
     position: 'relative',
     overflow: 'hidden',
+    minHeight: '120px',
     ...selectedVariant,
+    
     '&::before': variant !== 'default' ? {
       content: '""',
       position: 'absolute',
       top: 0,
       right: 0,
-      width: '100px',
-      height: '100px',
+      width: '80px',
+      height: '80px',
       background: 'rgba(255, 255, 255, 0.1)',
       borderRadius: '50%',
-      transform: 'translate(30px, -30px)',
+      transform: 'translate(25px, -25px)',
     } : {},
-    [theme.breakpoints.down('md')]: {
+    
+    [theme.breakpoints.up('sm')]: {
       padding: '20px',
+      minHeight: '140px',
+      
+      '&::before': variant !== 'default' ? {
+        width: '100px',
+        height: '100px',
+      } : {},
+    },
+    
+    [theme.breakpoints.up('md')]: {
+      padding: '24px',
+      minHeight: '160px',
+    },
+    
+    [theme.breakpoints.up('lg')]: {
+      padding: '28px', // Más padding en PC
+      minHeight: '180px', // Cards más altas en PC
+      
+      '&::before': variant !== 'default' ? {
+        width: '120px',
+        height: '120px',
+        transform: 'translate(30px, -30px)',
+      } : {},
     }
   };
 });
 
-const StatHeader = styled(Box)({
+const StatHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'space-between',
-  marginBottom: '16px',
-});
+  marginBottom: '12px',
+  flex: 1,
+}));
 
-const StatIconContainer = styled(Box)(({ variant }) => ({
-  width: '48px',
-  height: '48px',
-  borderRadius: '12px',
+const StatIconContainer = styled(Box)(({ theme, variant }) => ({
+  width: '40px',
+  height: '40px',
+  borderRadius: '10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -349,28 +454,58 @@ const StatIconContainer = styled(Box)(({ variant }) => ({
     ? 'rgba(255, 255, 255, 0.2)' 
     : alpha('#1F64BF', 0.1),
   color: variant !== 'default' ? '#FFFFFF' : '#1F64BF',
+  flexShrink: 0,
+  
+  [theme.breakpoints.up('sm')]: {
+    width: '48px',
+    height: '48px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    borderRadius: '12px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    width: '56px', // Iconos más grandes en PC
+    height: '56px',
+  }
 }));
 
 const StatValue = styled(Typography)(({ theme }) => ({
-  fontSize: '2rem',
+  fontSize: '1.5rem',
   fontWeight: 700,
   lineHeight: 1,
   marginBottom: '4px',
-  [theme.breakpoints.down('md')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     fontSize: '1.75rem',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '2rem',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    fontSize: '2.5rem', // Valores más grandes en PC
   }
 }));
 
 const StatLabel = styled(Typography)(({ theme }) => ({
-  fontSize: '0.875rem',
+  fontSize: '0.8rem',
   fontWeight: 500,
   opacity: 0.8,
-  [theme.breakpoints.down('md')]: {
-    fontSize: '0.8rem',
+  lineHeight: 1.2,
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.875rem',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    fontSize: '1rem', // Texto más grande en PC
   }
 }));
 
-const StatTrend = styled(Box)({
+const StatTrend = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
@@ -379,62 +514,159 @@ const StatTrend = styled(Box)({
   borderRadius: '6px',
   background: 'rgba(255, 255, 255, 0.15)',
   width: 'fit-content',
-});
-
-const MainGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: '2fr 1fr',
-  gap: '32px',
-  marginBottom: '32px',
-  [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: '1fr',
-    gap: '24px',
+  fontSize: '0.75rem',
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.875rem',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    marginTop: '12px', // Más espacio en PC
+    padding: '6px 12px', // Más padding en PC
   }
 }));
 
-const ActivitySection = styled(Box)({
-  marginBottom: '32px',
-});
+const MainGrid = styled(Grid)(({ theme }) => ({
+  marginBottom: '24px',
+  
+  [theme.breakpoints.up('sm')]: {
+    marginBottom: '28px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    marginBottom: '32px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    marginBottom: '36px', // Más espacio en PC
+  }
+}));
 
-const SectionTitle = styled(Typography)({
-  fontSize: '1.5rem',
+const ActivitySection = styled(Box)(({ theme }) => ({
+  marginBottom: '24px',
+  
+  [theme.breakpoints.up('sm')]: {
+    marginBottom: '28px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    marginBottom: '32px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    marginBottom: '36px', // Más espacio en PC
+  }
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.25rem',
   fontWeight: 600,
   color: '#010326',
-  marginBottom: '16px',
+  marginBottom: '12px',
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-});
+  gap: '6px',
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '1.35rem',
+    marginBottom: '16px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1.5rem',
+    gap: '8px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    fontSize: '1.75rem', // Títulos más grandes en PC
+    marginBottom: '20px',
+  }
+}));
 
 const ChartControlsBar = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: '24px',
-  padding: '16px 24px',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: '12px',
+  marginBottom: '20px',
+  padding: '16px',
   background: '#f8fafc',
-  borderRadius: '12px',
+  borderRadius: '10px',
   border: `1px solid ${alpha('#1F64BF', 0.1)}`,
-  [theme.breakpoints.down('md')]: {
-    flexDirection: 'column',
-    gap: '16px',
-    alignItems: 'stretch',
+  
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px 20px',
+    marginBottom: '24px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '20px 24px',
+    borderRadius: '12px',
+    marginBottom: '28px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '24px 32px', // Más padding en PC
+    marginBottom: '32px',
   }
 }));
 
 const ChartCard = styled(ModernCard)(({ theme, visible }) => ({
-  padding: '24px',
-  height: '450px',
+  padding: '16px',
+  height: '320px',
   position: 'relative',
-  display: visible ? 'block' : 'none',
-  [theme.breakpoints.down('md')]: {
-    height: '400px',
+  display: visible ? 'flex' : 'none',
+  flexDirection: 'column',
+  
+  [theme.breakpoints.up('sm')]: {
     padding: '20px',
+    height: '350px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '24px',
+    height: '380px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '28px', // Más padding en PC
+    height: '420px', // Gráficas más altas en PC
   }
+}));
+
+const ChartContainer = styled(Box)(({ theme }) => ({
+  height: '250px',
+  position: 'relative',
+  flex: 1,
+  
+  [theme.breakpoints.up('sm')]: {
+    height: '280px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    height: '300px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    height: '340px', // Contenedor más alto en PC
+  }
+}));
+
+const ChartsGrid = styled(Grid)(({ theme }) => ({
+  minHeight: '300px',
 }));
 
 // ================ COMPONENTE PRINCIPAL ================
 const Dashboard = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isLargeDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Estados para gráficas dinámicas
@@ -442,13 +674,11 @@ const Dashboard = () => {
     products_overview: true,
     user_stats: true,
     employee_distribution: true,
-    design_status: false,
-    products_performance: false,
-    design_trends: false
+    design_status: false
   });
   
   const [chartSettingsOpen, setChartSettingsOpen] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(30); // segundos
+  const [refreshInterval, setRefreshInterval] = useState(30);
   const [autoRefresh, setAutoRefresh] = useState(false);
 
   // Hooks de datos reales
@@ -518,8 +748,8 @@ const Dashboard = () => {
     gray: '#64748b',
   };
 
-  // Configuración base para gráficas
-  const chartOptions = {
+  // Configuración base para gráficas - responsive
+  const getChartOptions = () => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -528,10 +758,10 @@ const Dashboard = () => {
         position: 'top',
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: isMobile ? 10 : 15,
           font: {
             family: 'Inter',
-            size: 12,
+            size: isMobile ? 10 : 12,
             weight: '600'
           }
         }
@@ -542,23 +772,46 @@ const Dashboard = () => {
         bodyColor: colors.white,
         borderColor: colors.primary,
         borderWidth: 1,
-        cornerRadius: 12,
+        cornerRadius: 8,
         titleFont: {
           family: 'Inter',
-          size: 14,
+          size: isMobile ? 12 : 14,
           weight: '600'
         },
         bodyFont: {
           family: 'Inter',
-          size: 12
+          size: isMobile ? 10 : 12
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: alpha(colors.primary, 0.1)
+        },
+        ticks: {
+          color: colors.gray,
+          font: {
+            size: isMobile ? 9 : 11
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: colors.gray,
+          font: {
+            size: isMobile ? 9 : 11
+          }
         }
       }
     }
-  };
+  });
 
   // ================ FUNCIONES DE DATOS ================
-
-  // Obtener estadísticas principales del dashboard
   const getDashboardStats = () => {
     const productStats = getProductStats();
     const userStats = getUserStats();
@@ -609,24 +862,21 @@ const Dashboard = () => {
     ];
   };
 
-  // ================ GENERADORES DE DATOS PARA GRÁFICAS ================
-
-  // Vista general de productos
+  // Generadores de datos
   const getProductsOverviewData = () => {
     const stats = getProductStats();
     return {
-      labels: ['Productos Activos', 'Productos Inactivos'],
+      labels: ['Activos', 'Inactivos'],
       datasets: [{
         data: [stats.active, stats.inactive],
         backgroundColor: [colors.primary, colors.gray],
         borderWidth: 0,
-        hoverBorderWidth: 3,
+        hoverBorderWidth: 2,
         hoverBorderColor: colors.white
       }]
     };
   };
 
-  // Estadísticas de usuarios
   const getUserStatsData = () => {
     const stats = getUserStats();
     return {
@@ -642,14 +892,13 @@ const Dashboard = () => {
           alpha(colors.primary, 0.6)
         ],
         borderColor: colors.white,
-        borderWidth: 2,
-        borderRadius: 8,
+        borderWidth: 1,
+        borderRadius: 6,
         borderSkipped: false,
       }]
     };
   };
 
-  // Distribución de empleados
   const getEmployeeDistributionData = () => {
     const stats = getEmployeeStats();
     const roles = stats.roles || {};
@@ -676,7 +925,6 @@ const Dashboard = () => {
     };
   };
 
-  // Estados de diseños
   const getDesignStatusData = () => {
     const stats = getDesignStats();
     return {
@@ -691,65 +939,8 @@ const Dashboard = () => {
           colors.dark,
           alpha(colors.primary, 0.4)
         ],
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: colors.white
-      }]
-    };
-  };
-
-  // Rendimiento de productos (simulado - los hooks reales no tienen datos históricos)
-  const getProductsPerformanceData = () => {
-    const stats = getProductStats();
-    const topProducts = stats.topProducts || [];
-    
-    return {
-      labels: topProducts.slice(0, 5).map(p => p.name || `Producto ${p.id}`),
-      datasets: [
-        {
-          label: 'Vistas',
-          data: topProducts.slice(0, 5).map(p => p.totalViews || Math.floor(Math.random() * 100)),
-          borderColor: colors.primary,
-          backgroundColor: alpha(colors.primary, 0.1),
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-        },
-        {
-          label: 'Pedidos',
-          data: topProducts.slice(0, 5).map(p => p.totalOrders || Math.floor(Math.random() * 20)),
-          borderColor: colors.secondary,
-          backgroundColor: alpha(colors.secondary, 0.1),
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-        }
-      ]
-    };
-  };
-
-  // Tendencias de diseños (simulado)
-  const getDesignTrendsData = () => {
-    const last7Days = Array.from({length: 7}, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6-i));
-      return date.toLocaleDateString('es-ES', { weekday: 'short' });
-    });
-
-    return {
-      labels: last7Days,
-      datasets: [{
-        label: 'Nuevos Diseños',
-        data: Array.from({length: 7}, () => Math.floor(Math.random() * 10) + 1),
-        borderColor: colors.accent,
-        backgroundColor: alpha(colors.accent, 0.1),
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: colors.accent,
-        pointBorderColor: colors.white,
-        pointBorderWidth: 3,
-        pointRadius: 6,
-        pointHoverRadius: 8,
       }]
     };
   };
@@ -761,25 +952,40 @@ const Dashboard = () => {
       onClose={() => setChartSettingsOpen(false)}
       maxWidth="sm"
       fullWidth
-      style={{ zIndex: 9999 }} // Z-index alto para estar por encima del editor
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          zIndex: 10000 // Z-index adicional en el paper
+          borderRadius: isMobile ? 0 : '12px',
+          m: isMobile ? 0 : 2
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Gear size={24} />
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1,
+        fontSize: isMobile ? '1.1rem' : '1.25rem',
+        padding: isMobile ? '16px' : '24px 24px 16px'
+      }}>
+        <Gear size={isMobile ? 20 : 24} />
         Configuración de Gráficas
         <Box sx={{ flex: 1 }} />
-        <IconButton onClick={() => setChartSettingsOpen(false)}>
-          <X size={20} />
+        <IconButton 
+          onClick={() => setChartSettingsOpen(false)}
+          size={isMobile ? 'small' : 'medium'}
+        >
+          <X size={isMobile ? 18 : 20} />
         </IconButton>
       </DialogTitle>
       
-      <DialogContent>
+      <DialogContent sx={{ 
+        padding: isMobile ? '8px 16px' : '16px 24px'
+      }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ 
+            mb: 2,
+            fontSize: isMobile ? '1rem' : '1.1rem'
+          }}>
             Gráficas Visibles
           </Typography>
           
@@ -794,14 +1000,21 @@ const Dashboard = () => {
                     [chart.id]: e.target.checked
                   }))}
                   color="primary"
+                  size={isMobile ? 'small' : 'medium'}
                 />
               }
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <chart.icon size={20} />
+                  <chart.icon size={isMobile ? 18 : 20} />
                   <Box>
-                    <Typography variant="body1">{chart.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="body1" sx={{ 
+                      fontSize: isMobile ? '0.875rem' : '1rem'
+                    }}>
+                      {chart.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ 
+                      fontSize: isMobile ? '0.75rem' : '0.8rem'
+                    }}>
                       {chart.description}
                     </Typography>
                   </Box>
@@ -821,25 +1034,26 @@ const Dashboard = () => {
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 color="primary"
+                size={isMobile ? 'small' : 'medium'}
               />
             }
-            label="Actualización Automática"
+            label={
+              <Typography sx={{ 
+                fontSize: isMobile ? '0.875rem' : '1rem'
+              }}>
+                Actualización Automática
+              </Typography>
+            }
             sx={{ mb: 2 }}
           />
           
           {autoRefresh && (
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Intervalo de Actualización</InputLabel>
+            <FormControl size="small" sx={{ minWidth: 120, width: '100%' }}>
+              <InputLabel>Intervalo</InputLabel>
               <Select
                 value={refreshInterval}
-                label="Intervalo de Actualización"
+                label="Intervalo"
                 onChange={(e) => setRefreshInterval(e.target.value)}
-                MenuProps={{
-                  style: { zIndex: 10000 }, // Z-index alto para el menú desplegable
-                  PaperProps: {
-                    style: { zIndex: 10001 } // Z-index adicional en el paper del menú
-                  }
-                }}
               >
                 <MenuItem value={15}>15 segundos</MenuItem>
                 <MenuItem value={30}>30 segundos</MenuItem>
@@ -851,8 +1065,14 @@ const Dashboard = () => {
         </Box>
       </DialogContent>
       
-      <DialogActions>
-        <Button onClick={() => setChartSettingsOpen(false)}>
+      <DialogActions sx={{ 
+        padding: isMobile ? '8px 16px 16px' : '8px 24px 16px'
+      }}>
+        <Button 
+          onClick={() => setChartSettingsOpen(false)}
+          fullWidth={isMobile}
+          size={isMobile ? 'large' : 'medium'}
+        >
           Cerrar
         </Button>
       </DialogActions>
@@ -926,24 +1146,30 @@ const Dashboard = () => {
               <WelcomeSubtitle>
                 Panel de control de Diambars Sublimado - {visibleChartsCount} gráfica{visibleChartsCount !== 1 ? 's' : ''} activa{visibleChartsCount !== 1 ? 's' : ''}
               </WelcomeSubtitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, opacity: 0.8 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Clock size={16} />
-                  <Typography variant="body2">
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                opacity: 0.8,
+                flexWrap: 'wrap'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Clock size={14} />
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                     {formatTime(currentTime)}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Calendar size={16} />
-                  <Typography variant="body2">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Calendar size={14} />
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                     {currentTime.toLocaleDateString('es-ES')}
                   </Typography>
                 </Box>
                 {autoRefresh && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Pulse size={16} />
-                    <Typography variant="body2">
-                      Auto-refresh: {refreshInterval}s
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Pulse size={14} />
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                      Auto: {refreshInterval}s
                     </Typography>
                   </Box>
                 )}
@@ -952,68 +1178,73 @@ const Dashboard = () => {
             
             <QuickActionsContainer>
               <QuickActionButton
-                startIcon={<Plus size={18} />}
+                startIcon={<Plus size={16} />}
                 onClick={() => handleQuickAction('create_product')}
               >
-                Crear Producto
+                {isMobile ? 'Crear' : 'Crear Producto'}
               </QuickActionButton>
               <QuickActionButton
-                startIcon={<Gear size={18} />}
+                startIcon={<Gear size={16} />}
                 onClick={() => handleQuickAction('view_analytics')}
               >
-                Configurar Gráficas
+                {isMobile ? 'Configurar' : 'Configurar Gráficas'}
               </QuickActionButton>
             </QuickActionsContainer>
           </WelcomeContent>
         </WelcomeCard>
 
         {/* Stats Cards */}
-        <StatsGrid>
+        <StatsGrid container spacing={2}>
           {getDashboardStats().map((stat) => (
-            <StatCard key={stat.id} variant={stat.variant}>
-              <StatHeader>
-                <Box>
-                  <StatValue>
-                    {stat.loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      stat.value
-                    )}
-                  </StatValue>
-                  <StatLabel>
-                    {stat.title}
-                  </StatLabel>
-                </Box>
-                <StatIconContainer variant={stat.variant}>
-                  <stat.icon size={24} weight="duotone" />
-                </StatIconContainer>
-              </StatHeader>
-              <StatTrend trend={stat.trend}>
-                <TrendUp size={12} weight="bold" />
-                <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                  {stat.change}
-                </Typography>
-              </StatTrend>
-            </StatCard>
+            <Grid item xs={6} sm={6} md={3} key={stat.id}>
+              <StatCard variant={stat.variant}>
+                <StatHeader>
+                  <Box sx={{ flex: 1 }}>
+                    <StatValue>
+                      {stat.loading ? (
+                        <CircularProgress 
+                          size={20} 
+                          color="inherit" 
+                        />
+                      ) : (
+                        stat.value
+                      )}
+                    </StatValue>
+                    <StatLabel>
+                      {stat.title}
+                    </StatLabel>
+                  </Box>
+                  <StatIconContainer variant={stat.variant}>
+                    <stat.icon size={isMobile ? 20 : 24} weight="duotone" />
+                  </StatIconContainer>
+                </StatHeader>
+                <StatTrend trend={stat.trend}>
+                  <TrendUp size={12} weight="bold" />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    {stat.change}
+                  </Typography>
+                </StatTrend>
+              </StatCard>
+            </Grid>
           ))}
         </StatsGrid>
 
-        <MainGrid>
+        {/* Main Grid - Info Cards */}
+        <MainGrid container spacing={2}>
           {/* Resumen rápido con errores */}
-          <Box>
-            <ModernCard sx={{ p: 3, mb: 3 }}>
-              <SectionTitle sx={{ mb: 2, fontSize: '1.25rem' }}>
+          <Grid item xs={12} md={8}>
+            <ModernCard sx={{ p: 2, height: '100%' }}>
+              <SectionTitle>
                 <Target size={20} weight="duotone" />
                 Estado del Sistema
               </SectionTitle>
               
-              {/* Mostrar errores si los hay */}
               {(productsError || usersError || employeesError || designsError) && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
                     Algunos servicios tienen problemas:
                   </Typography>
-                  <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                  <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '0.75rem' }}>
                     {productsError && <li>Productos: {productsError}</li>}
                     {usersError && <li>Usuarios: {usersError}</li>}
                     {employeesError && <li>Empleados: {employeesError}</li>}
@@ -1022,12 +1253,12 @@ const Dashboard = () => {
                 </Alert>
               )}
 
-              <Box sx={{ mb: 3 }}>
+              <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
                     Servicios Operativos
                   </Typography>
-                  <Typography variant="body2" sx={{ color: colors.accent, fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ color: colors.accent, fontWeight: 600, fontSize: '0.8rem' }}>
                     {4 - [productsError, usersError, employeesError, designsError].filter(Boolean).length}/4
                   </Typography>
                 </Box>
@@ -1035,12 +1266,12 @@ const Dashboard = () => {
                   variant="determinate"
                   value={(4 - [productsError, usersError, employeesError, designsError].filter(Boolean).length) * 25}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                    height: 6,
+                    borderRadius: 3,
                     backgroundColor: alpha(colors.accent, 0.1),
                     '& .MuiLinearProgress-bar': {
                       backgroundColor: colors.accent,
-                      borderRadius: 4,
+                      borderRadius: 3,
                     },
                   }}
                 />
@@ -1052,20 +1283,20 @@ const Dashboard = () => {
                 <Box sx={{
                   width: 40,
                   height: 40,
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   background: alpha(colors.accent, 0.1),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: colors.accent
                 }}>
-                  <Lightning size={20} weight="duotone" />
+                  <Lightning size={18} weight="duotone" />
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.8rem' }}>
                     Productos más Populares
                   </Typography>
-                  <Typography variant="body2" sx={{ color: colors.gray }}>
+                  <Typography variant="body2" sx={{ color: colors.gray, fontSize: '0.75rem' }}>
                     {getProductStats().topProducts?.[0]?.name || 'Sin datos disponibles'}
                   </Typography>
                 </Box>
@@ -1075,43 +1306,46 @@ const Dashboard = () => {
                 <Box sx={{
                   width: 40,
                   height: 40,
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   background: alpha(colors.primary, 0.1),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: colors.primary
                 }}>
-                  <Coffee size={20} weight="duotone" />
+                  <Coffee size={18} weight="duotone" />
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.8rem' }}>
                     Última Actualización
                   </Typography>
-                  <Typography variant="body2" sx={{ color: colors.gray }}>
+                  <Typography variant="body2" sx={{ color: colors.gray, fontSize: '0.75rem' }}>
                     {formatTime(currentTime)}
                   </Typography>
                 </Box>
               </Box>
             </ModernCard>
-          </Box>
+          </Grid>
 
           {/* Controles de gráficas */}
-          <Box>
-            <ModernCard sx={{ p: 3 }}>
-              <SectionTitle sx={{ mb: 2, fontSize: '1.25rem' }}>
+          <Grid item xs={12} md={4}>
+            <ModernCard sx={{ p: 2, height: '100%' }}>
+              <SectionTitle>
                 <ChartLine size={20} weight="duotone" />
                 Control de Gráficas
               </SectionTitle>
               
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 <Button
                   variant="outlined"
-                  startIcon={<Gear size={18} />}
+                  startIcon={<Gear size={16} />}
                   onClick={() => setChartSettingsOpen(true)}
+                  size="small"
+                  fullWidth
                   sx={{
                     borderColor: colors.primary,
                     color: colors.primary,
+                    fontSize: '0.8rem',
                     '&:hover': {
                       borderColor: colors.secondary,
                       backgroundColor: alpha(colors.primary, 0.05),
@@ -1123,11 +1357,14 @@ const Dashboard = () => {
                 
                 <Button
                   variant="outlined"
-                  startIcon={<ArrowRight size={18} />}
+                  startIcon={<ArrowRight size={16} />}
                   onClick={handleRefreshAll}
+                  size="small"
+                  fullWidth
                   sx={{
                     borderColor: colors.secondary,
                     color: colors.secondary,
+                    fontSize: '0.8rem',
                     '&:hover': {
                       borderColor: colors.accent,
                       backgroundColor: alpha(colors.secondary, 0.05),
@@ -1138,22 +1375,24 @@ const Dashboard = () => {
                 </Button>
 
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.8rem' }}>
                     Gráficas Activas
                   </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {Object.entries(CHART_TYPES)
                       .filter(([id]) => visibleCharts[id])
                       .map(([id, chart]) => (
                         <Chip
                           key={id}
-                          icon={<chart.icon size={16} />}
-                          label={chart.name}
+                          icon={<chart.icon size={14} />}
+                          label={isMobile ? chart.name.split(' ')[0] : chart.name}
                           size="small"
                           sx={{
                             background: alpha(colors.primary, 0.1),
                             color: colors.primary,
-                            fontWeight: 600
+                            fontWeight: 600,
+                            fontSize: '0.7rem',
+                            height: '24px'
                           }}
                         />
                       ))
@@ -1162,16 +1401,16 @@ const Dashboard = () => {
                 </Box>
               </Box>
             </ModernCard>
-          </Box>
+          </Grid>
         </MainGrid>
 
         {/* Charts Section */}
         <ActivitySection>
           <ChartControlsBar>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <SectionTitle sx={{ mb: 0 }}>
-                <ChartLine size={24} weight="duotone" />
-                Analíticas Dinámicas
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <SectionTitle sx={{ mb: 0, fontSize: '1.1rem' }}>
+                <ChartLine size={20} weight="duotone" />
+                {isMobile ? 'Analíticas' : 'Analíticas Dinámicas'}
               </SectionTitle>
               
               <Chip
@@ -1180,17 +1419,19 @@ const Dashboard = () => {
                 sx={{
                   background: colors.accent,
                   color: colors.white,
-                  fontWeight: 600
+                  fontWeight: 600,
+                  fontSize: '0.7rem',
+                  height: '24px'
                 }}
               />
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {autoRefresh && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Pulse size={16} style={{ color: colors.accent }} />
-                  <Typography variant="body2" sx={{ color: colors.accent }}>
-                    Auto-refresh cada {refreshInterval}s
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {autoRefresh && !isMobile && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Pulse size={14} style={{ color: colors.accent }} />
+                  <Typography variant="body2" sx={{ color: colors.accent, fontSize: '0.8rem' }}>
+                    Auto: {refreshInterval}s
                   </Typography>
                 </Box>
               )}
@@ -1198,285 +1439,175 @@ const Dashboard = () => {
               <Tooltip title="Configurar gráficas">
                 <IconButton
                   onClick={() => setChartSettingsOpen(true)}
+                  size="small"
                   sx={{ 
                     color: colors.primary,
                     '&:hover': { backgroundColor: alpha(colors.primary, 0.1) }
                   }}
                 >
-                  <Gear size={20} />
+                  <Gear size={18} />
                 </IconButton>
               </Tooltip>
             </Box>
           </ChartControlsBar>
           
           {/* Contenedor de gráficas dinámicas */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { 
-              xs: '1fr', 
-              md: 'repeat(2, 1fr)',
-              lg: visibleChartsCount <= 2 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'
-            }, 
-            gap: 3,
-            minHeight: visibleChartsCount === 0 ? '300px' : 'auto'
-          }}>
+          <ChartsGrid container spacing={2}>
             {visibleChartsCount === 0 ? (
-              <Box sx={{ 
-                gridColumn: '1 / -1',
-                display: 'flex', 
-                flexDirection: 'column',
-                alignItems: 'center', 
-                justifyContent: 'center',
-                textAlign: 'center',
-                py: 6
-              }}>
-                <EyeSlash size={48} style={{ color: colors.gray, marginBottom: '16px' }} />
-                <Typography variant="h6" sx={{ color: colors.dark, mb: 1 }}>
-                  No hay gráficas seleccionadas
-                </Typography>
-                <Typography variant="body2" sx={{ color: colors.gray, mb: 3 }}>
-                  Selecciona al menos una gráfica para visualizar los datos
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Gear size={18} />}
-                  onClick={() => setChartSettingsOpen(true)}
-                  sx={{
-                    backgroundColor: colors.primary,
-                    '&:hover': {
-                      backgroundColor: colors.secondary,
-                    }
-                  }}
-                >
-                  Configurar Gráficas
-                </Button>
-              </Box>
+              <Grid item xs={12}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  py: 4,
+                  px: 2
+                }}>
+                  <EyeSlash size={40} style={{ color: colors.gray, marginBottom: '12px' }} />
+                  <Typography variant="h6" sx={{ color: colors.dark, mb: 1, fontSize: '1.1rem' }}>
+                    No hay gráficas seleccionadas
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: colors.gray, mb: 2, fontSize: '0.8rem' }}>
+                    Selecciona al menos una gráfica para visualizar los datos
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<Gear size={16} />}
+                    onClick={() => setChartSettingsOpen(true)}
+                    size="small"
+                    sx={{
+                      backgroundColor: colors.primary,
+                      fontSize: '0.8rem',
+                      '&:hover': {
+                        backgroundColor: colors.secondary,
+                      }
+                    }}
+                  >
+                    Configurar Gráficas
+                  </Button>
+                </Box>
+              </Grid>
             ) : (
               <>
                 {/* Vista General de Productos */}
-                <ChartCard visible={visibleCharts.products_overview}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Package size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Productos
-                      </Typography>
-                    </Box>
-                    {productsLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {productsError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar datos de productos
-                        </Typography>
+                {visibleCharts.products_overview && (
+                  <Grid item xs={12} sm={6} lg={3}>
+                    <ChartCard visible={true}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Package size={18} />
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>
+                            Productos
+                          </Typography>
+                        </Box>
+                        {productsLoading && <CircularProgress size={16} />}
                       </Box>
-                    ) : (
-                      <Doughnut data={getProductsOverviewData()} options={chartOptions} />
-                    )}
-                  </Box>
-                </ChartCard>
+                      <ChartContainer>
+                        {productsError ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
+                            <Warning size={24} style={{ color: colors.gray, marginBottom: '8px' }} />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              Error al cargar datos
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Doughnut data={getProductsOverviewData()} options={getChartOptions()} />
+                        )}
+                      </ChartContainer>
+                    </ChartCard>
+                  </Grid>
+                )}
 
                 {/* Estadísticas de Usuarios */}
-                <ChartCard visible={visibleCharts.user_stats}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Users size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Usuarios
-                      </Typography>
-                    </Box>
-                    {usersLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {usersError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar datos de usuarios
-                        </Typography>
+                {visibleCharts.user_stats && (
+                  <Grid item xs={12} sm={6} lg={3}>
+                    <ChartCard visible={true}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Users size={18} />
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>
+                            Usuarios
+                          </Typography>
+                        </Box>
+                        {usersLoading && <CircularProgress size={16} />}
                       </Box>
-                    ) : (
-                      <Bar 
-                        data={getUserStatsData()} 
-                        options={{
-                          ...chartOptions,
-                          scales: {
-                            y: {
-                              beginAtZero: true,
-                              grid: {
-                                color: alpha(colors.primary, 0.1)
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            },
-                            x: {
-                              grid: {
-                                display: false
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            }
-                          }
-                        }} 
-                      />
-                    )}
-                  </Box>
-                </ChartCard>
+                      <ChartContainer>
+                        {usersError ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
+                            <Warning size={24} style={{ color: colors.gray, marginBottom: '8px' }} />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              Error al cargar datos
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Bar data={getUserStatsData()} options={getChartOptions()} />
+                        )}
+                      </ChartContainer>
+                    </ChartCard>
+                  </Grid>
+                )}
 
                 {/* Distribución de Empleados */}
-                <ChartCard visible={visibleCharts.employee_distribution}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <User size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Empleados por Rol
-                      </Typography>
-                    </Box>
-                    {employeesLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {employeesError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar datos de empleados
-                        </Typography>
+                {visibleCharts.employee_distribution && (
+                  <Grid item xs={12} sm={6} lg={3}>
+                    <ChartCard visible={true}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <User size={18} />
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>
+                            Empleados
+                          </Typography>
+                        </Box>
+                        {employeesLoading && <CircularProgress size={16} />}
                       </Box>
-                    ) : (
-                      <Pie data={getEmployeeDistributionData()} options={chartOptions} />
-                    )}
-                  </Box>
-                </ChartCard>
+                      <ChartContainer>
+                        {employeesError ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
+                            <Warning size={24} style={{ color: colors.gray, marginBottom: '8px' }} />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              Error al cargar datos
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Pie data={getEmployeeDistributionData()} options={getChartOptions()} />
+                        )}
+                      </ChartContainer>
+                    </ChartCard>
+                  </Grid>
+                )}
 
                 {/* Estados de Diseños */}
-                <ChartCard visible={visibleCharts.design_status}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ChartPie size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Estados de Diseños
-                      </Typography>
-                    </Box>
-                    {designsLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {designsError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar datos de diseños
-                        </Typography>
+                {visibleCharts.design_status && (
+                  <Grid item xs={12} sm={6} lg={3}>
+                    <ChartCard visible={true}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <ChartPie size={18} />
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>
+                            Diseños
+                          </Typography>
+                        </Box>
+                        {designsLoading && <CircularProgress size={16} />}
                       </Box>
-                    ) : (
-                      <PolarArea data={getDesignStatusData()} options={chartOptions} />
-                    )}
-                  </Box>
-                </ChartCard>
-
-                {/* Rendimiento de Productos */}
-                <ChartCard visible={visibleCharts.products_performance}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <TrendUp size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Rendimiento de Productos
-                      </Typography>
-                    </Box>
-                    {productsLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {productsError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar datos de rendimiento
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Line 
-                        data={getProductsPerformanceData()} 
-                        options={{
-                          ...chartOptions,
-                          scales: {
-                            y: {
-                              beginAtZero: true,
-                              grid: {
-                                color: alpha(colors.primary, 0.1)
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            },
-                            x: {
-                              grid: {
-                                display: false
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            }
-                          }
-                        }} 
-                      />
-                    )}
-                  </Box>
-                </ChartCard>
-
-                {/* Tendencias de Diseños */}
-                <ChartCard visible={visibleCharts.design_trends}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ChartLineUp size={20} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark }}>
-                        Tendencias de Diseños
-                      </Typography>
-                    </Box>
-                    {designsLoading && <CircularProgress size={20} />}
-                  </Box>
-                  <Box sx={{ height: '350px', position: 'relative' }}>
-                    {designsError ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
-                        <Warning size={32} style={{ color: colors.gray, marginBottom: '8px' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          Error al cargar tendencias
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Line 
-                        data={getDesignTrendsData()} 
-                        options={{
-                          ...chartOptions,
-                          scales: {
-                            y: {
-                              beginAtZero: true,
-                              grid: {
-                                color: alpha(colors.primary, 0.1)
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            },
-                            x: {
-                              grid: {
-                                display: false
-                              },
-                              ticks: {
-                                color: colors.gray
-                              }
-                            }
-                          }
-                        }} 
-                      />
-                    )}
-                  </Box>
-                </ChartCard>
+                      <ChartContainer>
+                        {designsError ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column' }}>
+                            <Warning size={24} style={{ color: colors.gray, marginBottom: '8px' }} />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              Error al cargar datos
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <PolarArea data={getDesignStatusData()} options={getChartOptions()} />
+                        )}
+                      </ChartContainer>
+                    </ChartCard>
+                  </Grid>
+                )}
               </>
             )}
-          </Box>
+          </ChartsGrid>
         </ActivitySection>
 
         {/* Dialog de configuración */}
