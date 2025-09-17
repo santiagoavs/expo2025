@@ -32,22 +32,22 @@ import {
   Plus,
   Funnel,
   MagnifyingGlass,
-  ArrowsClockwise,
-  GridNine,
+  ArrowClockwise,
+  SquaresFour as GridIcon,
   Broom,
   Star,
   ChartLine,
   Export,
-  Map as MapIcon,
+  MapPin as MapIcon,
   Phone,
-  Navigation
+  Compass
 } from '@phosphor-icons/react';
 
 import useAddresses from '../../hooks/useAddresses';
 import useUsers from '../../hooks/useUsers';
-import AddressTable from '../../components/AddressManagement/AddressTable';
-import AddressFormModal from '../../components/AddressManagement/AddressForm/AddressFormModal';
-import AddressMap from '../../components/AddressManagement/AddressMap/AddressMap';
+import AddressTable from '../../pages/AddressManagement/AddressTable/AddressTable';
+import AddressFormModal from '../../pages/AddressManagement/AddressFormModal/AddressFormModal';
+import AddressMap from '../../pages/AddressManagement/AddressMap/AddressMap';
 
 // Configuración global de SweetAlert2
 Swal.mixin({
@@ -871,7 +871,7 @@ const AddressManagement = () => {
         value: Object.keys(calculatedStats.byDepartment).length,
         change: "De 14 departamentos",
         trend: "up",
-        icon: Navigation,
+        icon: Compass,
         variant: "secondary"
       }
     ];
@@ -1138,7 +1138,7 @@ const AddressManagement = () => {
                 disabled={loading}
                 title="Refrescar direcciones"
               >
-                <ArrowsClockwise size={20} weight="bold" />
+                <ArrowClockwise size={20} weight="bold" />
               </AddressSecondaryActionButton>
 
               <AddressSecondaryActionButton
@@ -1259,7 +1259,7 @@ const AddressManagement = () => {
               </AddressFilterChip>
 
               <AddressFilterChip active={selectedDepartment !== ''}>
-                <Navigation size={16} weight="bold" />
+                <Compass size={16} weight="bold" />
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <Select
                     value={selectedDepartment}
@@ -1379,7 +1379,7 @@ const AddressManagement = () => {
         <AddressContentSection>
           <AddressSectionHeader>
             <AddressSectionTitle>
-              <GridNine size={24} weight="duotone" />
+              <GridIcon size={24} weight="duotone" />
               Direcciones
               <Chip 
                 label={`${addresses.length}${pagination.totalItems !== addresses.length ? ` de ${pagination.totalItems}` : ''}`}
@@ -1398,7 +1398,7 @@ const AddressManagement = () => {
               <AddressViewToggleButton
                 active={viewMode === 'table'}
                 onClick={() => setViewMode('table')}
-                startIcon={<GridNine size={16} weight="bold" />}
+                startIcon={<GridIcon size={16} weight="bold" />}
               >
                 <Box sx={{ display: { xs: 'inline', sm: 'none' } }}>Tabla</Box>
               </AddressViewToggleButton>

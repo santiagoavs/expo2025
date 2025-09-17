@@ -1,7 +1,7 @@
 // src/hooks/useAddresses.js
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import addressService from '../api/addressService';
+import addressService from '../api/AddressService';
 
 const handleError = (error, defaultMessage) => {
   const errorData = error.response?.data || {};

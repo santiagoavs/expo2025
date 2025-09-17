@@ -829,6 +829,12 @@ const DROPDOWN_MENUS = {
         description: "Organización de productos"
       },
       {
+        to: "/address-management",
+        label: "Direcciones",
+        icon: <MapPin size={18} weight="duotone" />,
+        description: "Gestión de direcciones de envío"
+      },
+      {
         to: "/ReviewsManagement",
         label: "Reseñas",
         icon: <Star size={18} weight="duotone" />,

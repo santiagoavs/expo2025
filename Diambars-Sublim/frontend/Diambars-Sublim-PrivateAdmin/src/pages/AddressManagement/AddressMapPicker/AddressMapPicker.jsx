@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import {
   MapPin as LocationIcon,
-  NavigationArrow as CenterIcon,
+  Compass as CenterIcon,
   MagnifyingGlass as SearchIcon,
   Target as CrosshairIcon,
   Check as ConfirmIcon,

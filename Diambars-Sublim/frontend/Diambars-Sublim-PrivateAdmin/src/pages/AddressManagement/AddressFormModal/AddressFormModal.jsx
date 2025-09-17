@@ -41,12 +41,12 @@ import {
   ArrowRight as NextIcon,
   FloppyDisk as SaveIcon,
   MagnifyingGlass as SearchIcon,
-  Navigation as CoordinatesIcon
+  Compass as CoordinatesIcon
 } from '@phosphor-icons/react';
 
 import useAddressValidation from '../../../hooks/useAddressValidation';
 import useGeolocation from '../../../hooks/useGeolocation';
-import AddressMapPicker from '../AddressMap/AddressMapPicker';
+import AddressMapPicker from '../AddressMapPicker/AddressMapPicker';
 
 // ================ ESTILOS STYLED COMPONENTS ================
 const AddressModalDialog = styled(Dialog)(({ theme }) => ({

@@ -25,20 +25,19 @@ import {
   useTheme
 } from '@mui/material';
 import {
-  PencilSimple as EditIcon,
+  Pencil as EditIcon,
   Trash as DeleteIcon,
   Star as StarIcon,
-  StarFill as StarFillIcon,
-  DotsThreeVertical as MoreIcon,
+  DotsThree as MoreIcon,
   MapPin as LocationIcon,
   Phone as PhoneIcon,
   User as UserIcon,
   House as HomeIcon,
-  Navigation as DepartmentIcon,
+  Compass as DepartmentIcon,
   Check as CheckIcon,
   X as XIcon,
-  ArrowUp as SortUpIcon,
-  ArrowDown as SortDownIcon
+  CaretUp as SortUpIcon,
+  CaretDown as SortDownIcon
 } from '@phosphor-icons/react';
 
 // ================ ESTILOS STYLED COMPONENTS ================
@@ -689,7 +688,7 @@ const AddressTable = ({
                         <AddressUserName>{address.userName}</AddressUserName>
                         {address.isDefault && (
                           <AddressDefaultBadge>
-                            <StarFillIcon size={10} />
+                            <StarIcon size={10} weight="fill" />
                             Principal
                           </AddressDefaultBadge>
                         )}
