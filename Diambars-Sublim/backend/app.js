@@ -181,7 +181,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // ========== RUTAS DE AUTENTICACIÓN ==========
-app.use("/api/auth", authLimiter, jsonMiddleware, authRoutes);
+app.use("/api/auth", jsonMiddleware, authRoutes);
 
 // ========== RUTAS DE REGISTRO ==========
 app.use("/api/employees/register", jsonMiddleware, debugEmailValidation, registerEmployeesRoutes);
@@ -189,7 +189,7 @@ app.use("/api/users/register", jsonMiddleware, debugEmailValidation, registerUse
 
 // ========== RUTAS DE VERIFICACIÓN Y RECUPERACIÓN ==========
 app.use("/api/verify-email", jsonMiddleware, verifyEmailRoutes);
-app.use("/api/password-recovery", authLimiter, jsonMiddleware, passwordRecoveryRoutes);
+app.use("/api/password-recovery", jsonMiddleware, passwordRecoveryRoutes);
 
 // ========== RUTA DE CONTACTO ==========
 app.use("/api/contact", contactRoutes);
