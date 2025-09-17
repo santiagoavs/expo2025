@@ -47,6 +47,7 @@ const corsOptions = {
       "http://localhost:19000", // Expo
       "http://localhost:19001", // Expo
       "http://localhost:19002", // Expo
+      "https://diambars-sublim.vercel.app", // Vercel deployment
       process.env.FRONTEND_URL,
       process.env.MOBILE_URL
     ].filter(Boolean);
