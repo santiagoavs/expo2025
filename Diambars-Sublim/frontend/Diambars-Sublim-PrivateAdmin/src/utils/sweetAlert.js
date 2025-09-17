@@ -1,5 +1,19 @@
 import Swal from 'sweetalert2';
 
+// Configuración global de SweetAlert2 con z-index alto
+Swal.mixin({
+  customClass: {
+    container: 'swal-overlay-custom',
+    popup: 'swal-modal-custom'
+  },
+  didOpen: () => {
+    const container = document.querySelector('.swal-overlay-custom');
+    if (container) {
+      container.style.zIndex = '1500';
+    }
+  }
+});
+
 export const showSuccess = (title, text) => {
   return Swal.fire({
     icon: 'success',
