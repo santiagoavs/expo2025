@@ -9,8 +9,17 @@ const computeBaseURL = () => {
       return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
     }
   } catch (_) {}
-  // Por defecto, usar ruta relativa para aprovechar el proxy de Vite (/api -> https://expo2025-8bjn.onrender.com)
-  return '/api';
+  
+  // Detectar si estamos en producción o desarrollo
+  const isProduction = import.meta.env.PROD || import.meta.env.NODE_ENV === 'production';
+  
+  if (isProduction) {
+    // En producción, usar la URL completa del backend
+    return 'https://expo2025-8bjn.onrender.com/api';
+  } else {
+    // En desarrollo, usar ruta relativa para aprovechar el proxy de Vite
+    return '/api';
+  }
 };
 
 const apiClient = axios.create({

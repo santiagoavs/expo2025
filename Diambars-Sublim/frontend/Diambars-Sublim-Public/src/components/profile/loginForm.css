@@ -194,6 +194,7 @@
 
 .phone-wrapper {
     display: flex;
+  
     align-items: center;
     gap: 10px;
     width: 474px;
@@ -201,7 +202,6 @@
   
   .phone-wrapper span {
     padding: 12px;
-    margin-bottom: 1rem;
     color: #787878;
   }
 
@@ -216,7 +216,7 @@
 
 
 .telephone-input {
-    width: 350px !important;
+    width: 73% !important;
   }
 
 .telephone-input:focus {
@@ -427,90 +427,79 @@
 }
 
 @media (max-width: 768px) {
-  .input-group {
-    margin-bottom: 0.75rem;
+  .login-form-container {
+    width: 80%;
   }
-  
-  .form-error-message {
-    font-size: 0.8rem;
-    padding: 0.5rem 0.75rem;
+
+  .form-content-content input {
+    width: 95%;
   }
-  
-  .phone-wrapper span {
-    padding: 0.5rem;
-    font-size: 0.8rem;
-  }
-  
+
   .telephone-input {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .input-error {
-    font-size: 0.75rem;
-    padding: 3px 6px;
-  }
-  
-  .input-hint {
-    font-size: 0.7rem;
+    width: 74% !important;
+
   }
 
-  .form-content input {
-    width: 100%;
+  .main-button {
+    width: 101%;
+    margin: 0;
   }
 
-  .main-button,
   .google-button {
-    width: 100%;
+    width: 101%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  .telephone-input {
+    width: 75% !important;
+  }
+
+  .phone-wrapper {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .telephone-input {
+    width: 50% !important;
+  }
+
+  .phone-wrapper {
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 480px) {
   .login-form-container {
-    padding: 1.5rem;
-    margin-bottom: 80px;
-    width: 220px;
+    width: 76%;
   }
 
-  .login-form-container input {
-    width: 200px;
-  }
-  
-  .telephone-input {
-    width: 145px !important;
+  .main-button {
+    width: 105%;
+    margin: 0;
   }
 
-  .tabs button {
-    font-size: 1.2rem;
-    padding: 0.6rem;
-  }
-
-  .input-group {
-    margin-bottom: 0.5rem;
-  }
-  
-  .form-error-message {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
-  }
-  
-  .input-error {
-    font-size: 0.7rem;
-    padding: 2px 5px;
-  }
-
-  .form-content h2 {
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-  }
-
-  .main-button,
   .google-button {
-    font-size: 1rem;
-    padding: 0.6rem 1.5rem;
+    width: 105%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 425px) {
+  .telephone-input {
+    width: 40% !important;
+  }
+}
+
+
+@media (max-width: 375px) {
+  .login-form-container {
+    width: 70%;
   }
 
-  .forgot-password-link-l {
-    font-size: 0.9rem;
+  .telephone-input {
+    width: 33% !important;
   }
 }

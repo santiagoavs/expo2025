@@ -509,7 +509,24 @@ const AddressFormModal = ({
         return formData.department && formData.municipality && 
                !hasFieldError('department') && !hasFieldError('municipality');
       case 3: // Revisar
-        return Object.keys(validationErrors).length === 0;
+        // Verificar que todos los campos requeridos estén completos
+        const requiredFieldsComplete = formData.userId && 
+                                     formData.recipient && 
+                                     formData.phoneNumber && 
+                                     formData.address && 
+                                     formData.department && 
+                                     formData.municipality;
+        
+        // Solo verificar errores de validación si hay errores críticos
+        const hasCriticalErrors = validationErrors.general || 
+                                 validationErrors.userId || 
+                                 validationErrors.recipient || 
+                                 validationErrors.phoneNumber || 
+                                 validationErrors.address || 
+                                 validationErrors.department || 
+                                 validationErrors.municipality;
+        
+        return requiredFieldsComplete && !hasCriticalErrors;
       default:
         return false;
     }
@@ -550,6 +567,28 @@ const AddressFormModal = ({
       setEstimatedFee(fee);
     }
   }, [formData.department, getDeliveryFee]);
+
+  // Efecto para limpiar errores de validación cuando se llega al paso de revisión
+  useEffect(() => {
+    if (activeStep === 3) { // Paso de revisión
+      console.log('🗺️ [AddressFormModal] Limpiando errores de validación en paso de revisión');
+      
+      // Limpiar errores de validación para permitir el envío
+      // Solo mantener errores críticos si los hay
+      setValidationErrors(prev => {
+        const criticalErrors = {};
+        if (prev.general) criticalErrors.general = prev.general;
+        if (prev.userId) criticalErrors.userId = prev.userId;
+        if (prev.recipient) criticalErrors.recipient = prev.recipient;
+        if (prev.phoneNumber) criticalErrors.phoneNumber = prev.phoneNumber;
+        if (prev.address) criticalErrors.address = prev.address;
+        if (prev.department) criticalErrors.department = prev.department;
+        if (prev.municipality) criticalErrors.municipality = prev.municipality;
+        
+        return criticalErrors;
+      });
+    }
+  }, [activeStep]);
 
   // Auto-geocoding cuando se completa la dirección
   useEffect(() => {
@@ -989,6 +1028,16 @@ const AddressFormModal = ({
       {validationErrors.general && (
         <AddressErrorAlert severity="error">
           {validationErrors.general}
+        </AddressErrorAlert>
+      )}
+
+      {/* Indicador de estado del botón */}
+      {!canProceedToNext && (
+        <AddressErrorAlert severity="warning">
+          {Object.keys(validationErrors).length > 0 
+            ? 'Por favor corrige los errores mostrados arriba para continuar'
+            : 'Completa todos los campos requeridos para continuar'
+          }
         </AddressErrorAlert>
       )}
 

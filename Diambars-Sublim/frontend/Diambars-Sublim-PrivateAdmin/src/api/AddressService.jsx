@@ -94,6 +94,15 @@ export default {
     return response;
   },
 
+  /**
+   * Crear ubicación predeterminada desde coordenadas (para AddressMapPicker)
+   * @param {Object} locationData - Datos de la ubicación
+   */
+  setDefaultLocationFromCoordinates: async (locationData) => {
+    const response = await apiClient.post(`${BASE_URL}/set-default-location`, locationData);
+    return response;
+  },
+
   // ==================== Validación y Datos Auxiliares ====================
 
   /**

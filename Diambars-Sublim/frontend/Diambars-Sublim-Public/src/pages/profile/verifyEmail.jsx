@@ -138,7 +138,7 @@ export default function VerifyEmailPage() {
           )}
           
           <button 
-            className="back-button"
+            className="back-button-email"
             onClick={handleBackToLogin}
           >
             Volver al login
