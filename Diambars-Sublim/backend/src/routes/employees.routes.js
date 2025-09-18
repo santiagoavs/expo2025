@@ -7,7 +7,7 @@ const router = express.Router();
 // Obtener empleados activos (solo Admin y Manager pueden ver a todos)
 router.get("/", 
   verifyToken, 
-  checkUserType("employee"), 
+  checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
   checkRole("Admin", "admin", "Manager", "manager"), 
   employeesController.getEmployees
 );
@@ -15,7 +15,7 @@ router.get("/",
 // Obtener empleado por ID (Admin o Manager pueden consultar cualquier ID)
 router.get("/:id", 
   verifyToken, 
-  checkUserType("employee"),
+  checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
   checkRole("Admin", "admin", "Manager", "manager"), 
   employeesController.getEmployeeById
 );
@@ -23,7 +23,7 @@ router.get("/:id",
 // Actualizar información de un empleado (solo Admin o Manager)
 router.put("/:id", 
   verifyToken, 
-  checkUserType("employee"),
+  checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
   checkRole("Admin", "admin", "Manager", "manager"), 
   employeesController.updateEmployee
 );
@@ -31,6 +31,7 @@ router.put("/:id",
 // Cambiar contraseña (puede hacerlo cualquier empleado autenticado sobre su propia cuenta)
 router.patch("/:id/password", 
   verifyToken, 
+  checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
   (req, res, next) => {
     // Permitir cambiar contraseña solo de su propia cuenta
     // a menos que sea Admin o Manager
@@ -50,7 +51,7 @@ router.patch("/:id/password",
 // Inactivar empleado (solo Admin o Manager)
 router.delete("/:id", 
   verifyToken, 
-  checkUserType("employee"),
+  checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
   checkRole("Admin", "admin", "Manager", "manager"), 
   employeesController.inactivateEmployee
 );

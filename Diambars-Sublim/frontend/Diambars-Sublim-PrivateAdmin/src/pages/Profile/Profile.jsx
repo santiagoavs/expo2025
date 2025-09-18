@@ -17,6 +17,7 @@ import {
   Briefcase
 } from '@phosphor-icons/react';
 import { useAuth } from '../../context/AuthContext';
+import ProfileService from '../../services/profileService';
 import Swal from 'sweetalert2';
 import './Profile.css';
 
@@ -27,6 +28,8 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   
   // Estados para edición de perfil
   const [profileData, setProfileData] = useState({
@@ -35,7 +38,10 @@ const Profile = () => {
     phone: '',
     position: '',
     location: '',
-    bio: ''
+    bio: '',
+    role: '',
+    hireDate: '',
+    dui: ''
   });
   
   // Estados para cambio de contraseña
@@ -47,17 +53,64 @@ const Profile = () => {
 
   // Cargar datos del usuario al iniciar
   useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        position: user.position || 'Administrador',
-        location: user.location || 'San Salvador, El Salvador',
-        bio: user.bio || 'Administrador del sistema DIAMBARS Sublimado'
-      });
-    }
+    loadUserProfile();
   }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user || !user.id) {
+      setProfileLoading(false);
+      return;
+    }
+
+    try {
+      setProfileLoading(true);
+      const response = await ProfileService.getUserProfile(user.id);
+      
+      if (response.success) {
+        const userData = response.data;
+        setProfileData({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phoneNumber || '',
+          position: getRoleDisplayName(userData.role) || 'Empleado',
+          location: userData.address || 'No especificado',
+          bio: userData.bio || `${getRoleDisplayName(userData.role)} en DIAMBARS Sublimado`,
+          role: userData.role || 'employee',
+          hireDate: userData.hireDate ? new Date(userData.hireDate).toLocaleDateString() : '',
+          dui: userData.dui || 'No especificado'
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar la información del perfil',
+          confirmButtonColor: '#040DBF'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error de conexión al cargar el perfil',
+        confirmButtonColor: '#040DBF'
+      });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Función para obtener el nombre del rol en español
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      'admin': 'Administrador',
+      'manager': 'Gerente',
+      'employee': 'Empleado',
+      'delivery': 'Repartidor',
+      'production': 'Producción'
+    };
+    return roleNames[role?.toLowerCase()] || 'Empleado';
+  };
 
   const handleProfileChange = (field, value) => {
     setProfileData(prev => ({
@@ -75,6 +128,8 @@ const Profile = () => {
 
   const handleSaveProfile = async () => {
     try {
+      setLoading(true);
+
       // Validaciones básicas
       if (!profileData.name.trim()) {
         Swal.fire({
@@ -96,26 +151,35 @@ const Profile = () => {
         return;
       }
 
-      // Aquí harías la llamada a tu API para actualizar el perfil
-      // const response = await updateUserProfile(profileData);
+      // Llamada a la API
+      const response = await ProfileService.updateUserProfile(user.id, profileData);
 
-      // Simulación de éxito
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (response.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Perfil actualizado',
+          text: 'Los cambios se han guardado exitosamente',
+          confirmButtonColor: '#040DBF',
+          timer: 2000,
+          showConfirmButton: false
+        });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Perfil actualizado',
-        text: 'Los cambios se han guardado exitosamente',
-        confirmButtonColor: '#040DBF',
-        timer: 2000,
-        showConfirmButton: false
-      });
-
-      setIsEditing(false);
-      
-      // Refrescar autenticación si es necesario
-      if (refreshAuth) {
-        await refreshAuth();
+        setIsEditing(false);
+        
+        // Refrescar autenticación si es necesario
+        if (refreshAuth) {
+          await refreshAuth();
+        }
+        
+        // Recargar datos del perfil
+        await loadUserProfile();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.error || 'No se pudo actualizar el perfil',
+          confirmButtonColor: '#040DBF'
+        });
       }
 
     } catch (error) {
@@ -126,11 +190,15 @@ const Profile = () => {
         text: 'No se pudo actualizar el perfil. Inténtalo de nuevo.',
         confirmButtonColor: '#040DBF'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChangePassword = async () => {
     try {
+      setLoading(true);
+
       // Validaciones
       if (!passwordData.currentPassword) {
         Swal.fire({
@@ -162,27 +230,33 @@ const Profile = () => {
         return;
       }
 
-      // Aquí harías la llamada a tu API para cambiar la contraseña
-      // const response = await changePassword(passwordData);
+      // Llamada a la API
+      const response = await ProfileService.changePassword(user.id, passwordData);
 
-      // Simulación de éxito
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (response.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Contraseña cambiada',
+          text: 'Tu contraseña se ha actualizado exitosamente',
+          confirmButtonColor: '#040DBF',
+          timer: 2000,
+          showConfirmButton: false
+        });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Contraseña cambiada',
-        text: 'Tu contraseña se ha actualizado exitosamente',
-        confirmButtonColor: '#040DBF',
-        timer: 2000,
-        showConfirmButton: false
-      });
-
-      setIsChangingPassword(false);
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+        setIsChangingPassword(false);
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.error || 'No se pudo cambiar la contraseña',
+          confirmButtonColor: '#040DBF'
+        });
+      }
 
     } catch (error) {
       console.error('Error changing password:', error);
@@ -192,21 +266,14 @@ const Profile = () => {
         text: 'No se pudo cambiar la contraseña. Verifica tu contraseña actual.',
         confirmButtonColor: '#040DBF'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancelEdit = () => {
-    // Restaurar datos originales
-    if (user) {
-      setProfileData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        position: user.position || 'Administrador',
-        location: user.location || 'San Salvador, El Salvador',
-        bio: user.bio || 'Administrador del sistema DIAMBARS Sublimado'
-      });
-    }
+    // Recargar datos originales
+    loadUserProfile();
     setIsEditing(false);
   };
 
@@ -218,6 +285,26 @@ const Profile = () => {
     });
     setIsChangingPassword(false);
   };
+
+  // Mostrar loading mientras carga el perfil
+  if (profileLoading) {
+    return (
+      <div className="profile-admin-page">
+        <div className="profile-admin-container">
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '50vh',
+            fontSize: '18px',
+            color: '#64748b'
+          }}>
+            Cargando perfil...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-admin-page">
@@ -241,7 +328,7 @@ const Profile = () => {
               <div className="profile-admin-avatar">
                 <div className="profile-admin-avatar-circle">
                   <span className="profile-admin-avatar-text">
-                    {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'A'}
+                    {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
                   </span>
                   <div className="profile-admin-avatar-status"></div>
                 </div>
@@ -255,9 +342,11 @@ const Profile = () => {
                 <h2 className="profile-admin-name">{profileData.name || 'Nombre del Usuario'}</h2>
                 <p className="profile-admin-role">{profileData.position}</p>
                 <div className="profile-admin-badges">
-                  <span className="profile-admin-badge profile-admin-badge--admin">
+                  <span className={`profile-admin-badge ${
+                    profileData.role === 'admin' ? 'profile-admin-badge--admin' : 'profile-admin-badge--active'
+                  }`}>
                     <Shield size={14} weight="duotone" />
-                    Administrador
+                    {profileData.position}
                   </span>
                   <span className="profile-admin-badge profile-admin-badge--active">
                     <span className="profile-admin-status-dot"></span>
@@ -281,6 +370,7 @@ const Profile = () => {
                   <button 
                     className="profile-admin-edit-btn"
                     onClick={() => setIsEditing(true)}
+                    disabled={loading}
                   >
                     <PencilSimple size={16} weight="duotone" />
                     Editar
@@ -302,6 +392,7 @@ const Profile = () => {
                         value={profileData.name}
                         onChange={(e) => handleProfileChange('name', e.target.value)}
                         placeholder="Tu nombre completo"
+                        disabled={loading}
                       />
                     </div>
 
@@ -316,6 +407,7 @@ const Profile = () => {
                         value={profileData.email}
                         onChange={(e) => handleProfileChange('email', e.target.value)}
                         placeholder="tu@email.com"
+                        disabled={loading}
                       />
                     </div>
 
@@ -330,47 +422,22 @@ const Profile = () => {
                         value={profileData.phone}
                         onChange={(e) => handleProfileChange('phone', e.target.value)}
                         placeholder="+503 1234-5678"
-                      />
-                    </div>
-
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <Briefcase size={16} weight="duotone" />
-                        Cargo
-                      </label>
-                      <input
-                        type="text"
-                        className="profile-admin-input"
-                        value={profileData.position}
-                        onChange={(e) => handleProfileChange('position', e.target.value)}
-                        placeholder="Tu cargo en la empresa"
+                        disabled={loading}
                       />
                     </div>
 
                     <div className="profile-admin-field">
                       <label className="profile-admin-label">
                         <MapPin size={16} weight="duotone" />
-                        Ubicación
+                        Dirección
                       </label>
                       <input
                         type="text"
                         className="profile-admin-input"
                         value={profileData.location}
                         onChange={(e) => handleProfileChange('location', e.target.value)}
-                        placeholder="Tu ubicación"
-                      />
-                    </div>
-
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        Biografía
-                      </label>
-                      <textarea
-                        className="profile-admin-textarea"
-                        value={profileData.bio}
-                        onChange={(e) => handleProfileChange('bio', e.target.value)}
-                        placeholder="Escribe una breve descripción sobre ti..."
-                        rows="3"
+                        placeholder="Tu dirección"
+                        disabled={loading}
                       />
                     </div>
 
@@ -378,13 +445,15 @@ const Profile = () => {
                       <button 
                         className="profile-admin-btn profile-admin-btn--primary"
                         onClick={handleSaveProfile}
+                        disabled={loading}
                       >
                         <Check size={16} weight="duotone" />
-                        Guardar cambios
+                        {loading ? 'Guardando...' : 'Guardar cambios'}
                       </button>
                       <button 
                         className="profile-admin-btn profile-admin-btn--secondary"
                         onClick={handleCancelEdit}
+                        disabled={loading}
                       >
                         <X size={16} weight="duotone" />
                         Cancelar
@@ -438,15 +507,30 @@ const Profile = () => {
                         <MapPin size={16} weight="duotone" />
                       </span>
                       <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Ubicación</span>
+                        <span className="profile-admin-info-label">Dirección</span>
                         <span className="profile-admin-info-value">{profileData.location}</span>
                       </div>
                     </div>
 
-                    {profileData.bio && (
-                      <div className="profile-admin-bio">
-                        <span className="profile-admin-info-label">Biografía</span>
-                        <p className="profile-admin-bio-text">{profileData.bio}</p>
+                    <div className="profile-admin-info-item">
+                      <span className="profile-admin-info-icon">
+                        <Calendar size={16} weight="duotone" />
+                      </span>
+                      <div className="profile-admin-info-content">
+                        <span className="profile-admin-info-label">Fecha de contratación</span>
+                        <span className="profile-admin-info-value">{profileData.hireDate}</span>
+                      </div>
+                    </div>
+
+                    {profileData.dui !== 'No especificado' && (
+                      <div className="profile-admin-info-item">
+                        <span className="profile-admin-info-icon">
+                          <User size={16} weight="duotone" />
+                        </span>
+                        <div className="profile-admin-info-content">
+                          <span className="profile-admin-info-label">DUI</span>
+                          <span className="profile-admin-info-value">{profileData.dui}</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -465,6 +549,7 @@ const Profile = () => {
                   <button 
                     className="profile-admin-edit-btn"
                     onClick={() => setIsChangingPassword(true)}
+                    disabled={loading}
                   >
                     <PencilSimple size={16} weight="duotone" />
                     Cambiar contraseña
@@ -487,11 +572,13 @@ const Profile = () => {
                           value={passwordData.currentPassword}
                           onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
                           placeholder="Tu contraseña actual"
+                          disabled={loading}
                         />
                         <button
                           type="button"
                           className="profile-admin-password-toggle"
                           onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          disabled={loading}
                         >
                           {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
                         </button>
@@ -510,11 +597,13 @@ const Profile = () => {
                           value={passwordData.newPassword}
                           onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
                           placeholder="Nueva contraseña (min. 6 caracteres)"
+                          disabled={loading}
                         />
                         <button
                           type="button"
                           className="profile-admin-password-toggle"
                           onClick={() => setShowNewPassword(!showNewPassword)}
+                          disabled={loading}
                         >
                           {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
                         </button>
@@ -533,11 +622,13 @@ const Profile = () => {
                           value={passwordData.confirmPassword}
                           onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
                           placeholder="Confirma tu nueva contraseña"
+                          disabled={loading}
                         />
                         <button
                           type="button"
                           className="profile-admin-password-toggle"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          disabled={loading}
                         >
                           {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
                         </button>
@@ -548,13 +639,15 @@ const Profile = () => {
                       <button 
                         className="profile-admin-btn profile-admin-btn--primary"
                         onClick={handleChangePassword}
+                        disabled={loading}
                       >
                         <Check size={16} weight="duotone" />
-                        Cambiar contraseña
+                        {loading ? 'Cambiando...' : 'Cambiar contraseña'}
                       </button>
                       <button 
                         className="profile-admin-btn profile-admin-btn--secondary"
                         onClick={handleCancelPasswordChange}
+                        disabled={loading}
                       >
                         <X size={16} weight="duotone" />
                         Cancelar
@@ -578,11 +671,11 @@ const Profile = () => {
 
                     <div className="profile-admin-security-item">
                       <span className="profile-admin-security-icon">
-                        <Calendar size={16} weight="duotone" />
+                        <Shield size={16} weight="duotone" />
                       </span>
                       <div className="profile-admin-security-content">
-                        <span className="profile-admin-security-label">Último cambio</span>
-                        <span className="profile-admin-security-value">Hace 30 días</span>
+                        <span className="profile-admin-security-label">Rol</span>
+                        <span className="profile-admin-security-value">{profileData.position}</span>
                       </div>
                     </div>
                   </div>
