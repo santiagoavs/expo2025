@@ -43,9 +43,11 @@ class GeocodingService {
 
           console.log(`🗺️ [GeocodingService] Geocoding attempt ${i + 1}:`, { query, address, department, municipality });
           
-          const response = await fetch(url, {
+          // Usar el proxy del backend para evitar CORS
+          const proxyUrl = `/api/addresses/geocoding/search?q=${encodeURIComponent(query)}&limit=3`;
+          
+          const response = await fetch(proxyUrl, {
             headers: {
-              'User-Agent': this.userAgent,
               'Accept': 'application/json',
               'Accept-Language': 'es,en'
             }
@@ -56,7 +58,8 @@ class GeocodingService {
             continue;
           }
           
-          const data = await response.json();
+          const result = await response.json();
+          const data = result.success ? result.data : [];
           console.log(`🗺️ [GeocodingService] Geocoding response ${i + 1}:`, data);
           
           if (data && data.length > 0) {
@@ -153,9 +156,11 @@ class GeocodingService {
   
         console.log('🗺️ [GeocodingService] Reverse geocoding request:', { lat, lng });
         
-        const response = await fetch(url, {
+        // Usar el proxy del backend para evitar CORS
+        const proxyUrl = `/api/addresses/geocoding/reverse?lat=${lat}&lng=${lng}`;
+        
+        const response = await fetch(proxyUrl, {
           headers: {
-            'User-Agent': this.userAgent,
             'Accept': 'application/json'
           }
         });
@@ -164,7 +169,8 @@ class GeocodingService {
           throw new Error(`Reverse geocoding API error: ${response.status}`);
         }
         
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.success ? result.data : null;
         console.log('🗺️ [GeocodingService] Reverse geocoding response:', data);
         
         if (data && data.address) {

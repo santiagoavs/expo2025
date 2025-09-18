@@ -282,6 +282,94 @@ const useAddresses = () => {
     }
   }, [fetchAddresses]);
 
+  /**
+   * Quitar dirección como predeterminada
+   * @param {string} addressId - ID de la dirección
+   */
+  const unsetDefaultAddress = useCallback(async (addressId) => {
+    try {
+      console.log('📍 [useAddresses] Unsetting default address:', addressId);
+      
+      const response = await addressService.unsetDefault(addressId);
+      
+      if (response.success) {
+        toast.success('Dirección ya no es predeterminada');
+        await fetchAddresses(); // Recargar lista
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Error al quitar dirección predeterminada');
+      }
+    } catch (error) {
+      handleError(error, 'Error al quitar dirección predeterminada');
+    }
+  }, [fetchAddresses]);
+
+  /**
+   * Activar dirección
+   * @param {string} addressId - ID de la dirección
+   */
+  const activateAddress = useCallback(async (addressId) => {
+    try {
+      console.log('📍 [useAddresses] Activating address:', addressId);
+      
+      const response = await addressService.update(addressId, { isActive: true });
+      
+      if (response.success) {
+        toast.success('Dirección activada exitosamente');
+        await fetchAddresses(); // Recargar lista
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Error al activar dirección');
+      }
+    } catch (error) {
+      handleError(error, 'Error al activar dirección');
+    }
+  }, [fetchAddresses]);
+
+  /**
+   * Desactivar dirección
+   * @param {string} addressId - ID de la dirección
+   */
+  const deactivateAddress = useCallback(async (addressId) => {
+    try {
+      console.log('📍 [useAddresses] Deactivating address:', addressId);
+      
+      const response = await addressService.update(addressId, { isActive: false });
+      
+      if (response.success) {
+        toast.success('Dirección desactivada exitosamente');
+        await fetchAddresses(); // Recargar lista
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Error al desactivar dirección');
+      }
+    } catch (error) {
+      handleError(error, 'Error al desactivar dirección');
+    }
+  }, [fetchAddresses]);
+
+  /**
+   * Eliminar dirección permanentemente (hard delete)
+   * @param {string} addressId - ID de la dirección
+   */
+  const hardDeleteAddress = useCallback(async (addressId) => {
+    try {
+      console.log('📍 [useAddresses] Hard deleting address:', addressId);
+      
+      const response = await addressService.hardDelete(addressId);
+      
+      if (response.success) {
+        toast.success('Dirección eliminada permanentemente');
+        await fetchAddresses(); // Recargar lista
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Error al eliminar dirección permanentemente');
+      }
+    } catch (error) {
+      handleError(error, 'Error al eliminar dirección permanentemente');
+    }
+  }, [fetchAddresses]);
+
   // ==================== VALIDACIÓN Y DATOS AUXILIARES ====================
 
   /**
@@ -618,7 +706,11 @@ const useAddresses = () => {
     createAddress,
     updateAddress,
     deleteAddress,
+    hardDeleteAddress,
     setDefaultAddress,
+    unsetDefaultAddress,
+    activateAddress,
+    deactivateAddress,
 
     // Validación y datos auxiliares
     validateAddress,

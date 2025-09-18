@@ -799,7 +799,11 @@ const AddressManagement = () => {
     createAddress,
     updateAddress,
     deleteAddress,
+    hardDeleteAddress,
     setDefaultAddress,
+    unsetDefaultAddress,
+    activateAddress,
+    deactivateAddress,
     updateFilters,
     clearFilters,
     batchUpdateAddresses,
@@ -828,7 +832,7 @@ const AddressManagement = () => {
       search: searchQuery,
       department: selectedDepartment,
       userId: selectedUser,
-      isActive: selectedStatus === 'all' ? null : selectedStatus === 'active',
+      isActive: selectedStatus === 'all' ? null : selectedStatus === 'active' ? true : false,
       sort: sortOption
     });
   }, [searchQuery, selectedDepartment, selectedUser, selectedStatus, sortOption, updateFilters]);
@@ -932,6 +936,7 @@ const AddressManagement = () => {
   };
 
   const handleEditAddress = (address) => {
+    console.log('🔧 [AddressManagement] Editing address:', address);
     setEditingAddress(address);
     setShowCreateModal(true);
   };
@@ -992,6 +997,81 @@ const AddressManagement = () => {
       await setDefaultAddress(addressId);
     } catch (error) {
       console.error('Error setting default address:', error);
+    }
+  };
+
+  const handleUnsetDefaultAddress = async (addressId) => {
+    try {
+      await unsetDefaultAddress(addressId);
+    } catch (error) {
+      console.error('Error unsetting default address:', error);
+    }
+  };
+
+  const handleActivateAddress = async (addressId) => {
+    try {
+      await activateAddress(addressId);
+    } catch (error) {
+      console.error('Error activating address:', error);
+    }
+  };
+
+  const handleDeactivateAddress = async (addressId) => {
+    try {
+      await deactivateAddress(addressId);
+    } catch (error) {
+      console.error('Error deactivating address:', error);
+    }
+  };
+
+  const handleHardDeleteAddress = async (addressId) => {
+    try {
+      const address = addresses.find(addr => addr.id === addressId);
+      const addressLabel = address?.fullAddress || 'esta dirección';
+      
+      const { isConfirmed } = await Swal.fire({
+        title: '¿Eliminar permanentemente?',
+        text: `¿Estás seguro de eliminar permanentemente "${addressLabel}"? Esta acción NO se puede deshacer.`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, eliminar permanentemente',
+        cancelButtonText: 'Cancelar',
+        backdrop: `rgba(0,0,0,0.7)`,
+        customClass: {
+          container: 'swal-overlay-custom',
+          popup: 'swal-modal-custom'
+        }
+      });
+
+      if (isConfirmed) {
+        await hardDeleteAddress(addressId);
+        
+        await Swal.fire({
+          title: '¡Eliminada permanentemente!',
+          text: 'La dirección ha sido eliminada permanentemente de la base de datos',
+          icon: 'success',
+          confirmButtonColor: '#1F64BF',
+          backdrop: `rgba(0,0,0,0.7)`,
+          customClass: {
+            container: 'swal-overlay-custom',
+            popup: 'swal-modal-custom'
+          }
+        });
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo eliminar la dirección permanentemente',
+        icon: 'error',
+        confirmButtonColor: '#1F64BF',
+        backdrop: `rgba(0,0,0,0.7)`,
+        customClass: {
+          container: 'swal-overlay-custom',
+          popup: 'swal-modal-custom'
+        }
+      });
     }
   };
 
@@ -1423,7 +1503,11 @@ const AddressManagement = () => {
                   selectedAddresses={selectedAddresses}
                   onEdit={handleEditAddress}
                   onDelete={handleDeleteAddress}
+                  onHardDelete={handleHardDeleteAddress}
                   onSetDefault={handleSetDefaultAddress}
+                  onUnsetDefault={handleUnsetDefaultAddress}
+                  onActivate={handleActivateAddress}
+                  onDeactivate={handleDeactivateAddress}
                   onBatchAction={handleBatchAction}
                   pagination={pagination}
                   onPageChange={(page) => updateFilters({ page })}

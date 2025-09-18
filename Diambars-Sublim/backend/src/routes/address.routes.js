@@ -122,6 +122,18 @@ router.patch('/:id/set-default',
   addressController.setDefaultAddress
 );
 
+// Quitar dirección como predeterminada
+router.patch('/:id/unset-default',
+  validateMongoId('id'),
+  addressController.unsetDefaultAddress
+);
+
+// Eliminar dirección permanentemente (hard delete)
+router.delete('/:id/hard-delete',
+  validateMongoId('id'),
+  addressController.hardDeleteAddress
+);
+
 // Crear ubicación predeterminada desde coordenadas (para AddressMapPicker)
 router.post('/set-default-location',
   [
@@ -160,6 +172,52 @@ router.get('/delivery/fees',
 // Obtener todas las direcciones (admin)
 router.get('/admin/all',
   addressController.getAllAddresses
+);
+
+// Actualizar dirección (admin)
+router.put('/admin/:id',
+  addressValidations.update,
+  validateRequest,
+  addressController.updateAddressAdmin
+);
+
+// Eliminar dirección (admin)
+router.delete('/admin/:id',
+  validateMongoId('id'),
+  addressController.deleteAddressAdmin
+);
+
+// Exportar direcciones (admin)
+router.get('/admin/export',
+  addressController.exportAddresses
+);
+
+// Crear dirección (admin)
+router.post('/admin',
+  addressValidations.create,
+  validateRequest,
+  addressController.createAddressAdmin
+);
+
+// Geocodificación (proxy para evitar CORS)
+router.get('/geocoding/search',
+  addressController.geocodeAddress
+);
+
+router.get('/geocoding/reverse',
+  addressController.reverseGeocode
+);
+
+// Establecer dirección como predeterminada (admin)
+router.patch('/admin/:id/set-default',
+  validateMongoId('id'),
+  addressController.setDefaultAddressAdmin
+);
+
+// Quitar dirección como predeterminada (admin)
+router.patch('/admin/:id/unset-default',
+  validateMongoId('id'),
+  addressController.unsetDefaultAddressAdmin
 );
 
 export default router;
