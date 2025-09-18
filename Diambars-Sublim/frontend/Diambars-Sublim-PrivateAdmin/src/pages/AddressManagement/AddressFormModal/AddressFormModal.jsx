@@ -537,6 +537,7 @@ const AddressFormModal = ({
   // ==================== EFECTOS ====================
   useEffect(() => {
     if (editMode && addressToEdit && isOpen) {
+      console.log('🔧 [AddressFormModal] Loading address for edit:', addressToEdit);
       setFormData({
         userId: addressToEdit.userId || '',
         label: addressToEdit.label || '',
@@ -557,6 +558,7 @@ const AddressFormModal = ({
         });
       }
     } else if (!editMode && isOpen) {
+      console.log('🔧 [AddressFormModal] Creating new address');
       resetForm();
     }
   }, [editMode, addressToEdit, isOpen]);

@@ -18,7 +18,7 @@ export default {
     if (filters.department) params.append('department', filters.department);
     if (filters.municipality) params.append('municipality', filters.municipality);
     if (filters.search) params.append('search', filters.search);
-    if (filters.isActive !== undefined && filters.isActive !== '') {
+    if (filters.isActive !== undefined && filters.isActive !== null && filters.isActive !== '') {
       params.append('isActive', filters.isActive);
     }
     if (filters.page) params.append('page', filters.page);
@@ -62,7 +62,20 @@ export default {
       userId: addressData.userId || addressData.user
     };
 
-    const response = await apiClient.post(BASE_URL, payload);
+    // Solo incluir location si las coordenadas son válidas
+    if (addressData.coordinates && 
+        addressData.coordinates.lng !== null && 
+        addressData.coordinates.lat !== null &&
+        !isNaN(addressData.coordinates.lng) && 
+        !isNaN(addressData.coordinates.lat)) {
+      payload.location = {
+        type: "Point",
+        coordinates: [addressData.coordinates.lng, addressData.coordinates.lat]
+      };
+    }
+
+    // Usar la ruta administrativa para crear direcciones
+    const response = await apiClient.post(`${BASE_URL}/admin`, payload);
     return response;
   },
 
@@ -72,7 +85,8 @@ export default {
    * @param {Object} updateData - Datos a actualizar
    */
   update: async (addressId, updateData) => {
-    const response = await apiClient.put(`${BASE_URL}/${addressId}`, updateData);
+    // Usar la ruta administrativa para actualizar
+    const response = await apiClient.put(`${BASE_URL}/admin/${addressId}`, updateData);
     return response;
   },
 
@@ -81,7 +95,8 @@ export default {
    * @param {string} addressId - ID de la dirección
    */
   delete: async (addressId) => {
-    const response = await apiClient.delete(`${BASE_URL}/${addressId}`);
+    // Usar la ruta administrativa para eliminar
+    const response = await apiClient.delete(`${BASE_URL}/admin/${addressId}`);
     return response;
   },
 
@@ -90,7 +105,30 @@ export default {
    * @param {string} addressId - ID de la dirección
    */
   setDefault: async (addressId) => {
-    const response = await apiClient.patch(`${BASE_URL}/${addressId}/set-default`);
+    // Usar la ruta administrativa
+    const response = await apiClient.patch(`${BASE_URL}/admin/${addressId}/set-default`);
+    return response;
+  },
+
+  /**
+   * Quitar dirección como predeterminada
+   * @param {string} addressId - ID de la dirección
+   */
+  unsetDefault: async (addressId) => {
+    console.log('🔧 [AddressService] Unsetting default for address:', addressId);
+    // Usar la ruta administrativa específica
+    const response = await apiClient.patch(`${BASE_URL}/admin/${addressId}/unset-default`);
+    console.log('🔧 [AddressService] Unset default response:', response);
+    return response;
+  },
+
+  /**
+   * Eliminar dirección permanentemente (hard delete)
+   * @param {string} addressId - ID de la dirección
+   */
+  hardDelete: async (addressId) => {
+    // Usar la ruta administrativa para eliminación permanente
+    const response = await apiClient.delete(`${BASE_URL}/admin/${addressId}`);
     return response;
   },
 

@@ -1,6 +1,6 @@
 // src/hooks/useAddressValidation.js
 import { useCallback, useState, useEffect } from 'react';
-import addressService from '../api/addressService';
+import addressService from '../api/AddressService';
 import useGeolocation from './useGeolocation';
 
 const useAddressValidation = () => {
@@ -11,7 +11,7 @@ const useAddressValidation = () => {
   const [deliveryFees, setDeliveryFees] = useState({});
 
   // Hook de geolocalización
-  const { validateAddressForGeocoding, isValidCoordinates } = useGeolocation();
+  const { validateAddressForGeocoding, isValidCoordinates, isWithinElSalvador } = useGeolocation();
 
   // ==================== VALIDACIONES BÁSICAS ====================
 
@@ -249,7 +249,7 @@ const useAddressValidation = () => {
     }
 
     // Validar que estén dentro de El Salvador
-    if (!useGeolocation().isWithinElSalvador(lat, lng)) {
+    if (!isWithinElSalvador(lat, lng)) {
       return {
         isValid: false,
         error: 'Las coordenadas están fuera de El Salvador'
@@ -266,7 +266,7 @@ const useAddressValidation = () => {
         display: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
       }
     };
-  }, [isValidCoordinates]);
+  }, [isValidCoordinates, isWithinElSalvador]);
 
   // ==================== VALIDACIONES GEOGRÁFICAS ====================
 
@@ -460,7 +460,7 @@ const useAddressValidation = () => {
       formattedData: hasErrors ? null : {
         userId,
         recipient: recipientValidation.formatted,
-        phoneNumber: phoneValidation.formatted,
+        phoneNumber: phoneValidation.clean,
         department: departmentValidation.formatted,
         municipality: municipalityValidation.formatted,
         address: addressValidation.formatted,

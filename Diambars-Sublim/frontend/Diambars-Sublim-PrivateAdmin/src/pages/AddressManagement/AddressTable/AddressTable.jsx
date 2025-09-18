@@ -413,7 +413,11 @@ const AddressTable = ({
   selectedAddresses = [],
   onEdit,
   onDelete,
+  onHardDelete,
   onSetDefault,
+  onUnsetDefault,
+  onActivate,
+  onDeactivate,
   onBatchAction,
   onSelectionChange,
   pagination = {},
@@ -507,8 +511,20 @@ const AddressTable = ({
       case 'delete':
         onDelete?.(selectedRowForMenu.id);
         break;
+      case 'hardDelete':
+        onHardDelete?.(selectedRowForMenu.id);
+        break;
       case 'setDefault':
         onSetDefault?.(selectedRowForMenu.id);
+        break;
+      case 'unsetDefault':
+        onUnsetDefault?.(selectedRowForMenu.id);
+        break;
+      case 'activate':
+        onActivate?.(selectedRowForMenu.id);
+        break;
+      case 'deactivate':
+        onDeactivate?.(selectedRowForMenu.id);
         break;
     }
     
@@ -892,15 +908,79 @@ const AddressTable = ({
           </MenuItem>
         )}
         
+        {selectedRowForMenu && selectedRowForMenu.isDefault && (
+          <MenuItem onClick={() => handleMenuAction('unsetDefault')}>
+            <ListItemIcon>
+              <StarIcon size={16} color="#6B7280" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Quitar como principal" 
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                fontFamily: "'Mona Sans'"
+              }}
+            />
+          </MenuItem>
+        )}
+        
+        {selectedRowForMenu && !selectedRowForMenu.isActive && (
+          <MenuItem onClick={() => handleMenuAction('activate')}>
+            <ListItemIcon>
+              <CheckIcon size={16} color="#10B981" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Activar dirección" 
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                fontFamily: "'Mona Sans'"
+              }}
+            />
+          </MenuItem>
+        )}
+        
+        {selectedRowForMenu && selectedRowForMenu.isActive && (
+          <MenuItem onClick={() => handleMenuAction('deactivate')}>
+            <ListItemIcon>
+              <XIcon size={16} color="#F59E0B" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Desactivar dirección" 
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                fontFamily: "'Mona Sans'"
+              }}
+            />
+          </MenuItem>
+        )}
+        
+        {selectedRowForMenu && selectedRowForMenu.isActive && (
+          <MenuItem 
+            onClick={() => handleMenuAction('delete')}
+            sx={{ color: '#F59E0B' }}
+          >
+            <ListItemIcon>
+              <DeleteIcon size={16} color="#F59E0B" />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Desactivar (Soft Delete)" 
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                fontFamily: "'Mona Sans'",
+                color: '#F59E0B'
+              }}
+            />
+          </MenuItem>
+        )}
+        
         <MenuItem 
-          onClick={() => handleMenuAction('delete')}
+          onClick={() => handleMenuAction('hardDelete')}
           sx={{ color: '#EF4444' }}
         >
           <ListItemIcon>
             <DeleteIcon size={16} color="#EF4444" />
           </ListItemIcon>
           <ListItemText 
-            primary="Eliminar dirección" 
+            primary="Eliminar permanentemente" 
             primaryTypographyProps={{
               fontSize: '0.9rem',
               fontFamily: "'Mona Sans'",
