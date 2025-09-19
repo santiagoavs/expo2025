@@ -1,32 +1,70 @@
-// hooks/useCustomizationAreas.js
+// hooks/useCustomizationAreas.js - HOOK MEJORADO PARA ÁREAS DE PERSONALIZACIÓN
 import { useState, useEffect, useCallback } from 'react';
 import { CANVAS_CONFIG, scaleCustomizationArea } from '../constants/canvasConfig';
 
-export const useCustomizationAreas = (product) => {
+export const useCustomizationAreas = (product, canvasDimensions = null) => {
   const [customizationAreas, setCustomizationAreas] = useState([]);
 
   useEffect(() => {
-    if (!product?.customizationAreas) return;
+    if (!product?.customizationAreas) {
+      setCustomizationAreas([]);
+      return;
+    }
 
-    const areas = product.customizationAreas.map(area => {
-      // Usar la función compartida para escalar áreas
-      const scaledArea = scaleCustomizationArea(area);
+    console.log('🎯 [useCustomizationAreas] Procesando áreas de personalización:', product.customizationAreas.length);
 
-      return {
-        id: area._id || area.id,
-        name: area.name,
-        displayName: area.displayName || area.name,
-        ...scaledArea, // x, y, width, height escalados
-        accepts: area.accepts || { text: true, image: true, shapes: true },
+    const areas = product.customizationAreas.map((area, index) => {
+      // ✅ CORREGIDO: No aplicar escalado adicional - mantener coordenadas originales
+      const scaledArea = scaleCustomizationArea(area, 1);
+
+      const processedArea = {
+        id: area._id || area.id || `area-${index}`,
+        name: area.name || `Área ${index + 1}`,
+        displayName: area.displayName || area.name || `Área ${index + 1}`,
+        description: area.description || '',
+        
+        // Coordenadas escaladas
+        x: scaledArea.x,
+        y: scaledArea.y,
+        width: scaledArea.width,
+        height: scaledArea.height,
+        
+        // Configuración de la zona
+        accepts: area.accepts || { 
+          text: true, 
+          image: true, 
+          shapes: true,
+          triangle: true,
+          star: true,
+          customShape: true,
+          line: true
+        },
         maxElements: area.maxElements || 10,
-        strokeColor: '#10B981',
+        minElements: area.minElements || 0,
+        
+        // Estilo visual
+        strokeColor: area.strokeColor || '#10B981',
+        fillColor: area.fillColor || 'rgba(16, 185, 129, 0.1)',
         strokeWidth: 2,
-        dash: [6, 6]
+        dash: [6, 6],
+        
+        // Metadatos
+        originalData: area,
+        debug: scaledArea._debug
       };
+
+      console.log('🎯 [useCustomizationAreas] Área procesada:', {
+        id: processedArea.id,
+        name: processedArea.name,
+        position: { x: processedArea.x, y: processedArea.y, width: processedArea.width, height: processedArea.height },
+        accepts: processedArea.accepts
+      });
+
+      return processedArea;
     });
 
     setCustomizationAreas(areas);
-  }, [product]);
+  }, [product, canvasDimensions]);
 
   const getAreaForPosition = useCallback((x, y) => {
     return customizationAreas.find(area => 
@@ -39,52 +77,100 @@ export const useCustomizationAreas = (product) => {
 
   const validateElementInArea = useCallback((element, areaId) => {
     const area = customizationAreas.find(a => a.id === areaId);
-    if (!area) return { valid: false, error: 'Área no encontrada' };
+    if (!area) return { isValid: false, error: 'Área no encontrada' };
 
-    // Validar tipo de elemento
-    if (element.type === 'text' && !area.accepts.text) {
-      return { valid: false, error: 'El área no acepta texto' };
-    }
-    if (element.type === 'image' && !area.accepts.image) {
-      return { valid: false, error: 'El área no acepta imágenes' };
-    }
-    if (['rect', 'circle', 'triangle'].includes(element.type) && !area.accepts.shapes) {
-      return { valid: false, error: 'El área no acepta formas' };
-    }
+    // Verificar que el elemento esté dentro del área
+    const elementRight = element.x + (element.width || 0);
+    const elementBottom = element.y + (element.height || 0);
+    const areaRight = area.x + area.width;
+    const areaBottom = area.y + area.height;
 
-    // Validar posición
-    if (element.x < area.x || element.y < area.y ||
-        element.x + (element.width || 0) > area.x + area.width ||
-        element.y + (element.height || 0) > area.y + area.height) {
-      return { valid: false, error: 'El elemento está fuera del área' };
+    if (element.x < area.x || element.y < area.y || 
+        elementRight > areaRight || elementBottom > areaBottom) {
+      return { 
+        isValid: false, 
+        error: 'Elemento fuera de los límites del área' 
+      };
     }
 
-    return { valid: true };
+    // Verificar tipo de elemento permitido
+    if (!area.accepts[element.type]) {
+      return { 
+        isValid: false, 
+        error: `Tipo de elemento '${element.type}' no permitido en esta área` 
+      };
+    }
+
+    return { isValid: true };
   }, [customizationAreas]);
 
-  const snapToArea = useCallback((element) => {
-    const area = getAreaForPosition(element.x, element.y);
-    if (!area) return element;
+  const snapToArea = useCallback((x, y, areaId) => {
+    const area = customizationAreas.find(a => a.id === areaId);
+    if (!area) return { x, y };
 
-    // Ajustar posición si está cerca del borde
+    // Snap al borde más cercano del área
     const snapThreshold = 10;
-    let newX = element.x;
-    let newY = element.y;
+    
+    let snappedX = x;
+    let snappedY = y;
 
-    if (Math.abs(element.x - area.x) < snapThreshold) {
-      newX = area.x;
-    }
-    if (Math.abs(element.y - area.y) < snapThreshold) {
-      newY = area.y;
+    // Snap horizontal
+    if (Math.abs(x - area.x) < snapThreshold) {
+      snappedX = area.x;
+    } else if (Math.abs(x - (area.x + area.width)) < snapThreshold) {
+      snappedX = area.x + area.width;
     }
 
-    return { ...element, x: newX, y: newY };
-  }, [getAreaForPosition]);
+    // Snap vertical
+    if (Math.abs(y - area.y) < snapThreshold) {
+      snappedY = area.y;
+    } else if (Math.abs(y - (area.y + area.height)) < snapThreshold) {
+      snappedY = area.y + area.height;
+    }
+
+    return { x: snappedX, y: snappedY };
+  }, [customizationAreas]);
+
+  const getAreaElements = useCallback((areaId, elements) => {
+    return elements.filter(element => element.areaId === areaId);
+  }, []);
+
+  const getAreaElementCount = useCallback((areaId, elements) => {
+    return getAreaElements(areaId, elements).length;
+  }, [getAreaElements]);
+
+  const canAddElementToArea = useCallback((areaId, elements) => {
+    const area = customizationAreas.find(a => a.id === areaId);
+    if (!area) return false;
+
+    const currentCount = getAreaElementCount(areaId, elements);
+    return currentCount < area.maxElements;
+  }, [customizationAreas, getAreaElementCount]);
+
+  const getAreaInfo = useCallback((areaId) => {
+    const area = customizationAreas.find(a => a.id === areaId);
+    if (!area) return null;
+
+    return {
+      id: area.id,
+      name: area.name,
+      displayName: area.displayName,
+      description: area.description,
+      position: { x: area.x, y: area.y, width: area.width, height: area.height },
+      accepts: area.accepts,
+      maxElements: area.maxElements,
+      minElements: area.minElements
+    };
+  }, [customizationAreas]);
 
   return {
     customizationAreas,
     getAreaForPosition,
     validateElementInArea,
-    snapToArea
+    snapToArea,
+    getAreaElements,
+    getAreaElementCount,
+    canAddElementToArea,
+    getAreaInfo
   };
 };

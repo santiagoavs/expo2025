@@ -1,7 +1,8 @@
 // src/components/KonvaDesignEditor/Components/KonvaDesignViewer.jsx - VIEWER KONVA
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Image, Line } from 'react-konva';
-import { CANVAS_CONFIG, scaleCustomizationArea } from '../constants/canvasConfig';
+import { CANVAS_CONFIG, scaleCustomizationArea, calculateScaledDimensions } from '../constants/canvasConfig';
+import { useUnifiedCanvasCentering } from '../hooks/useUnifiedCanvasCentering';
 import { 
   Dialog, 
   DialogTitle, 
@@ -51,11 +52,18 @@ const KonvaDesignViewer = ({
   
   const stageRef = useRef();
   const layerRef = useRef();
+  const containerRef = useRef();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [productImage, setProductImage] = useState(null);
   const [customizationAreas, setCustomizationAreas] = useState([]);
   const [elements, setElements] = useState([]);
+
+  // ✅ UNIFICADO: Usar hook compartido para centrado del canvas
+  const {
+    stageScale,
+    stagePosition
+  } = useUnifiedCanvasCentering(productImage?.image, containerRef);
 
   // Configuración del stage - usar constantes compartidas
   const stageConfig = useMemo(() => ({
@@ -74,21 +82,19 @@ const KonvaDesignViewer = ({
       imageObj.crossOrigin = 'anonymous';
       
       imageObj.onload = () => {
-        const scaleX = stageConfig.width / imageObj.width;
-        const scaleY = stageConfig.height / imageObj.height;
-        const scale = Math.min(scaleX, scaleY);
+        // ✅ UNIFICADO: Usar la misma lógica que los editores
+        const scaleX = CANVAS_CONFIG.width / imageObj.width;
+        const scaleY = CANVAS_CONFIG.height / imageObj.height;
+        const scale = Math.min(scaleX, scaleY) * CANVAS_CONFIG.productScale;
         
-        const scaledWidth = imageObj.width * scale;
-        const scaledHeight = imageObj.height * scale;
-        const offsetX = (stageConfig.width - scaledWidth) / 2;
-        const offsetY = (stageConfig.height - scaledHeight) / 2;
+        const scaledDimensions = calculateScaledDimensions(imageObj.width, imageObj.height, scale);
 
         setProductImage({
           image: imageObj,
-          x: offsetX,
-          y: offsetY,
-          width: scaledWidth,
-          height: scaledHeight
+          x: scaledDimensions.x,
+          y: scaledDimensions.y,
+          width: scaledDimensions.width,
+          height: scaledDimensions.height
         });
       };
 
@@ -97,7 +103,7 @@ const KonvaDesignViewer = ({
       console.error('Error cargando imagen del producto:', error);
       setError('Error cargando imagen del producto');
     }
-  }, [product, stageConfig]);
+  }, [product]);
 
   // ==================== CARGA DE ÁREAS DE PERSONALIZACIÓN ====================
 
@@ -105,13 +111,13 @@ const KonvaDesignViewer = ({
     if (!product?.customizationAreas) return;
 
     const areas = product.customizationAreas.map(area => {
-      // Usar la función compartida para escalar áreas
-      const scaledArea = scaleCustomizationArea(area);
+      // ✅ UNIFICADO: Usar la función compartida sin escalado adicional
+      const scaledArea = scaleCustomizationArea(area, 1);
 
       return {
         id: area._id || area.id,
         name: area.name,
-        ...scaledArea, // x, y, width, height escalados
+        ...scaledArea, // x, y, width, height (coordenadas originales)
         stroke: '#10B981',
         strokeWidth: 2,
         dash: [6, 6]
@@ -134,50 +140,123 @@ const KonvaDesignViewer = ({
 
     console.log('🎨 [KonvaDesignViewer] Cargando elementos del diseño:', designElements.length);
 
+    // ✅ UNIFICADO: Usar coordenadas originales (el escalado se maneja a nivel del stage)
+    const scaleFactor = 1; // No escalado adicional
+    const offsetX = 0; // No offset adicional
+    const offsetY = 0; // No offset adicional
+
     const konvaElements = designElements.map((element, index) => {
       const { konvaAttrs, type, areaId } = element;
       
-      return {
+      // Aplicar escalado y offset a las coordenadas
+      const scaledX = (konvaAttrs.x || 50) * scaleFactor + offsetX;
+      const scaledY = (konvaAttrs.y || 50) * scaleFactor + offsetY;
+      
+      const baseElement = {
         id: element._id || `element-${Date.now()}-${index}`,
         name: `${type}-${index}`,
         elementType: type,
         areaId: areaId || '',
         
-        // Propiedades de Konva directamente desde konvaAttrs
-        ...konvaAttrs,
-        
-        // Asegurar valores por defecto
-        x: konvaAttrs.x || 50,
-        y: konvaAttrs.y || 50,
+        // Coordenadas escaladas
+        x: scaledX,
+        y: scaledY,
         opacity: konvaAttrs.opacity ?? 1,
         
         // Propiedades específicas por tipo
         ...(type === 'text' && {
           text: konvaAttrs.text || 'Texto',
-          fontSize: konvaAttrs.fontSize || 24,
+          fontSize: (konvaAttrs.fontSize || 24) * scaleFactor,
           fontFamily: konvaAttrs.fontFamily || 'Arial',
-          fill: konvaAttrs.fill || '#000000'
+          fill: konvaAttrs.fill || '#000000',
+          width: (konvaAttrs.width || 200) * scaleFactor,
+          height: (konvaAttrs.height || 50) * scaleFactor
         }),
         
         ...(type === 'rect' && {
-          width: konvaAttrs.width || 100,
-          height: konvaAttrs.height || 60,
+          width: (konvaAttrs.width || 100) * scaleFactor,
+          height: (konvaAttrs.height || 60) * scaleFactor,
           fill: konvaAttrs.fill || '#1F64BF',
           stroke: konvaAttrs.stroke || '#032CA6',
-          strokeWidth: konvaAttrs.strokeWidth || 2
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor,
+          cornerRadius: (konvaAttrs.cornerRadius || 0) * scaleFactor
         }),
         
         ...(type === 'circle' && {
-          radius: konvaAttrs.radius || 50,
+          radius: (konvaAttrs.radius || 50) * scaleFactor,
           fill: konvaAttrs.fill || '#1F64BF',
           stroke: konvaAttrs.stroke || '#032CA6',
-          strokeWidth: konvaAttrs.strokeWidth || 2
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor
+        }),
+        
+        ...(type === 'image' && {
+          width: (konvaAttrs.width || 100) * scaleFactor,
+          height: (konvaAttrs.height || 100) * scaleFactor,
+          imageUrl: konvaAttrs.imageUrl,
+          image: konvaAttrs.image,
+          originalName: konvaAttrs.originalName
+        }),
+        
+        ...(type === 'triangle' && {
+          points: konvaAttrs.points ? konvaAttrs.points.map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ) : [0, 50, 50, 0, 100, 50].map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ),
+          fill: konvaAttrs.fill || '#1F64BF',
+          stroke: konvaAttrs.stroke || '#032CA6',
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor,
+          closed: true
+        }),
+        
+        ...(type === 'star' && {
+          points: konvaAttrs.points ? konvaAttrs.points.map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ) : [],
+          fill: konvaAttrs.fill || '#1F64BF',
+          stroke: konvaAttrs.stroke || '#032CA6',
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor,
+          closed: true,
+          numPoints: konvaAttrs.numPoints || 5,
+          innerRadius: (konvaAttrs.innerRadius || 20) * scaleFactor,
+          outerRadius: (konvaAttrs.outerRadius || 40) * scaleFactor
+        }),
+        
+        ...(type === 'customShape' && {
+          points: konvaAttrs.points ? konvaAttrs.points.map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ) : [],
+          fill: konvaAttrs.fill || '#1F64BF',
+          stroke: konvaAttrs.stroke || '#032CA6',
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor,
+          closed: konvaAttrs.closed !== false
+        }),
+        
+        ...(type === 'line' && {
+          points: konvaAttrs.points ? konvaAttrs.points.map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ) : [0, 0, 100, 0].map((point, i) => 
+            i % 2 === 0 ? point * scaleFactor : point * scaleFactor
+          ),
+          fill: konvaAttrs.fill || 'transparent',
+          stroke: konvaAttrs.stroke || '#1F64BF',
+          strokeWidth: (konvaAttrs.strokeWidth || 2) * scaleFactor,
+          closed: konvaAttrs.closed || false
         })
       };
+
+      console.log('🔄 [KonvaDesignViewer] Elemento escalado:', {
+        original: { x: konvaAttrs.x, y: konvaAttrs.y, width: konvaAttrs.width, height: konvaAttrs.height },
+        scaled: { x: scaledX, y: scaledY, width: baseElement.width, height: baseElement.height },
+        scaleFactor,
+        offset: { x: offsetX, y: offsetY }
+      });
+
+      return baseElement;
     });
 
     setElements(konvaElements);
-  }, [design]);
+  }, [design, productImage]);
 
   // ==================== RENDERIZADO DE ELEMENTOS ====================
 
@@ -202,6 +281,11 @@ const KonvaDesignViewer = ({
             fill={element.fill}
             width={element.width}
             height={element.height}
+            align={element.align || 'left'}
+            verticalAlign={element.verticalAlign || 'top'}
+            fontWeight={element.fontWeight || 'normal'}
+            fontStyle={element.fontStyle || 'normal'}
+            textDecoration={element.textDecoration || ''}
           />
         );
 
@@ -237,10 +321,69 @@ const KonvaDesignViewer = ({
             height={element.height}
             imageUrl={element.imageUrl}
             image={element.image}
+            opacity={element.opacity}
+          />
+        );
+
+      case 'triangle':
+        return (
+          <Line
+            {...commonProps}
+            points={element.points}
+            fill={element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth}
+            closed={true}
+            lineCap={element.lineCap || 'round'}
+            lineJoin={element.lineJoin || 'round'}
+          />
+        );
+
+      case 'star':
+        return (
+          <Line
+            {...commonProps}
+            points={element.points}
+            fill={element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth}
+            closed={true}
+            lineCap={element.lineCap || 'round'}
+            lineJoin={element.lineJoin || 'round'}
+          />
+        );
+
+      case 'customShape':
+        return (
+          <Line
+            {...commonProps}
+            points={element.points}
+            fill={element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth}
+            closed={element.closed !== false}
+            lineCap={element.lineCap || 'round'}
+            lineJoin={element.lineJoin || 'round'}
+          />
+        );
+
+      case 'line':
+        return (
+          <Line
+            {...commonProps}
+            points={element.points}
+            fill={element.fill}
+            stroke={element.stroke}
+            strokeWidth={element.strokeWidth}
+            closed={element.closed || false}
+            lineCap={element.lineCap || 'round'}
+            lineJoin={element.lineJoin || 'round'}
+            dash={element.dash}
           />
         );
 
       default:
+        console.warn(`[KonvaDesignViewer] Tipo de elemento no soportado: ${element.elementType}`);
         return null;
     }
   }, []);
@@ -390,6 +533,7 @@ const KonvaDesignViewer = ({
       >
         {/* Área del canvas */}
         <Box 
+          ref={containerRef}
           sx={{ 
             flex: 1,
             display: 'flex', 
@@ -471,6 +615,10 @@ const KonvaDesignViewer = ({
             ref={stageRef}
             width={stageConfig.width}
             height={stageConfig.height}
+            scaleX={stageScale}
+            scaleY={stageScale}
+            x={stagePosition.x}
+            y={stagePosition.y}
             style={{
               border: '1px solid #e0e0e0',
               borderRadius: '8px',

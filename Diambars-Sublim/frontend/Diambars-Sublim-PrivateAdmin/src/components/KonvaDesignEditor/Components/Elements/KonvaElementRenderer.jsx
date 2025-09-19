@@ -18,22 +18,45 @@ export const KonvaElementRenderer = ({
   // Cargar imagen si es necesario
   useEffect(() => {
     if (element.type === 'image') {
-      // Si ya tenemos la imagen cargada, usarla directamente
-      if (element.image) {
-        setKonvaImage(element.image);
+      // Obtener la fuente de imagen (priorizar imageUrl para el editor)
+      const imageSource = element.imageUrl || element.image;
+      
+      if (!imageSource) {
+        console.warn('🖼️ [KonvaElementRenderer] No hay fuente de imagen:', {
+          elementId: element.id,
+          hasImageUrl: !!element.imageUrl,
+          hasImage: !!element.image
+        });
+        return;
+      }
+
+      // Si ya tenemos la imagen cargada y es la misma fuente, usarla directamente
+      if (konvaImage && konvaImage.src === imageSource) {
         return;
       }
       
-      // Si no, cargar desde URL
-      if (element.imageUrl && !konvaImage) {
-        const img = new window.Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => setKonvaImage(img);
-        img.onerror = () => console.error('Error loading image:', element.imageUrl);
-        img.src = element.imageUrl;
-      }
+      // Cargar la imagen
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        console.log('🖼️ [KonvaElementRenderer] Imagen cargada exitosamente:', {
+          elementId: element.id,
+          width: img.width,
+          height: img.height,
+          source: imageSource.substring(0, 50) + '...'
+        });
+        setKonvaImage(img);
+      };
+      img.onerror = (error) => {
+        console.error('🖼️ [KonvaElementRenderer] Error cargando imagen:', {
+          elementId: element.id,
+          source: imageSource.substring(0, 50) + '...',
+          error
+        });
+      };
+      img.src = imageSource;
     }
-  }, [element.type, element.imageUrl, element.image, konvaImage]);
+  }, [element.type, element.imageUrl, element.image, element.id]);
 
   const commonProps = {
     id: element.id,
@@ -186,7 +209,10 @@ export const KonvaElementRenderer = ({
           console.log('🖼️ [KonvaElementRenderer] Imagen no cargada, mostrando placeholder:', {
             elementId: element.id,
             hasImage: !!element.image,
-            hasImageUrl: !!element.imageUrl
+            hasImageUrl: !!element.imageUrl,
+            imageSource: (element.imageUrl || element.image)?.substring(0, 50) + '...',
+            width: element.width,
+            height: element.height
           });
         }
         return (
@@ -210,6 +236,15 @@ export const KonvaElementRenderer = ({
           height={element.height || 100}
           crop={element.crop}
           filters={element.filters}
+          fill={element.fill}
+          // Aplicar filtro de color si está presente
+          {...(element.fill && {
+            fillPatternImage: konvaImage,
+            fillPatternScale: {
+              x: (element.width || 100) / konvaImage.width,
+              y: (element.height || 100) / konvaImage.height
+            }
+          })}
         />
       );
 

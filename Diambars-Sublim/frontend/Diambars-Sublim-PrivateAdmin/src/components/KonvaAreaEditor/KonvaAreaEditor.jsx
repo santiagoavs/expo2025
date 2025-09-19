@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer } from 'react-konva';
 import useImage from 'use-image';
 import { CANVAS_CONFIG, calculateScaledDimensions } from '../KonvaDesignEditor/constants/canvasConfig';
+import { EDITOR_THEME, EDITOR_LAYOUT, CANVAS_RENDERING } from './constants/editorConfig';
+import { useUnifiedCanvasCentering } from '../KonvaDesignEditor/hooks/useUnifiedCanvasCentering';
+import { GridPattern } from './components/GridPattern';
+import { ExportService } from './services/ExportService';
 import Swal from 'sweetalert2';
 import {
   Box,
@@ -39,82 +43,145 @@ Swal.mixin({
   didOpen: () => {
     const container = document.querySelector('.swal-overlay-custom');
     if (container) {
-      container.style.zIndex = '2100';
+      container.style.zIndex = '3000'; // Mayor que el editor (2000)
     }
   }
 });
 
-// Estilos personalizados
-const EditorOverlay = styled(Box)(({ theme }) => ({
+// Estilos personalizados modernos
+const EditorOverlay = styled(Box, {
+  name: 'KonvaAreaEditor-Overlay',
+  slot: 'ModalBackdrop'
+})(({ theme }) => ({
   position: 'fixed',
   top: 0,
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(1, 3, 38, 0.9)',
+  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   zIndex: 2000,
-  backdropFilter: 'blur(5px)',
+  backdropFilter: 'blur(12px)',
+  padding: theme.spacing(2),
 }));
 
-const EditorContainer = styled(Box)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: '16px',
-  width: '95vw',
-  height: '95vh',
-  maxWidth: '1400px',
-  maxHeight: '900px',
+const EditorContainer = styled(Box, {
+  name: 'KonvaAreaEditor-Container',
+  slot: 'MainEditorWindow'
+})(({ theme }) => ({
+  background: EDITOR_THEME.gradients.container,
+  borderRadius: EDITOR_THEME.borderRadius.container,
+  width: EDITOR_LAYOUT.container.width,
+  height: EDITOR_LAYOUT.container.height,
+  maxWidth: EDITOR_LAYOUT.container.maxWidth,
+  maxHeight: EDITOR_LAYOUT.container.maxHeight,
   overflow: 'hidden',
-  boxShadow: theme.shadows[10],
-  border: `1px solid ${theme.palette.divider}`,
+  boxShadow: EDITOR_THEME.shadows.container,
+  border: `1px solid ${EDITOR_THEME.colors.border}`,
   display: 'flex',
   flexDirection: 'column',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: EDITOR_THEME.borderRadius.container,
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+    pointerEvents: 'none',
+  },
 }));
 
-const EditorHeader = styled(Box)(({ theme }) => ({
+const EditorHeader = styled(Box, {
+  name: 'KonvaAreaEditor-Header',
+  slot: 'TopToolbar'
+})(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(2, 3),
-  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}0D)`,
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(3, 4),
+  background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%)',
+  borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+  borderRadius: '24px 24px 0 0',
+  position: 'relative',
+  zIndex: 1,
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, transparent 100%)',
+  },
 }));
 
 const EditorTitle = styled(Typography)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(1),
+  gap: theme.spacing(1.5),
   fontWeight: 700,
+  fontSize: '1.25rem',
+  color: '#1e293b',
+  textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
 }));
 
-const Toolbar = styled(Box)(({ theme }) => ({
+const Toolbar = styled(Box, {
+  name: 'KonvaAreaEditor-Toolbar',
+  slot: 'ActionButtons'
+})(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 3),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  gap: theme.spacing(2),
+  padding: theme.spacing(2, 4),
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(248, 250, 252, 0.4) 100%)',
+  borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+  gap: theme.spacing(3),
   flexWrap: 'wrap',
+  position: 'relative',
+  zIndex: 1,
 }));
 
 const ToolbarGroup = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(1),
+  gap: theme.spacing(1.5),
+  padding: theme.spacing(1),
+  borderRadius: '12px',
+  background: 'rgba(255, 255, 255, 0.5)',
+  border: '1px solid rgba(226, 232, 240, 0.5)',
 }));
 
 const ToolButton = styled(Button)(({ theme }) => ({
   minWidth: 'auto',
-  padding: theme.spacing(1, 2),
-  borderRadius: '8px',
-  fontSize: '0.8125rem',
+  padding: theme.spacing(1.5, 2.5),
+  borderRadius: '10px',
+  fontSize: '0.875rem',
   textTransform: 'none',
   gap: theme.spacing(1),
+  fontWeight: 500,
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  },
+  '&.MuiButton-contained': {
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+    },
+  },
 }));
 
-const EditorContent = styled(Box)(({ theme }) => ({
+const EditorContent = styled(Box, {
+  name: 'KonvaAreaEditor-Content',
+  slot: 'MainContentArea'
+})(({ theme }) => ({
   flex: 1,
   display: 'flex',
   overflow: 'hidden',
@@ -123,49 +190,91 @@ const EditorContent = styled(Box)(({ theme }) => ({
   },
 }));
 
-const CanvasContainer = styled(Box)(({ theme }) => ({
+const CanvasContainer = styled(Box, {
+  name: 'KonvaAreaEditor-CanvasContainer',
+  slot: 'MainCanvasWrapper'
+})(({ theme }) => ({
   flex: 1,
-  backgroundColor: theme.palette.grey[50],
+  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   overflow: 'hidden',
   position: 'relative',
-  borderRight: `1px solid ${theme.palette.divider}`,
+  borderRight: '1px solid rgba(226, 232, 240, 0.6)',
+  // ✅ CORREGIDO: Sin padding para usar todo el espacio disponible
+  padding: 0,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `
+      radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)
+    `,
+    pointerEvents: 'none',
+  },
   [theme.breakpoints.down('md')]: {
     borderRight: 'none',
-    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
     minHeight: '60vh',
+    padding: 0,
   },
 }));
 
-const PropertiesPanel = styled(Box)(({ theme }) => ({
-  width: '320px',
-  backgroundColor: theme.palette.background.paper,
+const PropertiesPanel = styled(Box, {
+  name: 'KonvaAreaEditor-PropertiesPanel',
+  slot: 'RightSidebar'
+})(({ theme }) => ({
+  width: EDITOR_LAYOUT.panels.properties.width,
+  background: EDITOR_THEME.gradients.panel,
   display: 'flex',
   flexDirection: 'column',
-  borderLeft: `1px solid ${theme.palette.divider}`,
+  borderLeft: `1px solid ${EDITOR_THEME.colors.border}`,
+  borderRadius: `0 0 ${EDITOR_THEME.borderRadius.container} 0`,
+  position: 'relative',
+  zIndex: 1,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%)',
+    borderRadius: `0 0 ${EDITOR_THEME.borderRadius.container} 0`,
+    pointerEvents: 'none',
+  },
   [theme.breakpoints.down('lg')]: {
-    width: '280px',
+    width: EDITOR_LAYOUT.panels.properties.widthLg,
   },
   [theme.breakpoints.down('md')]: {
     width: '100%',
     maxHeight: '40vh',
+    borderRadius: `0 0 ${EDITOR_THEME.borderRadius.container} ${EDITOR_THEME.borderRadius.container}`,
   },
 }));
 
 const PanelHeader = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}05)`,
+  padding: theme.spacing(3, 4),
+  borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+  background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.7) 100%)',
+  borderRadius: '0 0 16px 0',
+  position: 'relative',
+  zIndex: 2,
 }));
 
 const PropertyGroup = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(3),
-  paddingBottom: theme.spacing(2),
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2, 3),
+  background: 'rgba(255, 255, 255, 0.6)',
+  borderRadius: '12px',
+  border: '1px solid rgba(226, 232, 240, 0.5)',
   '&:last-child': {
-    borderBottom: 'none',
     marginBottom: 0,
   },
 }));
@@ -173,16 +282,28 @@ const PropertyGroup = styled(Box)(({ theme }) => ({
 const PropertyGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
-  gap: theme.spacing(1),
+  gap: theme.spacing(1.5),
 }));
 
 const EditorFooter = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: theme.spacing(1, 3),
-  background: `linear-gradient(135deg, ${theme.palette.grey[100]}, ${theme.palette.primary.light}05)`,
-  borderTop: `1px solid ${theme.palette.divider}`,
+  padding: theme.spacing(2, 4),
+  background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%)',
+  borderTop: '1px solid rgba(226, 232, 240, 0.6)',
+  borderRadius: '0 0 24px 24px',
+  position: 'relative',
+  zIndex: 1,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, transparent 100%)',
+  },
 }));
 
 // Componente AreaRect para representar cada área
@@ -232,12 +353,15 @@ const AreaRect = ({ area, isSelected, onSelect, onChange, stageScale }) => {
         width={area.position.width}
         height={area.position.height}
         rotation={area.position.rotationDegree || 0}
-        stroke={area.konvaConfig?.strokeColor || '#1F64BF'}
-        strokeWidth={(area.konvaConfig?.strokeWidth || 2) / stageScale}
-        fill={area.konvaConfig?.strokeColor || '#1F64BF'}
-        opacity={area.konvaConfig?.fillOpacity || 0.2}
-        cornerRadius={area.konvaConfig?.cornerRadius || 0}
-        dash={area.konvaConfig?.dash || [5, 5]}
+        stroke={isSelected ? CANVAS_RENDERING.areas.selected.strokeColor : (area.konvaConfig?.strokeColor || CANVAS_RENDERING.areas.default.strokeColor)}
+        strokeWidth={(isSelected ? CANVAS_RENDERING.areas.selected.strokeWidth : (area.konvaConfig?.strokeWidth || CANVAS_RENDERING.areas.default.strokeWidth)) / stageScale}
+        fill={isSelected ? CANVAS_RENDERING.areas.selected.fillOpacity : (area.konvaConfig?.strokeColor || CANVAS_RENDERING.areas.default.strokeColor)}
+        opacity={isSelected ? CANVAS_RENDERING.areas.selected.fillOpacity : (area.konvaConfig?.fillOpacity || CANVAS_RENDERING.areas.default.fillOpacity)}
+        cornerRadius={area.konvaConfig?.cornerRadius || CANVAS_RENDERING.areas.default.cornerRadius}
+        dash={isSelected ? CANVAS_RENDERING.areas.selected.dash : (area.konvaConfig?.dash || CANVAS_RENDERING.areas.default.dash)}
+        shadowColor={isSelected ? CANVAS_RENDERING.areas.selected.shadowColor : 'rgba(0, 0, 0, 0.1)'}
+        shadowBlur={isSelected ? CANVAS_RENDERING.areas.selected.shadowBlur : 4}
+        shadowOffset={isSelected ? CANVAS_RENDERING.areas.selected.shadowOffset : { x: 1, y: 1 }}
         draggable
         onClick={onSelect}
         onTap={onSelect}
@@ -248,12 +372,23 @@ const AreaRect = ({ area, isSelected, onSelect, onChange, stageScale }) => {
         <Transformer
           ref={transformerRef}
           boundBoxFunc={(oldBox, newBox) => {
-            // Limit resize
+            // ✅ VALIDACIÓN MEJORADA: Limitar redimensionado a mínimo 10px (igual que el backend)
             if (newBox.width < 10 || newBox.height < 10) {
               return oldBox;
             }
             return newBox;
           }}
+          rotateEnabled={true}
+          resizeEnabled={true}
+          borderEnabled={true}
+          anchorSize={CANVAS_RENDERING.transformer.anchorSize}
+          borderStroke={CANVAS_RENDERING.transformer.borderStroke}
+          borderStrokeWidth={CANVAS_RENDERING.transformer.borderStrokeWidth}
+          anchorStroke={CANVAS_RENDERING.transformer.anchorStroke}
+          anchorFill={CANVAS_RENDERING.transformer.anchorFill}
+          anchorStrokeWidth={CANVAS_RENDERING.transformer.anchorStrokeWidth}
+          keepRatio={false}
+          centeredScaling={false}
         />
       )}
     </>
@@ -271,8 +406,6 @@ const KonvaAreaEditor = ({
   const theme = useTheme();
   const [areas, setAreas] = useState(initialAreas);
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(null);
-  const [stageScale, setStageScale] = useState(1);
-  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
   // ✅ CORREGIDO: Stage dimensions SIEMPRE fijas usando constantes compartidas
   const [stageDimensions] = useState({ 
     width: CANVAS_CONFIG.width, 
@@ -285,29 +418,19 @@ const KonvaAreaEditor = ({
   const containerRef = useRef();
   const [image] = useImage(productImage, 'anonymous');
 
-  // ✅ CORREGIDO: Solo calcular el zoom inicial para que quepa en el contenedor
-  useEffect(() => {
-    if (image && containerRef.current) {
-      const container = containerRef.current;
-      const containerWidth = container.offsetWidth - 40;
-      const containerHeight = container.offsetHeight - 40;
-      
-      // ✅ CORREGIDO: Calcular zoom para que el stage quepa en el contenedor
-      const scaleX = containerWidth / CANVAS_CONFIG.width;
-      const scaleY = containerHeight / CANVAS_CONFIG.height;
-      const initialScale = Math.min(scaleX, scaleY, 1); // No ampliar, solo reducir si es necesario
-      
-      setStageScale(initialScale);
-      
-      // ✅ CORREGIDO: Centrar el stage en el contenedor
-      const scaledWidth = CANVAS_CONFIG.width * initialScale;
-      const scaledHeight = CANVAS_CONFIG.height * initialScale;
-      const centerX = (containerWidth - scaledWidth) / 2;
-      const centerY = (containerHeight - scaledHeight) / 2;
-      
-      setStagePosition({ x: centerX, y: centerY });
-    }
-  }, [image]);
+  // ✅ UNIFICADO: Usar hook compartido para centrado del canvas
+  const {
+    stageScale,
+    stagePosition,
+    handleWheel,
+    zoomIn,
+    zoomOut,
+    resetZoom
+  } = useUnifiedCanvasCentering(image, containerRef);
+
+  // ✅ NUEVO: Servicio de exportación optimizado
+  const exportService = new ExportService();
+
 
   const handleAreaSelect = useCallback((index) => {
     setSelectedAreaIndex(index);
@@ -359,7 +482,8 @@ const KonvaAreaEditor = ({
       customClass: {
         container: 'swal-overlay-custom',
         popup: 'swal-modal-custom'
-      }
+      },
+      zIndex: 3000
     });
 
     if (isConfirmed) {
@@ -387,41 +511,6 @@ const KonvaAreaEditor = ({
     setSelectedAreaIndex(areas.length);
   }, [selectedAreaIndex, areas]);
 
-  const handleWheel = useCallback((e) => {
-    e.evt.preventDefault();
-    
-    const scaleBy = 1.1;
-    const stage = e.target.getStage();
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-    
-    const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    const clampedScale = Math.max(0.1, Math.min(3, newScale));
-    
-    setStageScale(clampedScale);
-    setStagePosition({
-      x: pointer.x - mousePointTo.x * clampedScale,
-      y: pointer.y - mousePointTo.y * clampedScale,
-    });
-  }, []);
-
-  const zoomIn = useCallback(() => {
-    setStageScale(prev => Math.min(3, prev * 1.2));
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    setStageScale(prev => Math.max(0.1, prev / 1.2));
-  }, []);
-
-  const resetZoom = useCallback(() => {
-    setStageScale(1);
-    setStagePosition({ x: 0, y: 0 });
-  }, []);
 
   const updateSelectedArea = useCallback((field, value) => {
     if (selectedAreaIndex === null) return;
@@ -454,6 +543,15 @@ const KonvaAreaEditor = ({
       
       if (area.position.width <= 0 || area.position.height <= 0) {
         errors.push(`Área ${index + 1}: Dimensiones inválidas`);
+      }
+      
+      // ✅ VALIDACIÓN AGREGADA: Alto y ancho mínimo de 10px (igual que el backend)
+      if (area.position.width < 10) {
+        errors.push(`Área ${index + 1}: Ancho mínimo 10px`);
+      }
+      
+      if (area.position.height < 10) {
+        errors.push(`Área ${index + 1}: Alto mínimo 10px`);
       }
       
       if (!area.accepts.text && !area.accepts.image) {
@@ -492,13 +590,36 @@ const KonvaAreaEditor = ({
         customClass: {
           container: 'swal-overlay-custom',
           popup: 'swal-modal-custom'
-        }
+        },
+        zIndex: 3000
       });
       return;
     }
+
+    // ✅ MEJORADO: Exportar con resoluciones optimizadas para Cloudinary
+    try {
+      if (stageRef.current) {
+        const exportResult = await exportService.exportStage(stageRef.current, {
+          format: 'png',
+          quality: 0.9,
+          pixelRatio: 2,
+          targetResolution: 'areas' // Usar configuración para áreas
+        });
+
+        if (exportResult.success) {
+          console.log('💾 [KonvaAreaEditor] Áreas exportadas con resolución optimizada:', {
+            dimensions: exportResult.dimensions,
+            cloudinaryConfig: exportResult.cloudinaryConfig,
+            metadata: exportResult.metadata
+          });
+        }
+      }
+    } catch (exportError) {
+      console.warn('⚠️ [KonvaAreaEditor] Error en exportación (continuando con guardado):', exportError);
+    }
     
     onSaveAreas(areas);
-  }, [areas, validateAreas, onSaveAreas]);
+  }, [areas, validateAreas, onSaveAreas, exportService]);
 
   const handleStageClick = useCallback((e) => {
     if (e.target === e.target.getStage()) {
@@ -599,51 +720,106 @@ const KonvaAreaEditor = ({
               Ajustar
             </ToolButton>
           </ToolbarGroup>
+
+          <ToolbarGroup>
+            <ToolButton
+              variant="outlined"
+              color="success"
+              startIcon={<SaveIcon size={16} />}
+              onClick={async () => {
+                try {
+                  if (stageRef.current) {
+                    const exportResult = await exportService.exportStage(stageRef.current, {
+                      format: 'png',
+                      quality: 0.9,
+                      pixelRatio: 2,
+                      targetResolution: 'areas'
+                    });
+
+                    if (exportResult.success) {
+                      // Crear enlace de descarga
+                      const link = document.createElement('a');
+                      link.download = `areas-${Date.now()}.png`;
+                      link.href = exportResult.dataURL;
+                      link.click();
+                      
+                      Swal.fire({
+                        title: 'Exportado exitosamente',
+                        text: `Imagen exportada con resolución ${exportResult.dimensions.width}x${exportResult.dimensions.height}px`,
+                        icon: 'success',
+                        confirmButtonColor: '#1F64BF',
+                        backdrop: `rgba(0,0,0,0.7)`,
+                        customClass: {
+                          container: 'swal-overlay-custom',
+                          popup: 'swal-modal-custom'
+                        },
+                        zIndex: 3000
+                      });
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error en exportación:', error);
+                  Swal.fire({
+                    title: 'Error en exportación',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#1F64BF',
+                    backdrop: `rgba(0,0,0,0.7)`,
+                    customClass: {
+                      container: 'swal-overlay-custom',
+                      popup: 'swal-modal-custom'
+                    },
+                    zIndex: 3000
+                  });
+                }
+              }}
+            >
+              Exportar
+            </ToolButton>
+          </ToolbarGroup>
         </Toolbar>
 
         {/* Main content */}
         <EditorContent>
           {/* Canvas */}
           <CanvasContainer ref={containerRef}>
-            <Stage
-              ref={stageRef}
-              width={stageDimensions.width}
-              height={stageDimensions.height}
-              scaleX={stageScale}
-              scaleY={stageScale}
-              x={stagePosition.x}
-              y={stagePosition.y}
-              onWheel={handleWheel}
-              onClick={handleStageClick}
-              onTap={handleStageClick}
-              draggable
+            <Box
+              sx={{
+                position: 'relative',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: `
+                  0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                  0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                `,
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+              }}
             >
+              <Stage
+                ref={stageRef}
+                width={stageDimensions.width}
+                height={stageDimensions.height}
+                scaleX={stageScale}
+                scaleY={stageScale}
+                x={stagePosition.x}
+                y={stagePosition.y}
+                onWheel={handleWheel}
+                onClick={handleStageClick}
+                onTap={handleStageClick}
+                draggable
+                pixelRatio={window.devicePixelRatio || 1}
+                listening={true}
+              >
               <Layer>
-                {/* Grid */}
-                {showGrid && (
-                  <>
-                    {Array.from({ length: Math.ceil(stageDimensions.width / 20) + 1 }).map((_, i) => (
-                      <Rect
-                        key={`v-${i}`}
-                        x={i * 20}
-                        y={0}
-                        width={1}
-                        height={stageDimensions.height}
-                        fill="rgba(31, 100, 191, 0.1)"
-                      />
-                    ))}
-                    {Array.from({ length: Math.ceil(stageDimensions.height / 20) + 1 }).map((_, i) => (
-                      <Rect
-                        key={`h-${i}`}
-                        x={0}
-                        y={i * 20}
-                        width={stageDimensions.width}
-                        height={1}
-                        fill="rgba(31, 100, 191, 0.1)"
-                      />
-                    ))}
-                  </>
-                )}
+                {/* Grid compartido */}
+                <GridPattern 
+                  width={stageDimensions.width}
+                  height={stageDimensions.height}
+                  showGrid={showGrid}
+                  stageScale={stageScale}
+                />
                 
                 {/* Background image - Usar misma lógica que KonvaDesignEditor */}
                 {image && (() => {
@@ -678,41 +854,88 @@ const KonvaAreaEditor = ({
                   />
                 ))}
 
-                {/* Labels */}
+                {/* ✅ INDICADORES VISUALES DE ERROR MEJORADOS */}
+                {areas.map((area, index) => {
+                  const hasError = area.position.width < 10 || area.position.height < 10;
+                  if (!hasError) return null;
+                  
+                  return (
+                    <Text
+                      key={`error-${index}`}
+                      x={area.position.x}
+                      y={area.position.y + area.position.height + 8}
+                      text={`⚠️ Área ${index + 1}: Muy pequeña (mín. 10x10px)`}
+                      fontSize={Math.max(10, 12 / stageScale)}
+                      fill="#ef4444"
+                      fontStyle="bold"
+                      listening={false}
+                      shadowColor="rgba(255, 255, 255, 0.8)"
+                      shadowBlur={2}
+                      shadowOffset={{ x: 1, y: 1 }}
+                    />
+                  );
+                })}
+
+                {/* Labels mejorados */}
                 {showLabels && areas.map((area, index) => (
                   <Text
                     key={`label-${index}`}
                     x={area.position.x}
-                    y={area.position.y - 20}
+                    y={area.position.y - 25}
                     text={area.displayName || area.name}
-                    fontSize={14 / stageScale}
-                    fill="#1F64BF"
+                    fontSize={Math.max(12, 14 / stageScale)}
+                    fill="#1e293b"
                     fontStyle="bold"
                     listening={false}
+                    shadowColor="rgba(255, 255, 255, 0.9)"
+                    shadowBlur={3}
+                    shadowOffset={{ x: 1, y: 1 }}
+                    padding={4}
+                    background="rgba(255, 255, 255, 0.8)"
+                    cornerRadius={4}
                   />
                 ))}
               </Layer>
             </Stage>
+            </Box>
           </CanvasContainer>
 
           {/* Properties panel */}
           <PropertiesPanel>
             <PanelHeader>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Propiedades
-              </Typography>
-              {selectedArea && (
-                <Typography variant="caption" color="primary" sx={{ 
-                  bgcolor: 'primary.light', 
-                  px: 1, 
-                  py: 0.5, 
-                  borderRadius: 1,
-                  display: 'inline-block',
-                  mt: 1
-                }}>
-                  Área {selectedAreaIndex + 1} seleccionada
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: EDITOR_THEME.colors.text }}>
+                  Propiedades del Área
                 </Typography>
-              )}
+                {selectedArea ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Typography variant="caption" sx={{ 
+                      bgcolor: 'rgba(59, 130, 246, 0.1)', 
+                      color: EDITOR_THEME.colors.primary,
+                      px: 1.5, 
+                      py: 0.5, 
+                      borderRadius: 2,
+                      display: 'inline-block',
+                      fontWeight: 500
+                    }}>
+                      ✓ Área {selectedAreaIndex + 1} seleccionada
+                    </Typography>
+                    <Typography variant="caption" sx={{ 
+                      color: EDITOR_THEME.colors.textSecondary,
+                      opacity: 0.8
+                    }}>
+                      {selectedArea.displayName || selectedArea.name}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="caption" sx={{ 
+                    color: EDITOR_THEME.colors.textSecondary,
+                    opacity: 0.7
+                  }}>
+                    Selecciona un área para editar sus propiedades
+                  </Typography>
+                )}
+              </Box>
             </PanelHeader>
 
             <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
@@ -720,8 +943,13 @@ const KonvaAreaEditor = ({
                 <>
                   {/* Basic properties */}
                   <PropertyGroup>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Información Básica
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ 
+                      color: EDITOR_THEME.colors.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      📝 Información Básica
                     </Typography>
                     
                     <TextField
@@ -745,8 +973,13 @@ const KonvaAreaEditor = ({
 
                   {/* Position properties */}
                   <PropertyGroup>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Posición y Tamaño
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ 
+                      color: EDITOR_THEME.colors.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      📐 Posición y Tamaño
                     </Typography>
                     
                     <PropertyGrid>
@@ -775,7 +1008,9 @@ const KonvaAreaEditor = ({
                         type="number"
                         size="small"
                         margin="dense"
-                        inputProps={{ min: 1 }}
+                        inputProps={{ min: 10 }}
+                        error={selectedArea.position.width < 10}
+                        helperText={selectedArea.position.width < 10 ? "Mínimo 10px" : ""}
                       />
                       
                       <TextField
@@ -785,7 +1020,9 @@ const KonvaAreaEditor = ({
                         type="number"
                         size="small"
                         margin="dense"
-                        inputProps={{ min: 1 }}
+                        inputProps={{ min: 10 }}
+                        error={selectedArea.position.height < 10}
+                        helperText={selectedArea.position.height < 10 ? "Mínimo 10px" : ""}
                       />
                     </PropertyGrid>
                     
@@ -806,8 +1043,13 @@ const KonvaAreaEditor = ({
 
                   {/* Element settings */}
                   <PropertyGroup>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Configuración de Elementos
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ 
+                      color: EDITOR_THEME.colors.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      ⚙️ Configuración de Elementos
                     </Typography>
                     
                     <TextField
@@ -850,8 +1092,13 @@ const KonvaAreaEditor = ({
 
                   {/* Visual properties */}
                   <PropertyGroup>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Apariencia
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ 
+                      color: EDITOR_THEME.colors.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      🎨 Apariencia
                     </Typography>
                     
                     <TextField
@@ -917,23 +1164,45 @@ const KonvaAreaEditor = ({
           </PropertiesPanel>
         </EditorContent>
 
-        {/* Footer */}
+        {/* Footer mejorado */}
         <EditorFooter>
-          <Typography variant="caption" color="text.secondary">
-            Áreas definidas: {areas.length}
-            {selectedArea && (
-              <>
-                {' • '}
-                Área seleccionada: {selectedArea.name}
-              </>
-            )}
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Áreas definidas: {areas.length}
+              {selectedArea && (
+                <>
+                  {' • '}
+                  Área seleccionada: {selectedArea.name}
+                </>
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.7 }}>
+              Canvas: {stageDimensions.width}×{stageDimensions.height}px • 
+              Zoom: {Math.round(stageScale * 100)}% • 
+              Resolución exportación: 800×600px (optimizada para Cloudinary)
+            </Typography>
+          </Box>
           
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Button
               variant="outlined"
               onClick={onClose}
               color="inherit"
+              sx={{
+                borderRadius: EDITOR_THEME.borderRadius.button,
+                borderColor: EDITOR_THEME.colors.border,
+                color: EDITOR_THEME.colors.textSecondary,
+                px: 3,
+                py: 1.5,
+                fontWeight: 500,
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  borderColor: EDITOR_THEME.colors.primary,
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: EDITOR_THEME.shadows.buttonHover
+                }
+              }}
             >
               Cancelar
             </Button>
@@ -942,6 +1211,20 @@ const KonvaAreaEditor = ({
               color="primary"
               startIcon={<SaveIcon size={16} />}
               onClick={handleSave}
+              sx={{
+                borderRadius: EDITOR_THEME.borderRadius.button,
+                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                px: 3,
+                py: 1.5,
+                fontWeight: 500,
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: EDITOR_THEME.shadows.button,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: EDITOR_THEME.shadows.buttonHover
+                }
+              }}
             >
               Guardar Áreas
             </Button>

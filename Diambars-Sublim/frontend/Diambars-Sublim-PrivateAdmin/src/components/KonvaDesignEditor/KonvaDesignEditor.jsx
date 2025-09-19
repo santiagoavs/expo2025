@@ -11,6 +11,7 @@ import { useKonvaHistory } from './hooks/useKonvaHistory';
 import { useKonvaSelection } from './hooks/useKonvaSelection';
 import { useProductBackground } from './hooks/useProductBackground';
 import { useCustomizationAreas } from './hooks/useCustomizationAreas';
+import { useUnifiedCanvasCentering } from './hooks/useUnifiedCanvasCentering';
 
 // ==================== COMPONENTES ESPECIALIZADOS ====================
 import { EditorToolbar } from './components/Editor/EditorToolbar';
@@ -20,6 +21,8 @@ import { LayersPanel } from './components/Layers/LayersPanel';
 import { AssetsPanel } from './components/Assets/AssetsPanel';
 import { ExportPanel } from './components/Export/ExportPanel';
 import { ShapeCreator } from './components/Shapes/ShapeCreator';
+import ColorPicker from '../FabricDesignEditor/components/ColorPicker';
+import { testImageFlow } from './utils/imageTestUtils';
 
 // ==================== ELEMENTOS RENDERIZABLES ====================
 import { KonvaElementRenderer } from './components/Elements/KonvaElementRenderer';
@@ -32,7 +35,7 @@ import { ValidationService } from './services/ValidationService';
 import { FontService } from './services/FontService';
 import { ExportService } from './services/ExportService';
 import { HistoryManager } from './services/HistoryManager';
-import { CANVAS_CONFIG } from './constants/canvasConfig';
+import { CANVAS_CONFIG, calculateScaledDimensions } from './constants/canvasConfig';
 
 // ==================== CONSTANTES ====================
 const EDITOR_CONFIG = {
@@ -58,7 +61,10 @@ const THEME_COLORS = {
 };
 
 // ==================== STYLED COMPONENTS ====================
-const EditorLayout = styled(Box)(({ theme }) => ({
+const EditorLayout = styled(Box, {
+  name: 'KonvaDesignEditor-Layout',
+  slot: 'Root'
+})(({ theme }) => ({
   display: 'flex',
   height: '100vh',
   position: 'fixed',
@@ -75,20 +81,27 @@ const EditorLayout = styled(Box)(({ theme }) => ({
   }
 }));
 
-const CanvasContainer = styled(Box)(({ theme }) => ({
+const CanvasContainer = styled(Box, {
+  name: 'KonvaDesignEditor-CanvasContainer',
+  slot: 'MainCanvasWrapper'
+})(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
   background: THEME_COLORS.surface,
   borderRadius: '16px',
-  margin: theme.spacing(2),
+  // ✅ CORREGIDO: Reducir margin para usar más espacio
+  margin: theme.spacing(1),
   overflow: 'hidden',
   boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
   border: `1px solid ${theme.palette.divider}`
 }));
 
-const StageWrapper = styled(Box)({
+const StageWrapper = styled(Box, {
+  name: 'KonvaDesignEditor-StageWrapper',
+  slot: 'KonvaStageContainer'
+})({
   position: 'relative',
   flex: 1,
   overflow: 'hidden',
@@ -129,6 +142,10 @@ const KonvaDesignEditor = ({
   const [snapToGrid, setSnapToGrid] = useState(EDITOR_CONFIG.snap.enabled);
   const [zoom, setZoom] = useState(1);
   const [selectedAreaId, setSelectedAreaId] = useState(null);
+  
+  // ==================== ESTADO DE COLOR DE FONDO ====================
+  const [productColorFilter, setProductColorFilter] = useState(null);
+  const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
 
   // ==================== HOOKS ESPECIALIZADOS ====================
   
@@ -165,21 +182,44 @@ const KonvaDesignEditor = ({
     selectionBounds
   } = useKonvaSelection(elements);
 
-  // Fondo del producto
+  // Fondo del producto (sin canvasDimensions inicialmente)
   const {
     productImage,
     productImageLoaded,
     productScale,
     productPosition
-  } = useProductBackground(product);
+  } = useProductBackground(product, null);
 
-  // Áreas de personalización
+  // ✅ UNIFICADO: Usar hook compartido para centrado del canvas (después de productImage)
+  const {
+    stageScale,
+    stagePosition,
+    setStageScale,
+    setStagePosition,
+    handleWheel: handleCanvasWheel,
+    zoomIn,
+    zoomOut,
+    resetZoom
+  } = useUnifiedCanvasCentering(productImage, containerRef);
+
+  // ✅ CORREGIDO: Usar dimensiones fijas del canvas como KonvaAreaEditor
+  const stageDimensions = {
+    width: CANVAS_CONFIG.width,
+    height: CANVAS_CONFIG.height
+  };
+
+  // Dimensiones del canvas escalado (después de stageScale)
+  const canvasDimensions = {
+    width: CANVAS_CONFIG.width * stageScale,
+    height: CANVAS_CONFIG.height * stageScale
+  };
+  
   const {
     customizationAreas,
     getAreaForPosition,
     validateElementInArea,
     snapToArea
-  } = useCustomizationAreas(product);
+  } = useCustomizationAreas(product, canvasDimensions);
 
   // ==================== SERVICIOS ESPECIALIZADOS ====================
   const elementFactory = new ElementFactory();
@@ -365,22 +405,51 @@ const KonvaDesignEditor = ({
     
     try {
       for (const file of files) {
+        console.log('🖼️ [KonvaDesignEditor] Procesando archivo:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        });
+
         if (!file.type.startsWith('image/')) {
           toast.error(`${file.name} no es una imagen válida`);
           continue;
         }
 
+        // Validar archivo antes de procesar
+        const validationErrors = await validationService.validateImageFile(file);
+        if (validationErrors.length > 0) {
+          toast.error(`${file.name}: ${validationErrors.join(', ')}`);
+          continue;
+        }
+
         // Convertir a base64
-        const imageDataUrl = await new Promise((resolve) => {
+        const imageDataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
+          reader.onload = () => {
+            console.log('🖼️ [KonvaDesignEditor] Imagen convertida a base64:', {
+              name: file.name,
+              dataUrlLength: reader.result.length,
+              dataUrlStart: reader.result.substring(0, 50) + '...'
+            });
+            resolve(reader.result);
+          };
+          reader.onerror = () => reject(new Error('Error leyendo archivo'));
           reader.readAsDataURL(file);
         });
 
         // Obtener dimensiones
         const img = new window.Image();
-        await new Promise((resolve) => {
-          img.onload = resolve;
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            console.log('🖼️ [KonvaDesignEditor] Imagen cargada:', {
+              name: file.name,
+              width: img.width,
+              height: img.height
+            });
+            resolve();
+          };
+          img.onerror = () => reject(new Error('Error cargando imagen'));
           img.src = imageDataUrl;
         });
 
@@ -393,10 +462,30 @@ const KonvaDesignEditor = ({
           y: 100 + Math.random() * 100,
           width: img.width * scale,
           height: img.height * scale,
-          imageUrl: imageDataUrl,
+          imageUrl: imageDataUrl, // Para el editor
+          image: imageDataUrl, // Para el backend (mismo valor)
           originalName: file.name,
           originalSize: file.size,
           areaId: selectedAreaId || (customizationAreas.length > 0 ? customizationAreas[0].id : 'default-area')
+        });
+
+        // Validar el elemento antes de agregarlo
+        const elementValidation = validationService.validateElement(imageElement);
+        if (elementValidation.length > 0) {
+          console.error('🖼️ [KonvaDesignEditor] Error validando elemento de imagen:', elementValidation);
+          toast.error(`Error validando imagen ${file.name}: ${elementValidation.join(', ')}`);
+          continue;
+        }
+
+        console.log('🖼️ [KonvaDesignEditor] Elemento de imagen creado:', {
+          id: imageElement.id,
+          type: imageElement.type,
+          hasImageUrl: !!imageElement.imageUrl,
+          hasImage: !!imageElement.image,
+          imageUrlStart: imageElement.imageUrl?.substring(0, 50) + '...',
+          imageStart: imageElement.image?.substring(0, 50) + '...',
+          width: imageElement.width,
+          height: imageElement.height
         });
 
         addElement(imageElement);
@@ -411,7 +500,19 @@ const KonvaDesignEditor = ({
     } finally {
       setIsLoading(false);
     }
-  }, [elementFactory, addElement, selectElement, saveState, selectedAreaId, customizationAreas]);
+  }, [elementFactory, addElement, selectElement, saveState, selectedAreaId, customizationAreas, validationService]);
+
+  // ==================== FUNCIONES DE PRUEBA ====================
+
+  const handleTestImageFlow = useCallback(() => {
+    console.log('🧪 [KonvaDesignEditor] Iniciando prueba de flujo de imágenes...');
+    const testResult = testImageFlow();
+    if (testResult) {
+      toast.success('Prueba de flujo de imágenes exitosa ✅');
+    } else {
+      toast.error('Prueba de flujo de imágenes falló ❌');
+    }
+  }, []);
 
   // ==================== GESTIÓN DE FUENTES ====================
 
@@ -454,6 +555,26 @@ const KonvaDesignEditor = ({
     saveState(`Asignar ${elementsWithoutArea.length} elemento(s) a zona`);
     toast.success(`${elementsWithoutArea.length} elemento(s) asignado(s) a la zona seleccionada`);
   }, [selectedAreaId, elements, updateElement, saveState]);
+
+  // ==================== GESTIÓN DE COLOR DE FONDO ====================
+
+  const handleBackgroundColorChange = useCallback((color) => {
+    setProductColorFilter(color);
+    console.log('🎨 [KonvaDesignEditor] Color de fondo cambiado:', color);
+  }, []);
+
+  const handleBackgroundColorApply = useCallback((color) => {
+    setProductColorFilter(color);
+    setShowBackgroundColorPicker(false);
+    saveState('Cambiar color de fondo del producto');
+    toast.success('Color de fondo aplicado');
+  }, [saveState]);
+
+  const handleResetBackgroundColor = useCallback(() => {
+    setProductColorFilter(null);
+    saveState('Restablecer color de fondo del producto');
+    toast.success('Color de fondo restablecido');
+  }, [saveState]);
 
   // ==================== EXPORTACIÓN ====================
 
@@ -505,20 +626,11 @@ const KonvaDesignEditor = ({
       const designData = {
         productId: product?._id || product?.id,
         elements: elements.map(element => {
-          // Extraer propiedades que van en el nivel superior
-          const { id, type, areaId, ...konvaAttrs } = element;
-          
-          return {
-            id: id, // Mantener el ID
-            type: type, // Mantener el tipo
-            areaId: areaId,
-            konvaAttrs: {
-              ...konvaAttrs // Solo las propiedades de Konva, sin duplicar id, type, areaId
-            }
-          };
+          // Usar el ElementFactory para convertir al formato del backend
+          return elementFactory.toBackendFormat(element);
         }),
         canvasConfig,
-        productColorFilter: null, // Implementar si necesario
+        productColorFilter: productColorFilter, // Incluir el color de fondo
         metadata: {
           editor: 'konva-enhanced',
           version: '2.0.0',
@@ -537,9 +649,40 @@ const KonvaDesignEditor = ({
           hasImageUrl: !!el.konvaAttrs?.imageUrl,
           hasImage: !!el.konvaAttrs?.image,
           imageUrlPreview: el.konvaAttrs?.imageUrl?.substring(0, 50) + '...',
-          originalName: el.konvaAttrs?.originalName
+          imagePreview: el.konvaAttrs?.image?.substring(0, 50) + '...',
+          originalName: el.konvaAttrs?.originalName,
+          imageUrlValid: el.konvaAttrs?.imageUrl ? validationService.isValidImageUrl(el.konvaAttrs.imageUrl) : false,
+          imageValid: el.konvaAttrs?.image ? validationService.isValidImageUrl(el.konvaAttrs.image) : false
         }))
       });
+
+      // Validar cada elemento antes de guardar
+      const invalidElements = [];
+      designData.elements.forEach((element, index) => {
+        const elementValidation = validationService.validateElement({
+          id: element.id,
+          type: element.type,
+          ...element.konvaAttrs
+        });
+        if (elementValidation.length > 0) {
+          invalidElements.push({
+            index: index + 1,
+            id: element.id,
+            type: element.type,
+            errors: elementValidation
+          });
+        }
+      });
+
+      if (invalidElements.length > 0) {
+        console.error('💾 [KonvaDesignEditor] Elementos inválidos encontrados:', invalidElements);
+        const errorMessages = invalidElements.map(el => 
+          `Elemento ${el.index} (${el.type}): ${el.errors.join(', ')}`
+        );
+        toast.error(`Errores de validación: ${errorMessages.join('; ')}`);
+        setIsLoading(false);
+        return;
+      }
 
       await onSave(designData);
       toast.success('Diseño guardado exitosamente');
@@ -621,7 +764,7 @@ const KonvaDesignEditor = ({
     }
   }, [selectedIds]);
 
-  // Configurar zoom con rueda del mouse
+  // ✅ UNIFICADO: Configurar zoom con rueda del mouse usando hook compartido
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -630,33 +773,14 @@ const KonvaDesignEditor = ({
       e.evt.preventDefault();
       
       if (e.evt.ctrlKey) {
-        // Zoom con Ctrl + rueda
-        const scaleBy = 1.05;
-        const stage = e.target.getStage();
-        const oldScale = stage.scaleX();
-        const pointer = stage.getPointerPosition();
-
-        const mousePointTo = {
-          x: (pointer.x - stage.x()) / oldScale,
-          y: (pointer.y - stage.y()) / oldScale,
-        };
-
-        const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-        const clampedScale = Math.max(EDITOR_CONFIG.zoom.min, Math.min(EDITOR_CONFIG.zoom.max, newScale));
-
-        setZoom(clampedScale);
-
-        stage.scale({ x: clampedScale, y: clampedScale });
-        stage.position({
-          x: pointer.x - mousePointTo.x * clampedScale,
-          y: pointer.y - mousePointTo.y * clampedScale,
-        });
+        // Zoom con Ctrl + rueda usando el hook unificado
+        handleCanvasWheel(e);
       }
     };
 
     stage.on('wheel', handleWheel);
     return () => stage.off('wheel', handleWheel);
-  }, []);
+  }, [handleCanvasWheel]);
 
   if (!isOpen) return null;
 
@@ -674,12 +798,13 @@ const KonvaDesignEditor = ({
         onClose={onClose}
         onBack={onBack}
         isLoading={isLoading}
-        zoom={zoom}
-        onZoomChange={setZoom}
+        zoom={stageScale * zoom}
+        onZoomChange={(newZoom) => setZoom(newZoom / stageScale)}
         showGrid={showGrid}
         onToggleGrid={setShowGrid}
         snapToGrid={snapToGrid}
         onToggleSnap={setSnapToGrid}
+        onTestImageFlow={handleTestImageFlow}
       />
 
       {/* Panel de herramientas */}
@@ -699,6 +824,14 @@ const KonvaDesignEditor = ({
           selectedIds.forEach(id => duplicateElement(id));
           saveState('Duplicar elementos');
         }}
+        // Nuevas props para funcionalidades movidas
+        customizationAreas={customizationAreas}
+        selectedAreaId={selectedAreaId}
+        onAreaSelect={handleAreaSelect}
+        productColorFilter={productColorFilter}
+        onColorChange={handleBackgroundColorChange}
+        onColorApply={handleBackgroundColorApply}
+        onResetColor={handleResetBackgroundColor}
       />
 
       {/* Canvas principal */}
@@ -711,43 +844,61 @@ const KonvaDesignEditor = ({
         >
           <Stage
             ref={stageRef}
-            width={EDITOR_CONFIG.canvas.width}
-            height={EDITOR_CONFIG.canvas.height}
-            scaleX={zoom}
-            scaleY={zoom}
+            width={stageDimensions.width}
+            height={stageDimensions.height}
+            scaleX={stageScale * zoom}
+            scaleY={stageScale * zoom}
+            x={stagePosition.x}
+            y={stagePosition.y}
             onMouseDown={handleStageClick}
             onTouchStart={handleStageClick}
+            onWheel={handleCanvasWheel}
+            draggable
+            pixelRatio={window.devicePixelRatio || 1}
+            listening={true}
           >
             <Layer ref={layerRef}>
               {/* Grid de fondo */}
               {showGrid && (
                 <GridPattern
-                  width={EDITOR_CONFIG.canvas.width}
-                  height={EDITOR_CONFIG.canvas.height}
-                  size={EDITOR_CONFIG.grid.size}
-                  stroke={EDITOR_CONFIG.grid.color}
-                  opacity={EDITOR_CONFIG.grid.opacity}
+                  width={stageDimensions.width}
+                  height={stageDimensions.height}
+                  size={CANVAS_CONFIG.grid.size}
+                  stroke={CANVAS_CONFIG.grid.color}
+                  opacity={CANVAS_CONFIG.grid.opacity}
+                  stageScale={stageScale * zoom}
                 />
               )}
 
-              {/* Imagen del producto */}
-              {productImage && productImageLoaded && (
-                <KonvaElementRenderer
-                  element={{
-                    id: 'product-background',
-                    type: 'image',
-                    x: productPosition.x,
-                    y: productPosition.y,
-                    width: productImage.width * productScale.scaleX,
-                    height: productImage.height * productScale.scaleY,
-                    imageUrl: product.images?.main,
-                    image: productImage,
-                    listening: false,
-                    opacity: 0.8,
-                    draggable: false
-                  }}
-                />
-              )}
+              {/* Imagen del producto con filtro de color - CORREGIDO para usar misma lógica que KonvaAreaEditor */}
+              {productImage && productImageLoaded && (() => {
+                // ✅ CORREGIDO: Usar la función compartida calculateScaledDimensions
+                const scaleX = stageDimensions.width / productImage.width;
+                const scaleY = stageDimensions.height / productImage.height;
+                const scale = Math.min(scaleX, scaleY) * CANVAS_CONFIG.productScale;
+                const scaledDimensions = calculateScaledDimensions(productImage.width, productImage.height, scale);
+                
+                return (
+                  <KonvaElementRenderer
+                    element={{
+                      id: 'product-background',
+                      type: 'image',
+                      x: scaledDimensions.x,
+                      y: scaledDimensions.y,
+                      width: scaledDimensions.width,
+                      height: scaledDimensions.height,
+                      imageUrl: product.images?.main,
+                      image: productImage,
+                      listening: false,
+                      opacity: 0.8,
+                      draggable: false,
+                      // Aplicar filtro de color directamente
+                      fill: productColorFilter || undefined,
+                      filters: productColorFilter ? ['ColorMatrix'] : []
+                    }}
+                  />
+                );
+              })()}
 
               {/* Áreas de personalización */}
               {customizationAreas.map((area, index) => (
@@ -794,7 +945,7 @@ const KonvaDesignEditor = ({
       </CanvasContainer>
 
       {/* Panel lateral derecho */}
-      <Box sx={{ width: 320, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ width: 280, display: 'flex', flexDirection: 'column' }}>
         {/* Pestañas del panel */}
         <PanelTabs
           activePanel={activePanel}
@@ -860,16 +1011,7 @@ const KonvaDesignEditor = ({
           />
         )}
 
-        {activePanel === 'areas' && (
-          <AreaSelector
-            customizationAreas={customizationAreas}
-            selectedAreaId={selectedAreaId}
-            onAreaSelect={handleAreaSelect}
-            elements={elements}
-            product={product}
-            onAssignElements={handleAssignElementsToArea}
-          />
-        )}
+        {/* Estas funcionalidades se movieron al panel izquierdo */}
       </Box>
 
       {/* Loading overlay */}
@@ -951,8 +1093,6 @@ const GridPattern = ({ width, height, size, stroke, opacity }) => {
 // Panel Tabs
 const PanelTabs = ({ activePanel, onPanelChange, hasSelection }) => {
   const tabs = [
-    { id: 'tools', label: 'Herramientas', icon: '🔧' },
-    { id: 'areas', label: 'Zonas', icon: '📍' },
     { id: 'properties', label: 'Propiedades', icon: '⚙️', disabled: !hasSelection },
     { id: 'layers', label: 'Capas', icon: '📋' },
     { id: 'assets', label: 'Recursos', icon: '📁' },
@@ -977,6 +1117,167 @@ const PanelTabs = ({ activePanel, onPanelChange, hasSelection }) => {
           {tab.icon} {tab.label}
         </Button>
       ))}
+    </Box>
+  );
+};
+
+// ==================== COMPONENTE DE COLOR DE FONDO ====================
+
+const BackgroundColorPanel = ({
+  productColorFilter,
+  onColorChange,
+  onColorApply,
+  onResetColor,
+  product
+}) => {
+  return (
+    <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          color: THEME_COLORS.text,
+          fontWeight: 700,
+          mb: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+        🎨 Color de Fondo del Producto
+      </Typography>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: THEME_COLORS.text,
+            mb: 2,
+            opacity: 0.8
+          }}
+        >
+          Personaliza el color del producto base. Esto afectará toda la imagen del producto.
+        </Typography>
+
+        {/* Selector de color */}
+        <Box sx={{ mb: 2 }}>
+          <ColorPicker
+            currentcolor={productColorFilter || '#FFFFFF'}
+            onChange={onColorChange}
+            onColorApply={onColorApply}
+            label="Color del Producto"
+            showTransparency={false}
+            showPalettes={true}
+            showFavorites={true}
+            pickerType="sketch"
+            size="medium"
+          />
+        </Box>
+
+        {/* Botones de acción */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onResetColor}
+            disabled={!productColorFilter}
+            sx={{
+              borderColor: THEME_COLORS.primary,
+              color: THEME_COLORS.primary,
+              '&:hover': {
+                borderColor: THEME_COLORS.primaryDark,
+                backgroundColor: 'rgba(31, 100, 191, 0.1)'
+              }
+            }}
+          >
+            Restablecer
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Información del producto */}
+      {product && (
+        <Box sx={{ 
+          p: 2, 
+          backgroundColor: 'rgba(31, 100, 191, 0.1)',
+          borderRadius: 2,
+          border: `1px solid ${THEME_COLORS.primary}20`
+        }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: THEME_COLORS.text,
+              fontWeight: 600,
+              mb: 1
+            }}
+          >
+            Producto: {product.name || 'Sin nombre'}
+          </Typography>
+          
+          {product.images?.main && (
+            <Box sx={{ 
+              width: '100%', 
+              height: 60, 
+              backgroundImage: `url(${product.images.main})`,
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              borderRadius: 1,
+              border: '1px solid rgba(31, 100, 191, 0.2)',
+              mb: 1
+            }} />
+          )}
+          
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: THEME_COLORS.text,
+              opacity: 0.7
+            }}
+          >
+            El color se aplicará como filtro sobre la imagen del producto
+          </Typography>
+        </Box>
+      )}
+
+      {/* Colores predefinidos */}
+      <Box sx={{ mt: 3 }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: THEME_COLORS.text,
+            fontWeight: 600,
+            mb: 2
+          }}
+        >
+          Colores Populares
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {[
+            '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
+            '#FF00FF', '#00FFFF', '#FFA500', '#800080',
+            '#FFC0CB', '#A52A2A', '#808080', '#000000'
+          ].map((color) => (
+            <Box
+              key={color}
+              onClick={() => onColorChange(color)}
+              sx={{
+                width: 32,
+                height: 32,
+                backgroundColor: color,
+                borderRadius: 1,
+                cursor: 'pointer',
+                border: productColorFilter === color ? `2px solid ${THEME_COLORS.primary}` : '1px solid rgba(0,0,0,0.2)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                }
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 };

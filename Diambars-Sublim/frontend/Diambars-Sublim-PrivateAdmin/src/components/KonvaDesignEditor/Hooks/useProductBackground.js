@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CANVAS_CONFIG, calculateScaledDimensions } from '../constants/canvasConfig';
 
-export const useProductBackground = (product) => {
+export const useProductBackground = (product, canvasDimensions = null) => {
   const [productImage, setProductImage] = useState(null);
   const [productImageLoaded, setProductImageLoaded] = useState(false);
   const [productScale, setProductScale] = useState({ scaleX: 1, scaleY: 1 });
@@ -38,7 +38,7 @@ export const useProductBackground = (product) => {
         img.src = product.images.main;
       });
 
-      // Calcular escala para ajustar al canvas usando constantes compartidas
+      // ✅ CORREGIDO: Usar la misma lógica que KonvaAreaEditor
       const scaleX = CANVAS_CONFIG.width / img.width;
       const scaleY = CANVAS_CONFIG.height / img.height;
       const scale = Math.min(scaleX, scaleY) * CANVAS_CONFIG.productScale;
@@ -61,7 +61,7 @@ export const useProductBackground = (product) => {
       setProductImage(null);
       setProductImageLoaded(false);
     }
-  }, [product]);
+  }, [product, canvasDimensions]);
 
   useEffect(() => {
     loadProductImage();
