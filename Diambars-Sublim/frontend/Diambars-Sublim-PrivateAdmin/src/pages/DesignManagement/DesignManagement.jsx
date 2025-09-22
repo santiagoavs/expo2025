@@ -1681,6 +1681,7 @@ const DesignManagement = () => {
                     productName={design.productName}
                     productImage={design.productImage}
                     previewImage={design.previewImage}
+                    elements={design.elements}
                     price={design.price}
                     formattedPrice={design.formattedPrice}
                     createdDate={design.createdDate}

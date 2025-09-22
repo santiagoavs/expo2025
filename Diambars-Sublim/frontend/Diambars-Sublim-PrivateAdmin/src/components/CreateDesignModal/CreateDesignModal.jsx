@@ -122,15 +122,6 @@ const DesignService = {
     }
     
     elements.forEach((element, index) => {
-      // Debug: Log del elemento para validación
-      console.log(`🔍 [CreateDesignModal] Validando elemento ${index + 1}:`, element);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - type:`, element.type);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - src:`, element.src);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.image:`, element.konvaAttrs?.image);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.imageUrl:`, element.konvaAttrs?.imageUrl);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.points:`, element.konvaAttrs?.points);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.width:`, element.konvaAttrs?.width);
-      console.log(`🔍 [CreateDesignModal] Elemento ${index + 1} - konvaAttrs.height:`, element.konvaAttrs?.height);
       
       if (!element.type) {
         errors.push(`Elemento ${index + 1}: tipo no definido`);
@@ -140,8 +131,12 @@ const DesignService = {
         errors.push(`Elemento ${index + 1}: atributos no definidos`);
       }
       
-      if (element.type === 'text' && !element.konvaAttrs?.text?.trim()) {
-        errors.push(`Elemento de texto ${index + 1}: texto vacío`);
+      // ✅ CORRECCIÓN: Validación unificada del texto (consistente con ValidationService)
+      if (element.type === 'text') {
+        const textContent = element.text || element.konvaAttrs?.text || '';
+        if (!textContent || textContent.trim() === '') {
+          errors.push(`Elemento de texto ${index + 1}: texto vacío`);
+        }
       }
       
       if (element.type === 'image') {
@@ -153,11 +148,6 @@ const DesignService = {
         if (!hasImageUrl && !hasImage && !hasSrc) {
           errors.push(`Elemento de imagen ${index + 1}: URL de imagen no definida`);
         }
-      }
-      
-      // Validación para el nuevo sistema Fabric.js
-      if (element.type === 'text' && !element.text?.trim()) {
-        errors.push(`Elemento de texto ${index + 1}: texto vacío`);
       }
       
       // Validaciones para formas básicas
@@ -1142,16 +1132,10 @@ const CreateDesignModal = ({
   }, [closeEditor]);
 
   const handleSaveDesign = useCallback((designDataFromEditor) => {
-    console.log('🔍 [CreateDesignModal] handleSaveDesign llamado con:', designDataFromEditor);
-    console.log('💾 [CreateDesignModal] Recibiendo datos del editor:', designDataFromEditor);
-    
     // El editor ya envía los elementos en formato correcto
     const elements = designDataFromEditor.elements || [];
     const productColorFilter = designDataFromEditor.productColorFilter;
     const canvasData = designDataFromEditor.canvasData;
-    
-    console.log('📋 [CreateDesignModal] Elementos recibidos:', elements.length);
-    console.log('🎨 [CreateDesignModal] Filtro de color:', productColorFilter);
     
     // ✅ MEJORADO: Persistir datos del canvas
     saveCanvasData(designDataFromEditor);
@@ -1159,7 +1143,6 @@ const CreateDesignModal = ({
     // Validar elementos
     const validation = DesignService.validateElementsForSubmission(elements);
     if (!validation.isValid) {
-      console.error('❌ [CreateDesignModal] Elementos inválidos:', validation.errors);
       Swal.fire({
         title: '❌ Elementos Inválidos',
         html: `
@@ -1185,7 +1168,6 @@ const CreateDesignModal = ({
       metadata: designDataFromEditor.metadata || {}
     };
 
-    console.log('✅ [CreateDesignModal] Datos finales preparados:', finalDesignData);
 
     setDesignData(finalDesignData);
     setDesignElements(elements);
@@ -1800,11 +1782,6 @@ const CreateDesignModal = ({
       {/* ✅ EDITOR: Solo para edición */}
       {isEditorOpen && selectedProduct && (
         <>
-          {console.log('🎨 [CreateDesignModal] Abriendo editor con:', { 
-            canvasData: loadCanvasData(), 
-            designElements: designElements.length,
-            selectedProduct: !!selectedProduct 
-          })}
           <KonvaDesignEditor
             isOpen={isEditorOpen}
             onClose={handleCloseEditor}
@@ -1812,12 +1789,6 @@ const CreateDesignModal = ({
             initialDesign={(() => {
               const savedData = getCurrentCanvasData();
               const fallbackData = { elements: designElements };
-              console.log('🔄 [CreateDesignModal] Datos para editor Konva:', {
-                savedData: savedData,
-                fallbackData: fallbackData,
-                hasElements: savedData?.elements?.length || 0,
-                fallbackElements: fallbackData.elements.length
-              });
               return savedData || fallbackData;
             })()}
             onSave={handleSaveDesign}

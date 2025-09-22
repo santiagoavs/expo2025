@@ -21,6 +21,20 @@ export class ValidationService {
   validateElement(element, customizationAreas) {
     const errors = [];
 
+    // ✅ DEBUGGING: Log del elemento que se está validando
+    console.log('🔍 [ValidationService] Validando elemento:', {
+      id: element.id,
+      type: element.type,
+      x: element.x,
+      y: element.y,
+      hasPoints: !!element.points,
+      pointsLength: element.points?.length,
+      hasWidth: !!element.width,
+      hasHeight: !!element.height,
+      hasRadius: !!element.radius,
+      areaId: element.areaId
+    });
+
     // Validaciones básicas
     if (!element.id) {
       errors.push('ID del elemento requerido');
@@ -41,13 +55,21 @@ export class ValidationService {
     // Validaciones específicas por tipo
     switch (element.type) {
       case 'text':
-        if (!element.text || element.text.trim() === '') {
+        // ✅ CORRECCIÓN: Verificar texto en múltiples ubicaciones
+        const textContent = element.text || element.konvaAttrs?.text || '';
+        if (!textContent || textContent.trim() === '') {
           errors.push('Texto no puede estar vacío');
         }
-        if (element.fontSize && (element.fontSize < 8 || element.fontSize > 200)) {
+        
+        // ✅ CORRECCIÓN: Verificar fontSize en múltiples ubicaciones
+        const fontSize = element.fontSize || element.konvaAttrs?.fontSize || 24;
+        if (fontSize && (fontSize < 8 || fontSize > 200)) {
           errors.push('Tamaño de fuente inválido (8-200px)');
         }
-        if (element.width && element.width <= 0) {
+        
+        // ✅ CORRECCIÓN: Verificar width en múltiples ubicaciones
+        const width = element.width || element.konvaAttrs?.width;
+        if (width && width <= 0) {
           errors.push('Ancho del texto debe ser mayor que 0');
         }
         break;
@@ -118,6 +140,14 @@ export class ValidationService {
       case 'star':
       case 'customShape':
       case 'line':
+      case 'heart':
+      case 'diamond':
+      case 'hexagon':
+      case 'octagon':
+      case 'pentagon':
+      case 'polygon':
+      case 'shape':
+      case 'path':
         if (!element.points || element.points.length === 0) {
           errors.push('Puntos de la forma requeridos');
         }
@@ -126,6 +156,30 @@ export class ValidationService {
         }
         if (element.points && element.points.length % 2 !== 0) {
           errors.push('Los puntos deben ser pares (coordenadas x,y)');
+        }
+        break;
+        
+      case 'square':
+        if (element.width && element.width <= 0) {
+          errors.push('Ancho debe ser mayor que 0');
+        }
+        if (element.height && element.height <= 0) {
+          errors.push('Alto debe ser mayor que 0');
+        }
+        if (element.cornerRadius && element.cornerRadius < 0) {
+          errors.push('Radio de esquina no puede ser negativo');
+        }
+        break;
+        
+      case 'ellipse':
+        if (element.radius && element.radius <= 0) {
+          errors.push('Radio debe ser mayor que 0');
+        }
+        if (element.scaleX && element.scaleX <= 0) {
+          errors.push('Escala X debe ser mayor que 0');
+        }
+        if (element.scaleY && element.scaleY <= 0) {
+          errors.push('Escala Y debe ser mayor que 0');
         }
         break;
         
@@ -153,6 +207,14 @@ export class ValidationService {
         }
       }
     }
+
+    // ✅ DEBUGGING: Log del resultado de la validación
+    console.log('🔍 [ValidationService] Resultado de validación:', {
+      elementId: element.id,
+      elementType: element.type,
+      isValid: errors.length === 0,
+      errors: errors
+    });
 
     return errors;
   }
@@ -304,7 +366,7 @@ export class ValidationService {
     const imageElements = elements.filter(el => el.type === 'image').length;
     const textElements = elements.filter(el => el.type === 'text').length;
     const shapeElements = elements.filter(el => 
-      ['rect', 'circle', 'line', 'triangle', 'star', 'customShape'].includes(el.type)
+      ['rect', 'circle', 'line', 'triangle', 'star', 'customShape', 'square', 'ellipse', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path'].includes(el.type)
     ).length;
 
     let complexityScore = 0;

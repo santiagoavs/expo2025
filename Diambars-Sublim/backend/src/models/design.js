@@ -214,6 +214,11 @@ const designElementSchema = new mongoose.Schema({
     levels: { type: Number, default: 0.5 },
     threshold: { type: Number, default: 0.5 },
     
+    // Para formas complejas (líneas, polígonos, estrellas, etc.)
+    points: [Number], // Array de coordenadas para formas complejas
+    closed: { type: Boolean, default: false }, // Si la forma está cerrada
+    tension: { type: Number, default: 0 }, // Tensión para curvas suaves
+    
     // Otros
     cornerRadius: { type: Number, default: 0 },
     id: { type: String }, // ID único para Konva

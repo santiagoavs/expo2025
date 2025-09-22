@@ -40,12 +40,19 @@ const ShapeCreatorContainer = styled(Paper)(({ theme }) => ({
   borderRadius: '20px',
   border: '1px solid rgba(31, 100, 191, 0.3)',
   boxShadow: '0 8px 32px rgba(1, 3, 38, 0.15)',
-  padding: theme.spacing(2)
+  padding: theme.spacing(3),
+  
+  // ✅ RESPONSIVE: Adaptación para modal
+  [theme.breakpoints.down('md')]: {
+    maxHeight: '90vh',
+    padding: theme.spacing(2),
+    borderRadius: '16px'
+  }
 }));
 
 const PreviewCanvas = styled(Box)(({ theme }) => ({
   width: '100%',
-  height: '200px',
+  height: '300px', // ✅ AUMENTADO: Más espacio para dibujar
   border: '2px solid #e0e0e0',
   borderRadius: '12px',
   display: 'flex',
@@ -54,7 +61,12 @@ const PreviewCanvas = styled(Box)(({ theme }) => ({
   backgroundColor: '#f8f9fa',
   cursor: 'crosshair',
   position: 'relative',
-  overflow: 'hidden'
+  overflow: 'hidden',
+  
+  // ✅ RESPONSIVE: Adaptación para móviles
+  [theme.breakpoints.down('md')]: {
+    height: '250px'
+  }
 }));
 
 const ShapeButton = styled(Button)(({ theme, selected }) => ({
@@ -271,8 +283,8 @@ export const ShapeCreator = ({ onAddShape, onAddCustomShape }) => {
           <PreviewCanvas>
             <Stage
               ref={stageRef}
-              width={280}
-              height={200}
+              width={400} // ✅ AUMENTADO: Canvas más grande
+              height={300} // ✅ AUMENTADO: Canvas más grande
               onMouseDown={handleCanvasClick}
             >
               <Layer>

@@ -95,6 +95,13 @@
   -webkit-backdrop-filter: blur(15px);
   color: #032CA6;
   gap: 8px;
+  overflow: visible;
+}
+
+.design-image-fallback canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ================ OVERLAY FIXED ================ */

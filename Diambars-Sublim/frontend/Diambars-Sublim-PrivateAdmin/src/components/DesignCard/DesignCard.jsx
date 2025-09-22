@@ -1,6 +1,8 @@
 // src/components/DesignCard/DesignCard.jsx - TARJETA DE DISEÑO ADMIN
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import './DesignCard.css';
+
 import {
   Eye,
   PencilSimple,
@@ -24,6 +26,8 @@ const DesignCard = ({
   clientEmail,
   clientRole = 'customer', // Nuevo prop para el rol del cliente
   productName,
+  productImage,
+  elements = [],
   elementsCount,
   complexity,
   createdDate,
@@ -41,6 +45,8 @@ const DesignCard = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [productImg, setProductImg] = useState(null);
+  const stageRef = useRef(null);
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -78,6 +84,19 @@ const DesignCard = ({
   const handleImageError = () => {
     setImageError(true);
   };
+
+  // Cargar imagen del producto para el canvas
+  useEffect(() => {
+    if (productImage && !previewImage) {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setProductImg(img);
+      };
+      img.src = productImage;
+    }
+  }, [productImage, previewImage]);
+
 
   const handleAction = (action, e) => {
     e.stopPropagation();
@@ -124,8 +143,37 @@ const DesignCard = ({
           />
         ) : (
           <div className="design-image-fallback">
-            <Package size={32} weight="duotone" />
-            <span>Sin vista previa</span>
+            {elements && elements.length > 0 ? (
+              <Stage
+                ref={stageRef}
+                width={327}
+                height={220}
+                style={{ 
+                  background: '#f8f9fa',
+                  width: '100%',
+                  height: '100%'
+                }}
+              >
+                <Layer>
+                  {/* Solo imagen del producto */}
+                  {productImg && (
+                    <KonvaImage
+                      image={productImg}
+                      x={0}
+                      y={0}
+                      width={327}
+                      height={220}
+                      opacity={0.8}
+                    />
+                  )}
+                </Layer>
+              </Stage>
+            ) : (
+              <>
+                <Package size={32} weight="duotone" />
+                <span>Sin vista previa</span>
+              </>
+            )}
           </div>
         )}
         

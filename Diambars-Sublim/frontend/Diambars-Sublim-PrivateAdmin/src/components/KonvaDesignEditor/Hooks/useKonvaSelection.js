@@ -5,6 +5,10 @@ export const useKonvaSelection = (elements) => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   const selectElement = useCallback((elementId) => {
+    console.log('🎯 [useKonvaSelection] selectElement llamado:', {
+      elementId,
+      timestamp: new Date().toISOString()
+    });
     setSelectedIds([elementId]);
   }, []);
 
@@ -29,7 +33,20 @@ export const useKonvaSelection = (elements) => {
   }, [selectedIds]);
 
   const selectedElements = useMemo(() => {
-    return elements.filter(el => selectedIds.includes(el.id));
+    const filtered = elements.filter(el => selectedIds.includes(el.id));
+    console.log('🎯 [useKonvaSelection] selectedElements calculado:', {
+      selectedIds,
+      totalElements: elements.length,
+      selectedElementsCount: filtered.length,
+      selectedElements: filtered.map(el => ({ 
+        id: el.id, 
+        type: el.type, 
+        fill: el.fill, 
+        stroke: el.stroke, 
+        strokeWidth: el.strokeWidth 
+      }))
+    });
+    return filtered;
   }, [elements, selectedIds]);
 
   const selectionBounds = useMemo(() => {
