@@ -1,7 +1,7 @@
 // Enhanced Design Editor Modal - Integrates Advanced Editor with Existing Modal
 import React, { useState, useCallback } from 'react';
 import AdvancedDesignEditor from './advanced/AdvancedDesignEditor';
-import './designEditorModal.css';
+import './EnhancedDesignEditorModal.css';
 
 const EnhancedDesignEditorModal = ({ 
   isOpen, 

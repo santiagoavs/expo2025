@@ -1,0 +1,266 @@
+/* components/EditorToolbar/EditorToolbar.css - GLASSMORPHISM TOOLBAR STYLING */
+
+.editor-toolbar {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+.editor-toolbar-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  align-items: flex-start;
+}
+
+/* Toolbar Sections */
+.toolbar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.toolbar-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.toolbar-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Toolbar Tools */
+.toolbar-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  min-width: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.toolbar-tool::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.toolbar-tool:hover::before {
+  left: 100%;
+}
+
+.toolbar-tool:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.toolbar-tool:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 10px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.toolbar-tool.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.toolbar-tool.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+/* Tool Icons and Labels */
+.tool-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.tool-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Zoom Indicator */
+.zoom-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: rgba(0, 212, 255, 0.2);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 8px;
+  color: #00D4FF;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 60px;
+  box-shadow: inset 0 1px 0 rgba(0, 212, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .editor-toolbar {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+  }
+  
+  .editor-toolbar-content {
+    gap: 15px;
+  }
+  
+  .toolbar-section {
+    min-width: 100px;
+  }
+  
+  .toolbar-tool {
+    padding: 10px 6px;
+    min-width: 50px;
+  }
+  
+  .tool-icon {
+    font-size: 1rem;
+  }
+  
+  .tool-label {
+    font-size: 0.65rem;
+  }
+  
+  .toolbar-section-title {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-toolbar {
+    padding: 10px 12px;
+  }
+  
+  .editor-toolbar-content {
+    gap: 12px;
+    justify-content: space-between;
+  }
+  
+  .toolbar-section {
+    min-width: 80px;
+  }
+  
+  .toolbar-tools {
+    gap: 6px;
+  }
+  
+  .toolbar-tool {
+    padding: 8px 4px;
+    min-width: 45px;
+  }
+  
+  .tool-icon {
+    font-size: 0.9rem;
+  }
+  
+  .tool-label {
+    font-size: 0.6rem;
+  }
+  
+  .zoom-indicator {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+    min-width: 50px;
+  }
+}
+
+/* Animation for tool activation */
+@keyframes toolActivate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.toolbar-tool:active {
+  animation: toolActivate 0.15s ease;
+}
+
+/* Glassmorphism enhancement */
+.editor-toolbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  border-radius: 15px 15px 0 0;
+}
+
+/* Tooltip enhancement */
+.toolbar-tool[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
