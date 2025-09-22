@@ -5,9 +5,9 @@ import useDesigns from '../../hooks/useDesign';
 import useProducts from '../../hooks/useProducts';
 import Footer from '../../components/UI/footer/footer';
 import CreateDesignModal from '../../components/designs/createDesignModal';
+// import DesignEditorModal from '../../components/designs/designEditorModal'; // Replaced with enhanced version
+import EnhancedDesignEditorModal from '../../components/designs/EnhancedDesignEditorModal';
 import DesignViewerModal from '../../components/designs/designViewerModal';
-import QuoteResponseModal from '../../components/designs/quoteResponseModal';
-import DesignEditorModal from '../../components/designs/designEditorModal';
 import './designHub.css';
 
 const DesignHub = ({ initialProductId = null }) => {
@@ -20,7 +20,6 @@ const DesignHub = ({ initialProductId = null }) => {
     updateDesign, 
     cloneDesign, 
     cancelDesign, 
-    respondToQuote,
     getDesignById,
     getDesignStats,
     needsResponseDesigns,
@@ -35,9 +34,13 @@ const DesignHub = ({ initialProductId = null }) => {
   // ==================== ESTADOS DE MODALES ====================
   const [modals, setModals] = useState({
     create: false,
-    viewer: false,
-    editor: false,
-    quoteResponse: false
+    viewer: false
+  });
+
+  // Enhanced editor modal state
+  const [editorModal, setEditorModal] = useState({
+    isOpen: false,
+    design: null
   });
 
   // ==================== ESTADOS DE DATOS ====================
@@ -147,8 +150,7 @@ const DesignHub = ({ initialProductId = null }) => {
     try {
       const designData = await getDesignById(designId);
       if (designData && designData.design.canEdit) {
-        setSelectedDesign(designData);
-        openModal('editor');
+        setEditorModal({ isOpen: true, design: designData });
       } else {
         alert('Este diseño no se puede editar');
       }
@@ -156,12 +158,12 @@ const DesignHub = ({ initialProductId = null }) => {
       console.error('Error obteniendo diseño:', error);
       alert('Error al cargar el diseño');
     }
-  }, [getDesignById, openModal]);
+  }, [getDesignById]);
 
   const handleQuoteResponse = useCallback((design) => {
-    setSelectedDesign(design);
-    openModal('quoteResponse');
-  }, [openModal]);
+    // For now, show a simple alert - can be enhanced later
+    alert('Funcionalidad de respuesta a cotización será implementada próximamente');
+  }, []);
 
   const handleCloneDesign = useCallback(async (designId, designName) => {
     try {
@@ -202,28 +204,34 @@ const DesignHub = ({ initialProductId = null }) => {
     }
   }, [createDesign, closeModal]);
 
-  const handleUpdateSubmit = useCallback(async (designId, designData) => {
-    try {
-      await updateDesign(designId, designData);
-      closeModal('editor');
-      alert('Diseño actualizado exitosamente');
-    } catch (error) {
-      console.error('Error actualizando diseño:', error);
-      throw error;
-    }
-  }, [updateDesign, closeModal]);
+  // Removed deprecated handleUpdateSubmit - using handleSaveDesign instead
 
-  const handleQuoteResponseSubmit = useCallback(async (designId, response) => {
+  // Enhanced save handler for the new editor
+  const handleSaveDesign = useCallback(async (designData) => {
     try {
-      await respondToQuote(designId, response.accept, response.notes);
-      closeModal('quoteResponse');
-      const actionText = response.accept ? 'aceptada' : 'rechazada';
-      alert(`Cotización ${actionText} exitosamente`);
+      if (editorModal.design?.design?._id) {
+        // Update existing design
+        await updateDesign(editorModal.design.design._id, designData);
+        alert('Diseño actualizado exitosamente');
+      } else {
+        // Create new design
+        await createDesign(designData);
+        alert('Diseño creado exitosamente');
+      }
+      setEditorModal({ isOpen: false, design: null });
     } catch (error) {
-      console.error('Error respondiendo cotización:', error);
+      console.error('Error guardando diseño:', error);
       throw error;
     }
-  }, [respondToQuote, closeModal]);
+  }, [editorModal.design, updateDesign, createDesign]);
+
+  // Handle design update callback
+  const handleDesignUpdate = useCallback((updatedDesign) => {
+    // Refresh designs list or update local state as needed
+    console.log('Design updated:', updatedDesign);
+  }, []);
+
+  // Removed deprecated handleQuoteResponseSubmit
 
   // ==================== COMPONENTES DE UI ====================
 
@@ -354,7 +362,7 @@ const DesignHub = ({ initialProductId = null }) => {
             <p>Crea y gestiona diseños personalizados para tus productos favoritos</p>
             <button 
               onClick={() => window.location.href = '/login'}
-              className="btn btn-primary"
+              className="create-design-btn"
             >
               Iniciar Sesión
             </button>
@@ -390,9 +398,9 @@ const DesignHub = ({ initialProductId = null }) => {
             
             <button 
               onClick={() => openModal('create')}
-              className="btn btn-primary create-design-btn"
+              className="create-design-btn"
             >
-              + Nuevo Diseño
+              + Nuevo diseño
             </button>
           </div>
         </div>
@@ -502,7 +510,7 @@ const DesignHub = ({ initialProductId = null }) => {
               <div className="error-icon">⚠️</div>
               <h3>Error al cargar diseños</h3>
               <p>{error}</p>
-              <button onClick={() => window.location.reload()} className="btn btn-primary">
+              <button onClick={() => window.location.reload()} className="create-design-btn">
                 Reintentar
               </button>
             </div>
@@ -526,7 +534,7 @@ const DesignHub = ({ initialProductId = null }) => {
               {(!searchTerm && activeTab === 'all') && (
                 <button 
                   onClick={() => openModal('create')}
-                  className="btn btn-primary"
+                  className="create-design-btn"
                 >
                   Crear Primer Diseño
                 </button>
@@ -558,20 +566,16 @@ const DesignHub = ({ initialProductId = null }) => {
         onEdit={handleEditDesign}
         onQuoteResponse={handleQuoteResponse}
       />
-
-      <DesignEditorModal
-        isOpen={modals.editor}
-        onClose={() => closeModal('editor')}
-        designData={selectedDesign}
-        onSave={handleUpdateSubmit}
+      <EnhancedDesignEditorModal
+        isOpen={editorModal.isOpen}
+        onClose={() => setEditorModal({ isOpen: false, design: null })}
+        design={editorModal.design}
+        onSave={handleSaveDesign}
+        product={editorModal.design?.product}
+        onDesignUpdate={handleDesignUpdate}
       />
 
-      <QuoteResponseModal
-        isOpen={modals.quoteResponse}
-        onClose={() => closeModal('quoteResponse')}
-        design={selectedDesign?.design}
-        onSubmit={handleQuoteResponseSubmit}
-      />
+      {/* Quote response functionality will be implemented in future updates */}
 
       <Footer />
     </div>

@@ -348,7 +348,7 @@ export async function sendSublimationRequestEmail(requestData) {
           <!-- Información del Cliente -->
           <div style="background: linear-gradient(135deg, #FFF1D0 0%, #ffffff 100%); border-radius: 12px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #E5446D;">
             <h2 style="color: #8B1538; margin: 0 0 20px; font-size: 20px; font-weight: 600; display: flex; align-items: center;">
-              📋 Información del Cliente
+              Información del Cliente
             </h2>
             
             <table style="width: 100%; border-collapse: collapse;">
