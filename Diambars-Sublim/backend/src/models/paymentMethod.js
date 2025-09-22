@@ -9,17 +9,28 @@ const paymentMethodSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  // Almacenar solo los últimos 4 dígitos de forma segura
+  // Tipo de método de pago
+  type: {
+    type: String,
+    enum: ['card', 'wompi', 'cash', 'bank'],
+    required: true,
+    default: 'card'
+  },
+  // Almacenar solo los últimos 4 dígitos de forma segura (opcional para efectivo/banco)
   lastFourDigits: {
     type: String,
-    required: true,
+    required: function() {
+      return this.type === 'card' || this.type === 'wompi';
+    },
     length: 4
   },
-  // Hash del número completo para prevenir duplicados
+  // Hash del número completo para prevenir duplicados (opcional para efectivo/banco)
   numberHash: {
     type: String,
-    required: true,
-    unique: true
+    required: function() {
+      return this.type === 'card' || this.type === 'wompi';
+    },
+    sparse: true // Permite múltiples valores null
   },
   // Nombre del titular
   name: {
@@ -28,13 +39,15 @@ const paymentMethodSchema = new mongoose.Schema({
     trim: true,
     maxlength: 100
   },
-  // Fecha de expiración
+  // Fecha de expiración (opcional para efectivo/banco)
   expiry: {
     type: String,
-    required: true,
+    required: function() {
+      return this.type === 'card' || this.type === 'wompi';
+    },
     match: /^(0[1-9]|1[0-2])\/\d{2}$/
   },
-  // Tipo de tarjeta
+  // Tipo de tarjeta (opcional para efectivo/banco)
   issuer: {
     type: String,
     enum: ['visa', 'mastercard', 'amex', 'discover', 'unknown'],
@@ -125,6 +138,11 @@ paymentMethodSchema.pre('save', async function(next) {
 // Método de instancia para verificar si la tarjeta está expirada
 paymentMethodSchema.methods.isExpired = function() {
   try {
+    // Para métodos que no tienen fecha de expiración, siempre retornar false
+    if (!this.expiry || this.type === 'cash' || this.type === 'bank') {
+      return false;
+    }
+    
     const [month, year] = this.expiry.split('/');
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear() % 100;
@@ -144,6 +162,7 @@ paymentMethodSchema.methods.isExpired = function() {
 paymentMethodSchema.methods.toSafeObject = function() {
   return {
     _id: this._id,
+    type: this.type,
     lastFourDigits: this.lastFourDigits,
     name: this.name,
     expiry: this.expiry,
@@ -158,6 +177,10 @@ paymentMethodSchema.methods.toSafeObject = function() {
 
 // Método de instancia para obtener nombre para mostrar
 paymentMethodSchema.methods.getDisplayName = function() {
+  if (this.type === 'cash' || this.type === 'bank') {
+    return this.nickname || this.name;
+  }
+  
   const issuerName = this.issuer.charAt(0).toUpperCase() + this.issuer.slice(1);
   const baseName = `${issuerName} •••• ${this.lastFourDigits}`;
   
@@ -174,10 +197,11 @@ paymentMethodSchema.statics.findByUser = function(userId) {
   return this.find({ userId }).sort({ createdAt: -1 });
 };
 
-// Validación personalizada para prevenir duplicados
+// Validación personalizada para prevenir duplicados (solo para métodos con tarjeta)
 paymentMethodSchema.pre('save', async function(next) {
   try {
-    if (this.isNew || this.isModified('numberHash')) {
+    // Solo validar duplicados para métodos que tienen número de tarjeta
+    if ((this.type === 'card' || this.type === 'wompi') && this.numberHash && (this.isNew || this.isModified('numberHash'))) {
       console.log('🔍 [PaymentMethod] Verificando duplicados...');
       const existing = await this.constructor.findOne({
         userId: this.userId,
