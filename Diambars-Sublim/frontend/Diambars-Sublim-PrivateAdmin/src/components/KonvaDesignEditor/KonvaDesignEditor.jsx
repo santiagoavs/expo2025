@@ -1,9 +1,14 @@
-// KonvaDesignEditor.jsx - EDITOR REFACTORIZADO CON ARQUITECTURA MEJORADA
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+// KonvaDesignEditor.jsx - EDITOR REFACTORIZADO CON ARQUITECTURA MEJORADA Y DISEÑO MODERNO RESPONSIVO
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Stage, Layer, Transformer, Line } from 'react-konva';
-import { Box, Typography, CircularProgress, Backdrop, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Backdrop, Button, ThemeProvider } from '@mui/material';
+import { Plus } from '@phosphor-icons/react';
 import { styled } from '@mui/material/styles';
 import toast, { Toaster } from 'react-hot-toast';
+import Swal from 'sweetalert2';
+import { ChromePicker } from 'react-color';
+// ✅ CORREGIDO: Importar estilos para SweetAlert
+import './styles/sweetalert-fix.css';
 
 // ==================== HOOKS Y SERVICIOS ESPECIALIZADOS ====================
 import { useKonvaCanvas } from './hooks/useKonvaCanvas';
@@ -15,19 +20,18 @@ import { useUnifiedCanvasCentering } from './hooks/useUnifiedCanvasCentering';
 
 // ==================== COMPONENTES ESPECIALIZADOS ====================
 import { EditorToolbar } from './components/Editor/EditorToolbar';
-import { ToolsPanel } from './components/Tools/ToolsPanel';
-import { PropertiesPanel } from './components/Properties/PropertiesPanel';
-import { LayersPanel } from './components/Layers/LayersPanel';
-import { AssetsPanel } from './components/Assets/AssetsPanel';
-import { ExportPanel } from './components/Export/ExportPanel';
-import { ShapeCreator } from './components/Shapes/ShapeCreator';
-import ColorPicker from '../FabricDesignEditor/components/ColorPicker';
+import { ShapeCreatorModal } from './components/Shapes/ShapeCreatorModal';
 import { testImageFlow } from './utils/imageTestUtils';
+import UnifiedPanel from './components/UnifiedPanel/UnifiedPanel';
+import AdvancedShapeCreatorModal from './Components/ShapeCreator/ShapeCreatorModal';
+
+// ==================== TEMA Y ESTILOS RESPONSIVOS ====================
+import { responsiveTheme, GRADIENTS_3D, SHADOWS_3D, FIXED_COLORS, BORDERS, TRANSITIONS, Z_INDEX } from './styles/responsiveTheme';
+import { useResponsiveLayout } from './hooks/useResponsiveLayout';
 
 // ==================== ELEMENTOS RENDERIZABLES ====================
 import { KonvaElementRenderer } from './components/Elements/KonvaElementRenderer';
 import { CustomizationAreaRenderer } from './components/Areas/CustomizationAreaRenderer';
-import { AreaSelector } from './components/Areas/AreaSelector';
 
 // ==================== SERVICIOS ====================
 import { ElementFactory } from './services/ElementFactory';
@@ -48,23 +52,11 @@ const EDITOR_CONFIG = {
   zoom: CANVAS_CONFIG.zoom
 };
 
-const THEME_COLORS = {
-  primary: '#1F64BF',
-  primaryDark: '#032CA6',
-  accent: '#040DBF',
-  background: '#F2F2F2',
-  surface: '#FFFFFF',
-  text: '#010326',
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444'
-};
-
-// ==================== STYLED COMPONENTS ====================
+// ==================== STYLED COMPONENTS RESPONSIVOS ====================
 const EditorLayout = styled(Box, {
   name: 'KonvaDesignEditor-Layout',
   slot: 'Root'
-})(({ theme }) => ({
+})(({ theme, isMobile, isTablet, isDesktop }) => ({
   display: 'flex',
   height: '100vh',
   position: 'fixed',
@@ -72,30 +64,33 @@ const EditorLayout = styled(Box, {
   left: 0,
   right: 0,
   bottom: 0,
-  zIndex: 10000,
+  zIndex: Z_INDEX.base,
   overflow: 'hidden',
-  background: `linear-gradient(135deg, ${THEME_COLORS.background} 0%, #E8E8E8 100%)`,
+  background: GRADIENTS_3D.background,
+  backdropFilter: 'blur(10px)',
   
-  [theme.breakpoints.down('md')]: {
-    flexDirection: 'column'
-  }
+  // Layout responsivo - Sin padding superior para el toolbar flotante
+  flexDirection: isMobile ? 'column' : 'row',
+  padding: isMobile ? '8px 8px 8px 8px' : isTablet ? '12px 12px 12px 12px' : '16px 16px 16px 16px',
+  paddingTop: isMobile ? '80px' : isTablet ? '90px' : '100px', // Espacio para toolbar flotante
+  gap: isMobile ? '8px' : isTablet ? '12px' : '16px'
 }));
 
 const CanvasContainer = styled(Box, {
   name: 'KonvaDesignEditor-CanvasContainer',
   slot: 'MainCanvasWrapper'
-})(({ theme }) => ({
+})(({ theme, isMobile, isTablet }) => ({
   flex: 1,
   display: 'flex',
-  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
   position: 'relative',
-  background: THEME_COLORS.surface,
-  borderRadius: '16px',
-  // ✅ CORREGIDO: Reducir margin para usar más espacio
-  margin: theme.spacing(1),
+  background: GRADIENTS_3D.surface,
+  borderRadius: isMobile ? BORDERS.radius.medium : BORDERS.radius.large,
   overflow: 'hidden',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-  border: `1px solid ${theme.palette.divider}`
+  boxShadow: SHADOWS_3D.panel,
+  border: `1px solid ${FIXED_COLORS.border}`,
+  minHeight: isMobile ? '300px' : 'auto'
 }));
 
 const StageWrapper = styled(Box, {
@@ -103,9 +98,13 @@ const StageWrapper = styled(Box, {
   slot: 'KonvaStageContainer'
 })({
   position: 'relative',
-  flex: 1,
   overflow: 'hidden',
   cursor: 'default',
+  borderRadius: BORDERS.radius.medium,
+  boxShadow: SHADOWS_3D.light,
+  border: `1px solid ${FIXED_COLORS.border}`,
+  transition: TRANSITIONS.fast,
+  
   '&.drawing': {
     cursor: 'crosshair'
   },
@@ -114,6 +113,9 @@ const StageWrapper = styled(Box, {
   },
   '&.resizing': {
     cursor: 'nw-resize'
+  },
+  '&:hover': {
+    boxShadow: SHADOWS_3D.medium
   }
 });
 
@@ -127,25 +129,57 @@ const KonvaDesignEditor = ({
   isOpen = true,
   mode = 'full' // 'full', 'simple', 'viewer'
 }) => {
+  // ✅ OPTIMIZADO: Eliminado log excesivo que causaba problemas de rendimiento
   // ==================== REFS ====================
   const stageRef = useRef();
   const layerRef = useRef();
   const transformerRef = useRef();
   const containerRef = useRef();
 
+  // ==================== HOOK RESPONSIVO ====================
+  const {
+    isMobile,
+    isTablet,
+    isDesktop,
+    isPanelOpen,
+    activePanel,
+    togglePanel,
+    openPanel,
+    closePanel,
+    changeActivePanel,
+    getCanvasSize,
+    getEditorLayout,
+    getToolbarLayout,
+    getCanvasLayout,
+    getPanelLayout
+  } = useResponsiveLayout();
+
   // ==================== ESTADO LOCAL ====================
   const [editorMode, setEditorMode] = useState(mode);
   const [activeTool, setActiveTool] = useState('select');
   const [isLoading, setIsLoading] = useState(false);
-  const [activePanel, setActivePanel] = useState('tools'); // 'tools', 'properties', 'layers', 'assets', 'areas'
   const [showGrid, setShowGrid] = useState(EDITOR_CONFIG.grid.enabled);
   const [snapToGrid, setSnapToGrid] = useState(EDITOR_CONFIG.snap.enabled);
   const [zoom, setZoom] = useState(1);
   const [selectedAreaId, setSelectedAreaId] = useState(null);
   
   // ==================== ESTADO DE COLOR DE FONDO ====================
-  const [productColorFilter, setProductColorFilter] = useState(null);
+  const [productColorFilter, setProductColorFilter] = useState(initialDesign?.productColorFilter || null);
   const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
+  
+  // ✅ CORREGIDO: Actualizar productColorFilter cuando cambie initialDesign
+  useEffect(() => {
+    if (initialDesign?.productColorFilter) {
+      setProductColorFilter(initialDesign.productColorFilter);
+    }
+  }, [initialDesign?.productColorFilter]);
+  
+  // ==================== ESTADO DEL MODAL DE FORMAS ====================
+  const [showShapeModal, setShowShapeModal] = useState(false);
+  const [showShapeCreatorModal, setShowShapeCreatorModal] = useState(false);
+
+  // ==================== ESTADO DE FUENTES ====================
+  const [availableFonts, setAvailableFonts] = useState(['Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana']);
 
   // ==================== HOOKS ESPECIALIZADOS ====================
   
@@ -202,17 +236,19 @@ const KonvaDesignEditor = ({
     resetZoom
   } = useUnifiedCanvasCentering(productImage, containerRef);
 
-  // ✅ CORREGIDO: Usar dimensiones fijas del canvas como KonvaAreaEditor
-  const stageDimensions = {
-    width: CANVAS_CONFIG.width,
-    height: CANVAS_CONFIG.height
-  };
 
-  // Dimensiones del canvas escalado (después de stageScale)
-  const canvasDimensions = {
+  // ✅ RESPONSIVO: Usar dimensiones del canvas basadas en el dispositivo
+  const canvasSize = getCanvasSize();
+  const stageDimensions = useMemo(() => ({
+    width: canvasSize.width,
+    height: canvasSize.height
+  }), [canvasSize.width, canvasSize.height]);
+
+  // Dimensiones del canvas escalado (después de stageScale) - MEMOIZADO para evitar bucles infinitos
+  const canvasDimensions = useMemo(() => ({
     width: CANVAS_CONFIG.width * stageScale,
     height: CANVAS_CONFIG.height * stageScale
-  };
+  }), [stageScale]);
   
   const {
     customizationAreas,
@@ -315,6 +351,7 @@ const KonvaDesignEditor = ({
     saveState(`Transformar elemento`);
   }, [updateElement, saveState]);
 
+
   // ==================== HERRAMIENTAS ====================
 
   const handleToolChange = useCallback((toolId) => {
@@ -322,28 +359,13 @@ const KonvaDesignEditor = ({
     clearSelection(); // Limpiar selección al cambiar herramienta
   }, [clearSelection]);
 
-  const handleAddText = useCallback(() => {
-    const textElement = elementFactory.createTextElement({
-      x: 100,
-      y: 100,
-      text: 'Nuevo texto',
-      fontSize: 24,
-      fill: THEME_COLORS.text,
-      areaId: selectedAreaId || (customizationAreas.length > 0 ? customizationAreas[0].id : 'default-area')
-    });
-
-    addElement(textElement);
-    selectElement(textElement.id);
-    saveState('Agregar texto');
-    toast.success('Texto agregado');
-  }, [elementFactory, addElement, selectElement, saveState, selectedAreaId, customizationAreas]);
 
   const handleAddShape = useCallback((shapeType, customPoints = null) => {
     const baseConfig = {
       x: 150,
       y: 150,
-      fill: THEME_COLORS.primary,
-      stroke: THEME_COLORS.primaryDark,
+      fill: FIXED_COLORS.primary,
+      stroke: FIXED_COLORS.primaryDark,
       strokeWidth: 2,
       areaId: selectedAreaId || (customizationAreas.length > 0 ? customizationAreas[0].id : 'default-area')
     };
@@ -364,6 +386,19 @@ const KonvaDesignEditor = ({
           radius: 50
         });
         break;
+      case 'square':
+        shapeElement = elementFactory.createSquareElement({
+          ...baseConfig,
+          width: 80,
+          height: 80
+        });
+        break;
+      case 'ellipse':
+        shapeElement = elementFactory.createEllipseElement({
+          ...baseConfig,
+          radius: 50
+        });
+        break;
       case 'triangle':
         shapeElement = elementFactory.createTriangleElement({
           ...baseConfig,
@@ -378,6 +413,27 @@ const KonvaDesignEditor = ({
           outerRadius: 40
         });
         break;
+      case 'diamond':
+        shapeElement = elementFactory.createDiamondElement(baseConfig);
+        break;
+      case 'hexagon':
+        shapeElement = elementFactory.createHexagonElement({
+          ...baseConfig,
+          radius: 50
+        });
+        break;
+      case 'octagon':
+        shapeElement = elementFactory.createOctagonElement({
+          ...baseConfig,
+          radius: 50
+        });
+        break;
+      case 'pentagon':
+        shapeElement = elementFactory.createPentagonElement({
+          ...baseConfig,
+          radius: 50
+        });
+        break;
       case 'custom':
         if (customPoints) {
           shapeElement = elementFactory.createCustomShapeElement({
@@ -390,7 +446,7 @@ const KonvaDesignEditor = ({
         }
         break;
       default:
-        toast.error('Tipo de forma no soportado');
+        toast.error(`Tipo de forma no soportado: ${shapeType}`);
         return;
     }
 
@@ -400,17 +456,60 @@ const KonvaDesignEditor = ({
     toast.success(`${shapeType} agregado`);
   }, [elementFactory, addElement, selectElement, saveState, selectedAreaId, customizationAreas]);
 
+  // ==================== MANEJADORES DEL MODAL DE FORMAS ====================
+  
+  const handleOpenShapeModal = useCallback(() => {
+    setShowShapeModal(true);
+  }, []);
+
+  const handleCloseShapeModal = useCallback(() => {
+    setShowShapeModal(false);
+  }, []);
+
+  // Manejadores del modal de creación de formas
+  const handleOpenShapeCreatorModal = useCallback(() => {
+    setShowShapeCreatorModal(true);
+  }, []);
+
+  const handleCloseShapeCreatorModal = useCallback(() => {
+    setShowShapeCreatorModal(false);
+  }, []);
+
+  const handleAddShapeFromCreator = useCallback((shapeType, shapeData) => {
+    // ✅ DEBUGGING: Solo logs importantes para formas complejas
+    if (['star', 'diamond', 'hexagon', 'octagon', 'pentagon', 'shape'].includes(shapeType)) {
+      console.log('🎨 [KonvaDesignEditor] Creando forma compleja:', {
+        shapeType,
+        hasPoints: !!shapeData.points,
+        pointsLength: shapeData.points?.length,
+        points: shapeData.points
+      });
+    }
+    
+    // Crear elemento de forma directamente
+    const shapeElement = {
+      id: `shape-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: shapeType,
+      x: 100 + Math.random() * 100,
+      y: 100 + Math.random() * 100,
+      ...shapeData,
+      areaId: selectedAreaId || (customizationAreas.length > 0 ? customizationAreas[0].id : 'default-area'),
+      draggable: true,
+      visible: true,
+      locked: false
+    };
+    
+    addElement(shapeElement);
+    selectElement(shapeElement.id);
+    saveState(`Agregar ${shapeType} desde editor`);
+    toast.success(`${shapeType} agregado desde editor`);
+  }, [addElement, selectElement, saveState, selectedAreaId, customizationAreas]);
+
   const handleImageDrop = useCallback(async (files) => {
     setIsLoading(true);
     
     try {
       for (const file of files) {
-        console.log('🖼️ [KonvaDesignEditor] Procesando archivo:', {
-          name: file.name,
-          type: file.type,
-          size: file.size
-        });
-
         if (!file.type.startsWith('image/')) {
           toast.error(`${file.name} no es una imagen válida`);
           continue;
@@ -426,14 +525,7 @@ const KonvaDesignEditor = ({
         // Convertir a base64
         const imageDataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => {
-            console.log('🖼️ [KonvaDesignEditor] Imagen convertida a base64:', {
-              name: file.name,
-              dataUrlLength: reader.result.length,
-              dataUrlStart: reader.result.substring(0, 50) + '...'
-            });
-            resolve(reader.result);
-          };
+          reader.onload = () => resolve(reader.result);
           reader.onerror = () => reject(new Error('Error leyendo archivo'));
           reader.readAsDataURL(file);
         });
@@ -441,14 +533,7 @@ const KonvaDesignEditor = ({
         // Obtener dimensiones
         const img = new window.Image();
         await new Promise((resolve, reject) => {
-          img.onload = () => {
-            console.log('🖼️ [KonvaDesignEditor] Imagen cargada:', {
-              name: file.name,
-              width: img.width,
-              height: img.height
-            });
-            resolve();
-          };
+          img.onload = () => resolve();
           img.onerror = () => reject(new Error('Error cargando imagen'));
           img.src = imageDataUrl;
         });
@@ -472,22 +557,11 @@ const KonvaDesignEditor = ({
         // Validar el elemento antes de agregarlo
         const elementValidation = validationService.validateElement(imageElement);
         if (elementValidation.length > 0) {
-          console.error('🖼️ [KonvaDesignEditor] Error validando elemento de imagen:', elementValidation);
           toast.error(`Error validando imagen ${file.name}: ${elementValidation.join(', ')}`);
           continue;
         }
 
-        console.log('🖼️ [KonvaDesignEditor] Elemento de imagen creado:', {
-          id: imageElement.id,
-          type: imageElement.type,
-          hasImageUrl: !!imageElement.imageUrl,
-          hasImage: !!imageElement.image,
-          imageUrlStart: imageElement.imageUrl?.substring(0, 50) + '...',
-          imageStart: imageElement.image?.substring(0, 50) + '...',
-          width: imageElement.width,
-          height: imageElement.height
-        });
-
+        // ✅ OPTIMIZADO: Agregar elemento directamente
         addElement(imageElement);
         selectElement(imageElement.id);
         toast.success(`Imagen ${file.name} agregada`);
@@ -521,6 +595,7 @@ const KonvaDesignEditor = ({
     
     try {
       await fontService.loadGoogleFonts(fontNames);
+      setAvailableFonts(prev => [...new Set([...prev, ...fontNames])]);
       toast.success(`${fontNames.length} fuentes cargadas exitosamente`);
     } catch (error) {
       console.error('Error cargando fuentes:', error);
@@ -529,6 +604,123 @@ const KonvaDesignEditor = ({
       setIsLoading(false);
     }
   }, [fontService]);
+
+  const handleFontLoad = useCallback((fontFamily, variants) => {
+    console.log('🎨 [KonvaDesignEditor] Fuente cargada:', { fontFamily, variants });
+    setAvailableFonts(prev => {
+      if (!prev.includes(fontFamily)) {
+        return [...prev, fontFamily];
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleAddText = useCallback((textElement) => {
+    console.log('🎨 [KonvaDesignEditor] handleAddText llamado:', textElement);
+    
+    // Validar el elemento de texto
+    const validationErrors = validationService.validateElement(textElement);
+    if (validationErrors && validationErrors.length > 0) {
+      console.error('❌ [KonvaDesignEditor] Elemento de texto inválido:', validationErrors);
+      const errorMessage = validationErrors.join(', ');
+      toast.error(`Error en el texto: ${errorMessage}`);
+      return;
+    }
+
+    // Agregar el elemento
+    addElement(textElement);
+    selectElement(textElement.id);
+    saveState(`Agregar texto: ${textElement.text}`);
+    toast.success(`Texto "${textElement.text}" agregado`);
+  }, [addElement, selectElement, saveState, validationService]);
+
+  const handleUpdateText = useCallback((updatedTextElement) => {
+    console.log('🎨 [KonvaDesignEditor] handleUpdateText llamado:', updatedTextElement);
+    
+    // Validar el elemento de texto actualizado
+    const validationErrors = validationService.validateElement(updatedTextElement);
+    if (validationErrors && validationErrors.length > 0) {
+      console.error('❌ [KonvaDesignEditor] Elemento de texto actualizado inválido:', validationErrors);
+      const errorMessage = validationErrors.join(', ');
+      toast.error(`Error en el texto: ${errorMessage}`);
+      return;
+    }
+
+    // Actualizar el elemento
+    updateElement(updatedTextElement.id, updatedTextElement);
+    saveState(`Actualizar texto: ${updatedTextElement.text}`);
+  }, [updateElement, saveState, validationService]);
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedElements.length === 0) {
+      toast.warning('No hay elementos seleccionados para eliminar');
+      return;
+    }
+
+    // Confirmar eliminación
+    const elementNames = selectedElements.map(el => {
+      if (el.type === 'text') return `"${el.text || 'Texto'}"`;
+      if (el.type === 'image') return 'Imagen';
+      return el.type;
+    }).join(', ');
+
+    // ✅ CORREGIDO: Configuración global de SweetAlert para evitar conflictos
+    Swal.mixin({
+      customClass: {
+        popup: 'swal2-popup-custom',
+        title: 'swal2-title-custom',
+        content: 'swal2-content-custom'
+      },
+      buttonsStyling: false
+    });
+
+    try {
+      const swalResult = await Swal.fire({
+        title: '¿Eliminar elementos?',
+        html: `¿Estás seguro de que quieres eliminar: <strong>${elementNames}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff4757',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        // ✅ CORREGIDO: Z-index alto para que aparezca sobre todo
+        zIndex: 99999,
+        // ✅ CORREGIDO: Prevenir cierre automático
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        // ✅ CORREGIDO: Configuración adicional para evitar problemas
+        backdrop: true,
+        focusConfirm: false,
+        reverseButtons: false,
+        // ✅ CORREGIDO: Forzar que se muestre en el centro
+        position: 'center',
+        // ✅ CORREGIDO: Estilos personalizados para asegurar visibilidad
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        },
+        // ✅ CORREGIDO: Configuración adicional para evitar auto-dismiss
+        timer: null,
+        timerProgressBar: false
+      });
+      
+      if (swalResult.isConfirmed) {
+        // Eliminar elementos seleccionados
+        selectedElements.forEach(element => {
+          removeElement(element.id);
+        });
+        
+        clearSelection();
+        saveState(`Eliminar ${selectedElements.length} elemento(s)`);
+        toast.success(`${selectedElements.length} elemento(s) eliminado(s)`);
+      }
+    } catch (error) {
+      console.error('🗑️ [KonvaDesignEditor] Error en SweetAlert:', error);
+      toast.error('Error al mostrar el diálogo de confirmación');
+    }
+  }, [selectedElements, removeElement, clearSelection, saveState]);
 
   // ==================== GESTIÓN DE ÁREAS ====================
 
@@ -560,7 +752,6 @@ const KonvaDesignEditor = ({
 
   const handleBackgroundColorChange = useCallback((color) => {
     setProductColorFilter(color);
-    console.log('🎨 [KonvaDesignEditor] Color de fondo cambiado:', color);
   }, []);
 
   const handleBackgroundColorApply = useCallback((color) => {
@@ -622,12 +813,16 @@ const KonvaDesignEditor = ({
         return;
       }
 
+
       // Preparar datos para el backend
       const designData = {
         productId: product?._id || product?.id,
         elements: elements.map(element => {
           // Usar el ElementFactory para convertir al formato del backend
-          return elementFactory.toBackendFormat(element);
+          const convertedElement = elementFactory.toBackendFormat(element);
+          
+          
+          return convertedElement;
         }),
         canvasConfig,
         productColorFilter: productColorFilter, // Incluir el color de fondo
@@ -640,21 +835,6 @@ const KonvaDesignEditor = ({
         }
       };
 
-      // Log de depuración para verificar que las imágenes se están guardando
-      console.log('💾 [KonvaDesignEditor] Datos preparados para guardar:', {
-        totalElements: designData.elements.length,
-        elements: designData.elements.map(el => ({
-          id: el.id,
-          type: el.type,
-          hasImageUrl: !!el.konvaAttrs?.imageUrl,
-          hasImage: !!el.konvaAttrs?.image,
-          imageUrlPreview: el.konvaAttrs?.imageUrl?.substring(0, 50) + '...',
-          imagePreview: el.konvaAttrs?.image?.substring(0, 50) + '...',
-          originalName: el.konvaAttrs?.originalName,
-          imageUrlValid: el.konvaAttrs?.imageUrl ? validationService.isValidImageUrl(el.konvaAttrs.imageUrl) : false,
-          imageValid: el.konvaAttrs?.image ? validationService.isValidImageUrl(el.konvaAttrs.image) : false
-        }))
-      });
 
       // Validar cada elemento antes de guardar
       const invalidElements = [];
@@ -782,12 +962,18 @@ const KonvaDesignEditor = ({
     return () => stage.off('wheel', handleWheel);
   }, [handleCanvasWheel]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    console.log('🚫 [KonvaDesignEditor] No se renderiza - isOpen es false');
+    return null;
+  }
+
+  // ✅ OPTIMIZADO: Eliminado log excesivo que causaba problemas de rendimiento
 
   // ==================== RENDER ====================
   return (
-    <EditorLayout>
-      {/* Toolbar principal */}
+    <ThemeProvider theme={responsiveTheme}>
+      <EditorLayout isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop}>
+      {/* Toolbar flotante 3D */}
       <EditorToolbar
         product={product}
         canUndo={canUndo}
@@ -798,44 +984,24 @@ const KonvaDesignEditor = ({
         onClose={onClose}
         onBack={onBack}
         isLoading={isLoading}
-        zoom={stageScale * zoom}
-        onZoomChange={(newZoom) => setZoom(newZoom / stageScale)}
+        zoom={stageScale}
+        onZoomChange={(newZoom) => setStageScale(newZoom)}
         showGrid={showGrid}
         onToggleGrid={setShowGrid}
         snapToGrid={snapToGrid}
         onToggleSnap={setSnapToGrid}
         onTestImageFlow={handleTestImageFlow}
+        isMobile={isMobile}
+        isTablet={isTablet}
+        isDesktop={isDesktop}
+        onTogglePanel={togglePanel}
+        onDelete={handleDeleteSelected}
+        hasSelectedElements={selectedElements.length > 0}
       />
 
-      {/* Panel de herramientas */}
-      <ToolsPanel
-        activeTool={activeTool}
-        onToolChange={handleToolChange}
-        onAddText={handleAddText}
-        onAddShape={handleAddShape}
-        onImageDrop={handleImageDrop}
-        selectedCount={selectedIds.length}
-        onDeleteSelected={() => {
-          selectedIds.forEach(id => removeElement(id));
-          clearSelection();
-          saveState('Eliminar elementos');
-        }}
-        onDuplicateSelected={() => {
-          selectedIds.forEach(id => duplicateElement(id));
-          saveState('Duplicar elementos');
-        }}
-        // Nuevas props para funcionalidades movidas
-        customizationAreas={customizationAreas}
-        selectedAreaId={selectedAreaId}
-        onAreaSelect={handleAreaSelect}
-        productColorFilter={productColorFilter}
-        onColorChange={handleBackgroundColorChange}
-        onColorApply={handleBackgroundColorApply}
-        onResetColor={handleResetBackgroundColor}
-      />
+      {/* Canvas principal responsivo */}
+      <CanvasContainer ref={containerRef} isMobile={isMobile} isTablet={isTablet} sx={getCanvasLayout()}>
 
-      {/* Canvas principal */}
-      <CanvasContainer ref={containerRef}>
         <StageWrapper
           className={`
             ${activeTool === 'draw' ? 'drawing' : ''}
@@ -846,8 +1012,8 @@ const KonvaDesignEditor = ({
             ref={stageRef}
             width={stageDimensions.width}
             height={stageDimensions.height}
-            scaleX={stageScale * zoom}
-            scaleY={stageScale * zoom}
+            scaleX={stageScale}
+            scaleY={stageScale}
             x={stagePosition.x}
             y={stagePosition.y}
             onMouseDown={handleStageClick}
@@ -866,7 +1032,7 @@ const KonvaDesignEditor = ({
                   size={CANVAS_CONFIG.grid.size}
                   stroke={CANVAS_CONFIG.grid.color}
                   opacity={CANVAS_CONFIG.grid.opacity}
-                  stageScale={stageScale * zoom}
+                  stageScale={stageScale}
                 />
               )}
 
@@ -892,9 +1058,8 @@ const KonvaDesignEditor = ({
                       listening: false,
                       opacity: 0.8,
                       draggable: false,
-                      // Aplicar filtro de color directamente
-                      fill: productColorFilter || undefined,
-                      filters: productColorFilter ? ['ColorMatrix'] : []
+                      // ✅ CORREGIDO: Pasar el color del producto para tintado
+                      productColorFilter: productColorFilter || null
                     }}
                   />
                 );
@@ -935,121 +1100,134 @@ const KonvaDesignEditor = ({
                 resizeEnabled={true}
                 borderEnabled={true}
                 anchorSize={8}
-                borderStroke={THEME_COLORS.primary}
-                anchorStroke={THEME_COLORS.primary}
-                anchorFill={THEME_COLORS.surface}
+                borderStroke={FIXED_COLORS.primary}
+                anchorStroke={FIXED_COLORS.primary}
+                anchorFill={FIXED_COLORS.surface}
               />
             </Layer>
           </Stage>
         </StageWrapper>
       </CanvasContainer>
 
-      {/* Panel lateral derecho */}
-      <Box sx={{ width: 280, display: 'flex', flexDirection: 'column' }}>
-        {/* Pestañas del panel */}
-        <PanelTabs
-          activePanel={activePanel}
-          onPanelChange={setActivePanel}
-          hasSelection={selectedIds.length > 0}
-        />
+      {/* Panel unificado responsivo */}
+      <UnifiedPanel
+        isOpen={isPanelOpen}
+        onToggle={togglePanel}
+        activePanel={activePanel}
+        onPanelChange={changeActivePanel}
+        selectedElements={selectedElements}
+        elements={elements}
+        customizationAreas={customizationAreas}
+        selectedAreaId={selectedAreaId}
+        onAreaSelect={handleAreaSelect}
+        productColorFilter={productColorFilter}
+        onColorChange={handleBackgroundColorChange}
+        onColorApply={handleBackgroundColorApply}
+        onResetColor={handleResetBackgroundColor}
+        onImageDrop={handleImageDrop}
+        onLoadGoogleFonts={handleLoadGoogleFonts}
+        onExport={handleExport}
+        onAddText={handleAddText}
+        onUpdateText={handleUpdateText}
+        selectedElement={selectedElements.length === 1 ? selectedElements[0] : null}
+        onAddShape={handleAddShape}
+        onSelectElement={selectElement}
+        onSelectMultiple={selectMultiple}
+        onReorderElements={(newOrder) => {
+          setElements(newOrder);
+          saveState('Reordenar capas');
+        }}
+        onToggleVisibility={(elementId) => {
+          const element = elements.find(el => el.id === elementId);
+          if (element) {
+            updateElement(elementId, { visible: !element.visible });
+          }
+        }}
+        onToggleLock={(elementId) => {
+          const element = elements.find(el => el.id === elementId);
+          if (element) {
+            updateElement(elementId, { draggable: !element.locked });
+          }
+        }}
+        onUpdateElement={updateElement}
+        onOpenShapeCreator={handleOpenShapeCreatorModal}
+        fontService={fontService}
+        availableFonts={availableFonts}
+        onFontLoad={handleFontLoad}
+        isMobile={isMobile}
+        isTablet={isTablet}
+        isDesktop={isDesktop}
+      />
 
-        {/* Contenido del panel activo */}
-        {activePanel === 'properties' && (
-          <PropertiesPanel
-            selectedElements={selectedElements}
-            onUpdateElement={updateElement}
-            onLoadGoogleFonts={handleLoadGoogleFonts}
-            availableFonts={fontService.getAvailableFonts()}
-          />
-        )}
+      {/* Modal de Formas Personalizadas */}
+      <ShapeCreatorModal
+        isOpen={showShapeModal}
+        onClose={handleCloseShapeModal}
+        onAddShape={handleAddShapeFromCreator}
+        onAddCustomShape={(points) => handleAddShapeFromCreator('custom', { points })}
+      />
 
-        {activePanel === 'layers' && (
-          <LayersPanel
-            elements={elements}
-            selectedIds={selectedIds}
-            onSelectElement={selectElement}
-            onSelectMultiple={selectMultiple}
-            onReorderElements={(newOrder) => {
-              setElements(newOrder);
-              saveState('Reordenar capas');
-            }}
-            onToggleVisibility={(elementId) => {
-              const element = elements.find(el => el.id === elementId);
-              if (element) {
-                updateElement(elementId, { visible: !element.visible });
-              }
-            }}
-            onToggleLock={(elementId) => {
-              const element = elements.find(el => el.id === elementId);
-              if (element) {
-                updateElement(elementId, { draggable: !element.locked });
-              }
-            }}
-          />
-        )}
+      {/* Modal de Creación de Formas Avanzado */}
+      <AdvancedShapeCreatorModal
+        isOpen={showShapeCreatorModal}
+        onClose={handleCloseShapeCreatorModal}
+        onAddShape={handleAddShapeFromCreator}
+      />
 
-        {activePanel === 'assets' && (
-          <AssetsPanel
-            onImageDrop={handleImageDrop}
-            onLoadGoogleFonts={handleLoadGoogleFonts}
-            fontService={fontService}
-          />
-        )}
 
-        {activePanel === 'export' && (
-          <ExportPanel
-            onExport={handleExport}
-            elements={elements}
-            canvasConfig={canvasConfig}
-          />
-        )}
-
-        {activePanel === 'shapes' && (
-          <ShapeCreator
-            onAddShape={handleAddShape}
-            onAddCustomShape={(points) => handleAddShape('custom', points)}
-          />
-        )}
-
-        {/* Estas funcionalidades se movieron al panel izquierdo */}
-      </Box>
-
-      {/* Loading overlay */}
-      <Backdrop open={isLoading} sx={{ zIndex: 20000 }}>
-        <Box sx={{ textAlign: 'center', color: 'white' }}>
-          <CircularProgress color="inherit" size={60} />
-          <Typography sx={{ mt: 2 }}>Procesando...</Typography>
+      {/* Loading overlay responsivo */}
+      <Backdrop open={isLoading} sx={{ zIndex: Z_INDEX.overlay }}>
+        <Box sx={{ 
+          textAlign: 'center', 
+          color: 'white',
+          background: FIXED_COLORS.overlay,
+          borderRadius: BORDERS.radius.large,
+          padding: isMobile ? 2 : 4,
+          backdropFilter: 'blur(8px)'
+        }}>
+          <CircularProgress color="inherit" size={isMobile ? 40 : 60} />
+          <Typography sx={{ mt: 2, fontWeight: 500, fontSize: isMobile ? '0.875rem' : '1rem' }}>Procesando...</Typography>
         </Box>
       </Backdrop>
 
-      {/* Toast notifications */}
+      {/* Toast notifications responsivos */}
       <Toaster
-        position="top-right"
+        position={isMobile ? "bottom-center" : "bottom-left"}
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
-            zIndex: 99999,
+            background: FIXED_COLORS.surface,
+            color: FIXED_COLORS.text,
+            borderRadius: BORDERS.radius.medium,
+            boxShadow: SHADOWS_3D.medium,
+            border: `1px solid ${FIXED_COLORS.border}`,
+            zIndex: Z_INDEX.toast,
+            fontSize: isMobile ? '0.875rem' : '1rem',
+            maxWidth: isMobile ? '90vw' : '400px'
           },
           success: {
             duration: 3000,
             style: {
-              background: THEME_COLORS.success,
+              background: FIXED_COLORS.success,
+              color: 'white',
             },
           },
           error: {
             duration: 5000,
             style: {
-              background: THEME_COLORS.error,
+              background: FIXED_COLORS.error,
+              color: 'white',
             },
           },
         }}
         containerStyle={{
-          zIndex: 99999,
+          zIndex: Z_INDEX.toast,
+          bottom: isMobile ? '40px' : '60px', // ✅ AJUSTADO: Margen desde el borde inferior
+          left: isMobile ? 'auto' : '20px',    // ✅ AJUSTADO: Margen desde el borde izquierdo
         }}
       />
-    </EditorLayout>
+      </EditorLayout>
+    </ThemeProvider>
   );
 };
 
@@ -1090,36 +1268,6 @@ const GridPattern = ({ width, height, size, stroke, opacity }) => {
   return <>{lines}</>;
 };
 
-// Panel Tabs
-const PanelTabs = ({ activePanel, onPanelChange, hasSelection }) => {
-  const tabs = [
-    { id: 'properties', label: 'Propiedades', icon: '⚙️', disabled: !hasSelection },
-    { id: 'layers', label: 'Capas', icon: '📋' },
-    { id: 'assets', label: 'Recursos', icon: '📁' },
-    { id: 'shapes', label: 'Formas', icon: '🔷' },
-    { id: 'export', label: 'Exportar', icon: '💾' }
-  ];
-
-  return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-      {tabs.map(tab => (
-        <Button
-          key={tab.id}
-          onClick={() => onPanelChange(tab.id)}
-          disabled={tab.disabled}
-          sx={{
-            minWidth: 'auto',
-            p: 1,
-            backgroundColor: activePanel === tab.id ? 'primary.main' : 'transparent',
-            color: activePanel === tab.id ? 'primary.contrastText' : 'text.secondary'
-          }}
-        >
-          {tab.icon} {tab.label}
-        </Button>
-      ))}
-    </Box>
-  );
-};
 
 // ==================== COMPONENTE DE COLOR DE FONDO ====================
 
@@ -1130,12 +1278,13 @@ const BackgroundColorPanel = ({
   onResetColor,
   product
 }) => {
+  const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
   return (
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       <Typography 
         variant="h6" 
         sx={{ 
-          color: THEME_COLORS.text,
+          color: FIXED_COLORS.text,
           fontWeight: 700,
           mb: 2,
           display: 'flex',
@@ -1150,7 +1299,7 @@ const BackgroundColorPanel = ({
         <Typography 
           variant="body2" 
           sx={{ 
-            color: THEME_COLORS.text,
+            color: FIXED_COLORS.text,
             mb: 2,
             opacity: 0.8
           }}
@@ -1160,17 +1309,61 @@ const BackgroundColorPanel = ({
 
         {/* Selector de color */}
         <Box sx={{ mb: 2 }}>
-          <ColorPicker
-            currentcolor={productColorFilter || '#FFFFFF'}
-            onChange={onColorChange}
-            onColorApply={onColorApply}
-            label="Color del Producto"
-            showTransparency={false}
-            showPalettes={true}
-            showFavorites={true}
-            pickerType="sketch"
-            size="medium"
-          />
+          <Typography variant="body2" sx={{ color: FIXED_COLORS.text, mb: 1 }}>
+            Color del Producto
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Preview del color actual */}
+            <Box
+              sx={{
+                width: 50,
+                height: 50,
+                backgroundColor: productColorFilter || '#FFFFFF',
+                borderRadius: BORDERS.radius.medium,
+                border: `2px solid ${FIXED_COLORS.border}`,
+                cursor: 'pointer',
+                transition: TRANSITIONS.fast,
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: SHADOWS_3D.medium
+                }
+              }}
+              onClick={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
+            />
+            
+            {/* Input de color */}
+            <Box sx={{ flex: 1 }}>
+              <input
+                type="color"
+                value={productColorFilter || '#FFFFFF'}
+                onChange={(e) => onColorChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '40px',
+                  border: `1px solid ${FIXED_COLORS.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              />
+            </Box>
+          </Box>
+          
+          {/* ChromePicker cuando está abierto */}
+          {showBackgroundColorPicker && (
+            <Box sx={{ 
+              position: 'absolute', 
+              zIndex: Z_INDEX.tooltip + 1,
+              mt: 1,
+              boxShadow: SHADOWS_3D.large,
+              borderRadius: BORDERS.radius.medium
+            }}>
+              <ChromePicker
+                color={productColorFilter || '#FFFFFF'}
+                onChange={(color) => onColorChange(color.hex)}
+                disableAlpha={true}
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Botones de acción */}
@@ -1181,10 +1374,10 @@ const BackgroundColorPanel = ({
             onClick={onResetColor}
             disabled={!productColorFilter}
             sx={{
-              borderColor: THEME_COLORS.primary,
-              color: THEME_COLORS.primary,
+              borderColor: FIXED_COLORS.primary,
+              color: FIXED_COLORS.primary,
               '&:hover': {
-                borderColor: THEME_COLORS.primaryDark,
+                borderColor: FIXED_COLORS.primaryDark,
                 backgroundColor: 'rgba(31, 100, 191, 0.1)'
               }
             }}
@@ -1200,12 +1393,12 @@ const BackgroundColorPanel = ({
           p: 2, 
           backgroundColor: 'rgba(31, 100, 191, 0.1)',
           borderRadius: 2,
-          border: `1px solid ${THEME_COLORS.primary}20`
+          border: `1px solid ${FIXED_COLORS.primary}20`
         }}>
           <Typography 
             variant="body2" 
             sx={{ 
-              color: THEME_COLORS.text,
+              color: FIXED_COLORS.text,
               fontWeight: 600,
               mb: 1
             }}
@@ -1230,7 +1423,7 @@ const BackgroundColorPanel = ({
           <Typography 
             variant="caption" 
             sx={{ 
-              color: THEME_COLORS.text,
+              color: FIXED_COLORS.text,
               opacity: 0.7
             }}
           >
@@ -1244,7 +1437,7 @@ const BackgroundColorPanel = ({
         <Typography 
           variant="body2" 
           sx={{ 
-            color: THEME_COLORS.text,
+            color: FIXED_COLORS.text,
             fontWeight: 600,
             mb: 2
           }}
@@ -1267,7 +1460,7 @@ const BackgroundColorPanel = ({
                 backgroundColor: color,
                 borderRadius: 1,
                 cursor: 'pointer',
-                border: productColorFilter === color ? `2px solid ${THEME_COLORS.primary}` : '1px solid rgba(0,0,0,0.2)',
+                border: productColorFilter === color ? `2px solid ${FIXED_COLORS.primary}` : '1px solid rgba(0,0,0,0.2)',
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   transform: 'scale(1.1)',

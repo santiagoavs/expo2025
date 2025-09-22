@@ -701,6 +701,7 @@ const DesignManagement = () => {
     filters,
     fetchDesigns,
     createDesignForClient,
+    updateDesign,
     getDesignById,
     cloneDesign,
     submitQuote,
@@ -884,13 +885,20 @@ const DesignManagement = () => {
   const handleDesignCreated = async (designData) => {
     try {
       setActionLoading(true);
-      await createDesignForClient(designData);
+      // ✅ CORREGIDO: Usar updateDesign si está en modo edición, sino createDesignForClient
+      if (editingDesign) {
+        console.log('✏️ [DesignManagement] Actualizando diseño existente:', editingDesign._id);
+        await updateDesign(editingDesign._id, designData);
+      } else {
+        console.log('➕ [DesignManagement] Creando nuevo diseño');
+        await createDesignForClient(designData);
+      }
       setShowCreateModal(false);
       setEditingDesign(null);
 
       await Swal.fire({
-        title: '¡Diseño creado exitosamente!',
-        text: 'El diseño se ha enviado para cotización',
+        title: editingDesign ? '¡Diseño actualizado exitosamente!' : '¡Diseño creado exitosamente!',
+        text: editingDesign ? 'Los cambios se han guardado correctamente' : 'El diseño se ha enviado para cotización',
         icon: 'success',
         confirmButtonColor: '#1F64BF',
         timer: 3000,
@@ -902,7 +910,7 @@ const DesignManagement = () => {
     } catch (error) {
       console.error('Error en handleDesignCreated:', error);
       await Swal.fire({
-        title: 'Error al crear diseño',
+        title: editingDesign ? 'Error al actualizar diseño' : 'Error al crear diseño',
         text: error.message || 'Ocurrió un error inesperado',
         icon: 'error',
         confirmButtonColor: '#EF4444'
@@ -1681,6 +1689,7 @@ const DesignManagement = () => {
                     productName={design.productName}
                     productImage={design.productImage}
                     previewImage={design.previewImage}
+                    elements={design.elements}
                     price={design.price}
                     formattedPrice={design.formattedPrice}
                     createdDate={design.createdDate}

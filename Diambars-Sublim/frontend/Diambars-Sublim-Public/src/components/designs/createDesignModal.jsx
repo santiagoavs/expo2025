@@ -220,7 +220,6 @@ const CreateDesignModal = ({
         productColorFilter: designData.productColorFilter
       };
       
-      console.log('📤 Enviando diseño:', finalDesignData);
       await onSubmit(finalDesignData);
     } catch (error) {
       console.error('Error enviando diseño:', error);

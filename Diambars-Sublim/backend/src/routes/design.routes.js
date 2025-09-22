@@ -168,7 +168,7 @@ router.get('/:id',
   designController.getDesignById
 );
 
-// Actualizar diseño (solo en estado draft)
+// Actualizar diseño (solo en estado draft o pending)
 router.put('/:id',
   authRequired,
   designValidations.update,

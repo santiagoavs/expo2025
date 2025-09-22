@@ -1,0 +1,433 @@
+/* fixedColors.css - ESTILOS GLOBALES PARA COLORES FIJOS DEL EDITOR */
+
+/* ==================== VARIABLES CSS PERSONALIZADAS ==================== */
+:root {
+  /* Colores primarios fijos */
+  --fixed-primary: #1F64BF;
+  --fixed-primary-dark: #0F4A8F;
+  --fixed-primary-light: #4A8BDF;
+  
+  /* Colores secundarios fijos */
+  --fixed-secondary: #FF6B35;
+  --fixed-secondary-dark: #E55A2B;
+  --fixed-secondary-light: #FF8A5B;
+  
+  /* Colores de superficie fijos */
+  --fixed-background: #0A0E1A;
+  --fixed-surface: #1A1F2E;
+  --fixed-surface-light: #2A2F3E;
+  --fixed-surface-dark: #0F1419;
+  
+  /* Colores de texto fijos */
+  --fixed-text: #FFFFFF;
+  --fixed-text-secondary: #B0B8CC;
+  --fixed-text-disabled: #6B7280;
+  
+  /* Colores de estado fijos */
+  --fixed-success: #10B981;
+  --fixed-warning: #F59E0B;
+  --fixed-error: #EF4444;
+  --fixed-info: #3B82F6;
+  
+  /* Colores de borde fijos */
+  --fixed-border: #374151;
+  --fixed-border-light: #4B5563;
+  --fixed-border-dark: #1F2937;
+  --fixed-divider: #374151;
+  
+  /* Colores de overlay fijos */
+  --fixed-overlay: rgba(0, 0, 0, 0.8);
+  --fixed-overlay-light: rgba(0, 0, 0, 0.5);
+  --fixed-backdrop: rgba(0, 0, 0, 0.3);
+  
+  /* Gradientes fijos */
+  --fixed-gradient-primary: linear-gradient(135deg, #1F64BF 0%, #4A8BDF 50%, #1F64BF 100%);
+  --fixed-gradient-primary-hover: linear-gradient(135deg, #0F4A8F 0%, #1F64BF 50%, #0F4A8F 100%);
+  --fixed-gradient-secondary: linear-gradient(135deg, #FF6B35 0%, #FF8A5B 50%, #FF6B35 100%);
+  --fixed-gradient-background: linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #0A0E1A 100%);
+  --fixed-gradient-surface: linear-gradient(135deg, #1A1F2E 0%, #2A2F3E 50%, #1A1F2E 100%);
+  --fixed-gradient-surface-hover: linear-gradient(135deg, #2A2F3E 0%, #3A3F4E 50%, #2A2F3E 100%);
+  --fixed-gradient-panel: linear-gradient(135deg, #1A1F2E 0%, #2A2F3E 30%, #1A1F2E 100%);
+  --fixed-gradient-toolbar: linear-gradient(135deg, #0F1419 0%, #1A1F2E 50%, #0F1419 100%);
+  --fixed-gradient-button: linear-gradient(135deg, #1F64BF 0%, #4A8BDF 100%);
+  --fixed-gradient-button-hover: linear-gradient(135deg, #0F4A8F 0%, #1F64BF 100%);
+  --fixed-gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  --fixed-gradient-glass-hover: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+}
+
+/* ==================== CLASE PRINCIPAL DEL EDITOR ==================== */
+.editor-fixed-theme {
+  /* Forzar tema oscuro independientemente del sistema */
+  color-scheme: dark;
+  
+  /* Aplicar colores fijos a todos los elementos */
+  background-color: var(--fixed-background) !important;
+  color: var(--fixed-text) !important;
+}
+
+/* ==================== COMPONENTES MUI PERSONALIZADOS ==================== */
+.editor-fixed-theme .MuiButton-root {
+  background: var(--fixed-gradient-button) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.editor-fixed-theme .MuiButton-root:hover {
+  background: var(--fixed-gradient-button-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(31,100,191,0.3) !important;
+}
+
+.editor-fixed-theme .MuiButton-outlined {
+  background: transparent !important;
+  color: var(--fixed-text) !important;
+  border: 1px solid var(--fixed-border) !important;
+}
+
+.editor-fixed-theme .MuiButton-outlined:hover {
+  background: rgba(31, 100, 191, 0.1) !important;
+  border-color: var(--fixed-primary) !important;
+  color: var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .MuiPaper-root {
+  background: var(--fixed-gradient-surface) !important;
+  border: 1px solid var(--fixed-border) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.editor-fixed-theme .MuiDialog-paper {
+  background: var(--fixed-gradient-panel) !important;
+  border: 1px solid var(--fixed-border) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+}
+
+.editor-fixed-theme .MuiBackdrop-root {
+  background-color: var(--fixed-overlay) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.editor-fixed-theme .MuiIconButton-root {
+  color: var(--fixed-text) !important;
+}
+
+.editor-fixed-theme .MuiIconButton-root:hover {
+  background-color: rgba(31, 100, 191, 0.1) !important;
+  color: var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .MuiTypography-root {
+  color: var(--fixed-text) !important;
+}
+
+.editor-fixed-theme .MuiTypography-colorTextSecondary {
+  color: var(--fixed-text-secondary) !important;
+}
+
+.editor-fixed-theme .MuiDivider-root {
+  background-color: var(--fixed-divider) !important;
+}
+
+.editor-fixed-theme .MuiSlider-root {
+  color: var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked {
+  color: var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background-color: var(--fixed-primary) !important;
+}
+
+/* ==================== COMPONENTES ESPECÍFICOS DEL EDITOR ==================== */
+.editor-fixed-theme .konva-editor-toolbar {
+  background: var(--fixed-gradient-toolbar) !important;
+  border: 1px solid var(--fixed-border) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.editor-fixed-theme .konva-editor-panel {
+  background: var(--fixed-gradient-panel) !important;
+  border: 1px solid var(--fixed-border) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+}
+
+.editor-fixed-theme .konva-editor-canvas {
+  background: var(--fixed-gradient-surface) !important;
+  border: 1px solid var(--fixed-border) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.editor-fixed-theme .konva-editor-button {
+  background: var(--fixed-gradient-button) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.editor-fixed-theme .konva-editor-button:hover {
+  background: var(--fixed-gradient-button-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(31,100,191,0.3) !important;
+}
+
+.editor-fixed-theme .konva-editor-button:active {
+  transform: translateY(0) !important;
+}
+
+/* ==================== ESTADOS DE INTERACCIÓN ==================== */
+.editor-fixed-theme .konva-editor-interactive:hover {
+  background: var(--fixed-gradient-surface-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+.editor-fixed-theme .konva-editor-interactive:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.editor-fixed-theme .konva-editor-selected {
+  background: rgba(31, 100, 191, 0.2) !important;
+  border: 1px solid var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .konva-editor-focused {
+  outline: 2px solid var(--fixed-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==================== SCROLLBARS PERSONALIZADOS ==================== */
+.editor-fixed-theme ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.editor-fixed-theme ::-webkit-scrollbar-track {
+  background: var(--fixed-surface-dark);
+  border-radius: 4px;
+}
+
+.editor-fixed-theme ::-webkit-scrollbar-thumb {
+  background: var(--fixed-border);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.editor-fixed-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--fixed-border-light);
+}
+
+.editor-fixed-theme ::-webkit-scrollbar-corner {
+  background: var(--fixed-surface-dark);
+}
+
+/* ==================== EFECTOS DE GLASSMORPHISM ==================== */
+.editor-fixed-theme .konva-editor-glass {
+  background: var(--fixed-gradient-glass) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.editor-fixed-theme .konva-editor-glass:hover {
+  background: var(--fixed-gradient-glass-hover) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+/* ==================== ANIMACIONES ==================== */
+.editor-fixed-theme .konva-editor-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-fixed-theme .konva-editor-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-fixed-theme .konva-editor-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-fixed-theme .konva-editor-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .editor-fixed-theme .konva-editor-mobile {
+    /* Estilos específicos para móvil */
+    font-size: 14px !important;
+  }
+  
+  .editor-fixed-theme .konva-editor-mobile .MuiButton-root {
+    min-height: 40px !important;
+    padding: 8px 16px !important;
+  }
+  
+  .editor-fixed-theme .konva-editor-mobile .MuiIconButton-root {
+    padding: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-fixed-theme .konva-editor-mobile {
+    font-size: 12px !important;
+  }
+  
+  .editor-fixed-theme .konva-editor-mobile .MuiButton-root {
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* ==================== ESTADOS DE CARGA ==================== */
+.editor-fixed-theme .konva-editor-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.editor-fixed-theme .konva-editor-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(31, 100, 191, 0.2),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ==================== ESTADOS DE ERROR ==================== */
+.editor-fixed-theme .konva-editor-error {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid var(--fixed-error) !important;
+  color: var(--fixed-error) !important;
+}
+
+.editor-fixed-theme .konva-editor-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid var(--fixed-success) !important;
+  color: var(--fixed-success) !important;
+}
+
+.editor-fixed-theme .konva-editor-warning {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid var(--fixed-warning) !important;
+  color: var(--fixed-warning) !important;
+}
+
+/* ==================== ESTADOS DE INFORMACIÓN ==================== */
+.editor-fixed-theme .konva-editor-info {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid var(--fixed-info) !important;
+  color: var(--fixed-info) !important;
+}
+
+/* ==================== UTILIDADES ==================== */
+.editor-fixed-theme .konva-editor-text-primary {
+  color: var(--fixed-text) !important;
+}
+
+.editor-fixed-theme .konva-editor-text-secondary {
+  color: var(--fixed-text-secondary) !important;
+}
+
+.editor-fixed-theme .konva-editor-text-disabled {
+  color: var(--fixed-text-disabled) !important;
+}
+
+.editor-fixed-theme .konva-editor-bg-primary {
+  background: var(--fixed-primary) !important;
+}
+
+.editor-fixed-theme .konva-editor-bg-surface {
+  background: var(--fixed-surface) !important;
+}
+
+.editor-fixed-theme .konva-editor-border {
+  border: 1px solid var(--fixed-border) !important;
+}
+
+.editor-fixed-theme .konva-editor-shadow {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+.editor-fixed-theme .konva-editor-shadow-lg {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3) !important;
+}
+
+.editor-fixed-theme .konva-editor-rounded {
+  border-radius: 8px !important;
+}
+
+.editor-fixed-theme .konva-editor-rounded-lg {
+  border-radius: 12px !important;
+}
+
+.editor-fixed-theme .konva-editor-rounded-full {
+  border-radius: 50% !important;
+}

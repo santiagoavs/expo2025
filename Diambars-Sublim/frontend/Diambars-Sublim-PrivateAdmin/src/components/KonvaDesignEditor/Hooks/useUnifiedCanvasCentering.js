@@ -21,12 +21,18 @@ export const useUnifiedCanvasCentering = (image, containerRef) => {
       const scaleY = containerHeight / CANVAS_CONFIG.height;
       const initialScale = Math.min(scaleX, scaleY);
       
-      // ✅ NUEVO: Aplicar un factor de ajuste para usar más espacio
-      const adjustedScale = initialScale * 0.95; // Usar 95% del espacio disponible
+      // ✅ ESTRATEGIA HÍBRIDA: Diferentes escalas según el tamaño de pantalla
+      // Desktop (lg+): Usar 95% del espacio (como KonvaAreaEditor que funciona bien)
+      // Mobile/Tablet (md-): Usar 80% del espacio (como antes)
+      const isDesktop = containerWidth >= 1200; // lg breakpoint de Material-UI
+      const scaleFactor = isDesktop ? 0.95 : 0.8;
+      const adjustedScale = initialScale * scaleFactor;
       
       setStageScale(adjustedScale);
       
-      // Centrar perfectamente el stage en el contenedor
+      // ✅ CORREGIDO: Centrar perfectamente el stage en el contenedor
+      // Como el contenedor ya tiene alignItems: center y justifyContent: center,
+      // el stage se centrará automáticamente, pero necesitamos ajustar la posición
       const scaledWidth = CANVAS_CONFIG.width * adjustedScale;
       const scaledHeight = CANVAS_CONFIG.height * adjustedScale;
       const centerX = (containerWidth - scaledWidth) / 2;
@@ -34,14 +40,19 @@ export const useUnifiedCanvasCentering = (image, containerRef) => {
       
       setStagePosition({ x: centerX, y: centerY });
       
-      console.log('📐 [useUnifiedCanvasCentering] Canvas optimizado para máximo uso del espacio:', {
+      console.log('📐 [useUnifiedCanvasCentering] Canvas con estrategia híbrida:', {
         containerSize: { width: containerWidth, height: containerHeight },
         stageSize: { width: CANVAS_CONFIG.width, height: CANVAS_CONFIG.height },
         rawScale: initialScale,
         adjustedScale: adjustedScale,
         scaledSize: { width: scaledWidth, height: scaledHeight },
         position: { x: centerX, y: centerY },
-        coverage: `${Math.round((scaledWidth / containerWidth) * 100)}% x ${Math.round((scaledHeight / containerHeight) * 100)}%`
+        coverage: `${Math.round((scaledWidth / containerWidth) * 100)}% x ${Math.round((scaledHeight / containerHeight) * 100)}%`,
+        strategy: {
+          isDesktop,
+          scaleFactor,
+          method: isDesktop ? 'Desktop: 95% space (KonvaAreaEditor logic)' : 'Mobile/Tablet: 80% space (original logic)'
+        }
       });
     }
   }, [containerRef]);

@@ -171,7 +171,7 @@ const DesignService = {
   },
 
   /**
-   * Actualizar diseño existente (solo en estado draft)
+   * Actualizar diseño existente (solo en estado draft o pending)
    * @param {string} id - ID del diseño
    * @param {Object} designData - Datos actualizados
    * @returns {Promise} Respuesta con diseño actualizado
@@ -185,7 +185,7 @@ const DesignService = {
       }
 
       // Filtrar solo campos permitidos para actualización
-      const allowedFields = ['elements', 'productOptions', 'clientNotes', 'name'];
+      const allowedFields = ['elements', 'productOptions', 'clientNotes', 'name', 'productColorFilter'];
       const payload = {};
       
       allowedFields.forEach(field => {
@@ -714,8 +714,10 @@ updateProductColor: async (id, color) => {
       
       // Validaciones específicas por tipo
       if (element.type === 'text') {
-        if (!element.konvaAttrs.text || element.konvaAttrs.text.trim() === '') {
-          errors.push(`Elemento ${index + 1}: El texto no puede estar vacío`);
+        // Verificar texto en konvaAttrs o directamente en el elemento
+        const textValue = element.konvaAttrs.text || element.text;
+        if (!textValue || textValue.trim() === '') {
+          errors.push(`Elemento de texto ${index + 1}: texto vacío`);
         }
         
         // Asegurar propiedades de texto por defecto
@@ -927,8 +929,13 @@ updateProductColor: async (id, color) => {
       }
     }
 
-    // Validaciones para formas
-    if (['triangle', 'star', 'customShape', 'line'].includes(normalized.type)) {
+    // ✅ Validaciones para formas - CORREGIDO
+    const shapeTypes = [
+      'triangle', 'star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon',
+      'polygon', 'shape', 'path', 'line', 'arrow', 'cross', 'plus', 'minus'
+    ];
+    
+    if (shapeTypes.includes(normalized.type)) {
       console.log('🔷 [DesignService] Normalizando elemento de forma:', {
         id: element.id,
         type: normalized.type,
@@ -936,20 +943,35 @@ updateProductColor: async (id, color) => {
         pointsLength: normalized.konvaAttrs.points?.length || 0
       });
       
-      if (!normalized.konvaAttrs.points || normalized.konvaAttrs.points.length === 0) {
-        console.warn('❌ [DesignService] Elemento de forma sin puntos:', {
-          id: element.id,
-          type: normalized.type,
-          konvaAttrs: normalized.konvaAttrs
+      // ✅ NO eliminar elementos sin puntos - pueden ser formas personalizadas válidas
+      if (normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0) {
+        // Asegurar que los puntos sean números válidos
+        normalized.konvaAttrs.points = normalized.konvaAttrs.points.map(point => {
+          const num = Number(point);
+          return isNaN(num) ? 0 : num;
         });
-        return null;
+      } else {
+        // ✅ Para formas personalizadas, permitir puntos vacíos
+        console.log('ℹ️ [DesignService] Forma personalizada sin puntos predefinidos:', {
+          id: element.id,
+          type: normalized.type
+        });
+        normalized.konvaAttrs.points = normalized.konvaAttrs.points || [];
       }
       
-      // Asegurar que los puntos sean números válidos
-      normalized.konvaAttrs.points = normalized.konvaAttrs.points.map(point => {
-        const num = Number(point);
-        return isNaN(num) ? 0 : num;
-      });
+      // ✅ Preservar propiedades específicas de formas
+      if (normalized.konvaAttrs.closed !== undefined) {
+        normalized.konvaAttrs.closed = Boolean(normalized.konvaAttrs.closed);
+      }
+      if (normalized.konvaAttrs.tension !== undefined) {
+        normalized.konvaAttrs.tension = Number(normalized.konvaAttrs.tension) || 0;
+      }
+      if (normalized.konvaAttrs.lineCap) {
+        normalized.konvaAttrs.lineCap = normalized.konvaAttrs.lineCap;
+      }
+      if (normalized.konvaAttrs.lineJoin) {
+        normalized.konvaAttrs.lineJoin = normalized.konvaAttrs.lineJoin;
+      }
     }
 
     return normalized;

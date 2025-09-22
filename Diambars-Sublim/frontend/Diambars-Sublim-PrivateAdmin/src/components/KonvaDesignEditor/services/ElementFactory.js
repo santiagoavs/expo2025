@@ -200,11 +200,49 @@ export class ElementFactory {
 
   // ==================== FORMAS PREDEFINIDAS ====================
 
+  // ==================== FORMAS ADICIONALES DEL EDITOR ====================
+
+  createSquareElement(config) {
+    return {
+      id: config.id || this.generateId(),
+      type: 'square',
+      x: config.x || 0,
+      y: config.y || 0,
+      width: config.width || 80,
+      height: config.height || 80,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      cornerRadius: config.cornerRadius || 0,
+      opacity: config.opacity || 1,
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createEllipseElement(config) {
+    return {
+      id: config.id || this.generateId(),
+      type: 'ellipse',
+      x: config.x || 0,
+      y: config.y || 0,
+      radius: config.radius || 50,
+      scaleX: config.scaleX || 1.2,
+      scaleY: config.scaleY || 0.8,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      opacity: config.opacity || 1,
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
   createHeartElement(config) {
     const points = this.generateHeartPoints();
     return {
       id: config.id || this.generateId(),
-      type: 'customShape',
+      type: 'heart',
       x: config.x || 0,
       y: config.y || 0,
       points: points,
@@ -215,7 +253,146 @@ export class ElementFactory {
       opacity: config.opacity || 1,
       lineCap: config.lineCap || 'round',
       lineJoin: config.lineJoin || 'round',
-      shapeType: 'heart',
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createDiamondElement(config) {
+    const points = [50, 0, 100, 50, 50, 100, 0, 50];
+    return {
+      id: config.id || this.generateId(),
+      type: 'diamond',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: points,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: true,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createHexagonElement(config) {
+    const points = this.generateHexagonPoints(config.radius || 50);
+    return {
+      id: config.id || this.generateId(),
+      type: 'hexagon',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: points,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: true,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createOctagonElement(config) {
+    const points = this.generateOctagonPoints(config.radius || 50);
+    return {
+      id: config.id || this.generateId(),
+      type: 'octagon',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: points,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: true,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createPentagonElement(config) {
+    const points = this.generatePentagonPoints(config.radius || 50);
+    return {
+      id: config.id || this.generateId(),
+      type: 'pentagon',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: points,
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: true,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createPolygonElement(config) {
+    return {
+      id: config.id || this.generateId(),
+      type: 'polygon',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: config.points || [],
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: config.closed !== false,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      tension: config.tension || 0,
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createShapeElement(config) {
+    return {
+      id: config.id || this.generateId(),
+      type: 'shape',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: config.points || [],
+      fill: config.fill || '#1F64BF',
+      stroke: config.stroke || '#032CA6',
+      strokeWidth: config.strokeWidth || 2,
+      closed: config.closed !== false,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      tension: config.tension || 0,
+      areaId: config.areaId || 'default-area',
+      ...config
+    };
+  }
+
+  createPathElement(config) {
+    return {
+      id: config.id || this.generateId(),
+      type: 'path',
+      x: config.x || 0,
+      y: config.y || 0,
+      points: config.points || [],
+      fill: config.fill || 'transparent',
+      stroke: config.stroke || '#1F64BF',
+      strokeWidth: config.strokeWidth || 2,
+      closed: config.closed || false,
+      opacity: config.opacity || 1,
+      lineCap: config.lineCap || 'round',
+      lineJoin: config.lineJoin || 'round',
+      tension: config.tension || 0,
       areaId: config.areaId || 'default-area',
       ...config
     };
@@ -262,15 +439,71 @@ export class ElementFactory {
   }
 
   generateHeartPoints() {
-    // Genera puntos para una forma de corazón
+    // Genera puntos para una forma de corazón más simple
     const points = [];
-    const steps = 20;
+    const centerX = 25;
+    const centerY = 25;
+    const size = 15;
     
-    for (let i = 0; i <= steps; i++) {
-      const t = (i / steps) * Math.PI;
-      const x = 16 * Math.pow(Math.sin(t), 3);
-      const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-      points.push(x + 25, y + 25);
+    const heartPoints = [
+      [centerX, centerY + 10], // Punto inferior
+      [centerX - 8, centerY + 5], // Lado izquierdo inferior
+      [centerX - 12, centerY - 2], // Lado izquierdo medio
+      [centerX - 8, centerY - 8], // Lado izquierdo superior
+      [centerX, centerY - 12], // Punto superior izquierdo
+      [centerX + 8, centerY - 8], // Punto superior derecho
+      [centerX + 12, centerY - 2], // Lado derecho medio
+      [centerX + 8, centerY + 5], // Lado derecho inferior
+    ];
+    
+    // Convertir a array plano
+    heartPoints.forEach(point => {
+      points.push(point[0], point[1]);
+    });
+    
+    return points;
+  }
+
+  generateHexagonPoints(radius) {
+    const points = [];
+    const centerX = radius;
+    const centerY = radius;
+    
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      points.push(x, y);
+    }
+    
+    return points;
+  }
+
+  generateOctagonPoints(radius) {
+    const points = [];
+    const centerX = radius;
+    const centerY = radius;
+    
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      points.push(x, y);
+    }
+    
+    return points;
+  }
+
+  generatePentagonPoints(radius) {
+    const points = [];
+    const centerX = radius;
+    const centerY = radius;
+    
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      points.push(x, y);
     }
     
     return points;
@@ -361,6 +594,14 @@ export class ElementFactory {
       case 'star':
       case 'customShape':
       case 'line':
+      case 'heart':
+      case 'diamond':
+      case 'hexagon':
+      case 'octagon':
+      case 'pentagon':
+      case 'polygon':
+      case 'shape':
+      case 'path':
         if (!element.points || element.points.length === 0) {
           errors.push('Puntos de la forma requeridos');
         }
@@ -382,24 +623,57 @@ export class ElementFactory {
    * Convierte un elemento del editor a formato compatible con el backend
    */
   toBackendFormat(element) {
-    const { id, type, areaId, ...konvaAttrs } = element;
+    // ✅ DEBUGGING: Solo logs importantes para formas complejas
+    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path'].includes(element.type)) {
+      console.log('🔍 [ElementFactory] Convirtiendo forma compleja:', {
+        type: element.type,
+        hasPoints: !!element.points,
+        pointsLength: element.points?.length,
+        points: element.points
+      });
+    }
+    
+    // ✅ DEBUGGING: Log específico para texto
+    if (element.type === 'text') {
+      console.log('🔍 [ElementFactory] Convirtiendo texto:', {
+        type: element.type,
+        text: element.text,
+        hasText: !!element.text,
+        textLength: element.text?.length,
+        konvaAttrs: element.konvaAttrs
+      });
+    }
+    
+    // Extraer propiedades del elemento
+    const { 
+      id, 
+      type, 
+      areaId, 
+      draggable, 
+      visible, 
+      locked,
+      shapeType, // Propiedad específica del frontend
+      ...konvaAttrs 
+    } = element;
     
     // Validación especial para elementos de imagen
     if (type === 'image') {
-      if (!konvaAttrs.imageUrl) {
-        console.error('🖼️ [ElementFactory] Error: imageUrl faltante al convertir elemento de imagen:', {
+      // Verificar si tiene imageUrl o image válido
+      if (!konvaAttrs.imageUrl && !konvaAttrs.image) {
+        console.error('🖼️ [ElementFactory] Error: Ni imageUrl ni image válidos al convertir elemento de imagen:', {
           elementId: id,
           hasImageUrl: !!konvaAttrs.imageUrl,
           hasImage: !!konvaAttrs.image,
           originalName: konvaAttrs.originalName
         });
-        throw new Error(`Elemento de imagen ${id} no tiene imageUrl válido`);
+        throw new Error(`Elemento de imagen ${id} no tiene imageUrl ni image válido`);
       }
 
       // El backend espera 'image' en lugar de 'imageUrl'
       const backendKonvaAttrs = {
         ...konvaAttrs,
-        image: konvaAttrs.imageUrl, // Convertir imageUrl a image para el backend
+        // Si tiene imageUrl, usarlo como image; si no, mantener el image existente
+        image: konvaAttrs.imageUrl || konvaAttrs.image,
         // Remover imageUrl ya que el backend no lo espera
         imageUrl: undefined
       };
@@ -421,14 +695,44 @@ export class ElementFactory {
       };
     }
     
-    return {
+    // ✅ CORRECCIÓN CRÍTICA: Asegurar que todas las propiedades estén en konvaAttrs
+    const backendKonvaAttrs = {
+      ...konvaAttrs,
+      // Asegurar que las propiedades básicas estén presentes
+      draggable: draggable !== undefined ? draggable : true,
+      visible: visible !== undefined ? visible : true,
+      listening: true // Propiedad requerida por Konva
+    };
+    
+    const result = {
       id: id,
       type: type,
       areaId: areaId || 'default-area',
-      konvaAttrs: {
-        ...konvaAttrs
-      }
+      konvaAttrs: backendKonvaAttrs
     };
+    
+    // ✅ DEBUGGING: Solo logs importantes para formas complejas en el resultado
+    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path'].includes(result.type)) {
+      console.log('🔍 [ElementFactory] Resultado forma compleja:', {
+        type: result.type,
+        hasPoints: !!result.konvaAttrs.points,
+        pointsLength: result.konvaAttrs.points?.length,
+        points: result.konvaAttrs.points
+      });
+    }
+    
+    // ✅ DEBUGGING: Log específico para texto en el resultado
+    if (result.type === 'text') {
+      console.log('🔍 [ElementFactory] Resultado texto:', {
+        type: result.type,
+        text: result.konvaAttrs.text,
+        hasText: !!result.konvaAttrs.text,
+        textLength: result.konvaAttrs.text?.length,
+        konvaAttrs: result.konvaAttrs
+      });
+    }
+    
+    return result;
   }
 
   /**

@@ -13,6 +13,104 @@ const designController = {};
 // ==================== FUNCIONES AUXILIARES ====================
 
 /**
+ * Genera puntos para una estrella
+ * @param {number} numPoints - Número de puntas
+ * @param {number} innerRadius - Radio interno
+ * @param {number} outerRadius - Radio externo
+ * @returns {Array} Array de puntos [x1, y1, x2, y2, ...]
+ */
+function generateStarPoints(numPoints = 5, innerRadius = 20, outerRadius = 40) {
+  const points = [];
+  const angleStep = (Math.PI * 2) / numPoints;
+  
+  for (let i = 0; i < numPoints * 2; i++) {
+    const angle = i * angleStep / 2;
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    points.push(x, y);
+  }
+  
+  return points;
+}
+
+/**
+ * Genera puntos para un corazón
+ * @returns {Array} Array de puntos [x1, y1, x2, y2, ...]
+ */
+function generateHeartPoints() {
+  return [
+    50, 15,  // Punto superior
+    30, 25,  // Lado izquierdo
+    30, 45,  // Curva izquierda
+    50, 65,  // Punto inferior
+    70, 45,  // Curva derecha
+    70, 25,  // Lado derecho
+    50, 15   // Cerrar
+  ];
+}
+
+/**
+ * Genera puntos para un hexágono
+ * @returns {Array} Array de puntos [x1, y1, x2, y2, ...]
+ */
+function generateHexagonPoints() {
+  const points = [];
+  const radius = 40;
+  const centerX = 50;
+  const centerY = 50;
+  
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
+    points.push(x, y);
+  }
+  
+  return points;
+}
+
+/**
+ * Genera puntos para un octágono
+ * @returns {Array} Array de puntos [x1, y1, x2, y2, ...]
+ */
+function generateOctagonPoints() {
+  const points = [];
+  const radius = 40;
+  const centerX = 50;
+  const centerY = 50;
+  
+  for (let i = 0; i < 8; i++) {
+    const angle = (Math.PI / 4) * i;
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
+    points.push(x, y);
+  }
+  
+  return points;
+}
+
+/**
+ * Genera puntos para un pentágono
+ * @returns {Array} Array de puntos [x1, y1, x2, y2, ...]
+ */
+function generatePentagonPoints() {
+  const points = [];
+  const radius = 40;
+  const centerX = 50;
+  const centerY = 50;
+  
+  for (let i = 0; i < 5; i++) {
+    const angle = (Math.PI * 2 / 5) * i - Math.PI / 2; // Empezar desde arriba
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
+    points.push(x, y);
+  }
+  
+  return points;
+}
+
+/**
  * Valida elementos de diseño
  * @param {Array} elements - Elementos del diseño a validar
  * @param {Array} customizationAreas - Áreas de personalización del producto
@@ -99,25 +197,362 @@ const normalizeDesignElements = (elements, customizationAreas = []) => {
       }
     };
     
-    if (normalized.type === 'text') {
-      normalized.konvaAttrs = {
-        fontSize: 24,
-        fontFamily: 'Arial',
-        fill: '#000000',
-        ...normalized.konvaAttrs
-      };
-      
-      if (!normalized.konvaAttrs.text) {
-        normalized.konvaAttrs.text = 'Texto sin contenido';
-      }
-    }
-    
-    if (normalized.type === 'image') {
-      normalized.konvaAttrs = {
-        width: 200,
-        height: 150,
-        ...normalized.konvaAttrs
-      };
+    // Normalización específica por tipo de elemento
+    switch (normalized.type) {
+      case 'text':
+        normalized.konvaAttrs = {
+          fontSize: 24,
+          fontFamily: 'Arial',
+          fill: '#000000',
+          ...normalized.konvaAttrs
+        };
+        
+        if (!normalized.konvaAttrs.text) {
+          normalized.konvaAttrs.text = 'Texto sin contenido';
+        }
+        break;
+        
+      case 'image':
+        normalized.konvaAttrs = {
+          width: 200,
+          height: 150,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      // ✅ FORMAS BÁSICAS
+      case 'rect':
+        normalized.konvaAttrs = {
+          width: 100,
+          height: 80,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          cornerRadius: 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'square':
+        normalized.konvaAttrs = {
+          width: 80,
+          height: 80,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          cornerRadius: 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'circle':
+        normalized.konvaAttrs = {
+          radius: 50,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'ellipse':
+        normalized.konvaAttrs = {
+          radius: 50,
+          scaleX: 1.2,
+          scaleY: 0.8,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      // ✅ FORMAS COMPLEJAS CON PUNTOS - CORREGIDO
+      case 'triangle':
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [0, 50, 50, 0, 100, 50],
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'star':
+        // ✅ DEBUGGING: Solo log importante para estrella
+        console.log('⭐ [Backend] Normalizando estrella:', {
+          hasOriginalPoints: !!normalized.konvaAttrs.points,
+          originalPointsLength: normalized.konvaAttrs.points?.length,
+          originalPoints: normalized.konvaAttrs.points
+        });
+        
+        // ✅ PRESERVAR puntos originales si existen, sino generar estrella por defecto
+        const starPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : generateStarPoints(5, 20, 40);
+        
+        normalized.konvaAttrs = {
+          points: starPoints,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          numPoints: normalized.konvaAttrs.numPoints || 5,
+          innerRadius: normalized.konvaAttrs.innerRadius || 20,
+          outerRadius: normalized.konvaAttrs.outerRadius || 40,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'heart':
+        // ✅ PRESERVAR puntos originales si existen
+        const heartPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : generateHeartPoints();
+        normalized.konvaAttrs = {
+          points: heartPoints,
+          fill: '#FF69B4',
+          stroke: '#FF1493',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'diamond':
+        // ✅ PRESERVAR puntos originales si existen
+        const diamondPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : [50, 0, 100, 50, 50, 100, 0, 50];
+        normalized.konvaAttrs = {
+          points: diamondPoints,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'hexagon':
+        // ✅ PRESERVAR puntos originales si existen
+        const hexagonPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : generateHexagonPoints();
+        normalized.konvaAttrs = {
+          points: hexagonPoints,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'octagon':
+        // ✅ PRESERVAR puntos originales si existen
+        const octagonPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : generateOctagonPoints();
+        normalized.konvaAttrs = {
+          points: octagonPoints,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'pentagon':
+        // ✅ DEBUGGING: Solo log importante para pentágono
+        console.log('🔶 [Backend] Normalizando pentágono:', {
+          hasOriginalPoints: !!normalized.konvaAttrs.points,
+          originalPointsLength: normalized.konvaAttrs.points?.length,
+          originalPoints: normalized.konvaAttrs.points
+        });
+        
+        // ✅ PRESERVAR puntos originales si existen
+        const pentagonPoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : generatePentagonPoints();
+        
+        normalized.konvaAttrs = {
+          points: pentagonPoints,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'polygon':
+        // ✅ PRESERVAR puntos originales - NO generar por defecto
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [],
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          tension: normalized.konvaAttrs.tension || 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'shape':
+        // ✅ PRESERVAR puntos originales - NO generar por defecto
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [],
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          closed: true,
+          lineCap: 'round',
+          lineJoin: 'round',
+          tension: normalized.konvaAttrs.tension || 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'path':
+        // ✅ PRESERVAR puntos originales - NO generar por defecto
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [],
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: normalized.konvaAttrs.closed || false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          tension: normalized.konvaAttrs.tension || 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'line':
+        // ✅ PRESERVAR puntos originales si existen
+        const linePoints = normalized.konvaAttrs.points && normalized.konvaAttrs.points.length > 0 
+          ? normalized.konvaAttrs.points 
+          : [0, 0, 100, 0];
+        normalized.konvaAttrs = {
+          points: linePoints,
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      // ✅ FORMAS ADICIONALES DEL ENUM
+      case 'i-text':
+        normalized.konvaAttrs = {
+          text: normalized.konvaAttrs.text || 'Texto editable',
+          fontSize: 24,
+          fontFamily: 'Arial',
+          fill: '#000000',
+          width: 200,
+          height: 50,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'group':
+        normalized.konvaAttrs = {
+          children: normalized.konvaAttrs.children || [],
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'arrow':
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [0, 0, 100, 0],
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'cross':
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [0, 0, 100, 100, 100, 0, 0, 100],
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'plus':
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [50, 0, 50, 100, 0, 50, 100, 50],
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'minus':
+        normalized.konvaAttrs = {
+          points: normalized.konvaAttrs.points || [0, 50, 100, 50],
+          fill: 'transparent',
+          stroke: '#1F64BF',
+          strokeWidth: 2,
+          closed: false,
+          lineCap: 'round',
+          lineJoin: 'round',
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      case 'rectangle':
+        normalized.konvaAttrs = {
+          width: 100,
+          height: 80,
+          fill: '#1F64BF',
+          stroke: '#032CA6',
+          strokeWidth: 2,
+          cornerRadius: 0,
+          ...normalized.konvaAttrs
+        };
+        break;
+        
+      // ✅ CASO POR DEFECTO - preservar todas las propiedades
+      default:
+        // No hacer nada especial, preservar todas las propiedades originales
+        console.log(`⚠️ [Backend] Tipo de elemento no normalizado: ${normalized.type}, preservando propiedades originales`);
+        break;
     }
     
     return normalized;
@@ -186,8 +621,15 @@ async function validateProductOptions(productOptions, availableOptions) {
  */
 designController.createDesign = async (req, res) => {
   try {
+    console.log('🔍 [createDesign] Request body:', req.body);
+    console.log('🔍 [createDesign] User:', req.user);
+    
     const { productId, elements, productOptions, clientNotes, mode = 'simple', productColorFilter } = req.body;
     const userId = req.user._id;
+    
+    console.log('🔍 [createDesign] Parsed data:', {
+      userId, productId, elements: elements?.length, productOptions: productOptions?.length
+    });
 
     const basicValidation = validateFields({
       productId, clientNotes, mode
@@ -213,6 +655,16 @@ designController.createDesign = async (req, res) => {
       });
     }
 
+    // Verificar que el usuario existe
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Usuario no encontrado",
+        error: 'USER_NOT_FOUND'
+      });
+    }
+
     const product = await Product.findById(basicValidation.cleaned.productId);
     if (!product || !product.isActive) {
       return res.status(!product ? 404 : 400).json({ 
@@ -224,11 +676,17 @@ designController.createDesign = async (req, res) => {
 
     const elementsValidation = validateDesignElements(elements, product.customizationAreas);
     if (!elementsValidation.isValid) {
+      console.error('❌ [createDesign] Elementos inválidos:', elementsValidation.errors);
+      console.error('❌ [createDesign] Elementos recibidos:', JSON.stringify(elements, null, 2));
       return res.status(400).json({ 
         success: false,
         message: "Elementos de diseño no válidos",
         errors: elementsValidation.errors,
-        error: 'INVALID_DESIGN_ELEMENTS'
+        error: 'INVALID_DESIGN_ELEMENTS',
+        details: {
+          receivedElements: elements.length,
+          validationErrors: elementsValidation.errors
+        }
       });
     }
 
@@ -260,7 +718,32 @@ designController.createDesign = async (req, res) => {
       }
     });
 
+    // ✅ DEBUGGING: Log antes de guardar
+    console.log('🔍 [createDesign] Diseño antes de guardar:', {
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
+    
     await newDesign.save();
+    
+    // ✅ DEBUGGING: Log después de guardar
+    console.log('🔍 [createDesign] Diseño después de guardar:', {
+      designId: newDesign._id,
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
     generatePreviewAndNotify(newDesign, product, userId).catch(console.error);
 
     res.status(201).json({
@@ -269,12 +752,32 @@ designController.createDesign = async (req, res) => {
       data: {
         designId: newDesign._id,
         status: newDesign.status,
+        userName: user.name,
+        userEmail: user.email,
+        productName: product.name,
         message: "Tu diseño será revisado y cotizado por nuestro equipo"
       }
     });
 
   } catch (error) {
     console.error("Error en createDesign:", error);
+    
+    // Manejar errores de validación de Mongoose específicamente
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación en los datos del diseño",
+        errors: validationErrors,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+    
     res.status(500).json({ 
       success: false,
       message: "Error al crear el diseño",
@@ -409,7 +912,33 @@ designController.createDesignForClient = async (req, res) => {
       }]
     });
 
+    // ✅ DEBUGGING: Log antes de guardar
+    console.log('🔍 [createDesignForClient] Diseño antes de guardar:', {
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
+    
     await newDesign.save();
+    
+    // ✅ DEBUGGING: Log después de guardar
+    console.log('🔍 [createDesignForClient] Diseño después de guardar:', {
+      designId: newDesign._id,
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
+    
     generatePreviewAndNotifyAdmin(newDesign, product, client._id, adminId).catch(console.error);
 
     res.status(201).json({
@@ -996,10 +1525,10 @@ designController.updateDesign = async (req, res) => {
       });
     }
     
-    if (design.status !== 'draft') {
+    if (!['draft', 'pending'].includes(design.status)) {
       return res.status(400).json({ 
         success: false,
-        message: "Solo se pueden modificar diseños en estado borrador",
+        message: "Solo se pueden modificar diseños en estado borrador o pendiente",
         error: 'INVALID_DESIGN_STATUS'
       });
     }
@@ -1044,8 +1573,8 @@ designController.updateDesign = async (req, res) => {
       design.metadata.complexity = calculateDesignComplexity(normalizedElements);
     }
 
-    if (designData.productColorFilter !== undefined) {
-      const colorValidation = validators.text(designData.productColorFilter, 0, 7);
+    if (req.body.productColorFilter !== undefined) {
+      const colorValidation = validators.text(req.body.productColorFilter, 0, 7);
       if (!colorValidation.isValid) {
         return res.status(400).json({
           success: false,
@@ -1066,6 +1595,11 @@ designController.updateDesign = async (req, res) => {
       }
       
       design.productOptions = optionsValidation.cleaned;
+    }
+
+    // Actualizar productColorFilter si se proporciona
+    if (req.body.productColorFilter !== undefined) {
+      design.productColorFilter = req.body.productColorFilter;
     }
     
     await design.save();

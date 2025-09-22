@@ -37,9 +37,15 @@ export const useKonvaCanvas = (initialDesign, product) => {
   }, []);
 
   const updateElement = useCallback((elementId, updates) => {
-    setElements(prev => 
-      prev.map(el => el.id === elementId ? { ...el, ...updates } : el)
-    );
+    setElements(prev => {
+      const newElements = prev.map(el => {
+        if (el.id === elementId) {
+          return { ...el, ...updates };
+        }
+        return el;
+      });
+      return newElements;
+    });
   }, []);
 
   const removeElement = useCallback((elementId) => {
