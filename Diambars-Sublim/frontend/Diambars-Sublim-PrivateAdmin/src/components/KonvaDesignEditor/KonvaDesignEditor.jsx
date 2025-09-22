@@ -6,6 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import { styled } from '@mui/material/styles';
 import toast, { Toaster } from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import { ChromePicker } from 'react-color';
 // ✅ CORREGIDO: Importar estilos para SweetAlert
 import './styles/sweetalert-fix.css';
 
@@ -20,7 +21,6 @@ import { useUnifiedCanvasCentering } from './hooks/useUnifiedCanvasCentering';
 // ==================== COMPONENTES ESPECIALIZADOS ====================
 import { EditorToolbar } from './components/Editor/EditorToolbar';
 import { ShapeCreatorModal } from './components/Shapes/ShapeCreatorModal';
-import ColorPicker from '../FabricDesignEditor/components/ColorPicker';
 import { testImageFlow } from './utils/imageTestUtils';
 import UnifiedPanel from './components/UnifiedPanel/UnifiedPanel';
 import AdvancedShapeCreatorModal from './Components/ShapeCreator/ShapeCreatorModal';
@@ -413,9 +413,6 @@ const KonvaDesignEditor = ({
           outerRadius: 40
         });
         break;
-      case 'heart':
-        shapeElement = elementFactory.createHeartElement(baseConfig);
-        break;
       case 'diamond':
         shapeElement = elementFactory.createDiamondElement(baseConfig);
         break;
@@ -435,24 +432,6 @@ const KonvaDesignEditor = ({
         shapeElement = elementFactory.createPentagonElement({
           ...baseConfig,
           radius: 50
-        });
-        break;
-      case 'polygon':
-        shapeElement = elementFactory.createPolygonElement({
-          ...baseConfig,
-          points: customPoints || []
-        });
-        break;
-      case 'shape':
-        shapeElement = elementFactory.createShapeElement({
-          ...baseConfig,
-          points: customPoints || []
-        });
-        break;
-      case 'path':
-        shapeElement = elementFactory.createPathElement({
-          ...baseConfig,
-          points: customPoints || []
         });
         break;
       case 'custom':
@@ -498,7 +477,7 @@ const KonvaDesignEditor = ({
 
   const handleAddShapeFromCreator = useCallback((shapeType, shapeData) => {
     // ✅ DEBUGGING: Solo logs importantes para formas complejas
-    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path'].includes(shapeType)) {
+    if (['star', 'diamond', 'hexagon', 'octagon', 'pentagon', 'shape'].includes(shapeType)) {
       console.log('🎨 [KonvaDesignEditor] Creando forma compleja:', {
         shapeType,
         hasPoints: !!shapeData.points,
@@ -1299,6 +1278,7 @@ const BackgroundColorPanel = ({
   onResetColor,
   product
 }) => {
+  const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
   return (
     <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
       <Typography 
@@ -1329,17 +1309,61 @@ const BackgroundColorPanel = ({
 
         {/* Selector de color */}
         <Box sx={{ mb: 2 }}>
-          <ColorPicker
-            currentcolor={productColorFilter || '#FFFFFF'}
-            onChange={onColorChange}
-            onColorApply={onColorApply}
-            label="Color del Producto"
-            showTransparency={false}
-            showPalettes={true}
-            showFavorites={true}
-            pickerType="sketch"
-            size="medium"
-          />
+          <Typography variant="body2" sx={{ color: FIXED_COLORS.text, mb: 1 }}>
+            Color del Producto
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Preview del color actual */}
+            <Box
+              sx={{
+                width: 50,
+                height: 50,
+                backgroundColor: productColorFilter || '#FFFFFF',
+                borderRadius: BORDERS.radius.medium,
+                border: `2px solid ${FIXED_COLORS.border}`,
+                cursor: 'pointer',
+                transition: TRANSITIONS.fast,
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: SHADOWS_3D.medium
+                }
+              }}
+              onClick={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
+            />
+            
+            {/* Input de color */}
+            <Box sx={{ flex: 1 }}>
+              <input
+                type="color"
+                value={productColorFilter || '#FFFFFF'}
+                onChange={(e) => onColorChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '40px',
+                  border: `1px solid ${FIXED_COLORS.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              />
+            </Box>
+          </Box>
+          
+          {/* ChromePicker cuando está abierto */}
+          {showBackgroundColorPicker && (
+            <Box sx={{ 
+              position: 'absolute', 
+              zIndex: Z_INDEX.tooltip + 1,
+              mt: 1,
+              boxShadow: SHADOWS_3D.large,
+              borderRadius: BORDERS.radius.medium
+            }}>
+              <ChromePicker
+                color={productColorFilter || '#FFFFFF'}
+                onChange={(color) => onColorChange(color.hex)}
+                disableAlpha={true}
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Botones de acción */}

@@ -8,9 +8,6 @@ import {
   Slider,
   Switch,
   FormControlLabel,
-  Menu,
-  MenuItem,
-  Divider,
   useTheme,
   useMediaQuery,
   Fab,
@@ -27,11 +24,9 @@ import {
   SquaresFour,
   Magnet,
   DotsThree as MoreIcon,
-  TestTube as TestIcon,
   MagnifyingGlassMinus,
   MagnifyingGlassPlus,
   List as MenuIcon,
-  Gear as SettingsIcon,
   Trash as DeleteIcon
 } from '@phosphor-icons/react';
 import { GRADIENTS_3D, SHADOWS_3D, FIXED_COLORS, BORDERS, TRANSITIONS, Z_INDEX } from '../../styles/responsiveTheme';
@@ -259,7 +254,6 @@ export const EditorToolbar = ({
 }) => {
   const theme = useTheme();
   const [moreMenuAnchor, setMoreMenuAnchor] = useState(null);
-  const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleMoreMenuOpen = (event) => {
@@ -270,13 +264,6 @@ export const EditorToolbar = ({
     setMoreMenuAnchor(null);
   };
 
-  const handleSettingsMenuOpen = (event) => {
-    setSettingsMenuAnchor(event.currentTarget);
-  };
-
-  const handleSettingsMenuClose = () => {
-    setSettingsMenuAnchor(null);
-  };
 
   const iconSize = isMobile ? 18 : 20;
 
@@ -461,44 +448,7 @@ export const EditorToolbar = ({
           </span>
         </Tooltip>
         
-        {/* Menú de configuración */}
-        <Tooltip title="Configuración">
-          <ToolbarButton onClick={handleSettingsMenuOpen} size="small" isMobile={isMobile} variant="glass">
-            <SettingsIcon size={iconSize} />
-          </ToolbarButton>
-        </Tooltip>
         
-        {/* Menú de configuración */}
-        <Menu
-          anchorEl={settingsMenuAnchor}
-          open={Boolean(settingsMenuAnchor)}
-          onClose={handleSettingsMenuClose}
-          PaperProps={{
-            sx: {
-              background: GRADIENTS_3D.surface,
-              border: `1px solid ${FIXED_COLORS.border}`,
-              boxShadow: SHADOWS_3D.panel,
-              borderRadius: BORDERS.radius.medium,
-              backdropFilter: 'blur(20px)'
-            }
-          }}
-        >
-          <MenuItem onClick={() => { onToggleGrid(!showGrid); handleSettingsMenuClose(); }}>
-            <SquaresFour size={16} style={{ marginRight: 8 }} />
-            {showGrid ? 'Ocultar' : 'Mostrar'} Cuadrícula
-          </MenuItem>
-          <MenuItem onClick={() => { onToggleSnap(!snapToGrid); handleSettingsMenuClose(); }}>
-            <Magnet size={16} style={{ marginRight: 8 }} />
-            {snapToGrid ? 'Desactivar' : 'Activar'} Snap
-          </MenuItem>
-          {onTestImageFlow && [
-            <Divider key="divider" sx={{ backgroundColor: FIXED_COLORS.border }} />,
-            <MenuItem key="test-flow" onClick={() => { onTestImageFlow(); handleSettingsMenuClose(); }}>
-              <TestIcon size={16} style={{ marginRight: 8 }} />
-              Probar Imágenes
-            </MenuItem>
-          ]}
-        </Menu>
         
         {/* Cerrar */}
         <Tooltip title="Cerrar">

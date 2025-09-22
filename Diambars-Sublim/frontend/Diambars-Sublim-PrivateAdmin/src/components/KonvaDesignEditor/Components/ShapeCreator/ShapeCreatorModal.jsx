@@ -20,22 +20,17 @@ import {
   Divider,
   Tabs,
   Tab,
-  Paper,
-  Switch,
-  FormControlLabel
+  Paper
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
   X as CloseIcon,
   Check as CheckIcon,
   Star,
-  Heart,
   Circle as CircleIcon,
   Square,
   Triangle,
   Polygon,
-  PaintBrush,
-  CursorClick,
   Eraser,
   Download,
   Upload
@@ -116,10 +111,8 @@ const SHAPE_TYPES = {
   circle: { name: 'Círculo', icon: <CircleIcon size={20} />, category: 'basic', backendType: 'circle' },
   triangle: { name: 'Triángulo', icon: <Triangle size={20} />, category: 'basic', backendType: 'triangle' },
   star: { name: 'Estrella', icon: <Star size={20} />, category: 'basic', backendType: 'star' },
-  heart: { name: 'Corazón', icon: <Heart size={20} />, category: 'basic', backendType: 'heart' },
   square: { name: 'Cuadrado', icon: <Square size={20} />, category: 'basic', backendType: 'square' },
   ellipse: { name: 'Elipse', icon: <CircleIcon size={20} />, category: 'basic', backendType: 'ellipse' },
-  polygon: { name: 'Polígono', icon: <Polygon size={20} />, category: 'basic', backendType: 'polygon' },
   
   // Formas avanzadas
   diamond: { name: 'Diamante', icon: <Polygon size={20} />, category: 'advanced', backendType: 'diamond' },
@@ -128,9 +121,7 @@ const SHAPE_TYPES = {
   pentagon: { name: 'Pentágono', icon: <Polygon size={20} />, category: 'advanced', backendType: 'pentagon' },
   
   // Formas personalizadas
-  custom: { name: 'Personalizada', icon: <Polygon size={20} />, category: 'custom', backendType: 'shape' },
-  curve: { name: 'Línea Curva', icon: <PaintBrush size={20} />, category: 'advanced', backendType: 'path' },
-  freehand: { name: 'Dibujo Libre', icon: <CursorClick size={20} />, category: 'advanced', backendType: 'path' }
+  custom: { name: 'Personalizada', icon: <Polygon size={20} />, category: 'custom', backendType: 'shape' }
 };
 
 const CANVAS_SIZE = { width: 400, height: 300 };
@@ -152,9 +143,7 @@ const ShapeCreatorModal = ({
     cornerRadius: 0,
     points: 5,
     innerRadius: 0.5,
-    outerRadius: 1,
-    isCurved: false,
-    isSmooth: false
+    outerRadius: 1
   });
   
   // Estados del canvas
@@ -188,32 +177,6 @@ const ShapeCreatorModal = ({
     return result;
   }, []);
 
-  // Generar puntos para corazón
-  const generateHeartPoints = useCallback(() => {
-    const points = [];
-    const centerX = 50;
-    const centerY = 50;
-    const size = 15; // Reducido el tamaño
-    
-    // Crear un corazón más simple y pequeño
-    const heartPoints = [
-      [centerX, centerY + 10], // Punto inferior
-      [centerX - 8, centerY + 5], // Lado izquierdo inferior
-      [centerX - 12, centerY - 2], // Lado izquierdo medio
-      [centerX - 8, centerY - 8], // Lado izquierdo superior
-      [centerX, centerY - 12], // Punto superior izquierdo
-      [centerX + 8, centerY - 8], // Punto superior derecho
-      [centerX + 12, centerY - 2], // Lado derecho medio
-      [centerX + 8, centerY + 5], // Lado derecho inferior
-    ];
-    
-    // Convertir a array plano
-    heartPoints.forEach(point => {
-      points.push(point[0], point[1]);
-    });
-    
-    return points;
-  }, []);
 
   // Generar puntos para hexágono
   const generateHexagonPoints = useCallback((radius) => {
@@ -338,10 +301,6 @@ const ShapeCreatorModal = ({
         points: generateStarPoints(shapeProperties.points, 50, 25),
         closed: true 
       }),
-      ...(selectedShapeType === 'heart' && { 
-        points: generateHeartPoints(),
-        closed: true 
-      }),
       ...(selectedShapeType === 'custom' && { 
         points: customPoints.flatMap(p => [p.x, p.y]),
         closed: true 
@@ -449,21 +408,18 @@ const ShapeCreatorModal = ({
         );
       case 'triangle':
       case 'star':
-      case 'heart':
       case 'diamond':
       case 'hexagon':
       case 'octagon':
       case 'pentagon':
       case 'custom':
       case 'shape':
-      case 'path':
         return (
           <Line
             key={element.id}
             {...commonProps}
             points={element.points || []}
             closed={element.closed || true}
-            tension={element.isCurved ? 0.5 : 0}
             lineCap="round"
             lineJoin="round"
           />
@@ -496,7 +452,7 @@ const ShapeCreatorModal = ({
           alignItems: 'center',
           gap: 1
         }}>
-          <PaintBrush size={24} />
+          <Polygon size={24} />
           Editor de Formas
         </Typography>
         <IconButton onClick={onClose} sx={{ color: FIXED_COLORS.textSecondary }}>
@@ -746,29 +702,6 @@ const ShapeCreatorModal = ({
                     </Box>
                   )}
 
-                  {/* Opciones avanzadas */}
-                  <Box sx={{ mb: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={shapeProperties.isCurved}
-                          onChange={(e) => handlePropertyChange('isCurved', e.target.checked)}
-                        />
-                      }
-                      label="Líneas Curvas"
-                      sx={{ color: FIXED_COLORS.text }}
-                    />
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={shapeProperties.isSmooth}
-                          onChange={(e) => handlePropertyChange('isSmooth', e.target.checked)}
-                        />
-                      }
-                      label="Suavizado"
-                      sx={{ color: FIXED_COLORS.text }}
-                    />
-                  </Box>
                 </Box>
               )}
             </Box>
