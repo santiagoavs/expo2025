@@ -58,6 +58,7 @@ import {
   XCircle
 } from '@phosphor-icons/react';
 import { usePaymentConfig, usePaymentStats, usePaymentActions, usePaymentMethods, usePaymentMethodActions } from '../../hooks/usePayments';
+import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
 import toast from 'react-hot-toast';
 
 // Configuración global de SweetAlert2
@@ -81,8 +82,17 @@ const PaymentMethods = () => {
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isExtraSmall = useMediaQuery(theme.breakpoints.down(480));
 
-  const { config, loading: configLoading, updateConfig } = usePaymentConfig();
-  const { stats, loading: statsLoading, refreshStats } = usePaymentStats();
+  // Hooks para configuración de métodos de pago del sistema
+  const { 
+    configs, 
+    stats, 
+    loading, 
+    upsertConfig, 
+    updateConfig, 
+    deleteConfig 
+  } = usePaymentConfigManagement();
+  
+  // Hooks legacy para compatibilidad (tarjetas de usuarios)
   const { methods, loading: methodsLoading, refreshMethods } = usePaymentMethods();
   const { createMethod, updateMethod, deleteMethod, loading: actionLoading } = usePaymentMethodActions();
 
@@ -134,33 +144,31 @@ const PaymentMethods = () => {
     setMethodDialogOpen(true);
   };
 
-  // Función para guardar método
+  // Función para guardar método (ahora usa el nuevo sistema de configuración)
   const handleSaveMethod = async () => {
     try {
       if (selectedMethod) {
-        await updateMethod(selectedMethod._id, methodForm);
+        await updateConfig(selectedMethod.type, methodForm);
         toast.success('Método actualizado correctamente');
       } else {
-        await createMethod(methodForm);
+        await upsertConfig(methodForm);
         toast.success('Método creado correctamente');
       }
       
       setMethodDialogOpen(false);
       setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
       setSelectedMethod(null);
-      refreshMethods();
     } catch (error) {
       toast.error('Error al guardar el método');
     }
   };
 
-  // Función para eliminar método
+  // Función para eliminar método (ahora usa el nuevo sistema de configuración)
   const handleDeleteMethod = async (method) => {
     try {
-      await deleteMethod(method._id);
+      await deleteConfig(method.type);
       toast.success('Método eliminado correctamente');
       handleMenuClose();
-      refreshMethods();
     } catch (error) {
       toast.error('Error al eliminar el método');
     }
@@ -194,11 +202,11 @@ const PaymentMethods = () => {
       totalPayments: stats.totalPayments || 0,
       totalAmount: stats.totalAmount || 0,
       successRate: stats.successRate || 0,
-      activeMethods: methods?.filter(m => m.enabled).length || 0
+      activeMethods: configs?.filter(c => c.enabled).length || 0
     };
-  }, [stats, methods]);
+  }, [stats, configs]);
 
-  if (configLoading || statsLoading || methodsLoading) {
+  if (loading || methodsLoading) {
     return (
       <Box 
         sx={{ 
@@ -684,7 +692,8 @@ const PaymentMethods = () => {
               { icon: CurrencyDollar, name: 'Efectivo', type: 'cash', description: 'Pago contra entrega' },
               { icon: Bank, name: 'Transferencia', type: 'bank', description: 'Transferencia bancaria' }
             ].map((item, index) => {
-              const isEnabled = config?.[item.type]?.enabled;
+              const configItem = configs?.find(c => c.type === item.type);
+              const isEnabled = configItem?.enabled;
               
               return (
                 <Paper
@@ -764,7 +773,7 @@ const PaymentMethods = () => {
                       </Typography>
                     </Box>
                     
-                    {config?.[item.type]?.message && (
+                    {configItem?.message && (
                       <Box
                         sx={{
                           p: 2,
@@ -782,7 +791,7 @@ const PaymentMethods = () => {
                             fontStyle: 'italic'
                           }}
                         >
-                          "{config[item.type].message}"
+                          "{configItem.message}"
                         </Typography>
                       </Box>
                     )}
@@ -839,7 +848,7 @@ const PaymentMethods = () => {
                 </Typography>
               </Stack>
               
-              {methods && methods.length > 0 && (
+              {configs && configs.length > 0 && (
                 <Typography
                   variant="body2"
                   sx={{
@@ -852,12 +861,12 @@ const PaymentMethods = () => {
                     borderRadius: 2
                   }}
                 >
-                  {methods.length} método{methods.length !== 1 ? 's' : ''} registrado{methods.length !== 1 ? 's' : ''}
+                  {configs.length} método{configs.length !== 1 ? 's' : ''} configurado{configs.length !== 1 ? 's' : ''}
                 </Typography>
               )}
             </Stack>
 
-            {methods && methods.length > 0 ? (
+            {configs && configs.length > 0 ? (
               <Box
                 sx={{
                   '& .MuiListItem-root': {
@@ -875,8 +884,8 @@ const PaymentMethods = () => {
                 }}
               >
                 <List sx={{ p: 0 }}>
-                  {methods.map((method, index) => (
-                    <React.Fragment key={method._id}>
+                  {configs.map((method, index) => (
+                    <React.Fragment key={method.type}>
                       <ListItem
                         sx={{
                           px: { xs: 2, md: 3 },
@@ -1565,8 +1574,14 @@ const PaymentMethods = () => {
                     </Stack>
                     
                     <Switch
-                      checked={config?.[configType.type]?.enabled || false}
-                      onChange={(e) => updateConfig(configType.type, { ...config?.[configType.type], enabled: e.target.checked })}
+                      checked={configs?.find(c => c.type === configType.type)?.enabled || false}
+                      onChange={(e) => {
+                        const existingConfig = configs?.find(c => c.type === configType.type);
+                        updateConfig(configType.type, { 
+                          ...existingConfig, 
+                          enabled: e.target.checked 
+                        });
+                      }}
                       size="medium"
                     />
                   </Stack>
@@ -1588,11 +1603,14 @@ const PaymentMethods = () => {
                         type={field.type === 'password' ? 'password' : 'text'}
                         multiline={field.type === 'textarea'}
                         rows={field.type === 'textarea' ? 3 : 1}
-                        value={config?.[configType.type]?.[field.key] || ''}
-                        onChange={(e) => updateConfig(configType.type, { 
-                          ...config?.[configType.type], 
-                          [field.key]: e.target.value 
-                        })}
+                        value={configs?.find(c => c.type === configType.type)?.[field.key] || ''}
+                        onChange={(e) => {
+                          const existingConfig = configs?.find(c => c.type === configType.type);
+                          updateConfig(configType.type, { 
+                            ...existingConfig, 
+                            [field.key]: e.target.value 
+                          });
+                        }}
                         fullWidth
                         variant="outlined"
                         placeholder={field.placeholder}
