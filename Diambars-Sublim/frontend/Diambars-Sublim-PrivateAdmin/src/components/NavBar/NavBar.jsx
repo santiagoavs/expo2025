@@ -126,55 +126,57 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
     textTransform: "none",
     fontWeight: 600,
     fontSize: 14,
-    transition: "color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     overflow: "visible",
     whiteSpace: "nowrap",
     pointerEvents: "auto",
     
-    // Solo aplicar estilos visuales cuando está activo, es danger o está open (hover)
+    // Estado por defecto: efecto glass sutil
+    color: "#64748b",
+    background: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
+    
+    // Solo aplicar estilos más intensos cuando está activo o hover
     ...(isActive ? {
       color: "#FFFFFF",
-      background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      border: "1px solid rgba(255, 255, 255, 0.25)",
-      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      background: "rgba(31, 100, 191, 0.9)",
+      backdropFilter: "blur(15px)",
+      WebkitBackdropFilter: "blur(15px)",
+      border: "1px solid rgba(255, 255, 255, 0.3)",
+      boxShadow: "0 6px 20px rgba(31, 100, 191, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
     } : variant === "danger" ? {
       color: "#FFFFFF",
-      background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
+      background: "rgba(220, 38, 38, 0.9)",
+      backdropFilter: "blur(15px)",
+      WebkitBackdropFilter: "blur(15px)",
       border: "1px solid rgba(255, 255, 255, 0.25)",
       boxShadow: "0 6px 20px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
     } : isHover ? {
       color: "#040DBF",
-      background: "rgba(31, 100, 191, 0.15)",
+      background: "rgba(31, 100, 191, 0.2)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
-      border: "1px solid rgba(31, 100, 191, 0.25)",
-      boxShadow: "0 6px 20px rgba(31, 100, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
-    } : {
-      // Estado por defecto: completamente transparente
-      color: "#64748b",
-      background: "transparent",
-      border: "none",
-      boxShadow: "none",
-    }),
+      border: "1px solid rgba(31, 100, 191, 0.3)",
+      boxShadow: "0 4px 15px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
+    } : {}),
     
     "&:hover": {
-      // Solo efecto de reflejo, sin cambios de tamaño o posición
+      transform: "translateY(-1px)",
       ...(isActive ? {
-        background: "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)",
-        boxShadow: "0 8px 30px rgba(4, 13, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        background: "rgba(31, 100, 191, 1)",
+        boxShadow: "0 8px 25px rgba(31, 100, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
       } : variant === "danger" ? {
-        background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
-        boxShadow: "0 8px 30px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
-      } : isHover ? {
-        color: "#040DBF",
-        background: "rgba(31, 100, 191, 0.2)",
+        background: "rgba(220, 38, 38, 1)",
+        boxShadow: "0 8px 25px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
       } : {
-        // Hover minimalista solo con cambio de color
         color: "#040DBF",
+        background: "rgba(31, 100, 191, 0.25)",
+        backdropFilter: "blur(15px)",
+        WebkitBackdropFilter: "blur(15px)",
+        boxShadow: "0 6px 20px rgba(31, 100, 191, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
       }),
     },
     
@@ -262,29 +264,68 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
 
 const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden, ...props }) => ({
   position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
+  top: 16,
+  left: 16,
+  right: 16,
   height: 72,
-  background: "#FFFFFF",
-  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
-  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
-  transition: "all 0.3s ease",
+  background: "rgba(255, 255, 255, 0.85)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255, 255, 255, 0.2)",
+  borderRadius: 20,
+  boxShadow: `
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8)
+  `,
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   zIndex: 1300,
-  transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
+  transform: hidden ? 'translateY(-120px)' : 'translateY(0)',
   opacity: hidden ? 0 : 1,
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
+    borderRadius: "20px 20px 0 0",
+  },
+
+  "&:hover": {
+    transform: hidden ? 'translateY(-120px)' : 'translateY(-2px)',
+    boxShadow: `
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9)
+    `,
+  },
 
   [theme.breakpoints.down('lg')]: {
     height: 68,
+    top: 12,
+    left: 12,
+    right: 12,
+    borderRadius: 18,
   },
   [theme.breakpoints.down('md')]: {
     height: 64,
+    top: 8,
+    left: 8,
+    right: 8,
+    borderRadius: 16,
   },
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     height: 60,
+    top: 8,
+    left: 8,
+    right: 8,
   },
   [`@media (max-width: 375px)`]: {
     height: 56,
+    top: 4,
+    left: 4,
+    right: 4,
   },
 }));
 
@@ -312,41 +353,51 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-const BrandContainer = styled(Box)(({ theme }) => ({
+const BrandContainer = styled(GlassBase)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  gap: 16,
+  gap: 12,
   cursor: "pointer",
-  padding: "8px 12px",
+  padding: "8px 16px",
+  borderRadius: 16,
   flex: "0 0 auto",
-  background: "transparent",
-  border: "none",
-  boxShadow: "none",
+  transition: "all 0.3s ease",
+
+  "&:hover": {
+    transform: "translateY(-1px)",
+    boxShadow: `
+      0 6px 20px rgba(31, 100, 191, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9)
+    `,
+  },
 
   [theme.breakpoints.down('lg')]: {
-    gap: 14,
-    padding: "6px 10px",
+    gap: 10,
+    padding: "6px 12px",
+    borderRadius: 14,
   },
   [theme.breakpoints.down('md')]: {
-    gap: 12,
-    padding: "4px 8px",
+    gap: 8,
+    padding: "4px 10px",
+    borderRadius: 12,
   },
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
-    gap: 10,
-    padding: "2px 4px",
+    gap: 6,
+    padding: "4px 8px",
+    borderRadius: 10,
   },
 }));
 
 const LogoContainer = styled(Box)(({ theme }) => ({
   position: "relative",
-  width: 48,
-  height: 48,
+  width: 40,
+  height: 40,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 12,
+  borderRadius: 10,
   overflow: "hidden",
-  background: "transparent",
+  background: "rgba(31, 100, 191, 0.1)",
   transition: "all 0.3s ease",
   flexShrink: 0,
 
@@ -357,7 +408,7 @@ const LogoContainer = styled(Box)(({ theme }) => ({
     left: "-100%",
     width: "100%",
     height: "100%",
-    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
+    background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)",
     transition: "all 0.6s ease",
     opacity: 0,
     zIndex: 1,
@@ -369,28 +420,24 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   },
 
   "&:hover": {
+    background: "rgba(31, 100, 191, 0.15)",
     transform: "scale(1.05)",
   },
 
   [theme.breakpoints.down('lg')]: {
-    width: 44,
-    height: 44,
-    borderRadius: 11,
-  },
-  [theme.breakpoints.down('md')]: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-  },
-  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     width: 36,
     height: 36,
     borderRadius: 9,
   },
-  [`@media (max-width: 375px)`]: {
+  [theme.breakpoints.down('md')]: {
     width: 32,
     height: 32,
     borderRadius: 8,
+  },
+  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
   },
 }));
 
@@ -399,9 +446,6 @@ const BrandText = styled(Box)(({ theme }) => ({
   flexDirection: "column",
   gap: 2,
   flex: "0 0 auto",
-  background: "transparent",
-  border: "none",
-  boxShadow: "none",
 
   [`@media (max-width: 320px)`]: {
     "& .brand-subtitle": {
@@ -460,13 +504,18 @@ const BrandSubtitle = styled(Typography)(({ theme }) => ({
   },
 }));
 
-const NavContainer = styled(GlassBase)(({ theme }) => ({
+const NavContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 4,
   borderRadius: 20,
   padding: "6px",
-  transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+  background: "transparent",
+  backdropFilter: "none",
+  WebkitBackdropFilter: "none",
+  border: "none",
+  boxShadow: "none",
+  transition: "none",
   pointerEvents: "auto",
 
   [theme.breakpoints.down('lg')]: {
@@ -747,34 +796,53 @@ const SidebarButton = styled(Button)(({ theme, variant, ...props }) => ({
     zIndex: 1,
   },
 
-  "&:hover": {
-    ...(variant === "profile" ? {
-      background: "#1F64BF",
-      color: "#FFFFFF",
-      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
-      transform: "translateY(-1px)",
-    } : variant === "danger" ? {
-      background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
-      color: "#FFFFFF",
-      boxShadow: "0 6px 20px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
-      transform: "translateY(-1px)",
-    } : {
-      background: "rgba(31, 100, 191, 0.08)",
-      borderColor: "rgba(31, 100, 191, 0.2)",
-      color: "#040DBF",
-      transform: "translateY(-1px)",
-    }),
-  },
+      "&:hover": {
+      ...(variant === "profile" ? {
+        background: "#1F64BF",
+        color: "#FFFFFF",
+        boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+        transform: "translateY(-1px)",
+      } : variant === "danger" ? {
+        background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
+        color: "#FFFFFF",
+        boxShadow: "0 6px 20px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+        transform: "translateY(-1px)",
+      } : {
+        background: "rgba(31, 100, 191, 0.08)",
+        borderColor: "rgba(31, 100, 191, 0.2)",
+        color: "#040DBF",
+        transform: "translateY(-1px)",
+      }),
+    },
 
-  "&:hover::before": {
-    left: "100%",
-    opacity: 1,
-  },
+    "&:hover::before": {
+      left: "100%",
+      opacity: 1,
+    },
 
+    [theme.breakpoints.down('md')]: {
+      padding: "12px 18px",
+      fontSize: 13,
+      gap: 10,
+    },
+}));
+
+// Styled component para el contenido principal
+const MainContent = styled(Box)(({ theme }) => ({
+  paddingTop: 104, // 72px (altura del navbar) + 32px (margen)
+  minHeight: '100vh',
+
+  [theme.breakpoints.down('lg')]: {
+    paddingTop: 92, // 68px + 24px
+  },
   [theme.breakpoints.down('md')]: {
-    padding: "12px 18px",
-    fontSize: 13,
-    gap: 10,
+    paddingTop: 88, // 64px + 24px
+  },
+  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
+    paddingTop: 84, // 60px + 24px
+  },
+  [`@media (max-width: 375px)`]: {
+    paddingTop: 76, // 56px + 20px
   },
 }));
 
@@ -965,7 +1033,6 @@ const Navbar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Logout desde sidebar
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
@@ -985,7 +1052,6 @@ const Navbar = () => {
     setShowLogoutConfirm(false);
   };
 
-  // Logout desde navbar
   const handleNavbarLogoutClick = () => {
     setShowNavbarLogoutConfirm(true);
   };
@@ -1188,35 +1254,35 @@ const Navbar = () => {
           p: 3,
           borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
         }}>
-                     <Box display="flex" alignItems="center" gap={2}>
-             <Box sx={{
-               width: 40,
-               height: 40,
-               display: "flex",
-               alignItems: "center",
-               justifyContent: "center",
-               borderRadius: 2,
-               overflow: "hidden",
-             }}>
-               <img 
-                 src="/logo.png" 
-                 alt="DIAMBARS Logo" 
-                 style={{ 
-                   width: '100%', 
-                   height: '100%', 
-                   objectFit: 'contain'
-                 }} 
-               />
-             </Box>
-             <Box>
-               <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
-                 DIAMBARS
-               </Typography>
-               <Typography variant="caption" color="#64748b" fontWeight={500}>
-                 administración
-               </Typography>
-             </Box>
-           </Box>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{
+              width: 40,
+              height: 40,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 2,
+              overflow: "hidden",
+            }}>
+              <img 
+                src="/logo.png" 
+                alt="DIAMBARS Logo" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain'
+                }} 
+              />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
+                DIAMBARS
+              </Typography>
+              <Typography variant="caption" color="#64748b" fontWeight={500}>
+                administración
+              </Typography>
+            </Box>
+          </Box>
           <GlassIconButton onClick={toggleSidebar} sx={{
             "&:hover": { transform: "rotate(90deg) scale(1.05)" }
           }}>
@@ -1404,7 +1470,6 @@ const Navbar = () => {
             </Stack>
           </Box>
 
-          {/* Modal de confirmación de logout dentro del sidebar */}
           {showLogoutConfirm && (
             <>
               <Box sx={{
@@ -1476,7 +1541,7 @@ const Navbar = () => {
         </Box>
       </StyledDrawer>
 
-      {/* Menús Desplegables - Solo cuando navbar visible y sidebar cerrado */}
+      {/* Menús Desplegables */}
       {!isMobile && !isSidebarOpen && Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
         <StyledPopper
           key={key}
@@ -1486,45 +1551,45 @@ const Navbar = () => {
         >
           {dropdownStates[key].open && (
             <Paper>
-                <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
-                  <Box sx={{ p: 1 }}>
-                    <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
-                      {dropdown.label}
-                    </Typography>
-                    <List dense sx={{ p: 0 }}>
-                      {dropdown.items.map((item) => (
-                        <MenuItemStyled
-                          key={item.to}
-                          component={Link}
-                          to={item.to}
-                          active={isActiveRoute(item.to)}
-                          onClick={() => handleDropdownClose(key)}
-                        >
-                          <ListItemIcon sx={{ 
-                            color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
-                            minWidth: 32 
-                          }}>
-                            {item.icon}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={item.label}
-                            secondary={item.description}
-                            primaryTypographyProps={{
-                              fontWeight: 600,
-                              fontSize: 14,
-                              color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326"
-                            }}
-                            secondaryTypographyProps={{
-                              fontSize: 12,
-                              color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b"
-                            }}
-                          />
-                        </MenuItemStyled>
-                      ))}
-                    </List>
-                  </Box>
-                </ClickAwayListener>
-              </Paper>
+              <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+                <Box sx={{ p: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
+                    {dropdown.label}
+                  </Typography>
+                  <List dense sx={{ p: 0 }}>
+                    {dropdown.items.map((item) => (
+                      <MenuItemStyled
+                        key={item.to}
+                        component={Link}
+                        to={item.to}
+                        active={isActiveRoute(item.to)}
+                        onClick={() => handleDropdownClose(key)}
+                      >
+                        <ListItemIcon sx={{ 
+                          color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
+                          minWidth: 32 
+                        }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={item.label}
+                          secondary={item.description}
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            fontSize: 14,
+                            color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326"
+                          }}
+                          secondaryTypographyProps={{
+                            fontSize: 12,
+                            color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b"
+                          }}
+                        />
+                      </MenuItemStyled>
+                    ))}
+                  </List>
+                </Box>
+              </ClickAwayListener>
+            </Paper>
           )}
         </StyledPopper>
       ))}
@@ -1532,4 +1597,5 @@ const Navbar = () => {
   );
 };
 
+export { MainContent };
 export default Navbar;
