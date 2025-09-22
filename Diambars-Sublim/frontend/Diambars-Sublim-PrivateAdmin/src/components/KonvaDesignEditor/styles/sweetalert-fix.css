@@ -55,7 +55,7 @@
 }
 
 .swal2-confirm {
-  background-color: #ff4757 !important;
+  background-color: #032CA6 !important;
   border: none !important;
   border-radius: 6px !important;
   padding: 0.75rem 1.5rem !important;
@@ -64,7 +64,7 @@
 }
 
 .swal2-confirm:hover {
-  background-color: #ff3742 !important;
+  background-color: #032CA6 !important;
   transform: translateY(-1px) !important;
 }
 

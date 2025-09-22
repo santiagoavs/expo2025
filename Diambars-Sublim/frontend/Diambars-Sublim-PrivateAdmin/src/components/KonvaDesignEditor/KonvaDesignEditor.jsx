@@ -19,9 +19,7 @@ import { useUnifiedCanvasCentering } from './hooks/useUnifiedCanvasCentering';
 
 // ==================== COMPONENTES ESPECIALIZADOS ====================
 import { EditorToolbar } from './components/Editor/EditorToolbar';
-import { ShapeCreator } from './components/Shapes/ShapeCreator';
 import { ShapeCreatorModal } from './components/Shapes/ShapeCreatorModal';
-import { GoogleFontsLoader } from './components/GoogleFonts/GoogleFontsLoader';
 import ColorPicker from '../FabricDesignEditor/components/ColorPicker';
 import { testImageFlow } from './utils/imageTestUtils';
 import UnifiedPanel from './components/UnifiedPanel/UnifiedPanel';
@@ -34,7 +32,6 @@ import { useResponsiveLayout } from './hooks/useResponsiveLayout';
 // ==================== ELEMENTOS RENDERIZABLES ====================
 import { KonvaElementRenderer } from './components/Elements/KonvaElementRenderer';
 import { CustomizationAreaRenderer } from './components/Areas/CustomizationAreaRenderer';
-import { AreaSelector } from './components/Areas/AreaSelector';
 
 // ==================== SERVICIOS ====================
 import { ElementFactory } from './services/ElementFactory';
