@@ -171,7 +171,7 @@ const DesignService = {
   },
 
   /**
-   * Actualizar diseño existente (solo en estado draft)
+   * Actualizar diseño existente (solo en estado draft o pending)
    * @param {string} id - ID del diseño
    * @param {Object} designData - Datos actualizados
    * @returns {Promise} Respuesta con diseño actualizado
@@ -185,7 +185,7 @@ const DesignService = {
       }
 
       // Filtrar solo campos permitidos para actualización
-      const allowedFields = ['elements', 'productOptions', 'clientNotes', 'name'];
+      const allowedFields = ['elements', 'productOptions', 'clientNotes', 'name', 'productColorFilter'];
       const payload = {};
       
       allowedFields.forEach(field => {

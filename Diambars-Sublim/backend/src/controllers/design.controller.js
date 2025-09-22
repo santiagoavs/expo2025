@@ -621,8 +621,15 @@ async function validateProductOptions(productOptions, availableOptions) {
  */
 designController.createDesign = async (req, res) => {
   try {
+    console.log('🔍 [createDesign] Request body:', req.body);
+    console.log('🔍 [createDesign] User:', req.user);
+    
     const { productId, elements, productOptions, clientNotes, mode = 'simple', productColorFilter } = req.body;
     const userId = req.user._id;
+    
+    console.log('🔍 [createDesign] Parsed data:', {
+      userId, productId, elements: elements?.length, productOptions: productOptions?.length
+    });
 
     const basicValidation = validateFields({
       productId, clientNotes, mode
@@ -648,6 +655,16 @@ designController.createDesign = async (req, res) => {
       });
     }
 
+    // Verificar que el usuario existe
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Usuario no encontrado",
+        error: 'USER_NOT_FOUND'
+      });
+    }
+
     const product = await Product.findById(basicValidation.cleaned.productId);
     if (!product || !product.isActive) {
       return res.status(!product ? 404 : 400).json({ 
@@ -659,11 +676,17 @@ designController.createDesign = async (req, res) => {
 
     const elementsValidation = validateDesignElements(elements, product.customizationAreas);
     if (!elementsValidation.isValid) {
+      console.error('❌ [createDesign] Elementos inválidos:', elementsValidation.errors);
+      console.error('❌ [createDesign] Elementos recibidos:', JSON.stringify(elements, null, 2));
       return res.status(400).json({ 
         success: false,
         message: "Elementos de diseño no válidos",
         errors: elementsValidation.errors,
-        error: 'INVALID_DESIGN_ELEMENTS'
+        error: 'INVALID_DESIGN_ELEMENTS',
+        details: {
+          receivedElements: elements.length,
+          validationErrors: elementsValidation.errors
+        }
       });
     }
 
@@ -695,7 +718,32 @@ designController.createDesign = async (req, res) => {
       }
     });
 
+    // ✅ DEBUGGING: Log antes de guardar
+    console.log('🔍 [createDesign] Diseño antes de guardar:', {
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
+    
     await newDesign.save();
+    
+    // ✅ DEBUGGING: Log después de guardar
+    console.log('🔍 [createDesign] Diseño después de guardar:', {
+      designId: newDesign._id,
+      elementsCount: newDesign.elements.length,
+      elements: newDesign.elements.map(el => ({
+        type: el.type,
+        hasKonvaAttrs: !!el.konvaAttrs,
+        hasPoints: !!el.konvaAttrs?.points,
+        pointsLength: el.konvaAttrs?.points?.length,
+        points: el.konvaAttrs?.points
+      }))
+    });
     generatePreviewAndNotify(newDesign, product, userId).catch(console.error);
 
     res.status(201).json({
@@ -704,12 +752,32 @@ designController.createDesign = async (req, res) => {
       data: {
         designId: newDesign._id,
         status: newDesign.status,
+        userName: user.name,
+        userEmail: user.email,
+        productName: product.name,
         message: "Tu diseño será revisado y cotizado por nuestro equipo"
       }
     });
 
   } catch (error) {
     console.error("Error en createDesign:", error);
+    
+    // Manejar errores de validación de Mongoose específicamente
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        message: "Error de validación en los datos del diseño",
+        errors: validationErrors,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+    
     res.status(500).json({ 
       success: false,
       message: "Error al crear el diseño",
@@ -1457,10 +1525,10 @@ designController.updateDesign = async (req, res) => {
       });
     }
     
-    if (design.status !== 'draft') {
+    if (!['draft', 'pending'].includes(design.status)) {
       return res.status(400).json({ 
         success: false,
-        message: "Solo se pueden modificar diseños en estado borrador",
+        message: "Solo se pueden modificar diseños en estado borrador o pendiente",
         error: 'INVALID_DESIGN_STATUS'
       });
     }
@@ -1505,8 +1573,8 @@ designController.updateDesign = async (req, res) => {
       design.metadata.complexity = calculateDesignComplexity(normalizedElements);
     }
 
-    if (designData.productColorFilter !== undefined) {
-      const colorValidation = validators.text(designData.productColorFilter, 0, 7);
+    if (req.body.productColorFilter !== undefined) {
+      const colorValidation = validators.text(req.body.productColorFilter, 0, 7);
       if (!colorValidation.isValid) {
         return res.status(400).json({
           success: false,
@@ -1527,6 +1595,11 @@ designController.updateDesign = async (req, res) => {
       }
       
       design.productOptions = optionsValidation.cleaned;
+    }
+
+    // Actualizar productColorFilter si se proporciona
+    if (req.body.productColorFilter !== undefined) {
+      design.productColorFilter = req.body.productColorFilter;
     }
     
     await design.save();
