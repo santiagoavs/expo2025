@@ -1,7 +1,8 @@
 // src/components/designs/DesignEditorModal.jsx - MODAL DEL EDITOR DE DISEÑOS
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Rect as KonvaRect, Circle as KonvaCircle, Transformer, Group } from 'react-konva';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Rect as KonvaRect, Circle as KonvaCircle, Transformer } from 'react-konva';
 import useImage from 'use-image';
+import AdvancedDesignEditor from './advanced/AdvancedDesignEditor';
 import './designEditorModal.css';
 
 // Imagen desde URL usando useImage
@@ -29,9 +30,13 @@ const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransfo
 const DesignEditorModal = ({
   isOpen,
   onClose,
-  designData,
-  onSave
+  design,
+  onSave,
+  product,
+  onDesignUpdate
 }) => {
+  // Use advanced editor for better functionality
+  const [useAdvancedEditor, setUseAdvancedEditor] = useState(true);
   // ==================== ESTADOS ====================
   const [activeTab, setActiveTab] = useState('tools'); // tools, layers
   const [activeTool, setActiveTool] = useState('select'); // select, text, image, shape
@@ -555,39 +560,6 @@ const DesignEditorModal = ({
                       }
                     }}
                     className="property-input"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Propiedades de texto */}
-        {selectedElement.type === 'text' && (
-          <div className="property-section">
-            <div className="property-title">Texto</div>
-            <div className="property-field full-width">
-              <label className="property-label">Contenido</label>
-              <input
-                type="text"
-                value={attrs.text || ''}
-                onChange={(e) => updateSelectedElement({ text: e.target.value })}
-                className="property-input"
-                placeholder="Escribe aquí..."
-              />
-            </div>
-            <div className="property-grid">
-              <div className="property-field">
-                <label className="property-label">Tamaño</label>
-                <input
-                  type="number"
-                  value={attrs.fontSize || 24}
-                  onChange={(e) => updateSelectedElement({ fontSize: parseInt(e.target.value) || 24 })}
-                  className="property-input"
-                  min="8"
-                  max="200"
-                />
-              </div>
               <div className="property-field">
                 <label className="property-label">Color</label>
                 <input
