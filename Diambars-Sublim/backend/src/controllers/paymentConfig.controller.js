@@ -288,4 +288,15 @@ paymentConfigController.getPaymentConfigStats = async (req, res) => {
   }
 };
 
+// Exportar funciones individuales
+export const {
+  getPaymentConfigs,
+  getAvailablePaymentMethods,
+  getPaymentConfigByType,
+  upsertPaymentConfig,
+  updatePaymentConfig,
+  deletePaymentConfig,
+  getPaymentConfigStats
+} = paymentConfigController;
+
 export default paymentConfigController;

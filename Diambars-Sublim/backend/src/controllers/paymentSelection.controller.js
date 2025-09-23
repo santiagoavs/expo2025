@@ -178,4 +178,12 @@ paymentSelectionController.getPaymentStatus = async (req, res) => {
   }
 };
 
+// Exportar funciones individuales
+export const {
+  getAvailableMethods,
+  validateMethod,
+  processOrderPayment,
+  getPaymentStatus
+} = paymentSelectionController;
+
 export default paymentSelectionController;
