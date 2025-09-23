@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/authService';
+import { requestRecoveryCode, verifyRecoveryCode, resetPassword } from '../api/AuthService';
 import Swal from 'sweetalert2';
 
 // Funciones de SweetAlert2 personalizadas

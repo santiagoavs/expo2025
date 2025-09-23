@@ -389,7 +389,7 @@ class GeocodingService {
      * @returns {Object|null} Coordenadas del centro del municipio
      */
     getMunicipalityCenter(municipality, department) {
-      // Base de datos de coordenadas de municipios principales de El Salvador
+      // Base de datos de coordenadas de municipios organizados por departamento
       const municipalityCenters = {
         // San Salvador
         'San Salvador': { lat: 13.6929, lng: -89.2182 },

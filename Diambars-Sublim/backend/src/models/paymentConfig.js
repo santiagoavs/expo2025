@@ -5,7 +5,7 @@ const paymentConfigSchema = new mongoose.Schema({
   // Tipo de método de pago
   type: {
     type: String,
-    enum: ['wompi', 'cash', 'bank'],
+    enum: ['wompi', 'cash', 'bank_transfer', 'credit_card'],
     required: true,
     unique: true
   },

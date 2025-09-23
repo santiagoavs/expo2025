@@ -101,6 +101,22 @@ const paymentConfigService = {
   },
 
   /**
+   * Obtener tipos de métodos soportados
+   */
+  async getSupportedTypes() {
+    try {
+      console.log('📋 [paymentConfigService] Obteniendo tipos soportados');
+      
+      const response = await apiClient.get('/payment-config/supported-types');
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [paymentConfigService] Error obteniendo tipos soportados:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
    * Manejo de errores centralizado
    */
   handleError(error) {

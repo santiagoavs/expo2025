@@ -12,15 +12,15 @@ const paymentMethodSchema = new mongoose.Schema({
   // Tipo de método de pago
   type: {
     type: String,
-    enum: ['card', 'wompi', 'cash', 'bank'],
+    enum: ['credit_card', 'wompi', 'cash', 'bank_transfer'],
     required: true,
-    default: 'card'
+    default: 'credit_card'
   },
   // Almacenar solo los últimos 4 dígitos de forma segura (opcional para efectivo/banco)
   lastFourDigits: {
     type: String,
     required: function() {
-      return this.type === 'card' || this.type === 'wompi';
+      return this.type === 'credit_card' || this.type === 'wompi';
     },
     length: 4
   },
@@ -28,9 +28,17 @@ const paymentMethodSchema = new mongoose.Schema({
   numberHash: {
     type: String,
     required: function() {
-      return this.type === 'card' || this.type === 'wompi';
+      return this.type === 'credit_card' || this.type === 'wompi';
     },
     sparse: true // Permite múltiples valores null
+  },
+  // Número de cuenta bancaria (para transferencias)
+  bankAccount: {
+    type: String,
+    required: function() {
+      return this.type === 'bank_transfer';
+    },
+    sparse: true
   },
   // Nombre del titular
   name: {
@@ -43,7 +51,7 @@ const paymentMethodSchema = new mongoose.Schema({
   expiry: {
     type: String,
     required: function() {
-      return this.type === 'card' || this.type === 'wompi';
+      return this.type === 'credit_card' || this.type === 'wompi';
     },
     match: /^(0[1-9]|1[0-2])\/\d{2}$/
   },
@@ -139,7 +147,7 @@ paymentMethodSchema.pre('save', async function(next) {
 paymentMethodSchema.methods.isExpired = function() {
   try {
     // Para métodos que no tienen fecha de expiración, siempre retornar false
-    if (!this.expiry || this.type === 'cash' || this.type === 'bank') {
+    if (!this.expiry || this.type === 'cash' || this.type === 'bank_transfer') {
       return false;
     }
     
@@ -177,7 +185,7 @@ paymentMethodSchema.methods.toSafeObject = function() {
 
 // Método de instancia para obtener nombre para mostrar
 paymentMethodSchema.methods.getDisplayName = function() {
-  if (this.type === 'cash' || this.type === 'bank') {
+  if (this.type === 'cash' || this.type === 'bank_transfer') {
     return this.nickname || this.name;
   }
   
@@ -201,7 +209,7 @@ paymentMethodSchema.statics.findByUser = function(userId) {
 paymentMethodSchema.pre('save', async function(next) {
   try {
     // Solo validar duplicados para métodos que tienen número de tarjeta
-    if ((this.type === 'card' || this.type === 'wompi') && this.numberHash && (this.isNew || this.isModified('numberHash'))) {
+    if ((this.type === 'credit_card' || this.type === 'wompi') && this.numberHash && (this.isNew || this.isModified('numberHash'))) {
       console.log('🔍 [PaymentMethod] Verificando duplicados...');
       const existing = await this.constructor.findOne({
         userId: this.userId,

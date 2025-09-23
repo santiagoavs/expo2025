@@ -228,6 +228,50 @@ export const usePaymentConfigActions = () => {
 };
 
 /**
+ * Hook para tipos de métodos soportados
+ */
+export const useSupportedPaymentTypes = () => {
+  const [supportedTypes, setSupportedTypes] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchSupportedTypes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('📋 [useSupportedPaymentTypes] Obteniendo tipos soportados');
+
+      const response = await paymentConfigService.getSupportedTypes();
+
+      if (response.success) {
+        setSupportedTypes(response.supportedTypes);
+      } else {
+        throw new Error(response.message || 'Error obteniendo tipos soportados');
+      }
+
+    } catch (error) {
+      console.error('❌ [useSupportedPaymentTypes] Error:', error);
+      setError(error.message || 'Error obteniendo tipos soportados');
+      setSupportedTypes(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSupportedTypes();
+  }, [fetchSupportedTypes]);
+
+  return {
+    supportedTypes,
+    loading,
+    error,
+    refetch: fetchSupportedTypes
+  };
+};
+
+/**
  * Hook combinado para configuración de métodos de pago
  */
 export const usePaymentConfigManagement = () => {

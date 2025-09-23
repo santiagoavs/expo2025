@@ -50,7 +50,7 @@ import {
 import DesignCard from '../../components/DesignCard/DesignCard';
 import CreateDesignModal from '../../components/CreateDesignModal/CreateDesignModal';
 import QuoteDesignModal from '../../components/QuoteDesignModal/QuoteDesignModal';
-import KonvaDesignViewer from '../../components/KonvaDesignEditor/Components/KonvaDesignViewer';
+import KonvaDesignViewer from '../../components/KonvaDesignEditor/components/KonvaDesignViewer';
 
 // Importar hooks personalizados
 import useDesigns from '../../hooks/useDesigns';

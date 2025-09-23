@@ -1,42 +1,6 @@
 // controllers/paymentMethods.controller.js - SIN ALMACENAR CVC
 import PaymentMethod from '../models/paymentMethod.js';
-
-// Validación condicional según el tipo de método de pago
-const validatePaymentData = (data) => {
-  const errors = [];
-  const { number, name, expiry, type } = data;
-
-  // Validar nombre (requerido para todos los tipos)
-  if (!name || name.trim().length < 2 || name.trim().length > 100) {
-    errors.push({ field: 'name', message: 'Nombre debe tener entre 2 y 100 caracteres' });
-  }
-
-  // Validaciones específicas según el tipo de método
-  if (type === 'card' || type === 'wompi') {
-    // Para tarjetas, validar número y fecha de expiración
-    if (!number || number.length < 13 || number.length > 19 || !/^\d+$/.test(number)) {
-      errors.push({ field: 'number', message: 'Número de tarjeta debe contener solo dígitos y tener entre 13-19 caracteres' });
-    }
-
-    if (!expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-      errors.push({ field: 'expiry', message: 'Fecha de expiración debe tener formato MM/AA' });
-    } else {
-      const [month, year] = expiry.split('/');
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear() % 100;
-      const currentMonth = currentDate.getMonth() + 1;
-      
-      if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-        errors.push({ field: 'expiry', message: 'La fecha de expiración no puede ser pasada' });
-      }
-    }
-  } else if (type === 'cash' || type === 'bank') {
-    // Para efectivo y transferencia bancaria, no validar número ni fecha
-    // Estos campos son opcionales o no aplicables
-  }
-
-  return errors;
-};
+import { PaymentValidationService } from '../services/paymentValidation.service.js';
 
 // Obtener todos los métodos de pago del usuario
 export const getPaymentMethods = async (req, res) => {
@@ -74,31 +38,42 @@ export const createPaymentMethod = async (req, res) => {
       // NO logging del CVC por seguridad
     });
     
-    // Validar datos de entrada (sin CVC)
-    const validationErrors = validatePaymentData(req.body);
-    if (validationErrors.length > 0) {
-      console.log('❌ [paymentController] Errores de validación:', validationErrors);
+    // Validar datos de entrada usando el servicio de validación
+    const validation = PaymentValidationService.validatePaymentMethodData(req.body);
+    if (!validation.isValid) {
+      console.log('❌ [paymentController] Errores de validación:', validation.errors);
       return res.status(400).json({
         success: false,
         message: 'Datos de entrada inválidos',
-        errors: validationErrors
+        errors: validation.errors
       });
     }
     
-    const { number, name, expiry, nickname, issuer, type } = req.body;
+    const { number, name, expiry, nickname, issuer, type, bankAccount } = req.body;
     
     try {
       let numberHash = null;
       let lastFourDigits = null;
       let detectedIssuer = null;
       
-      // Solo procesar datos de tarjeta si es necesario
-      if (type === 'card' || type === 'wompi') {
-        if (number && number !== 'N/A') {
-          numberHash = PaymentMethod.generateNumberHash(number);
-          lastFourDigits = number.slice(-4);
-          detectedIssuer = issuer || PaymentMethod.detectCardType(number);
-        }
+      // Procesar datos según el tipo de método
+      switch (type) {
+        case 'credit_card':
+        case 'wompi':
+          if (number && number !== 'N/A') {
+            numberHash = PaymentMethod.generateNumberHash(number);
+            lastFourDigits = number.slice(-4);
+            detectedIssuer = issuer || PaymentMethod.detectCardType(number);
+          }
+          break;
+          
+        case 'bank_transfer':
+          // Para transferencia bancaria, no se procesan datos de tarjeta
+          break;
+          
+        case 'cash':
+          // Para efectivo, no se procesan datos de tarjeta
+          break;
       }
       
       console.log('🔧 [paymentController] Datos procesados:', {
@@ -113,12 +88,13 @@ export const createPaymentMethod = async (req, res) => {
       const newMethod = new PaymentMethod({
         userId: req.user.id,
         name: name.trim().toUpperCase(),
-        type: type || 'card',
+        type: type || 'credit_card',
         lastFourDigits,
         numberHash,
-        expiry: (type === 'card' || type === 'wompi') ? expiry : undefined,
+        expiry: (type === 'credit_card' || type === 'wompi') ? expiry : undefined,
         issuer: detectedIssuer,
         nickname: nickname?.trim() || '',
+        bankAccount: type === 'bank_transfer' ? bankAccount : undefined,
         active: false // Los nuevos métodos inician inactivos
       });
       
@@ -169,13 +145,13 @@ export const updatePaymentMethod = async (req, res) => {
   try {
     console.log('🔄 [paymentController] Actualizando método:', req.params.id, 'para usuario:', req.user.id);
     
-    // Validar datos de entrada
-    const validationErrors = validatePaymentData(req.body);
-    if (validationErrors.length > 0) {
+    // Validar datos de entrada usando el servicio de validación
+    const validation = PaymentValidationService.validatePaymentMethodData(req.body);
+    if (!validation.isValid) {
       return res.status(400).json({
         success: false,
         message: 'Datos de entrada inválidos',
-        errors: validationErrors
+        errors: validation.errors
       });
     }
     

@@ -9,7 +9,7 @@ import {
   CircleNotch 
 } from '@phosphor-icons/react';
 import { useLogin } from '../../hooks/useLogin';
-import './login.css';
+import './Login.css';
 
 const LoginPage = () => {
   const location = useLocation();

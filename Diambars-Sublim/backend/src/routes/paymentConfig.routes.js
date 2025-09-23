@@ -5,7 +5,8 @@ import {
   getPublicPaymentConfig,
   upsertPaymentConfig,
   deletePaymentConfig,
-  getPaymentStats
+  getPaymentStats,
+  getSupportedPaymentTypes
 } from '../controllers/paymentConfig.controller.js';
 import { authRequired } from '../middlewares/auth.middleware.js';
 
@@ -13,6 +14,7 @@ const router = express.Router();
 
 // Rutas públicas
 router.get('/public', getPublicPaymentConfig);
+router.get('/supported-types', getSupportedPaymentTypes);
 
 // Rutas protegidas (requieren autenticación)
 router.use(authRequired);

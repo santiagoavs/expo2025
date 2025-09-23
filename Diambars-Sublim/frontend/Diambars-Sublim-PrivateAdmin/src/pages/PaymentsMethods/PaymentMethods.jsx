@@ -1,5 +1,5 @@
 // src/pages/PaymentMethods/PaymentMethods.jsx - Diseño UX/UI Mejorado
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import {
   Box,
@@ -59,6 +59,11 @@ import {
 } from '@phosphor-icons/react';
 import { usePaymentConfig, usePaymentStats, usePaymentActions, usePaymentMethods, usePaymentMethodActions } from '../../hooks/usePayments';
 import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
+import { usePaymentModals } from '../../hooks/usePaymentModals';
+import PaymentMethodConfigModal from '../../components/PaymentMethodModals/PaymentMethodConfigModal';
+import UserPaymentMethodModal from '../../components/PaymentMethodModals/UserPaymentMethodModal';
+import PaymentStatsModal from '../../components/PaymentMethodModals/PaymentStatsModal';
+import PaymentActionButtons from '../../components/PaymentMethodModals/PaymentActionButtons';
 import toast from 'react-hot-toast';
 
 // Configuración global de SweetAlert2
@@ -96,12 +101,50 @@ const PaymentMethods = () => {
   const { methods, loading: methodsLoading, refreshMethods } = usePaymentMethods();
   const { createMethod, updateMethod, deleteMethod, loading: actionLoading } = usePaymentMethodActions();
 
+  // Hook para gestión de modales
+  const {
+    configModalOpen,
+    userMethodModalOpen,
+    statsModalOpen,
+    selectedConfigMethod,
+    selectedUserMethod,
+    modalMode,
+    openConfigModal,
+    closeConfigModal,
+    openUserMethodModal,
+    closeUserMethodModal,
+    openStatsModal,
+    closeStatsModal
+  } = usePaymentModals();
+
   // Estados locales
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  const [methodDialogOpen, setMethodDialogOpen] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuMethod, setMenuMethod] = useState(null);
+  const [updatingConfig, setUpdatingConfig] = useState(null);
+
+  // Función para actualizar configuración con debounce
+  const handleConfigUpdate = useCallback(async (type, updates) => {
+    if (updatingConfig === type) return; // Evitar múltiples actualizaciones simultáneas
+    
+    try {
+      setUpdatingConfig(type);
+      const existingConfig = configs?.find(c => c.type === type);
+      if (existingConfig) {
+        await updateConfig(type, {
+          type: existingConfig.type,
+          name: existingConfig.name,
+          enabled: existingConfig.enabled,
+          config: existingConfig.config,
+          message: existingConfig.message,
+          ...updates
+        });
+      }
+    } catch (error) {
+      console.error('Error actualizando configuración:', error);
+    } finally {
+      setUpdatingConfig(null);
+    }
+  }, [configs, updateConfig, updatingConfig]);
 
   // Estados del formulario
   const [methodForm, setMethodForm] = useState({
@@ -122,26 +165,22 @@ const PaymentMethods = () => {
     setMenuMethod(null);
   };
 
-  // Función para abrir diálogo de método
-  const handleOpenMethodDialog = (method = null) => {
+  // Función para abrir diálogo de método de configuración
+  const handleOpenConfigMethodDialog = (method = null) => {
     if (method) {
-      setMethodForm({
-        name: method.name,
-        type: method.type,
-        enabled: method.enabled,
-        config: method.config || {}
-      });
-      setSelectedMethod(method);
+      openConfigModal(method, 'edit');
     } else {
-      setMethodForm({
-        name: '',
-        type: 'wompi',
-        enabled: true,
-        config: {}
-      });
-      setSelectedMethod(null);
+      openConfigModal(null, 'create');
     }
-    setMethodDialogOpen(true);
+  };
+
+  // Función para abrir diálogo de método de usuario
+  const handleOpenUserMethodDialog = (method = null) => {
+    if (method) {
+      openUserMethodModal(method, 'edit');
+    } else {
+      openUserMethodModal(null, 'create');
+    }
   };
 
   // Función para guardar método (ahora usa el nuevo sistema de configuración)
@@ -155,9 +194,9 @@ const PaymentMethods = () => {
         toast.success('Método creado correctamente');
       }
       
-      setMethodDialogOpen(false);
+      closeUserMethodModal();
       setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
-      setSelectedMethod(null);
+      // setSelectedMethod(null); // Removed - using modal hooks now
     } catch (error) {
       toast.error('Error al guardar el método');
     }
@@ -341,69 +380,13 @@ const PaymentMethods = () => {
             </Box>
 
             {/* Botones de acción optimizados */}
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={{ xs: 2, sm: 3 }}
-              sx={{ 
-                width: { xs: '100%', sm: 'auto', lg: 'auto' },
-                minWidth: { lg: '300px' },
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Button
-                variant="contained"
-                startIcon={<Gear size={20} weight="bold" />}
-                onClick={() => setConfigDialogOpen(true)}
-                sx={{
-                  background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-                  color: 'white',
-                  borderRadius: { xs: 2, md: 2.5 },
-                  py: { xs: 1.75, md: 2 },
-                  px: { xs: 3, md: 4 },
-                  fontSize: { xs: '0.9rem', md: '1rem' },
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  fontFamily: "'Mona Sans'",
-                  boxShadow: '0 8px 24px rgba(31, 100, 191, 0.24)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  minHeight: { xs: 48, md: 56 },
-                  width: { xs: '100%', sm: 'auto' },
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-                    boxShadow: '0 12px 32px rgba(31, 100, 191, 0.32)',
-                    transform: 'translateY(-2px)'
-                  },
-                  '&:active': {
-                    transform: 'translateY(0)'
-                  }
-                }}
-              >
-                Configuración
-              </Button>
-              
-              <IconButton
-                onClick={() => handleOpenMethodDialog()}
-                sx={{
-                  background: alpha('#1F64BF', 0.08),
-                  color: '#1F64BF',
-                  borderRadius: { xs: 2, md: 2.5 },
-                  width: { xs: '100%', sm: 56, md: 64 },
-                  height: { xs: 48, sm: 56, md: 64 },
-                  border: `1px solid ${alpha('#1F64BF', 0.12)}`,
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    background: alpha('#1F64BF', 0.12),
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 24px rgba(31, 100, 191, 0.16)'
-                  }
-                }}
-                title="Agregar Nuevo Método"
-              >
-                <Plus size={isMobile ? 22 : 24} weight="bold" />
-              </IconButton>
-            </Stack>
+            <PaymentActionButtons
+              onOpenConfigModal={() => openConfigModal()}
+              onOpenUserMethodModal={() => openUserMethodModal()}
+              onOpenStatsModal={() => openStatsModal()}
+              configs={configs}
+              userMethods={methods}
+            />
           </Stack>
         </Paper>
 
@@ -1110,7 +1093,7 @@ const PaymentMethods = () => {
       >
         <MenuItem
           onClick={() => {
-            handleOpenMethodDialog(menuMethod);
+            handleOpenConfigMethodDialog(menuMethod);
             handleMenuClose();
           }}
           sx={{
@@ -1198,241 +1181,12 @@ const PaymentMethods = () => {
         </MenuItem>
       </Menu>
 
-      {/* Diálogo de método optimizado */}
-      <Dialog
-        open={methodDialogOpen}
-        onClose={() => setMethodDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        fullScreen={isExtraSmall}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: isExtraSmall ? 0 : 3,
-            border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-            boxShadow: '0 16px 64px rgba(31, 100, 191, 0.16)',
-            m: isExtraSmall ? 0 : 2
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            p: { xs: 3, md: 4 },
-            pb: 2,
-            borderBottom: `1px solid ${alpha('#1F64BF', 0.06)}`
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: alpha('#1F64BF', 0.1),
-                color: '#1F64BF'
-              }}
-            >
-              {selectedMethod ? <PencilSimple size={24} weight="duotone" /> : <Plus size={24} weight="duotone" />}
-            </Box>
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
-                  fontWeight: 700,
-                  color: '#010326',
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                {selectedMethod ? 'Editar Método' : 'Nuevo Método'}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748B',
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                {selectedMethod ? 'Modifica la configuración del método' : 'Configura un nuevo método de pago'}
-              </Typography>
-            </Box>
-          </Stack>
-        </DialogTitle>
-        
-        <DialogContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={4} sx={{ pt: 2 }}>
-            <TextField
-              label="Nombre del método"
-              value={methodForm.name}
-              onChange={(e) => setMethodForm({ ...methodForm, name: e.target.value })}
-              fullWidth
-              variant="outlined"
-              placeholder="Ej: Tarjeta de Crédito Visa"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  fontSize: { xs: '1rem', md: '1.125rem' },
-                  fontFamily: "'Mona Sans'"
-                }
-              }}
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel sx={{ fontFamily: "'Mona Sans'" }}>Tipo de método</InputLabel>
-              <Select
-                value={methodForm.type}
-                onChange={(e) => setMethodForm({ ...methodForm, type: e.target.value })}
-                label="Tipo de método"
-                sx={{
-                  borderRadius: 2,
-                  fontSize: { xs: '1rem', md: '1.125rem' },
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                <MenuItem value="wompi" sx={{ fontFamily: "'Mona Sans'" }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <CreditCard size={20} weight="duotone" />
-                    <span>Wompi (Pagos digitales)</span>
-                  </Stack>
-                </MenuItem>
-                <MenuItem value="cash" sx={{ fontFamily: "'Mona Sans'" }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <CurrencyDollar size={20} weight="duotone" />
-                    <span>Efectivo</span>
-                  </Stack>
-                </MenuItem>
-                <MenuItem value="bank" sx={{ fontFamily: "'Mona Sans'" }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <Bank size={20} weight="duotone" />
-                    <span>Transferencia Bancaria</span>
-                  </Stack>
-                </MenuItem>
-                <MenuItem value="card" sx={{ fontFamily: "'Mona Sans'" }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <CreditCard size={20} weight="duotone" />
-                    <span>Tarjeta de Crédito/Débito</span>
-                  </Stack>
-                </MenuItem>
-              </Select>
-            </FormControl>
-            
-            <Paper
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                background: alpha('#1F64BF', 0.04),
-                border: `1px solid ${alpha('#1F64BF', 0.08)}`
-              }}
-            >
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={methodForm.enabled}
-                    onChange={(e) => setMethodForm({ ...methodForm, enabled: e.target.checked })}
-                    size="medium"
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 600,
-                        color: '#010326',
-                        fontFamily: "'Mona Sans'"
-                      }}
-                    >
-                      Habilitar método
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#64748B',
-                        fontFamily: "'Mona Sans'"
-                      }}
-                    >
-                      Los clientes podrán usar este método para realizar pagos
-                    </Typography>
-                  </Box>
-                }
-                sx={{ alignItems: 'flex-start', m: 0 }}
-              />
-            </Paper>
-          </Stack>
-        </DialogContent>
-        
-        <DialogActions
-          sx={{
-            p: { xs: 3, md: 4 },
-            pt: 2,
-            borderTop: `1px solid ${alpha('#1F64BF', 0.06)}`,
-            gap: 2
-          }}
-        >
-          <Button
-            onClick={() => setMethodDialogOpen(false)}
-            variant="outlined"
-            sx={{
-              borderRadius: 2,
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              fontFamily: "'Mona Sans'",
-              borderColor: alpha('#64748B', 0.2),
-              color: '#64748B',
-              minHeight: 48,
-              flex: { xs: 1, sm: 'none' },
-              '&:hover': {
-                borderColor: '#64748B',
-                background: alpha('#64748B', 0.04)
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          
-          <Button
-            onClick={handleSaveMethod}
-            variant="contained"
-            disabled={actionLoading || !methodForm.name}
-            sx={{
-              background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-              borderRadius: 2,
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              fontFamily: "'Mona Sans'",
-              boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
-              minHeight: 48,
-              flex: { xs: 1, sm: 'none' },
-              '&:hover': {
-                background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-                boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)'
-              }
-            }}
-          >
-            {actionLoading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              selectedMethod ? 'Actualizar Método' : 'Crear Método'
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Dialog legacy removido - usando UserPaymentMethodModal ahora */}
 
       {/* Diálogo de configuración mejorado */}
       <Dialog
-        open={configDialogOpen}
-        onClose={() => setConfigDialogOpen(false)}
+        open={configModalOpen}
+        onClose={closeConfigModal}
         maxWidth="md"
         fullWidth
         fullScreen={isExtraSmall}
@@ -1576,11 +1330,7 @@ const PaymentMethods = () => {
                     <Switch
                       checked={configs?.find(c => c.type === configType.type)?.enabled || false}
                       onChange={(e) => {
-                        const existingConfig = configs?.find(c => c.type === configType.type);
-                        updateConfig(configType.type, { 
-                          ...existingConfig, 
-                          enabled: e.target.checked 
-                        });
+                        handleConfigUpdate(configType.type, { enabled: e.target.checked });
                       }}
                       size="medium"
                     />
@@ -1605,10 +1355,8 @@ const PaymentMethods = () => {
                         rows={field.type === 'textarea' ? 3 : 1}
                         value={configs?.find(c => c.type === configType.type)?.[field.key] || ''}
                         onChange={(e) => {
-                          const existingConfig = configs?.find(c => c.type === configType.type);
-                          updateConfig(configType.type, { 
-                            ...existingConfig, 
-                            [field.key]: e.target.value 
+                          handleConfigUpdate(configType.type, { 
+                            config: { ...configs?.find(c => c.type === configType.type)?.config, [field.key]: e.target.value }
                           });
                         }}
                         fullWidth
@@ -1639,7 +1387,7 @@ const PaymentMethods = () => {
           }}
         >
           <Button
-            onClick={() => setConfigDialogOpen(false)}
+            onClick={closeConfigModal}
             variant="outlined"
             sx={{
               borderRadius: 2,
@@ -1662,7 +1410,7 @@ const PaymentMethods = () => {
             variant="contained"
             onClick={() => {
               toast.success('Configuración guardada correctamente');
-              setConfigDialogOpen(false);
+              closeConfigModal();
             }}
             sx={{
               background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
@@ -1682,6 +1430,28 @@ const PaymentMethods = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de configuración de métodos de pago */}
+      <PaymentMethodConfigModal
+        open={configModalOpen}
+        onClose={closeConfigModal}
+        selectedMethod={selectedConfigMethod}
+        mode={modalMode}
+      />
+
+      {/* Modal de métodos de pago de usuarios */}
+      <UserPaymentMethodModal
+        open={userMethodModalOpen}
+        onClose={closeUserMethodModal}
+        selectedMethod={selectedUserMethod}
+        mode={modalMode}
+      />
+
+      {/* Modal de estadísticas */}
+      <PaymentStatsModal
+        open={statsModalOpen}
+        onClose={closeStatsModal}
+      />
     </Box>
   );
 };

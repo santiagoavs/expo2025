@@ -43,7 +43,7 @@ import {
 
 // Importar componentes
 import KonvaDesignEditor from '../KonvaDesignEditor/KonvaDesignEditor';
-import KonvaDesignViewer from '../KonvaDesignEditor/Components/KonvaDesignViewer';
+import KonvaDesignViewer from '../KonvaDesignEditor/components/KonvaDesignViewer';
 
 // ================ HOOK SIMPLIFICADO PARA SCROLL ================
 const useScroll = () => {

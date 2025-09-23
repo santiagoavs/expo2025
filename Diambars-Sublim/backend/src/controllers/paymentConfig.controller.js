@@ -1,5 +1,6 @@
 // controllers/paymentConfig.controller.js - Configuración de métodos de pago del sistema
 import PaymentConfig from '../models/paymentConfig.js';
+import { PaymentValidationService } from '../services/paymentValidation.service.js';
 
 // Obtener todas las configuraciones de métodos de pago
 export const getPaymentConfigs = async (req, res) => {
@@ -67,18 +68,13 @@ export const upsertPaymentConfig = async (req, res) => {
     
     const { type, name, enabled, config, message } = req.body;
     
-    // Validar datos de entrada
-    if (!type || !name) {
+    // Validar datos de entrada usando el servicio de validación
+    const validation = PaymentValidationService.validatePaymentConfig(req.body);
+    if (!validation.isValid) {
       return res.status(400).json({
         success: false,
-        message: 'Tipo y nombre son requeridos'
-      });
-    }
-    
-    if (!['wompi', 'cash', 'bank'].includes(type)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Tipo de método no válido'
+        message: 'Datos de entrada inválidos',
+        errors: validation.errors
       });
     }
     
@@ -199,6 +195,27 @@ export const getPaymentStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error obteniendo estadísticas',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
+  }
+};
+
+// Obtener tipos de métodos soportados
+export const getSupportedPaymentTypes = async (req, res) => {
+  try {
+    console.log('📋 [paymentConfigController] Obteniendo tipos de métodos soportados');
+    
+    const supportedTypes = PaymentValidationService.getSupportedTypes();
+    
+    res.json({
+      success: true,
+      supportedTypes
+    });
+  } catch (error) {
+    console.error('❌ [paymentConfigController] Error obteniendo tipos soportados:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo tipos soportados',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
     });
   }

@@ -1,6 +1,6 @@
 // src/hooks/useOrders.js - Custom hooks para órdenes
 import { useState, useEffect, useCallback, useRef } from 'react';
-import orderService from '../api/orderService';
+import orderService from '../api/OrderService';
 import toast from 'react-hot-toast';
 
 /**
