@@ -891,6 +891,8 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNavbarLogoutConfirm, setShowNavbarLogoutConfirm] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
 
   const [dropdownStates, setDropdownStates] = useState({
     personal: { open: false, anchor: null },
@@ -945,6 +947,12 @@ const Navbar = () => {
         }));
       }
     });
+
+    // Cerrar menú de usuario si está abierto
+    if (showUserMenu) {
+      setShowUserMenu(false);
+      setUserMenuAnchor(null);
+    }
   };
 
   const handleDropdownClose = (dropdownKey) => {
@@ -954,6 +962,24 @@ const Navbar = () => {
     }));
   };
 
+  const handleUserMenuClick = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+    setShowUserMenu(!showUserMenu);
+    
+    // Cerrar otros dropdowns
+    setDropdownStates({
+      personal: { open: false, anchor: null },
+      gestion: { open: false, anchor: null },
+      herramientas: { open: false, anchor: null },
+      analisis: { open: false, anchor: null }
+    });
+  };
+
+  const handleUserMenuClose = () => {
+    setShowUserMenu(false);
+    setUserMenuAnchor(null);
+  };
+
   const toggleSidebar = () => {
     setDropdownStates({
       personal: { open: false, anchor: null },
@@ -961,6 +987,10 @@ const Navbar = () => {
       herramientas: { open: false, anchor: null },
       analisis: { open: false, anchor: null }
     });
+    
+    // Cerrar también el menú de usuario
+    setShowUserMenu(false);
+    setUserMenuAnchor(null);
     
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -1072,7 +1102,7 @@ const Navbar = () => {
 
           <Box display="flex" alignItems="center" gap={1.5}>
             {!isMd && !isMobile && (
-              <UserContainer>
+              <UserContainer onClick={handleUserMenuClick}>
                 <StyledAvatar>
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </StyledAvatar>
@@ -1085,17 +1115,6 @@ const Navbar = () => {
                   </Typography>
                 </Box>
               </UserContainer>
-            )}
-
-            {!isMobile && !isTablet && (
-              <Stack direction="row" spacing={1}>
-                <GlassIconButton component={Link} to="/profile" title="Perfil">
-                  <Gear size={20} weight="duotone" />
-                </GlassIconButton>
-                <GlassIconButton variant="danger" onClick={handleNavbarLogoutClick} title="Cerrar sesión">
-                  <SignOut size={20} weight="duotone" />
-                </GlassIconButton>
-              </Stack>
             )}
 
             <GlassIconButton onClick={toggleSidebar}>
@@ -1188,35 +1207,35 @@ const Navbar = () => {
           p: 3,
           borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
         }}>
-                     <Box display="flex" alignItems="center" gap={2}>
-             <Box sx={{
-               width: 40,
-               height: 40,
-               display: "flex",
-               alignItems: "center",
-               justifyContent: "center",
-               borderRadius: 2,
-               overflow: "hidden",
-             }}>
-               <img 
-                 src="/logo.png" 
-                 alt="DIAMBARS Logo" 
-                 style={{ 
-                   width: '100%', 
-                   height: '100%', 
-                   objectFit: 'contain'
-                 }} 
-               />
-             </Box>
-             <Box>
-               <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
-                 DIAMBARS
-               </Typography>
-               <Typography variant="caption" color="#64748b" fontWeight={500}>
-                 administración
-               </Typography>
-             </Box>
-           </Box>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box sx={{
+              width: 40,
+              height: 40,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 2,
+              overflow: "hidden",
+            }}>
+              <img 
+                src="/logo.png" 
+                alt="DIAMBARS Logo" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain'
+                }} 
+              />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={800} color="#010326" fontSize={20}>
+                DIAMBARS
+              </Typography>
+              <Typography variant="caption" color="#64748b" fontWeight={500}>
+                administración
+              </Typography>
+            </Box>
+          </Box>
           <GlassIconButton onClick={toggleSidebar} sx={{
             "&:hover": { transform: "rotate(90deg) scale(1.05)" }
           }}>
@@ -1477,57 +1496,154 @@ const Navbar = () => {
       </StyledDrawer>
 
       {/* Menús Desplegables - Solo cuando navbar visible y sidebar cerrado */}
-      {!isMobile && !isSidebarOpen && Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-        <StyledPopper
-          key={key}
-          open={dropdownStates[key].open}
-          anchorEl={dropdownStates[key].anchor}
-          placement="bottom-end"
-        >
-          {dropdownStates[key].open && (
-            <Paper>
-                <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+      {!isMobile && !isSidebarOpen && (
+        <>
+          {/* Menú de Usuario */}
+          <StyledPopper
+            open={showUserMenu}
+            anchorEl={userMenuAnchor}
+            placement="bottom-end"
+          >
+            {showUserMenu && (
+              <Paper>
+                <ClickAwayListener onClickAway={handleUserMenuClose}>
                   <Box sx={{ p: 1 }}>
-                    <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
-                      {dropdown.label}
-                    </Typography>
+                    <Box sx={{ p: 2, borderBottom: "1px solid rgba(226, 232, 240, 0.6)", mb: 1 }}>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        <StyledAvatar sx={{ width: 48, height: 48, fontSize: 18 }}>
+                          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </StyledAvatar>
+                        <Box>
+                          <Typography variant="body2" fontWeight={700} color="#010326" fontSize={15}>
+                            {user?.name || 'Usuario'}
+                          </Typography>
+                          <Chip label={user?.type || 'admin'} size="small" sx={{
+                            background: "linear-gradient(135deg, #040DBF 0%, #1F64BF 100%)",
+                            color: "#FFFFFF",
+                            fontWeight: 600,
+                            fontSize: 10,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                            mt: 0.5,
+                          }} />
+                        </Box>
+                      </Box>
+                    </Box>
+                    
                     <List dense sx={{ p: 0 }}>
-                      {dropdown.items.map((item) => (
-                        <MenuItemStyled
-                          key={item.to}
-                          component={Link}
-                          to={item.to}
-                          active={isActiveRoute(item.to)}
-                          onClick={() => handleDropdownClose(key)}
-                        >
-                          <ListItemIcon sx={{ 
-                            color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
-                            minWidth: 32 
-                          }}>
-                            {item.icon}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={item.label}
-                            secondary={item.description}
-                            primaryTypographyProps={{
-                              fontWeight: 600,
-                              fontSize: 14,
-                              color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326"
-                            }}
-                            secondaryTypographyProps={{
-                              fontSize: 12,
-                              color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b"
-                            }}
-                          />
-                        </MenuItemStyled>
-                      ))}
+                      <MenuItemStyled
+                        component={Link}
+                        to="/profile"
+                        onClick={handleUserMenuClose}
+                      >
+                        <ListItemIcon sx={{ color: "#475569", minWidth: 32 }}>
+                          <Gear size={18} weight="duotone" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Perfil"
+                          secondary="Configuración de cuenta"
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            fontSize: 14,
+                            color: "#010326"
+                          }}
+                          secondaryTypographyProps={{
+                            fontSize: 12,
+                            color: "#64748b"
+                          }}
+                        />
+                      </MenuItemStyled>
+                      
+                      <MenuItemStyled
+                        onClick={() => {
+                          handleUserMenuClose();
+                          handleNavbarLogoutClick();
+                        }}
+                        sx={{
+                          "&:hover": {
+                            background: "rgba(220, 38, 38, 0.08)",
+                            borderColor: "rgba(220, 38, 38, 0.2)",
+                          }
+                        }}
+                      >
+                        <ListItemIcon sx={{ color: "#dc2626", minWidth: 32 }}>
+                          <SignOut size={18} weight="duotone" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Cerrar Sesión"
+                          secondary="Salir del sistema"
+                          primaryTypographyProps={{
+                            fontWeight: 600,
+                            fontSize: 14,
+                            color: "#dc2626"
+                          }}
+                          secondaryTypographyProps={{
+                            fontSize: 12,
+                            color: "#dc2626"
+                          }}
+                        />
+                      </MenuItemStyled>
                     </List>
                   </Box>
                 </ClickAwayListener>
               </Paper>
-          )}
-        </StyledPopper>
-      ))}
+            )}
+          </StyledPopper>
+
+          {/* Menús de Navegación */}
+          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
+            <StyledPopper
+              key={key}
+              open={dropdownStates[key].open}
+              anchorEl={dropdownStates[key].anchor}
+              placement="bottom-end"
+            >
+              {dropdownStates[key].open && (
+                <Paper>
+                  <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+                    <Box sx={{ p: 1 }}>
+                      <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
+                        {dropdown.label}
+                      </Typography>
+                      <List dense sx={{ p: 0 }}>
+                        {dropdown.items.map((item) => (
+                          <MenuItemStyled
+                            key={item.to}
+                            component={Link}
+                            to={item.to}
+                            active={isActiveRoute(item.to)}
+                            onClick={() => handleDropdownClose(key)}
+                          >
+                            <ListItemIcon sx={{ 
+                              color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569",
+                              minWidth: 32 
+                            }}>
+                              {item.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={item.label}
+                              secondary={item.description}
+                              primaryTypographyProps={{
+                                fontWeight: 600,
+                                fontSize: 14,
+                                color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326"
+                              }}
+                              secondaryTypographyProps={{
+                                fontSize: 12,
+                                color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b"
+                              }}
+                            />
+                          </MenuItemStyled>
+                        ))}
+                      </List>
+                    </Box>
+                  </ClickAwayListener>
+                </Paper>
+              )}
+            </StyledPopper>
+          ))}
+        </>
+      )}
     </>
   );
 };
