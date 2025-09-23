@@ -93,7 +93,8 @@ const PaymentMethods = () => {
     loading, 
     upsertConfig, 
     updateConfig, 
-    deleteConfig 
+    deleteConfig,
+    checkMethodExists
   } = usePaymentConfigManagement();
 
   // Hook para gestión de modales (solo configuración del sistema)
@@ -168,29 +169,125 @@ const PaymentMethods = () => {
   // Función para guardar método de configuración del sistema
   const handleSaveConfigMethod = async () => {
     try {
+      // Validar si ya existe un método del mismo tipo (solo para nuevos métodos)
+      if (!selectedConfigMethod && checkMethodExists(methodForm.type)) {
+        await Swal.fire({
+          title: 'Método ya existe',
+          text: `Ya existe un método de pago de tipo "${methodForm.type}". ¿Deseas editarlo en su lugar?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, editar',
+          cancelButtonText: 'Cancelar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
+        return;
+      }
+
       if (selectedConfigMethod) {
         await updateConfig(selectedConfigMethod.type, methodForm);
-        toast.success('Método actualizado correctamente');
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Método de pago actualizado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
       } else {
         await upsertConfig(methodForm);
-        toast.success('Método creado correctamente');
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Método de pago creado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
       }
       
       closeConfigModal();
       setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
     } catch (error) {
-      toast.error('Error al guardar el método');
+      // SweetAlert de error
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar el método de pago',
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
     }
   };
 
   // Función para eliminar método (ahora usa el nuevo sistema de configuración)
   const handleDeleteMethod = async (method) => {
     try {
-      await deleteConfig(method.type);
-      toast.success('Método eliminado correctamente');
-      handleMenuClose();
+      // SweetAlert de confirmación
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Deseas eliminar el método "${method.name}"? Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
+
+      if (result.isConfirmed) {
+        await deleteConfig(method.type);
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Eliminado!',
+          text: 'Método de pago eliminado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
+        
+        handleMenuClose();
+      }
     } catch (error) {
-      toast.error('Error al eliminar el método');
+      // SweetAlert de error
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al eliminar el método de pago',
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
     }
   };
 

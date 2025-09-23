@@ -1,222 +1,291 @@
-// controllers/paymentConfig.controller.js - Configuración de métodos de pago del sistema
+// controllers/paymentConfig.controller.js - Controlador para configuración de métodos de pago
 import PaymentConfig from '../models/paymentConfig.js';
-import { PaymentValidationService } from '../services/paymentValidation.service.js';
+import { validationResult } from 'express-validator';
 
-// Obtener todas las configuraciones de métodos de pago
-export const getPaymentConfigs = async (req, res) => {
+const paymentConfigController = {};
+
+/**
+ * Obtener todas las configuraciones de métodos de pago (ADMIN)
+ */
+paymentConfigController.getPaymentConfigs = async (req, res) => {
   try {
-    console.log('🔍 [paymentConfigController] Obteniendo configuraciones de métodos de pago');
-    
-    const configs = await PaymentConfig.find().sort({ type: 1 });
-    
-    console.log('✅ [paymentConfigController] Encontradas', configs.length, 'configuraciones');
-    
+    console.log('⚙️ [PaymentConfig] Obteniendo configuraciones');
+
+    const configs = await PaymentConfig.find()
+      .sort({ createdAt: -1 });
+
+    console.log(`✅ [PaymentConfig] ${configs.length} configuraciones encontradas`);
+
     res.json({
       success: true,
-      configs: configs.map(config => config.toPublicObject())
+      configs,
+      count: configs.length
     });
+
   } catch (error) {
-    console.error('❌ [paymentConfigController] Error obteniendo configuraciones:', error);
+    console.error('❌ [PaymentConfig] Error obteniendo configuraciones:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo configuraciones de métodos de pago',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+      message: 'Error interno del servidor',
+      error: error.message
     });
   }
 };
 
-// Obtener configuración pública (sin datos sensibles)
-export const getPublicPaymentConfig = async (req, res) => {
+/**
+ * Obtener métodos de pago disponibles públicamente (SIN AUTENTICACIÓN)
+ */
+paymentConfigController.getAvailablePaymentMethods = async (req, res) => {
   try {
-    console.log('🌐 [paymentConfigController] Obteniendo configuración pública');
-    
-    const configs = await PaymentConfig.getActiveConfigs();
-    
-    const publicConfig = {
-      methods: {}
-    };
-    
-    configs.forEach(config => {
-      publicConfig.methods[config.type] = {
-        enabled: config.enabled,
-        name: config.name,
-        message: config.message
-      };
-    });
-    
-    console.log('✅ [paymentConfigController] Configuración pública generada');
-    
+    console.log('🌐 [PaymentConfig] Obteniendo métodos disponibles públicamente');
+
+    const availableMethods = await PaymentConfig.find({ enabled: true })
+      .select('type name message config')
+      .sort({ createdAt: 1 });
+
+    console.log(`✅ [PaymentConfig] ${availableMethods.length} métodos disponibles`);
+
     res.json({
       success: true,
-      config: publicConfig
+      methods: availableMethods,
+      count: availableMethods.length
     });
+
   } catch (error) {
-    console.error('❌ [paymentConfigController] Error obteniendo configuración pública:', error);
+    console.error('❌ [PaymentConfig] Error obteniendo métodos disponibles:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo configuración pública',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+      message: 'Error interno del servidor',
+      error: error.message
     });
   }
 };
 
-// Crear o actualizar configuración de método de pago
-export const upsertPaymentConfig = async (req, res) => {
+/**
+ * Obtener configuración por tipo
+ */
+paymentConfigController.getPaymentConfigByType = async (req, res) => {
   try {
-    console.log('🆕 [paymentConfigController] Creando/actualizando configuración:', req.body.type);
-    console.log('📋 [paymentConfigController] Datos recibidos:', req.body);
-    
-    const { type, name, enabled, config, message } = req.body;
-    
-    // Validar datos de entrada usando el servicio de validación
-    const validation = PaymentValidationService.validatePaymentConfig(req.body);
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Datos de entrada inválidos',
-        errors: validation.errors
-      });
-    }
-    
-    // Buscar configuración existente
-    const existingConfig = await PaymentConfig.findOne({ type });
-    
-    if (existingConfig) {
-      // Actualizar configuración existente
-      existingConfig.name = name.trim();
-      existingConfig.enabled = enabled !== undefined ? enabled : existingConfig.enabled;
-      existingConfig.config = config || existingConfig.config;
-      existingConfig.message = message || existingConfig.message;
-      
-      await existingConfig.save();
-      
-      console.log('✅ [paymentConfigController] Configuración actualizada:', existingConfig._id);
-      
-      res.json({
-        success: true,
-        message: 'Configuración actualizada exitosamente',
-        config: existingConfig.toPublicObject()
-      });
-    } else {
-      // Crear nueva configuración
-      const newConfig = new PaymentConfig({
-        type,
-        name: name.trim(),
-        enabled: enabled !== undefined ? enabled : true,
-        config: config || {},
-        message: message || ''
-      });
-      
-      await newConfig.save();
-      
-      console.log('✅ [paymentConfigController] Configuración creada:', newConfig._id);
-      
-      res.status(201).json({
-        success: true,
-        message: 'Configuración creada exitosamente',
-        config: newConfig.toPublicObject()
-      });
-    }
-  } catch (error) {
-    console.error('❌ [paymentConfigController] Error creando/actualizando configuración:', error);
-    
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya existe una configuración para este tipo de método'
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error creando/actualizando configuración',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
-    });
-  }
-};
+    const { type } = req.params;
 
-// Eliminar configuración de método de pago
-export const deletePaymentConfig = async (req, res) => {
-  try {
-    console.log('🗑️ [paymentConfigController] Eliminando configuración:', req.params.type);
-    
-    const config = await PaymentConfig.findOneAndDelete({ type: req.params.type });
-    
+    console.log(`⚙️ [PaymentConfig] Obteniendo configuración para tipo: ${type}`);
+
+    const config = await PaymentConfig.findOne({ type });
+
     if (!config) {
       return res.status(404).json({
         success: false,
-        message: 'Configuración no encontrada'
+        message: 'Configuración no encontrada',
+        error: 'CONFIG_NOT_FOUND'
       });
     }
-    
-    console.log('✅ [paymentConfigController] Configuración eliminada:', config._id);
-    
+
+    console.log(`✅ [PaymentConfig] Configuración encontrada para ${type}`);
+
     res.json({
       success: true,
-      message: 'Configuración eliminada exitosamente'
+      config
     });
+
   } catch (error) {
-    console.error('❌ [paymentConfigController] Error eliminando configuración:', error);
+    console.error('❌ [PaymentConfig] Error obteniendo configuración:', error);
     res.status(500).json({
       success: false,
-      message: 'Error eliminando configuración',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+      message: 'Error interno del servidor',
+      error: error.message
     });
   }
 };
 
-// Obtener estadísticas de métodos de pago
-export const getPaymentStats = async (req, res) => {
+/**
+ * Crear o actualizar configuración
+ */
+paymentConfigController.upsertPaymentConfig = async (req, res) => {
   try {
-    console.log('📊 [paymentConfigController] Obteniendo estadísticas de pagos');
-    
-    const configs = await PaymentConfig.find();
-    const activeConfigs = configs.filter(config => config.enabled);
-    
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de entrada inválidos',
+        errors: errors.array()
+      });
+    }
+
+    const { type, name, enabled, config, message } = req.body;
+
+    console.log(`⚙️ [PaymentConfig] Upserting configuración para tipo: ${type}`);
+
+    // Verificar si ya existe
+    const existingConfig = await PaymentConfig.findOne({ type });
+
+    let result;
+    if (existingConfig) {
+      // Actualizar existente
+      result = await PaymentConfig.findByIdAndUpdate(
+        existingConfig._id,
+        { name, enabled, config, message, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      );
+      console.log(`✅ [PaymentConfig] Configuración actualizada para ${type}`);
+    } else {
+      // Crear nueva
+      result = await PaymentConfig.create({
+        type,
+        name,
+        enabled,
+        config,
+        message
+      });
+      console.log(`✅ [PaymentConfig] Nueva configuración creada para ${type}`);
+    }
+
+    res.json({
+      success: true,
+      message: existingConfig ? 'Configuración actualizada exitosamente' : 'Configuración creada exitosamente',
+      config: result
+    });
+
+  } catch (error) {
+    console.error('❌ [PaymentConfig] Error upserting configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Actualizar configuración existente
+ */
+paymentConfigController.updatePaymentConfig = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de entrada inválidos',
+        errors: errors.array()
+      });
+    }
+
+    const { type } = req.params;
+    const { name, enabled, config, message } = req.body;
+
+    console.log(`⚙️ [PaymentConfig] Actualizando configuración para tipo: ${type}`);
+
+    const updatedConfig = await PaymentConfig.findOneAndUpdate(
+      { type },
+      { name, enabled, config, message, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedConfig) {
+      return res.status(404).json({
+        success: false,
+        message: 'Configuración no encontrada',
+        error: 'CONFIG_NOT_FOUND'
+      });
+    }
+
+    console.log(`✅ [PaymentConfig] Configuración actualizada para ${type}`);
+
+    res.json({
+      success: true,
+      message: 'Configuración actualizada exitosamente',
+      config: updatedConfig
+    });
+
+  } catch (error) {
+    console.error('❌ [PaymentConfig] Error actualizando configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Eliminar configuración
+ */
+paymentConfigController.deletePaymentConfig = async (req, res) => {
+  try {
+    const { type } = req.params;
+
+    console.log(`⚙️ [PaymentConfig] Eliminando configuración para tipo: ${type}`);
+
+    const deletedConfig = await PaymentConfig.findOneAndDelete({ type });
+
+    if (!deletedConfig) {
+      return res.status(404).json({
+        success: false,
+        message: 'Configuración no encontrada',
+        error: 'CONFIG_NOT_FOUND'
+      });
+    }
+
+    console.log(`✅ [PaymentConfig] Configuración eliminada para ${type}`);
+
+    res.json({
+      success: true,
+      message: 'Configuración eliminada exitosamente',
+      config: deletedConfig
+    });
+
+  } catch (error) {
+    console.error('❌ [PaymentConfig] Error eliminando configuración:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener estadísticas de configuraciones
+ */
+paymentConfigController.getPaymentConfigStats = async (req, res) => {
+  try {
+    console.log('📊 [PaymentConfig] Obteniendo estadísticas');
+
+    const totalConfigs = await PaymentConfig.countDocuments();
+    const enabledConfigs = await PaymentConfig.countDocuments({ enabled: true });
+    const disabledConfigs = await PaymentConfig.countDocuments({ enabled: false });
+
+    const configsByType = await PaymentConfig.aggregate([
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 },
+          enabled: { $sum: { $cond: ['$enabled', 1, 0] } }
+        }
+      }
+    ]);
+
     const stats = {
-      totalMethods: configs.length,
-      activeMethods: activeConfigs.length,
-      methods: configs.map(config => ({
-        type: config.type,
-        name: config.name,
-        enabled: config.enabled,
-        hasConfig: Object.keys(config.config).length > 0
-      }))
+      total: totalConfigs,
+      enabled: enabledConfigs,
+      disabled: disabledConfigs,
+      byType: configsByType
     };
-    
-    console.log('✅ [paymentConfigController] Estadísticas generadas');
-    
+
+    console.log(`✅ [PaymentConfig] Estadísticas obtenidas: ${totalConfigs} total`);
+
     res.json({
       success: true,
       stats
     });
+
   } catch (error) {
-    console.error('❌ [paymentConfigController] Error obteniendo estadísticas:', error);
+    console.error('❌ [PaymentConfig] Error obteniendo estadísticas:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo estadísticas',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+      message: 'Error interno del servidor',
+      error: error.message
     });
   }
 };
 
-// Obtener tipos de métodos soportados
-export const getSupportedPaymentTypes = async (req, res) => {
-  try {
-    console.log('📋 [paymentConfigController] Obteniendo tipos de métodos soportados');
-    
-    const supportedTypes = PaymentValidationService.getSupportedTypes();
-    
-    res.json({
-      success: true,
-      supportedTypes
-    });
-  } catch (error) {
-    console.error('❌ [paymentConfigController] Error obteniendo tipos soportados:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo tipos soportados',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
-    });
-  }
-};
+export default paymentConfigController;

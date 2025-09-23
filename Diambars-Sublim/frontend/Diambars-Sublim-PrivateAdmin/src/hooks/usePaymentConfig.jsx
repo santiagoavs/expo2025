@@ -39,11 +39,17 @@ export const usePaymentConfigs = () => {
     fetchConfigs();
   }, [fetchConfigs]);
 
+  // Función para verificar si ya existe un método del mismo tipo
+  const checkMethodExists = useCallback((type) => {
+    return configs.some(config => config.type === type && config.enabled);
+  }, [configs]);
+
   return {
     configs,
     loading,
     error,
-    refetch: fetchConfigs
+    refetch: fetchConfigs,
+    checkMethodExists
   };
 };
 
@@ -138,7 +144,7 @@ export const usePaymentConfigStats = () => {
 /**
  * Hook para acciones de configuración de métodos de pago
  */
-export const usePaymentConfigActions = () => {
+export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
   const [loading, setLoading] = useState(false);
 
   /**
@@ -152,7 +158,9 @@ export const usePaymentConfigActions = () => {
       const response = await paymentConfigService.upsertPaymentConfig(configData);
 
       if (response.success) {
-        toast.success('Configuración guardada exitosamente');
+        // Refrescar datos automáticamente
+        if (refetchConfigs) await refetchConfigs();
+        if (refetchStats) await refetchStats();
         return response.config;
       } else {
         throw new Error(response.message || 'Error guardando configuración');
@@ -178,7 +186,9 @@ export const usePaymentConfigActions = () => {
       const response = await paymentConfigService.updatePaymentConfig(type, configData);
 
       if (response.success) {
-        toast.success('Configuración actualizada exitosamente');
+        // Refrescar datos automáticamente
+        if (refetchConfigs) await refetchConfigs();
+        if (refetchStats) await refetchStats();
         return response.config;
       } else {
         throw new Error(response.message || 'Error actualizando configuración');
@@ -204,7 +214,9 @@ export const usePaymentConfigActions = () => {
       const response = await paymentConfigService.deletePaymentConfig(type);
 
       if (response.success) {
-        toast.success('Configuración eliminada exitosamente');
+        // Refrescar datos automáticamente
+        if (refetchConfigs) await refetchConfigs();
+        if (refetchStats) await refetchStats();
         return response;
       } else {
         throw new Error(response.message || 'Error eliminando configuración');
@@ -275,9 +287,9 @@ export const useSupportedPaymentTypes = () => {
  * Hook combinado para configuración de métodos de pago
  */
 export const usePaymentConfigManagement = () => {
-  const { configs, loading: configsLoading, error: configsError, refetch: refetchConfigs } = usePaymentConfigs();
+  const { configs, loading: configsLoading, error: configsError, refetch: refetchConfigs, checkMethodExists } = usePaymentConfigs();
   const { stats, loading: statsLoading, error: statsError, refetch: refetchStats } = usePaymentConfigStats();
-  const { loading: actionsLoading, upsertConfig, updateConfig, deleteConfig } = usePaymentConfigActions();
+  const { loading: actionsLoading, upsertConfig, updateConfig, deleteConfig } = usePaymentConfigActions(refetchConfigs, refetchStats);
 
   const handleUpsertConfig = useCallback(async (configData) => {
     try {
@@ -337,6 +349,9 @@ export const usePaymentConfigManagement = () => {
     refetch: () => {
       refetchConfigs();
       refetchStats();
-    }
+    },
+    
+    // Funciones de validación
+    checkMethodExists
   };
 };
