@@ -4,6 +4,7 @@
     "framework": "vite",
     "outputDirectory": "dist",
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "VITE_API_URL": "https://expo2025-8bjn.onrender.com/api"
     }
   }

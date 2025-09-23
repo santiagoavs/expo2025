@@ -1,6 +1,6 @@
 // src/hooks/useProfile.js
 import { useState, useEffect } from 'react';
-import ProfileService from '../services/profileService';
+import ProfileService from '../api/profileService';
 import { useAuth } from '../context/AuthContext';
 
 export const useProfile = () => {

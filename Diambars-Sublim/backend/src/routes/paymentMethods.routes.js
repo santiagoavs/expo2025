@@ -1,4 +1,4 @@
-// routes/paymentMethods.routes.js - CORREGIDO PARA ES6
+// routes/paymentMethods.routes.js - Rutas para métodos de pago de usuarios
 import express from 'express';
 import {
   getPaymentMethods,
@@ -8,14 +8,14 @@ import {
   togglePaymentMethod,
   getActivePaymentMethod
 } from '../controllers/paymentMethods.controller.js';
-import { authRequired } from '../middlewares/auth.middleware.js';
+import { authRequired, ownershipRequired } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 // Aplicar autenticación a todas las rutas
 router.use(authRequired);
 
-// Rutas principales
+// Rutas principales (solo para usuarios autenticados)
 router.get('/', getPaymentMethods);
 router.post('/', createPaymentMethod);
 router.get('/active', getActivePaymentMethod);
