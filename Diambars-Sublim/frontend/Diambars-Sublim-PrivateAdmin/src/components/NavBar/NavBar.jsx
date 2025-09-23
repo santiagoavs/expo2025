@@ -120,13 +120,15 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
     display: "flex",
     alignItems: "center",
     gap: 8,
-    padding: "10px 16px",
+    padding: "0px 16px",
     minWidth: "auto",
-    borderRadius: 16,
+    height: 48,
+    minHeight: 48,
+    borderRadius: 18,
     textTransform: "none",
     fontWeight: 600,
     fontSize: 14,
-    transition: "color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     overflow: "visible",
     whiteSpace: "nowrap",
     pointerEvents: "auto",
@@ -162,50 +164,78 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
     }),
     
     "&:hover": {
-      // Solo efecto de reflejo, sin cambios de tamaño o posición
+      transform: "translateY(-2px) scale(1.02)",
+      // Solo efecto de reflejo, con animación más suave
       ...(isActive ? {
         background: "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)",
-        boxShadow: "0 8px 30px rgba(4, 13, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        boxShadow: "0 12px 35px rgba(4, 13, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
       } : variant === "danger" ? {
         background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
-        boxShadow: "0 8px 30px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        boxShadow: "0 12px 35px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
       } : isHover ? {
         color: "#040DBF",
         background: "rgba(31, 100, 191, 0.2)",
+        boxShadow: "0 8px 25px rgba(31, 100, 191, 0.2)",
       } : {
-        // Hover minimalista solo con cambio de color
+        // Hover minimalista con efecto suave
         color: "#040DBF",
+        background: "rgba(31, 100, 191, 0.08)",
+        boxShadow: "0 4px 15px rgba(31, 100, 191, 0.1)",
       }),
     },
     
     [theme.breakpoints.down('lg')]: {
-      padding: "8px 14px",
+      padding: "0px 14px",
       fontSize: 13,
       gap: 6,
-      borderRadius: 14,
+      borderRadius: 16,
+      height: 44,
+      minHeight: 44,
     },
     
-    [theme.breakpoints.down('md')]: {
-      padding: "8px 10px",
+    [`@media (max-width: ${customBreakpoints.lg - 1}px)`]: {
+      padding: "0px 12px",
       fontSize: 12,
+      gap: 4,
+      borderRadius: 14,
+      height: 40,
+      minHeight: 40,
+    },
+    
+    [`@media (max-width: ${customBreakpoints.md - 1}px)`]: {
+      padding: "0px 10px",
+      fontSize: 11,
       gap: 4,
       borderRadius: 12,
       minWidth: 40,
+      height: 36,
+      minHeight: 36,
       
-      "& .nav-label, & .dropdown-label": {
+      "& .nav-label": {
+        display: "none",
+      },
+      "& .dropdown-label": {
         display: "none",
       },
       "& .dropdown-caret": {
         display: "none",
       },
     },
+    
+    [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
+      padding: "0px 8px",
+      minWidth: 36,
+      borderRadius: 10,
+      height: 32,
+      minHeight: 32,
+    },
   };
 });
 
 const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
-  width: 44,
-  height: 44,
-  borderRadius: 12,
+  width: 48,
+  height: 48,
+  borderRadius: 18,
   background: variant === "danger" 
     ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
     : "rgba(255, 255, 255, 0.8)",
@@ -215,7 +245,7 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
     ? "1px solid rgba(255, 255, 255, 0.25)"
     : "1px solid rgba(226, 232, 240, 0.6)",
   color: variant === "danger" ? "#FFFFFF" : "#64748b",
-  transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   boxShadow: variant === "danger" 
     ? "0 6px 20px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)"
     : "0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
@@ -230,7 +260,7 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
     width: "100%",
     height: "100%",
     background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)",
-    transition: "all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)",
+    transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
     opacity: 0,
   },
 
@@ -242,10 +272,10 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
       ? "rgba(255, 255, 255, 0.35)" 
       : "rgba(31, 100, 191, 0.35)",
     color: variant === "danger" ? "#FFFFFF" : "#040DBF",
-    transform: "translateY(-3px) scale(1.06)",
+    transform: "translateY(-2px) scale(1.05)",
     boxShadow: variant === "danger" 
-      ? "0 8px 30px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
-      : "0 6px 25px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+      ? "0 12px 35px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
+      : "0 8px 25px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
   },
 
   "&:hover::before": {
@@ -253,62 +283,127 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
     opacity: 1,
   },
 
+  [theme.breakpoints.down('lg')]: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+  },
   [theme.breakpoints.down('md')]: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+  },
+  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     width: 36,
     height: 36,
-    borderRadius: 9,
+    borderRadius: 12,
+  },
+  [`@media (max-width: 375px)`]: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
   },
 }));
 
 const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden, ...props }) => ({
   position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
+  top: 8,
+  left: "50%",
+  transform: `translateX(-50%) ${hidden ? 'translateY(-100%)' : 'translateY(0)'}`,
+  width: "fit-content",
+  maxWidth: "calc(100vw - 40px)",
   height: 72,
-  background: "#FFFFFF",
-  borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
-  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
+  background: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(226, 232, 240, 0.8)",
+  borderRadius: 36,
+  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
   transition: "all 0.3s ease",
   zIndex: 1300,
-  transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
   opacity: hidden ? 0 : 1,
+
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.3), transparent)",
+    borderRadius: "36px 36px 0 0",
+  },
 
   [theme.breakpoints.down('lg')]: {
     height: 68,
+    borderRadius: 34,
+    top: 6,
+    maxWidth: "calc(100vw - 32px)",
   },
   [theme.breakpoints.down('md')]: {
     height: 64,
+    borderRadius: 32,
+    top: 4,
+    maxWidth: "calc(100vw - 24px)",
   },
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     height: 60,
+    borderRadius: 30,
+    top: 2,
+    maxWidth: "calc(100vw - 20px)",
   },
   [`@media (max-width: 375px)`]: {
     height: 56,
+    borderRadius: 28,
+    top: 2,
+    maxWidth: "calc(100vw - 16px)",
   },
 }));
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   height: "100%",
-  padding: "0 32px",
-  justifyContent: "space-between",
+  padding: "0 24px",
+  justifyContent: "center",
   minHeight: "unset !important",
   position: "relative",
+  display: "flex",
+  alignItems: "center",
+  borderRadius: "inherit",
 
   [theme.breakpoints.down('xl')]: {
-    padding: "0 24px",
+    padding: "0 20px",
   },
   [theme.breakpoints.down('lg')]: {
-    padding: "0 20px",
+    padding: "0 18px",
   },
   [theme.breakpoints.down('md')]: {
     padding: "0 16px",
   },
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
-    padding: "0 12px",
+    padding: "0 14px",
   },
   [`@media (max-width: 375px)`]: {
-    padding: "0 8px",
+    padding: "0 12px",
+  },
+}));
+
+const MainContent = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: 32,
+  maxWidth: "fit-content",
+
+  [theme.breakpoints.down('xl')]: {
+    gap: 28,
+  },
+  [theme.breakpoints.down('lg')]: {
+    gap: 24,
+  },
+  [theme.breakpoints.down('md')]: {
+    gap: 20,
+  },
+  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
+    gap: 16,
   },
 }));
 
@@ -318,10 +413,10 @@ const BrandContainer = styled(Box)(({ theme }) => ({
   gap: 16,
   cursor: "pointer",
   padding: "8px 12px",
-  flex: "0 0 auto",
   background: "transparent",
   border: "none",
   boxShadow: "none",
+  flexShrink: 0,
 
   [theme.breakpoints.down('lg')]: {
     gap: 14,
@@ -344,10 +439,10 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 12,
+  borderRadius: 18,
   overflow: "hidden",
   background: "transparent",
-  transition: "all 0.3s ease",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   flexShrink: 0,
 
   "&::before": {
@@ -358,7 +453,7 @@ const LogoContainer = styled(Box)(({ theme }) => ({
     width: "100%",
     height: "100%",
     background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)",
-    transition: "all 0.6s ease",
+    transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
     opacity: 0,
     zIndex: 1,
   },
@@ -375,22 +470,22 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   [theme.breakpoints.down('lg')]: {
     width: 44,
     height: 44,
-    borderRadius: 11,
+    borderRadius: 16,
   },
   [theme.breakpoints.down('md')]: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
     width: 36,
     height: 36,
-    borderRadius: 9,
+    borderRadius: 12,
   },
   [`@media (max-width: 375px)`]: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 10,
   },
 }));
 
@@ -464,20 +559,20 @@ const NavContainer = styled(GlassBase)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 4,
-  borderRadius: 20,
+  borderRadius: 18,
   padding: "6px",
-  transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   pointerEvents: "auto",
 
   [theme.breakpoints.down('lg')]: {
     gap: 3,
     padding: "5px",
-    borderRadius: 18,
+    borderRadius: 16,
   },
   [theme.breakpoints.down('md')]: {
     gap: 2,
     padding: "4px",
-    borderRadius: 16,
+    borderRadius: 14,
   },
 }));
 
@@ -486,11 +581,12 @@ const UserContainer = styled(GlassBase)(({ theme }) => ({
   alignItems: "center",
   gap: 12,
   padding: "6px 12px 6px 6px",
-  borderRadius: 24,
+  borderRadius: 18,
   cursor: "pointer",
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
 
   "&:hover": {
-    transform: "translateY(-2px)",
+    transform: "translateY(-2px) scale(1.02)",
     boxShadow: `
       0 12px 40px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.6),
@@ -501,11 +597,28 @@ const UserContainer = styled(GlassBase)(({ theme }) => ({
   [theme.breakpoints.down('md')]: {
     padding: "4px",
     gap: 0,
-    borderRadius: 20,
+    borderRadius: 14,
     
     "& .user-info": {
       display: "none",
     },
+  },
+}));
+
+const RightControls = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: 16,
+  flexShrink: 0,
+
+  [theme.breakpoints.down('lg')]: {
+    gap: 12,
+  },
+  [theme.breakpoints.down('md')]: {
+    gap: 8,
+  },
+  [`@media (max-width: ${customBreakpoints.sm - 1}px)`]: {
+    gap: 8,
   },
 }));
 
@@ -923,8 +1036,9 @@ const Navbar = () => {
   }, []);
 
   const getVisibleItemsCount = () => {
-    if (isXs || isSm) return 0;
-    return 1;
+    if (isXs || isSm) return 0; // Mobile - solo sidebar
+    if (isMd) return 1; // Tablet - mostrar solo Inicio + iconos para dropdowns
+    return 1; // Desktop - mostrar Inicio + labels para dropdowns
   };
 
   const visibleItemsCount = getVisibleItemsCount();
@@ -1046,81 +1160,85 @@ const Navbar = () => {
     <>
       <StyledAppBar scrolled={isScrolled} hidden={isSidebarOpen} elevation={0}>
         <StyledToolbar>
-          <BrandContainer>
-            <LogoContainer>
-              <img 
-                src="/logo.png" 
-                alt="DIAMBARS Logo" 
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'contain',
-                  borderRadius: 'inherit'
-                }} 
-              />
-            </LogoContainer>
-            <BrandText>
-              <BrandName>DIAMBARS</BrandName>
-              <BrandSubtitle className="brand-subtitle">administración</BrandSubtitle>
-            </BrandText>
-          </BrandContainer>
+          <MainContent>
+            <BrandContainer>
+              <LogoContainer>
+                <img 
+                  src="/logo.png" 
+                  alt="DIAMBARS Logo" 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'contain',
+                    borderRadius: 'inherit'
+                  }} 
+                />
+              </LogoContainer>
+              <BrandText>
+                <BrandName>DIAMBARS</BrandName>
+                <BrandSubtitle className="brand-subtitle">administración</BrandSubtitle>
+              </BrandText>
+            </BrandContainer>
 
-          {!isMobile && (
-            <NavContainer>
-              {visibleMainItems.map((item) => (
-                <GlassButton
-                  key={item.to}
-                  component={Link}
-                  to={item.to}
-                  active={isActiveRoute(item.to)}
-                  startIcon={item.icon}
-                  title={item.description}
-                >
-                  <span className="nav-label">{item.label}</span>
-                </GlassButton>
-              ))}
-              
-              {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-                <GlassButton
-                  key={key}
-                  onClick={(e) => handleDropdownClick(key, e)}
-                  open={dropdownStates[key].open}
-                  hasActiveItems={hasActiveItems(key)}
-                  startIcon={dropdown.icon}
-                  endIcon={
-                    <span className="dropdown-caret">
-                      {dropdownStates[key].open ? <CaretUp size={14} /> : <CaretDown size={14} />}
-                    </span>
-                  }
-                  title={`Ver opciones de ${dropdown.label}`}
-                >
-                  <span className="dropdown-label">{dropdown.label}</span>
-                </GlassButton>
-              ))}
-            </NavContainer>
-          )}
-
-          <Box display="flex" alignItems="center" gap={1.5}>
-            {!isMd && !isMobile && (
-              <UserContainer onClick={handleUserMenuClick}>
-                <StyledAvatar>
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </StyledAvatar>
-                <Box className="user-info">
-                  <Typography variant="body2" fontWeight={700} color="#010326" fontSize={14}>
-                    {user?.name || 'Usuario'}
-                  </Typography>
-                  <Typography variant="caption" color="#64748b" textTransform="uppercase" fontSize={11}>
-                    {user?.type || 'admin'}
-                  </Typography>
-                </Box>
-              </UserContainer>
+            {!isMobile && (
+              <NavContainer>
+                {visibleMainItems.map((item) => (
+                  <GlassButton
+                    key={item.to}
+                    component={Link}
+                    to={item.to}
+                    active={isActiveRoute(item.to)}
+                    startIcon={item.icon}
+                    title={item.description}
+                  >
+                    <span className="nav-label">{item.label}</span>
+                  </GlassButton>
+                ))}
+                
+                {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
+                  <GlassButton
+                    key={key}
+                    onClick={(e) => handleDropdownClick(key, e)}
+                    open={dropdownStates[key].open}
+                    hasActiveItems={hasActiveItems(key)}
+                    startIcon={dropdown.icon}
+                    endIcon={
+                      !isMd && (
+                        <span className="dropdown-caret">
+                          {dropdownStates[key].open ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                        </span>
+                      )
+                    }
+                    title={`Ver opciones de ${dropdown.label}`}
+                  >
+                    <span className="dropdown-label">{dropdown.label}</span>
+                  </GlassButton>
+                ))}
+              </NavContainer>
             )}
 
-            <GlassIconButton onClick={toggleSidebar}>
-              <ListIcon size={20} weight="duotone" />
-            </GlassIconButton>
-          </Box>
+            <RightControls>
+              {!isMd && !isMobile && (
+                <UserContainer onClick={handleUserMenuClick}>
+                  <StyledAvatar>
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </StyledAvatar>
+                  <Box className="user-info">
+                    <Typography variant="body2" fontWeight={700} color="#010326" fontSize={14}>
+                      {user?.name || 'Usuario'}
+                    </Typography>
+                    <Typography variant="caption" color="#64748b" textTransform="uppercase" fontSize={11}>
+                      {user?.type || 'admin'}
+                    </Typography>
+                  </Box>
+                </UserContainer>
+              )}
+
+              <GlassIconButton onClick={toggleSidebar}>
+                <ListIcon size={20} weight="duotone" />
+              </GlassIconButton>
+            </RightControls>
+          </MainContent>
         </StyledToolbar>
       </StyledAppBar>
 
