@@ -21,10 +21,8 @@ import {
 
 const PaymentActionButtons = ({ 
   onOpenConfigModal, 
-  onOpenUserMethodModal, 
   onOpenStatsModal,
-  configs = [],
-  userMethods = []
+  configs = []
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -38,15 +36,6 @@ const PaymentActionButtons = ({
       color: '#1F64BF',
       onClick: () => onOpenConfigModal(),
       description: 'Gestionar métodos de pago del sistema'
-    },
-    {
-      id: 'user-method',
-      label: 'Métodos de Usuario',
-      icon: CreditCard,
-      color: '#8B5CF6',
-      onClick: () => onOpenUserMethodModal(),
-      description: 'Gestionar métodos de pago de usuarios',
-      count: userMethods.length
     },
     {
       id: 'stats',

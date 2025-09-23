@@ -57,11 +57,10 @@ import {
   CheckCircle,
   XCircle
 } from '@phosphor-icons/react';
-import { usePaymentConfig, usePaymentStats, usePaymentActions, usePaymentMethods, usePaymentMethodActions } from '../../hooks/usePayments';
+import { usePaymentConfig, usePaymentStats, usePaymentActions } from '../../hooks/usePayments';
 import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
 import { usePaymentModals } from '../../hooks/usePaymentModals';
 import PaymentMethodConfigModal from '../../components/PaymentMethodModals/PaymentMethodConfigModal';
-import UserPaymentMethodModal from '../../components/PaymentMethodModals/UserPaymentMethodModal';
 import PaymentStatsModal from '../../components/PaymentMethodModals/PaymentStatsModal';
 import PaymentActionButtons from '../../components/PaymentMethodModals/PaymentActionButtons';
 import toast from 'react-hot-toast';
@@ -96,23 +95,15 @@ const PaymentMethods = () => {
     updateConfig, 
     deleteConfig 
   } = usePaymentConfigManagement();
-  
-  // Hooks legacy para compatibilidad (tarjetas de usuarios)
-  const { methods, loading: methodsLoading, refreshMethods } = usePaymentMethods();
-  const { createMethod, updateMethod, deleteMethod, loading: actionLoading } = usePaymentMethodActions();
 
-  // Hook para gestión de modales
+  // Hook para gestión de modales (solo configuración del sistema)
   const {
     configModalOpen,
-    userMethodModalOpen,
     statsModalOpen,
     selectedConfigMethod,
-    selectedUserMethod,
     modalMode,
     openConfigModal,
     closeConfigModal,
-    openUserMethodModal,
-    closeUserMethodModal,
     openStatsModal,
     closeStatsModal
   } = usePaymentModals();
@@ -165,7 +156,7 @@ const PaymentMethods = () => {
     setMenuMethod(null);
   };
 
-  // Función para abrir diálogo de método de configuración
+  // Función para abrir diálogo de método de configuración (solo sistema)
   const handleOpenConfigMethodDialog = (method = null) => {
     if (method) {
       openConfigModal(method, 'edit');
@@ -174,29 +165,19 @@ const PaymentMethods = () => {
     }
   };
 
-  // Función para abrir diálogo de método de usuario
-  const handleOpenUserMethodDialog = (method = null) => {
-    if (method) {
-      openUserMethodModal(method, 'edit');
-    } else {
-      openUserMethodModal(null, 'create');
-    }
-  };
-
-  // Función para guardar método (ahora usa el nuevo sistema de configuración)
-  const handleSaveMethod = async () => {
+  // Función para guardar método de configuración del sistema
+  const handleSaveConfigMethod = async () => {
     try {
-      if (selectedMethod) {
-        await updateConfig(selectedMethod.type, methodForm);
+      if (selectedConfigMethod) {
+        await updateConfig(selectedConfigMethod.type, methodForm);
         toast.success('Método actualizado correctamente');
       } else {
         await upsertConfig(methodForm);
         toast.success('Método creado correctamente');
       }
       
-      closeUserMethodModal();
+      closeConfigModal();
       setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
-      // setSelectedMethod(null); // Removed - using modal hooks now
     } catch (error) {
       toast.error('Error al guardar el método');
     }
@@ -245,7 +226,7 @@ const PaymentMethods = () => {
     };
   }, [stats, configs]);
 
-  if (loading || methodsLoading) {
+  if (loading) {
     return (
       <Box 
         sx={{ 
@@ -382,10 +363,8 @@ const PaymentMethods = () => {
             {/* Botones de acción optimizados */}
             <PaymentActionButtons
               onOpenConfigModal={() => openConfigModal()}
-              onOpenUserMethodModal={() => openUserMethodModal()}
               onOpenStatsModal={() => openStatsModal()}
               configs={configs}
-              userMethods={methods}
             />
           </Stack>
         </Paper>
@@ -1439,13 +1418,6 @@ const PaymentMethods = () => {
         mode={modalMode}
       />
 
-      {/* Modal de métodos de pago de usuarios */}
-      <UserPaymentMethodModal
-        open={userMethodModalOpen}
-        onClose={closeUserMethodModal}
-        selectedMethod={selectedUserMethod}
-        mode={modalMode}
-      />
 
       {/* Modal de estadísticas */}
       <PaymentStatsModal

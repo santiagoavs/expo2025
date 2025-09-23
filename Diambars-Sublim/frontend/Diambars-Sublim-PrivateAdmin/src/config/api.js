@@ -2,10 +2,8 @@
 
 // Configuración base de la API
 export const API_CONFIG = {
-  // Cambia esta URL por la de tu servidor
-  BASE_URL: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:4000/api'  // Desarrollo
-    : 'https://tu-servidor.com/api', // Producción
+  // URL del backend - usa variable de entorno de Vite
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
   
   ENDPOINTS: {
     EMPLOYEES: '/employees',

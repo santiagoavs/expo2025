@@ -7,7 +7,7 @@ import useImage from 'use-image';
 import { useKonvaCanvas } from '../../../hooks/useKonvaCanvas';
 import { useKonvaHistory } from '../../../hooks/useKonvaHistory';
 import { elementFactory } from '../../../services/ElementFactory';
-import { validationService } from '../../../services/ValidationService';
+import { validationService } from '../../../services/validationService';
 import { CANVAS_CONFIG, DEFAULT_CUSTOMIZATION_AREAS } from '../../../utils/canvasConfig';
 import { debounce } from '../../../utils/helpers';
 import EditorToolbar from '../../EditorToolbar/EditorToolbar';
