@@ -1,7 +1,7 @@
 // services/wompi.service.js - Servicio optimizado con modo ficticio
 import axios from 'axios';
 import crypto from 'crypto';
-import { config } from '../config.js';
+import { config } from '../../config.js';
 
 // Usar configuración centralizada
 const WOMPI_CONFIG = config.wompi;

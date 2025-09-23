@@ -925,7 +925,7 @@ const DROPDOWN_MENUS = {
     items: [
       {
         to: "/catalog-management",
-        label: "Catálogo",
+        label: "Productos",
         icon: <ChartBar size={18} weight="duotone" />,
         description: "Gestión de productos y servicios"
       },

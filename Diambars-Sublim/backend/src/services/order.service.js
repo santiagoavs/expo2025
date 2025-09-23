@@ -5,7 +5,7 @@ import Address from "../models/address.js";
 import Product from "../models/product.js";
 import mongoose from "mongoose";
 import { validateDepartmentAndMunicipality } from "../utils/locationUtils.js";
-import { notificationService } from "./notification.service.js";
+import { notificationService } from "./email/notification.service.js";
 import { validators, validateFields } from "../utils/validators.utils.js";
 
 export const orderService = {

@@ -1,6 +1,6 @@
 // controllers/paymentMethods.controller.js - SIN ALMACENAR CVC
 import PaymentMethod from '../models/paymentMethod.js';
-import { PaymentValidationService } from '../services/paymentValidation.service.js';
+import { PaymentValidationService } from '../services/payment/paymentValidation.service.js';
 
 // Obtener todos los métodos de pago del usuario
 export const getPaymentMethods = async (req, res) => {

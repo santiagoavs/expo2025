@@ -30,7 +30,7 @@ import contactRoutes from "./src/routes/contact.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
-import { getPublicWompiConfig, isWompiConfigured } from "./src/services/wompi.service.js";
+import { getPublicWompiConfig, isWompiConfigured } from "./src/services/payment/wompi.service.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 import Review from './src/models/reviews.js';
 

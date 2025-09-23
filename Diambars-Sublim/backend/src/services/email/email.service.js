@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { config } from "../config.js";
+import { config } from "../../config.js";
 
 // Crear transportador de correo electrónico
 const transporter = nodemailer.createTransport({

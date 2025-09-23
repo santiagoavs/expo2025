@@ -1,6 +1,6 @@
 // services/notificationService.js - Servicio simplificado de notificaciones
 import nodemailer from 'nodemailer';
-import { config } from '../config.js';
+import { config } from '../../config.js';
 
 const transporter = nodemailer.createTransport({
   host: config.email.host,

@@ -1,7 +1,7 @@
 // services/paymentSelection.service.js - Servicio para selección de métodos de pago
-import PaymentConfig from '../models/paymentConfig.js';
-import PaymentMethod from '../models/paymentMethod.js';
-import User from '../models/users.js';
+import PaymentConfig from '../../models/paymentConfig.js';
+import PaymentMethod from '../../models/paymentMethod.js';
+import User from '../../models/users.js';
 
 /**
  * Obtener métodos de pago disponibles para un usuario

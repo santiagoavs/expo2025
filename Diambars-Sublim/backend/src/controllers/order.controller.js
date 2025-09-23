@@ -4,9 +4,9 @@ import Design from "../models/design.js";
 import Address from "../models/address.js";
 import mongoose from "mongoose";
 import { orderService } from "../services/order.service.js";
-import { paymentService } from "../services/unifiedPayment.service.js";
+import { paymentService } from "../services/payment/unifiedPayment.service.js";
 import { validators } from "../utils/validators.utils.js";
-import { notificationService } from "../services/notification.service.js";
+import { notificationService } from "../services/email/notification.service.js";
 
 const orderController = {};
 

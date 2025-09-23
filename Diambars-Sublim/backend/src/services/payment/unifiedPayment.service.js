@@ -1,10 +1,10 @@
 // src/services/unified-payment.service.js - Servicio de pago consolidado
-import Order from "../models/order.js";
+import Order from "../../models/order.js";
 import mongoose from "mongoose";
 import crypto from 'crypto';
 import axios from 'axios';
-import { config } from '../config.js';
-import { notificationService } from "./notification.service.js";
+import { config } from '../../config.js';
+import { notificationService } from "../email/notification.service.js";
 
 // Configuración Wompi simplificada
 const WOMPI = {

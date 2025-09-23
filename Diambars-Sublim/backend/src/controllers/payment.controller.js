@@ -1,5 +1,5 @@
 // src/controllers/payment.controller.js - Controlador simplificado
-import { paymentService } from "../services/unifiedPayment.service.js";
+import { paymentService } from "../services/payment/unifiedPayment.service.js";
 import { validators } from "../utils/validators.utils.js";
 
 const paymentController = {};

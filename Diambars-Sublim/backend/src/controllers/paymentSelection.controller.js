@@ -3,7 +3,7 @@ import {
   getAvailablePaymentMethodsForUser, 
   validateSelectedPaymentMethod,
   processPayment 
-} from '../services/paymentSelection.service.js';
+} from '../services/payment/paymentSelection.service.js';
 import Order from '../models/order.js';
 
 const paymentSelectionController = {};

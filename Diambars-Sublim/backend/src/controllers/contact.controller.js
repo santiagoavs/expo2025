@@ -1,4 +1,4 @@
-import { sendContactEmail, sendSublimationRequestEmail } from "../services/email.service.js";
+import { sendContactEmail, sendSublimationRequestEmail } from "../services/email/email.service.js";
 
 const contactController = {};
 
