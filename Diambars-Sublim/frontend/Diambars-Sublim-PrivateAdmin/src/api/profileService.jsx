@@ -1,12 +1,12 @@
 // src/services/profileService.js
-import { apiClient, ApiError, handleApiError, API_CONFIG } from '../config/api';
+import apiClient from './ApiClient';
 
 class ProfileService {
-
+  
   // Obtener perfil del usuario actual
   async getUserProfile(userId) {
     try {
-      const data = await apiClient.get(`${API_CONFIG.ENDPOINTS.EMPLOYEES}/${userId}`);
+      const data = await apiClient.get(`/employees/${userId}`);
       
       return {
         success: true,
@@ -16,7 +16,7 @@ class ProfileService {
       console.error('Error fetching user profile:', error);
       return {
         success: false,
-        error: handleApiError(error)
+        error: error.message || 'Error al cargar el perfil'
       };
     }
   }
@@ -33,7 +33,7 @@ class ProfileService {
         // No enviamos password, se maneja por separado
       };
 
-      const data = await apiClient.put(`${API_CONFIG.ENDPOINTS.EMPLOYEES}/${userId}`, allowedFields);
+      const data = await apiClient.put(`/employees/${userId}`, allowedFields);
       
       return {
         success: true,
@@ -43,7 +43,7 @@ class ProfileService {
       console.error('Error updating user profile:', error);
       return {
         success: false,
-        error: handleApiError(error)
+        error: error.message || 'Error al actualizar el perfil'
       };
     }
   }
@@ -56,7 +56,7 @@ class ProfileService {
         newPassword: passwordData.newPassword
       };
 
-      const data = await apiClient.patch(`${API_CONFIG.ENDPOINTS.EMPLOYEES}/${userId}/password`, requestBody);
+      const data = await apiClient.patch(`/employees/${userId}/password`, requestBody);
       
       return {
         success: true,
@@ -66,7 +66,7 @@ class ProfileService {
       console.error('Error changing password:', error);
       return {
         success: false,
-        error: handleApiError(error)
+        error: error.message || 'Error al cambiar la contraseña'
       };
     }
   }
