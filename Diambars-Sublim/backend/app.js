@@ -43,10 +43,8 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:5173",  // React dev
       "http://localhost:5174",  // React dev publico
-      "http://localhost:19000", // Expo
-      "http://localhost:19001", // Expo
-      "http://localhost:19002", // Expo
       "https://diambars-sublim.vercel.app", // Vercel deployment
+      "https://diambars-panel-administrativo.vercel.app", // Panel administrativo
       process.env.FRONTEND_URL,
       process.env.MOBILE_URL
     ].filter(Boolean);
