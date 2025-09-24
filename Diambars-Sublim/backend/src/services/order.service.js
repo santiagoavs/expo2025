@@ -21,8 +21,10 @@ export const orderService = {
       addressId,
       meetupDetails,
       clientNotes,
-      paymentMethod = 'cash',
-      paymentTiming = 'on_delivery',
+      paymentData = {
+        method: 'cash',
+        timing: 'on_delivery'
+      },
       isManualOrder = false,
       targetUserId,
       adminId
@@ -55,15 +57,15 @@ export const orderService = {
     }
 
     // Validar método de pago
-    if (!['cash', 'transfer', 'card'].includes(paymentMethod)) {
-      const error = new Error("Método de pago inválido");
+    if (!['cash', 'bank_transfer', 'wompi'].includes(paymentData.method)) {
+      const error = new Error("Método de pago inválido. Métodos permitidos: cash, bank_transfer, wompi");
       error.statusCode = 400;
       error.code = 'INVALID_PAYMENT_METHOD';
       throw error;
     }
 
     // Validar timing de pago
-    if (!['on_delivery', 'advance', 'partial'].includes(paymentTiming)) {
+    if (!['on_delivery', 'advance', 'partial'].includes(paymentData.timing)) {
       const error = new Error("Timing de pago inválido");
       error.statusCode = 400;
       error.code = 'INVALID_PAYMENT_TIMING';
@@ -144,8 +146,7 @@ export const orderService = {
       deliveryAddress,
       meetupDetails: processedMeetupDetails,
       clientNotes: validClientNotes || '',
-      paymentMethod,
-      paymentTiming,
+      paymentData,
       isManualOrder,
       targetUserId: finalTargetUserId
     };
@@ -288,7 +289,7 @@ export const orderService = {
    * Crear nuevo pedido
    */
   async createOrder(orderData, session) {
-    const { design, targetUserId, quantity, deliveryType, deliveryAddress, meetupDetails, clientNotes, paymentMethod, paymentTiming } = orderData;
+    const { design, targetUserId, quantity, deliveryType, deliveryAddress, meetupDetails, clientNotes, paymentData } = orderData;
 
     console.log('📦 Creando pedido con diseño cotizado:', {
       designId: design._id,
@@ -342,9 +343,9 @@ export const orderService = {
         timestamp: new Date()
       }],
       payment: {
-        method: paymentMethod,
+        method: paymentData.method,
         status: 'pending',
-        timing: paymentTiming,
+        timing: paymentData.timing,
         amount: subtotal // Se actualizará cuando el admin cotice
       },
       metadata: {

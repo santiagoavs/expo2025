@@ -140,21 +140,21 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
       border: "1px solid rgba(255, 255, 255, 0.25)",
-      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      boxShadow: "0 3px 10px rgba(4, 13, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
     } : variant === "danger" ? {
       color: "#FFFFFF",
       background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
       border: "1px solid rgba(255, 255, 255, 0.25)",
-      boxShadow: "0 6px 20px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      boxShadow: "0 3px 10px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
     } : isHover ? {
       color: "#040DBF",
       background: "rgba(31, 100, 191, 0.15)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
       border: "1px solid rgba(31, 100, 191, 0.25)",
-      boxShadow: "0 6px 20px rgba(31, 100, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
+      boxShadow: "0 3px 10px rgba(31, 100, 191, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
     } : {
       // Estado por defecto: completamente transparente
       color: "#64748b",
@@ -164,23 +164,23 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
     }),
     
     "&:hover": {
-      transform: "translateY(-2px) scale(1.02)",
+      transform: "translateY(-1px) scale(1.01)",
       // Solo efecto de reflejo, con animación más suave
       ...(isActive ? {
         background: "linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)",
-        boxShadow: "0 12px 35px rgba(4, 13, 191, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        boxShadow: "0 4px 12px rgba(4, 13, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
       } : variant === "danger" ? {
         background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
-        boxShadow: "0 12px 35px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)",
+        boxShadow: "0 4px 12px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
       } : isHover ? {
         color: "#040DBF",
-        background: "rgba(31, 100, 191, 0.2)",
-        boxShadow: "0 8px 25px rgba(31, 100, 191, 0.2)",
+        background: "rgba(31, 100, 191, 0.15)",
+        boxShadow: "0 2px 8px rgba(31, 100, 191, 0.1)",
       } : {
         // Hover minimalista con efecto suave
         color: "#040DBF",
-        background: "rgba(31, 100, 191, 0.08)",
-        boxShadow: "0 4px 15px rgba(31, 100, 191, 0.1)",
+        background: "rgba(31, 100, 191, 0.06)",
+        boxShadow: "0 2px 6px rgba(31, 100, 191, 0.05)",
       }),
     },
     
@@ -238,17 +238,17 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
   borderRadius: 18,
   background: variant === "danger" 
     ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
-    : "rgba(255, 255, 255, 0.8)",
-  backdropFilter: "blur(14px)",
-  WebkitBackdropFilter: "blur(14px)",
+    : "transparent",
+  backdropFilter: "none",
+  WebkitBackdropFilter: "none",
   border: variant === "danger" 
     ? "1px solid rgba(255, 255, 255, 0.25)"
-    : "1px solid rgba(226, 232, 240, 0.6)",
+    : "none",
   color: variant === "danger" ? "#FFFFFF" : "#64748b",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   boxShadow: variant === "danger" 
     ? "0 6px 20px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)"
-    : "0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+    : "none",
   position: "relative",
   overflow: "hidden",
 
@@ -267,15 +267,15 @@ const GlassIconButton = styled(IconButton)(({ theme, variant, ...props }) => ({
   "&:hover": {
     background: variant === "danger" 
       ? "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)"
-      : "rgba(31, 100, 191, 0.12)",
+      : "rgba(31, 100, 191, 0.08)",
     borderColor: variant === "danger" 
-      ? "rgba(255, 255, 255, 0.35)" 
-      : "rgba(31, 100, 191, 0.35)",
+      ? "rgba(255, 255, 255, 0.25)" 
+      : "rgba(31, 100, 191, 0.2)",
     color: variant === "danger" ? "#FFFFFF" : "#040DBF",
-    transform: "translateY(-2px) scale(1.05)",
+    transform: "translateY(-1px) scale(1.02)",
     boxShadow: variant === "danger" 
-      ? "0 12px 35px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5)"
-      : "0 8px 25px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+      ? "0 4px 12px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+      : "0 2px 8px rgba(31, 100, 191, 0.1)",
   },
 
   "&:hover::before": {
@@ -314,11 +314,11 @@ const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden, ...props }) => (
   maxWidth: "calc(100vw - 40px)",
   height: 72,
   background: "rgba(255, 255, 255, 0.95)",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  border: "1px solid rgba(226, 232, 240, 0.8)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  border: "1px solid rgba(226, 232, 240, 0.3)",
   borderRadius: 36,
-  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
+  boxShadow: "0 2px 14px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
   transition: "all 0.3s ease",
   zIndex: 1300,
   opacity: hidden ? 0 : 1,
@@ -330,7 +330,7 @@ const StyledAppBar = styled(AppBar)(({ theme, scrolled, hidden, ...props }) => (
     left: 0,
     right: 0,
     height: 1,
-    background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.3), transparent)",
+    background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)",
     borderRadius: "36px 36px 0 0",
   },
 
@@ -464,7 +464,7 @@ const LogoContainer = styled(Box)(({ theme }) => ({
   },
 
   "&:hover": {
-    transform: "scale(1.05)",
+    transform: "scale(1.02)",
   },
 
   [theme.breakpoints.down('lg')]: {
@@ -563,6 +563,11 @@ const NavContainer = styled(GlassBase)(({ theme }) => ({
   padding: "6px",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   pointerEvents: "auto",
+  background: "transparent",
+  backdropFilter: "none",
+  WebkitBackdropFilter: "none",
+  border: "none",
+  boxShadow: "none",
 
   [theme.breakpoints.down('lg')]: {
     gap: 3,
@@ -584,14 +589,16 @@ const UserContainer = styled(GlassBase)(({ theme }) => ({
   borderRadius: 18,
   cursor: "pointer",
   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  background: "transparent",
+  backdropFilter: "none",
+  WebkitBackdropFilter: "none",
+  border: "none",
+  boxShadow: "none",
 
   "&:hover": {
-    transform: "translateY(-2px) scale(1.02)",
-    boxShadow: `
-      0 12px 40px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.2)
-    `,
+    transform: "translateY(-1px) scale(1.01)",
+    background: "rgba(31, 100, 191, 0.08)",
+    boxShadow: "0 2px 8px rgba(31, 100, 191, 0.1)",
   },
 
   [theme.breakpoints.down('md')]: {
@@ -648,8 +655,8 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   },
 
   "&:hover": {
-    transform: "scale(1.05)",
-    boxShadow: "0 4px 16px rgba(4, 13, 191, 0.4)",
+    transform: "scale(1.02)",
+    boxShadow: "0 2px 8px rgba(4, 13, 191, 0.2)",
   },
 
   [theme.breakpoints.down('lg')]: {
@@ -864,7 +871,7 @@ const SidebarButton = styled(Button)(({ theme, variant, ...props }) => ({
     ...(variant === "profile" ? {
       background: "#1F64BF",
       color: "#FFFFFF",
-      boxShadow: "0 6px 20px rgba(4, 13, 191, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+      boxShadow: "0 3px 10px rgba(4, 13, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
       transform: "translateY(-1px)",
     } : variant === "danger" ? {
       background: "linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)",
@@ -1355,7 +1362,7 @@ const Navbar = () => {
             </Box>
           </Box>
           <GlassIconButton onClick={toggleSidebar} sx={{
-            "&:hover": { transform: "rotate(90deg) scale(1.05)" }
+            "&:hover": { transform: "rotate(90deg) scale(1.02)" }
           }}>
             <X size={20} weight="bold" />
           </GlassIconButton>
@@ -1398,8 +1405,8 @@ const Navbar = () => {
               background: "linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.2), transparent)",
             },
             "&:hover": {
-              transform: "translateY(-2px)",
-              boxShadow: "0 4px 12px rgba(31, 100, 191, 0.1)",
+              transform: "translateY(-1px)",
+              boxShadow: "0 2px 6px rgba(31, 100, 191, 0.05)",
             },
           }}>
             <Box display="flex" alignItems="center" gap={2} width="100%">

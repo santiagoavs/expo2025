@@ -1,10 +1,10 @@
-// controllers/order.controller.js - REFACTORIZADO con Validators
+// controllers/order.controller.js - ACTUALIZADO para nueva arquitectura de pagos
 import Order from "../models/order.js";
 import Design from "../models/design.js";
 import Address from "../models/address.js";
 import mongoose from "mongoose";
 import { orderService } from "../services/order.service.js";
-import { paymentService } from "../services/payment/unifiedPayment.service.js";
+import { paymentProcessor } from "../services/payment/PaymentProcessor.js";
 import { validators } from "../utils/validators.utils.js";
 import { notificationService } from "../services/email/notification.service.js";
 
@@ -243,13 +243,15 @@ orderController.submitQuote = async (req, res) => {
 };
 
 /**
- * Registrar pago en efectivo
+ * Registrar pago en efectivo - ACTUALIZADO para nueva arquitectura
  */
 orderController.registerCashPayment = async (req, res) => {
   try {
     const { id } = req.params;
     const paymentData = req.body;
     const adminId = req.user._id;
+
+    console.log('💰 [OrderController] Registrando pago en efectivo para orden:', id);
 
     // Validar ID de la orden
     const orderIdValidation = validators.mongoId(id, 'ID de pedido');
@@ -261,7 +263,7 @@ orderController.registerCashPayment = async (req, res) => {
       });
     }
 
-    // Obtener el total del pedido para validación
+    // Obtener la orden para validación
     const order = await Order.findById(orderIdValidation.cleaned);
     if (!order) {
       return res.status(404).json({
@@ -271,40 +273,104 @@ orderController.registerCashPayment = async (req, res) => {
       });
     }
 
+    // Validar que la orden tenga un total válido
+    if (!order.total || order.total <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "La orden no tiene un monto válido para pagar",
+        error: 'INVALID_ORDER_AMOUNT'
+      });
+    }
+
     // Validar datos de pago en efectivo
-    const cashPaymentValidation = validators.cashPayment(paymentData, order.totalPrice);
+    const cashPaymentValidation = validators.cashPayment(paymentData, order.total);
     if (!cashPaymentValidation.isValid) {
       return res.status(400).json({
         success: false,
-        message: "Datos de pago inválidos",
+        message: "Datos de pago en efectivo inválidos",
         error: cashPaymentValidation.error
       });
     }
 
-    const result = await paymentService.registerCashPayment(
-      orderIdValidation.cleaned, 
-      adminId, 
-      cashPaymentValidation.cleaned
+    // ✅ USAR LA NUEVA ARQUITECTURA DE PAGOS
+    
+    // 1. Primero crear el pago como "pending" si no existe
+    const userContext = {
+      adminId,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip,
+      source: 'admin'
+    };
+
+    const paymentCreationData = {
+      method: 'cash',
+      amount: order.total,
+      timing: 'on_delivery',
+      paymentType: 'full',
+      notes: 'Pago en efectivo registrado por admin'
+    };
+
+    // Verificar si ya existe un pago para esta orden
+    const Payment = (await import('../models/payment.js')).default;
+    let existingPayment = await Payment.findOne({
+      orderId: order._id,
+      method: 'cash',
+      status: { $in: ['pending', 'processing'] }
+    });
+
+    let paymentResult;
+
+    if (!existingPayment) {
+      // Crear nuevo pago
+      paymentResult = await paymentProcessor.processPayment(
+        { orderId: order._id },
+        paymentCreationData,
+        userContext
+      );
+      existingPayment = await Payment.findById(paymentResult.paymentId);
+    }
+
+    // 2. Confirmar el pago con los datos recibidos
+    const confirmationData = {
+      receivedAmount: cashPaymentValidation.cleaned.cashReceived,
+      changeGiven: cashPaymentValidation.cleaned.changeGiven,
+      location: cashPaymentValidation.cleaned.location,
+      notes: cashPaymentValidation.cleaned.notes,
+      deliveredAt: new Date()
+    };
+
+    const confirmationResult = await paymentProcessor.confirmPayment(
+      existingPayment._id,
+      confirmationData,
+      { adminId, adminRole: req.user.role }
     );
 
     res.status(200).json({
       success: true,
-      message: "Pago en efectivo registrado",
-      data: result
+      message: "Pago en efectivo registrado exitosamente",
+      data: {
+        paymentId: confirmationResult.paymentId,
+        orderId: confirmationResult.orderId,
+        receiptNumber: confirmationResult.receiptNumber || `CASH-${order.orderNumber}-${Date.now()}`,
+        receivedAmount: confirmationData.receivedAmount,
+        changeGiven: confirmationData.changeGiven,
+        collectedBy: adminId,
+        collectedAt: confirmationData.deliveredAt
+      }
     });
 
   } catch (error) {
     console.error("❌ Error en registerCashPayment:", error);
     res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || "Error al registrar pago",
+      message: error.message || "Error al registrar pago en efectivo",
       error: error.code || 'INTERNAL_ERROR'
     });
   }
 };
 
 /**
- * Obtener todas las órdenes (Admin) - MÉTODO NUEVO
+ * Obtener todas las órdenes (Admin)
  */
 orderController.getAllOrders = async (req, res) => {
   try {
@@ -445,7 +511,7 @@ orderController.getAllOrders = async (req, res) => {
 };
 
 /**
- * Obtener orden por ID - MÉTODO NUEVO
+ * Obtener orden por ID
  */
 orderController.getOrderById = async (req, res) => {
   try {
@@ -492,6 +558,19 @@ orderController.getOrderById = async (req, res) => {
       ? order.toDetailedObject() 
       : order.toObject();
 
+    // ✅ AGREGAR INFORMACIÓN DE PAGOS DE LA NUEVA ARQUITECTURA
+    try {
+      const paymentStatus = await paymentProcessor.getOrderPaymentStatus(
+        order._id,
+        { userId: isAdmin ? null : userId, adminId: isAdmin ? userId : null }
+      );
+      
+      orderData.paymentDetails = paymentStatus;
+    } catch (paymentError) {
+      console.error('❌ Error obteniendo detalles de pago:', paymentError);
+      // No fallar si hay error en pagos, solo loggear
+    }
+
     res.status(200).json({
       success: true,
       data: orderData
@@ -508,7 +587,7 @@ orderController.getOrderById = async (req, res) => {
 };
 
 /**
- * Actualizar estado de orden - MÉTODO NUEVO
+ * Actualizar estado de orden
  */
 orderController.updateOrderStatus = async (req, res) => {
   try {

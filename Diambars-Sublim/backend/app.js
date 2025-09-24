@@ -22,15 +22,13 @@ import designRoutes from "./src/routes/design.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
 import addressRoutes from "./src/routes/address.routes.js";
 import reviewsRoutes from "./src/routes/reviews.routes.js";
-import paymentRoutes from "./src/routes/payment.routes.js"; // NUEVA RUTA AGREGADA
-import paymentMethodsRoutes from "./src/routes/paymentMethods.routes.js";
+import paymentRoutes from "./src/routes/payment.routes.js";
 import paymentConfigRoutes from "./src/routes/paymentConfig.routes.js";
-import paymentSelectionRoutes from "./src/routes/paymentSelection.routes.js";
 import contactRoutes from "./src/routes/contact.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
-import { getPublicWompiConfig, isWompiConfigured } from "./src/services/payment/wompi.service.js";
+import { paymentProcessor } from "./src/services/payment/PaymentProcessor.js";
 import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 import Review from './src/models/reviews.js';
 
@@ -45,7 +43,6 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:5173",  // React dev
       "http://localhost:5174",  // React dev publico
-      "http://localhost:3000",  // React Native dev
       "http://localhost:19000", // Expo
       "http://localhost:19001", // Expo
       "http://localhost:19002", // Expo
@@ -153,33 +150,43 @@ const conditionalJsonMiddleware = (req, res, next) => {
 // ==================== RUTAS DE LA API ====================
 
 // Health check con información de configuración
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'API Diambars Sublim funcionando correctamente',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '2.0.0',
-    wompi: {
-      configured: isWompiConfigured(),
-      mode: isWompiConfigured() ? 'real' : 'fictitious'
-    },
-    endpoints: {
-      Reviews: "/api/reviews",
-      auth: '/api/auth',
-      users: '/api/users',
-      employees: '/api/employees',
-      products: '/api/products',
-      categories: '/api/categories',
-      designs: '/api/designs',
-      orders: '/api/orders',
-      addresses: '/api/addresses',
-      payments: '/api/payments',
-      paymentMethods: '/api/payment-methods',
-      contact: '/api/contact',
-      config: '/api/config'
-    }
-  });
+app.get("/api/health", async (req, res) => {
+  try {
+    const wompiProvider = paymentProcessor.getProvider('wompi');
+    const wompiConfig = wompiProvider.getPublicConfig();
+    
+    res.status(200).json({
+      success: true,
+      message: 'API Diambars Sublim funcionando correctamente',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '2.0.0',
+      wompi: {
+        configured: wompiConfig.isConfigured,
+        mode: wompiConfig.isConfigured ? 'real' : 'fictitious'
+      },
+      endpoints: {
+        Reviews: "/api/reviews",
+        auth: '/api/auth',
+        users: '/api/users',
+        employees: '/api/employees',
+        products: '/api/products',
+        categories: '/api/categories',
+        designs: '/api/designs',
+        orders: '/api/orders',
+        addresses: '/api/addresses',
+        payments: '/api/payments',
+        contact: '/api/contact',
+        config: '/api/config'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error en health check:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo configuración del sistema'
+    });
+  }
 });
 
 // ========== RUTAS DE AUTENTICACIÓN ==========
@@ -203,12 +210,9 @@ app.use("/api/addresses", jsonMiddleware, addressRoutes);
 app.use('/api/employees', conditionalJsonMiddleware, employeesRoutes);
 app.use('/api/users', conditionalJsonMiddleware, userRoutes);
 
-// ========== RUTAS DE MÉTODOS DE PAGO ==========
-app.use("/api/payment-methods", jsonMiddleware, paymentMethodsRoutes);
 
 // ========== RUTAS DE CONFIGURACIÓN DE MÉTODOS DE PAGO ==========
 app.use("/api/payment-config", jsonMiddleware, paymentConfigRoutes);
-app.use("/api/payment-selection", jsonMiddleware, paymentSelectionRoutes);
 
 // ========== RUTAS DE CATEGORÍAS ==========
 app.use("/api/categories", conditionalJsonMiddleware, categoryRoutes);
@@ -243,17 +247,20 @@ app.post('/api/orders/webhook/wompi',
 // Resto de rutas de orders con middleware condicional
 app.use("/api/orders", conditionalJsonMiddleware, orderRoutes);
 
-// ========== RUTAS DE PAGOS (NUEVA) ==========
+// ========== RUTAS DE PAGOS (NUEVA ARQUITECTURA) ==========
 app.use("/api/payments", jsonMiddleware, paymentRoutes);
 
 // ==================== RUTAS DE CONFIGURACIÓN ====================
 
 // Ruta para obtener configuración completa del sistema (para el frontend)
-app.get("/api/config", (req, res) => {
+app.get("/api/config", async (req, res) => {
   try {
+    const wompiProvider = paymentProcessor.getProvider('wompi');
+    const wompiConfig = wompiProvider.getPublicConfig();
+    
     const config = {
       // Configuración de Wompi
-      wompi: getPublicWompiConfig(),
+      wompi: wompiConfig,
       
       // Configuración de entrega
       delivery: {
@@ -273,7 +280,7 @@ app.get("/api/config", (req, res) => {
         maxFileSize: '5MB',
         allowedImageTypes: ['jpg', 'jpeg', 'png', 'webp'],
         features: {
-          wompiPayments: isWompiConfigured(),
+          wompiPayments: wompiConfig.isConfigured,
           cashPayments: true,
           deliveryTracking: true,
           productionPhotos: true,
@@ -305,11 +312,22 @@ app.get("/api/config", (req, res) => {
 });
 
 // Ruta específica para configuración de Wompi (legacy)
-app.get("/api/config/wompi", (req, res) => {
-  res.json({
-    success: true,
-    data: getPublicWompiConfig()
-  });
+app.get("/api/config/wompi", async (req, res) => {
+  try {
+    const wompiProvider = paymentProcessor.getProvider('wompi');
+    const wompiConfig = wompiProvider.getPublicConfig();
+    
+    res.json({
+      success: true,
+      data: wompiConfig
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo configuración de Wompi:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo configuración de Wompi'
+    });
+  }
 });
 
 // Ruta optimizada para obtener departamentos y municipios de El Salvador
@@ -347,24 +365,39 @@ app.get("/api/locations/data", (req, res) => {
 });
 
 // Endpoint para verificar estado del servicio Wompi
-app.get("/api/config/payment-status", (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      wompi: {
-        configured: isWompiConfigured(),
-        environment: process.env.WOMPI_ENV || 'sandbox',
-        mode: isWompiConfigured() ? 'real' : 'fictitious',
-        message: isWompiConfigured() 
-          ? 'Wompi configurado correctamente'
-          : 'Wompi en modo ficticio - configurar credenciales para usar pagos reales'
-      },
-      cash: {
-        enabled: true,
-        message: 'Pagos en efectivo siempre disponibles'
+app.get("/api/config/payment-status", async (req, res) => {
+  try {
+    const wompiProvider = paymentProcessor.getProvider('wompi');
+    const wompiConfig = wompiProvider.getPublicConfig();
+    
+    res.json({
+      success: true,
+      data: {
+        wompi: {
+          configured: wompiConfig.isConfigured,
+          environment: wompiConfig.environment,
+          mode: wompiConfig.isConfigured ? 'real' : 'fictitious',
+          message: wompiConfig.isConfigured 
+            ? 'Wompi configurado correctamente'
+            : 'Wompi en modo ficticio - configurar credenciales para usar pagos reales'
+        },
+        cash: {
+          enabled: true,
+          message: 'Pagos en efectivo siempre disponibles'
+        },
+        bankTransfer: {
+          enabled: true,
+          message: 'Transferencias bancarias disponibles'
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo estado de pagos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo estado de pagos'
+    });
+  }
 });
 
 // ==================== MANEJO DE ERRORES ====================

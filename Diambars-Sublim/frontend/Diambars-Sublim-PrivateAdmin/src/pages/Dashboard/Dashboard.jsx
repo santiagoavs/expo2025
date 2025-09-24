@@ -653,17 +653,6 @@ const Dashboard = () => {
             boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
             transform: 'translateY(-1px)'
           },
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: { xs: '120px', sm: '150px', md: '180px' },
-            height: { xs: '120px', sm: '150px', md: '180px' },
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '50%',
-            transform: 'translate(40px, -40px)',
-          }
         }}>
           <Box sx={{ 
             display: 'flex',
@@ -740,45 +729,42 @@ const Dashboard = () => {
               flexDirection: { xs: 'column', sm: 'row' }
             }}>
               <Button
-                variant="contained"
-                startIcon={<Plus size={18} />}
-                onClick={() => handleQuickAction('create_product')}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: '#FFFFFF',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.3)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                  }
-                }}
-              >
-                {isMobile ? 'Crear' : 'Crear Producto'}
-              </Button>
-              <Button
                 variant="outlined"
                 startIcon={<Gear size={18} />}
                 onClick={() => handleQuickAction('view_analytics')}
                 sx={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
                   color: '#FFFFFF',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  borderRadius: '16px',
                   padding: '12px 24px',
                   textTransform: 'none',
                   fontWeight: 600,
-                  transition: 'all 0.3s ease',
+                  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+                  boxShadow: 'none',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                    transition: 'left 0.5s ease',
+                    zIndex: 1,
+                  },
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 0.2)',
                     borderColor: 'rgba(255, 255, 255, 0.4)',
-                    transform: 'translateY(-2px)'
+                    transform: 'translateY(-1px) scale(1.02)',
+                    boxShadow: 'none',
+                    '&::before': {
+                      left: '100%',
+                    }
                   }
                 }}
               >
