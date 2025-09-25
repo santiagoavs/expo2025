@@ -253,3 +253,96 @@ export const deleteReview = async (req, res) => {
     });
   }
 };
+
+// Obtener estadísticas de reseñas
+export const getReviewStats = async (req, res) => {
+  try {
+    console.log('📊 [Reviews] Obteniendo estadísticas de reseñas');
+
+    // Obtener estadísticas básicas
+    const totalReviews = await Review.countDocuments();
+    const pendingReviews = await Review.countDocuments({ status: 'pending' });
+    const approvedReviews = await Review.countDocuments({ status: 'approved' });
+    const rejectedReviews = await Review.countDocuments({ status: 'rejected' });
+
+    // Obtener rating promedio
+    const ratingStats = await Review.aggregate([
+      { $match: { status: 'approved' } },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          totalRatings: { $sum: 1 },
+          ratingDistribution: {
+            $push: '$rating'
+          }
+        }
+      }
+    ]);
+
+    // Obtener distribución de ratings
+    const ratingDistribution = await Review.aggregate([
+      { $match: { status: 'approved' } },
+      {
+        $group: {
+          _id: '$rating',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Obtener reseñas por mes (últimos 6 meses)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const monthlyStats = await Review.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          approved: {
+            $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    const stats = {
+      overview: {
+        total: totalReviews,
+        pending: pendingReviews,
+        approved: approvedReviews,
+        rejected: rejectedReviews
+      },
+      rating: {
+        average: ratingStats[0]?.averageRating ? Math.round(ratingStats[0].averageRating * 10) / 10 : 0,
+        total: ratingStats[0]?.totalRatings || 0,
+        distribution: ratingDistribution
+      },
+      trends: {
+        monthly: monthlyStats
+      }
+    };
+
+    console.log(`✅ [Reviews] Estadísticas obtenidas: ${totalReviews} total`);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('❌ [Reviews] Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};
