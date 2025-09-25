@@ -13,7 +13,8 @@ import {
   Crown,
   Check,
   X,
-  Pause
+  Pause,
+  List
 } from '@phosphor-icons/react';
 import './UserCard.css';
 
@@ -136,8 +137,10 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
           <button 
             className="user-card-action-btn"
             onClick={() => setShowActions(!showActions)}
+            aria-label="Menú de acciones"
+            title="Opciones"
           >
-            <DotsThreeVertical size={16} weight="duotone" />
+            <DotsThreeVertical size={20} weight="bold" />
           </button>
 
           {showActions && (

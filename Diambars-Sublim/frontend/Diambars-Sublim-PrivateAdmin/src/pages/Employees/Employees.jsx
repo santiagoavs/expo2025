@@ -10,31 +10,38 @@ import {
   User,
   Export,
   Buildings,
-  CheckCircle
+  CheckCircle,
+  Users,
+  UserMinus,
+  Trash
 } from '@phosphor-icons/react';
-import UserCard from '../../components/UserCard/UserCard';
-import Modal from '../../components/Modal/Modal';
-import CreateUserModal from '../../components/CreateUserModal/CreateUserModal';
-import UserFilters from '../../components/UserFilters/UserFilters';
-import useUsers from '../../hooks/useUsers';
+import EmployeeCard from '../../components/EmployeeCard/EmployeeCard';
+import EmployeeModal from '../../components/EmployeeModal/EmployeeModal';
+import EmployeeFilters from '../../components/EmployeeFilters/EmployeeFilters';
+import useEmployees from '../../hooks/useEmployees';
 import Swal from 'sweetalert2';
 import './Employees.css';
 
 const Employees = () => {
   const {
-    users: employees,
+    employees,
     loading,
     error,
-    createUser: createEmployee,
-    updateUser: updateEmployee,
-    updateUserStatus: updateEmployeeStatus,
-    deleteUser: deleteEmployee,
-    getUserStats: getEmployeeStats
-  } = useUsers();
+    createEmployee,
+    updateEmployee,
+    inactivateEmployee,
+    hardDeleteEmployee,
+    getEmployeeStats,
+    searchEmployees,
+    getEmployeesByStatus,
+    fetchEmployees
+  } = useEmployees();
 
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     role: 'all',
@@ -44,12 +51,16 @@ const Employees = () => {
 
   // Filtrar empleados por búsqueda y filtros
   useEffect(() => {
-    let filtered = employees.filter(employee => {
-      const matchesSearch = 
-        employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (employee.phone && employee.phone.includes(searchQuery));
+    console.log('Filtrando empleados, total:', employees.length);
+    let filtered = employees;
 
+    // Aplicar búsqueda
+    if (searchQuery.trim()) {
+      filtered = searchEmployees(searchQuery);
+    }
+
+    // Aplicar filtros
+    filtered = filtered.filter(employee => {
       const matchesRole = filters.role === 'all' || employee.role === filters.role;
       const matchesStatus = filters.status === 'all' || employee.status === filters.status;
 
@@ -57,7 +68,7 @@ const Employees = () => {
       let matchesDate = true;
       if (filters.dateRange !== 'all') {
         const now = new Date();
-        const employeeDate = new Date(employee.createdAt);
+        const employeeDate = new Date(employee.createdAt || employee.hireDate);
         const daysDiff = (now - employeeDate) / (1000 * 60 * 60 * 24);
 
         switch (filters.dateRange) {
@@ -75,59 +86,24 @@ const Employees = () => {
         }
       }
 
-      return matchesSearch && matchesRole && matchesStatus && matchesDate;
+      return matchesRole && matchesStatus && matchesDate;
     });
 
+    console.log('Empleados filtrados:', filtered.length);
     setFilteredEmployees(filtered);
-  }, [employees, searchQuery, filters]);
+  }, [employees, searchQuery, filters, searchEmployees]);
 
-  const handleCreateEmployee = async (employeeData) => {
-    try {
-      await createEmployee(employeeData);
-      setShowCreateModal(false);
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Empleado creado',
-        text: `${employeeData.name} ha sido añadido exitosamente`,
-        confirmButtonColor: '#040DBF',
-        timer: 2000,
-        showConfirmButton: false
-      });
-
-    } catch (error) {
-      console.error('Error creating employee:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message || 'No se pudo crear el empleado',
-        confirmButtonColor: '#040DBF'
-      });
-    }
+  // Handlers para el modal
+  const handleCreateEmployee = () => {
+    setModalMode('create');
+    setSelectedEmployeeId(null);
+    setShowModal(true);
   };
 
-  const handleEditEmployee = async (employeeId, employeeData) => {
-    try {
-      await updateEmployee(employeeId, employeeData);
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Empleado actualizado',
-        text: 'Los cambios se han guardado exitosamente',
-        confirmButtonColor: '#040DBF',
-        timer: 2000,
-        showConfirmButton: false
-      });
-
-    } catch (error) {
-      console.error('Error updating employee:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message || 'No se pudo actualizar el empleado',
-        confirmButtonColor: '#040DBF'
-      });
-    }
+  const handleEditEmployee = (employeeId, employeeData) => {
+    setModalMode('edit');
+    setSelectedEmployeeId(employeeId);
+    setShowModal(true);
   };
 
   const handleDeleteEmployee = async (employeeId) => {
@@ -145,13 +121,13 @@ const Employees = () => {
       });
 
       if (result.isConfirmed) {
-        await deleteEmployee(employeeId);
+        await hardDeleteEmployee(employeeId);
         
         Swal.fire({
           icon: 'success',
           title: 'Empleado eliminado',
           text: 'El empleado ha sido eliminado exitosamente',
-          confirmButtonColor: '#040DBF',
+          confirmButtonColor: '#3b82f6',
           timer: 2000,
           showConfirmButton: false
         });
@@ -163,7 +139,7 @@ const Employees = () => {
         icon: 'error',
         title: 'Error',
         text: error.message || 'No se pudo eliminar el empleado',
-        confirmButtonColor: '#040DBF'
+        confirmButtonColor: '#3b82f6'
       });
     }
   };
@@ -171,7 +147,7 @@ const Employees = () => {
   const handleStatusChange = async (employeeId, newStatus) => {
     try {
       const isActive = newStatus === 'active';
-      await updateEmployeeStatus(employeeId, isActive);
+      await inactivateEmployee(employeeId);
 
       const statusText = {
         active: 'activado',
@@ -182,7 +158,7 @@ const Employees = () => {
         icon: 'success',
         title: 'Estado actualizado',
         text: `El empleado ha sido ${statusText[newStatus]}`,
-        confirmButtonColor: '#040DBF',
+        confirmButtonColor: '#3b82f6',
         timer: 2000,
         showConfirmButton: false
       });
@@ -193,9 +169,32 @@ const Employees = () => {
         icon: 'error',
         title: 'Error',
         text: error.message || 'No se pudo actualizar el estado',
-        confirmButtonColor: '#040DBF'
+        confirmButtonColor: '#3b82f6'
       });
     }
+  };
+
+  const handleModalSuccess = async () => {
+    // Forzar recarga de datos para asegurar actualización en tiempo real
+    console.log('Modal success - recargando datos...');
+    
+    try {
+      await fetchEmployees();
+      console.log('Datos recargados exitosamente');
+    } catch (error) {
+      console.error('Error al recargar datos:', error);
+    }
+    
+    Swal.fire({
+      icon: 'success',
+      title: modalMode === 'create' ? 'Empleado creado' : 'Empleado actualizado',
+      text: modalMode === 'create' 
+        ? 'El empleado ha sido creado exitosamente' 
+        : 'Los cambios se han guardado exitosamente',
+      confirmButtonColor: '#3b82f6',
+      timer: 2000,
+      showConfirmButton: false
+    });
   };
 
   const handleExportEmployees = () => {
@@ -319,7 +318,7 @@ const Employees = () => {
 
             <button 
               className="employees-admin-btn employees-admin-btn--primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={handleCreateEmployee}
             >
               <UserPlus size={16} weight="duotone" />
               Nuevo Empleado
@@ -384,7 +383,7 @@ const Employees = () => {
           </div>
 
           {showFilters && (
-            <UserFilters 
+            <EmployeeFilters 
               filters={filters}
               onFiltersChange={setFilters}
             />
@@ -413,9 +412,9 @@ const Employees = () => {
         ) : (
           <div className="employees-admin-grid">
             {filteredEmployees.map(employee => (
-              <UserCard
+              <EmployeeCard
                 key={employee.id}
-                user={employee}
+                employee={employee}
                 onEdit={handleEditEmployee}
                 onDelete={handleDeleteEmployee}
                 onStatusChange={handleStatusChange}
@@ -424,17 +423,14 @@ const Employees = () => {
           </div>
         )}
 
-        {/* Create Employee Modal */}
-        <Modal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          title="Crear Nuevo Empleado"
-        >
-          <CreateUserModal
-            onSubmit={handleCreateEmployee}
-            onCancel={() => setShowCreateModal(false)}
-          />
-        </Modal>
+        {/* Employee Modal */}
+        <EmployeeModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          mode={modalMode}
+          employeeId={selectedEmployeeId}
+          onSuccess={handleModalSuccess}
+        />
 
       </div>
     </div>

@@ -10,7 +10,11 @@ const employeesController = {};
  */
 employeesController.getEmployees = async (req, res) => {
   try {
-    const employees = await employeeModel.find({ active: true });
+    // Filtrar empleados activos excluyendo admins
+    const employees = await employeeModel.find({ 
+      active: true,
+      role: { $ne: 'admin' }
+    });
     return res.status(200).json(employees);
   } catch (error) {
     console.error("Error al obtener empleados:", error);
@@ -52,10 +56,15 @@ employeesController.updateEmployee = async (req, res) => {
       delete updateFields.password;
     }
 
+    // Normalizar rol a minúsculas
+    if (updateFields.role) {
+      updateFields.role = updateFields.role.toLowerCase();
+    }
+
     // Verificar que no haya más de un admin
-    if (updateFields.role && updateFields.role.toLowerCase() === "admin") {
+    if (updateFields.role && updateFields.role === "admin") {
       const existingAdmin = await employeeModel.findOne({ 
-        role: { $regex: new RegExp('^admin$', 'i') }, 
+        role: "admin", 
         _id: { $ne: id } 
       });
       if (existingAdmin) {
@@ -153,6 +162,36 @@ employeesController.inactivateEmployee = async (req, res) => {
   } catch (error) {
     console.error("Error al inactivar empleado:", error);
     return res.status(500).json({ message: "Error al inactivar empleado", error: error.message });
+  }
+};
+
+/**
+ * Elimina completamente (hard delete) un empleado de la base de datos.
+ * Protege al superadmin y requiere confirmación adicional.
+ */
+employeesController.hardDeleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employee = await employeeModel.findById(id);
+
+    if (!employee) {
+      return res.status(404).json({ message: "Empleado no encontrado" });
+    }
+
+    // Evitar eliminar al superadmin
+    if (employee.email === process.env.SUPERADMIN_EMAIL) {
+      return res.status(403).json({ 
+        message: "El superadmin no puede ser eliminado" 
+      });
+    }
+
+    // Eliminar completamente de la base de datos
+    await employeeModel.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Empleado eliminado permanentemente" });
+  } catch (error) {
+    console.error("Error al eliminar empleado:", error);
+    return res.status(500).json({ message: "Error al eliminar empleado", error: error.message });
   }
 };
 

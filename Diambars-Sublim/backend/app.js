@@ -41,10 +41,10 @@ const app = express();
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-      "http://localhost:5173",  // React dev
+      "http://localhost:5173",  // React dev privado
       "http://localhost:5174",  // React dev publico
-      "https://diambars-sublim.vercel.app", // Vercel deployment
-      "https://diambars-panel-administrativo.vercel.app", // Panel administrativo
+      "https://diambars-sublim.vercel.app", // Vercel publica
+      "https://diambars-panel-administrativo.vercel.app", // Vercel Panel administrativo
       process.env.FRONTEND_URL,
       process.env.MOBILE_URL
     ].filter(Boolean);

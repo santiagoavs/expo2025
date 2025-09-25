@@ -97,6 +97,17 @@ const useEmployees = () => {
     }
   }, [fetchEmployees]);
 
+  const hardDeleteEmployee = useCallback(async (id) => {
+    try {
+      const response = await employeeService.hardDeleteEmployee(id);
+      toast.success('Empleado eliminado permanentemente');
+      await fetchEmployees(); // Recargar lista
+      return response;
+    } catch (error) {
+      handleError(error, 'Error al eliminar empleado');
+    }
+  }, [fetchEmployees]);
+
   // Función para validar datos antes de crear/actualizar
   const validateEmployeeData = useCallback((employeeData) => {
     return employeeService.validateEmployeeData(employeeData);
@@ -231,6 +242,7 @@ const useEmployees = () => {
     createEmployee,
     updateEmployee,
     inactivateEmployee,
+    hardDeleteEmployee,
     changePassword,
     getEmployeeById,
     getEmployeesByRole,
@@ -240,7 +252,8 @@ const useEmployees = () => {
     validateEmployeeData,
     getEmployeeStats,
     getEmployeesByStatus,
-    searchEmployees
+    searchEmployees,
+    fetchEmployees
   };
 };
 

@@ -1,4 +1,4 @@
-// src/services/orderService.js - Servicio para órdenes
+// src/api/OrderService.jsx - Servicio de órdenes refactorizado para nueva arquitectura
 import apiClient from './ApiClient';
 
 const orderService = {
@@ -19,6 +19,11 @@ const orderService = {
         }
       });
       
+      // Formatear órdenes para el frontend
+      if (response.success && response.data?.orders) {
+        response.data.orders = response.data.orders.map(order => this.formatOrderForDisplay(order));
+      }
+      
       return response;
     } catch (error) {
       console.error('❌ [orderService] Error obteniendo órdenes:', error);
@@ -27,13 +32,17 @@ const orderService = {
   },
 
   /**
-   * Obtener orden específica por ID
+   * Obtener orden específica por ID con detalles completos
    */
   async getOrderById(orderId) {
     try {
       console.log('🔍 [orderService] Obteniendo orden:', orderId);
       
       const response = await apiClient.get(`/orders/${orderId}`);
+      
+      if (response.success && response.data) {
+        response.data = this.formatOrderForDisplay(response.data);
+      }
       
       return response;
     } catch (error) {
@@ -43,13 +52,17 @@ const orderService = {
   },
 
   /**
-   * Crear nuevo pedido
+   * Crear nuevo pedido (normal)
    */
   async createOrder(orderData) {
     try {
       console.log('📝 [orderService] Creando orden:', orderData);
       
       const response = await apiClient.post('/orders', orderData);
+      
+      if (response.success && response.data) {
+        response.data = this.formatOrderForDisplay(response.data);
+      }
       
       return response;
     } catch (error) {
@@ -59,30 +72,14 @@ const orderService = {
   },
 
   /**
-   * Cotizar pedido manualmente
-   */
-  async submitQuote(orderId, quoteData) {
-    try {
-      console.log('💰 [orderService] Enviando cotización:', orderId, quoteData);
-      
-      const response = await apiClient.post(`/orders/${orderId}/quote`, quoteData);
-      
-      return response;
-    } catch (error) {
-      console.error('❌ [orderService] Error enviando cotización:', error);
-      throw this.handleError(error);
-    }
-  },
-
-  /**
    * Actualizar estado de orden
    */
-  async updateOrderStatus(orderId, newStatus, notes = '') {
+  async updateOrderStatus(orderId, status, notes = '') {
     try {
-      console.log('🔄 [orderService] Actualizando estado:', orderId, newStatus);
+      console.log('🔄 [orderService] Actualizando estado:', orderId, status);
       
       const response = await apiClient.patch(`/orders/${orderId}/status`, {
-        status: newStatus,
+        status,
         notes
       });
       
@@ -94,120 +91,310 @@ const orderService = {
   },
 
   /**
-   * Cancelar orden
+   * Cotizar diseño para pedido manual
    */
-  async cancelOrder(orderId, reason = '') {
+  async quoteDesign(designId, quoteData) {
     try {
-      console.log('❌ [orderService] Cancelando orden:', orderId);
+      console.log('💰 [orderService] Cotizando diseño:', designId, quoteData);
       
-      const response = await apiClient.patch(`/orders/${orderId}/cancel`, {
-        reason
+      const response = await apiClient.post(`/orders/quote-design/${designId}`, quoteData);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error cotizando diseño:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Obtener órdenes por usuario (para clientes)
+   */
+  async getUserOrders(userId, filters = {}) {
+    try {
+      console.log('👤 [orderService] Obteniendo órdenes del usuario:', userId);
+      
+      const response = await apiClient.get(`/orders/user/${userId}`, {
+        params: filters
       });
       
-      return response;
-    } catch (error) {
-      console.error('❌ [orderService] Error cancelando orden:', error);
-      throw this.handleError(error);
-    }
-  },
-
-  /**
-   * Obtener tracking de orden
-   */
-  async getOrderTracking(orderId) {
-    try {
-      console.log('📍 [orderService] Obteniendo tracking:', orderId);
-      
-      const response = await apiClient.get(`/orders/${orderId}/tracking`);
-      
-      return response;
-    } catch (error) {
-      console.error('❌ [orderService] Error obteniendo tracking:', error);
-      throw this.handleError(error);
-    }
-  },
-
-  /**
-   * Subir foto de producción
-   */
-  async uploadProductionPhoto(orderId, photoData) {
-    try {
-      console.log('📸 [orderService] Subiendo foto de producción:', orderId);
-      
-      const formData = new FormData();
-      formData.append('photo', photoData.file);
-      formData.append('stage', photoData.stage);
-      if (photoData.notes) {
-        formData.append('notes', photoData.notes);
+      if (response.success && response.data?.orders) {
+        response.data.orders = response.data.orders.map(order => this.formatOrderForDisplay(order));
       }
       
-      const response = await apiClient.post(`/orders/${orderId}/production-photos`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo órdenes del usuario:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  // ==================== BÚSQUEDA Y FILTROS ====================
+  
+  /**
+   * Buscar órdenes por múltiples criterios
+   */
+  async searchOrders(searchParams) {
+    try {
+      console.log('🔍 [orderService] Buscando órdenes:', searchParams);
+      
+      const response = await apiClient.get('/orders/search', {
+        params: searchParams
       });
+      
+      if (response.success && response.data?.orders) {
+        response.data.orders = response.data.orders.map(order => this.formatOrderForDisplay(order));
+      }
       
       return response;
     } catch (error) {
-      console.error('❌ [orderService] Error subiendo foto:', error);
+      console.error('❌ [orderService] Error buscando órdenes:', error);
       throw this.handleError(error);
     }
   },
 
   /**
-   * Actualizar progreso de producción
+   * Obtener estadísticas de órdenes
    */
-  async updateProductionProgress(orderId, itemId, stageData) {
+  async getOrderStats(filters = {}) {
     try {
-      console.log('⚙️ [orderService] Actualizando progreso:', orderId, itemId, stageData);
+      console.log('📊 [orderService] Obteniendo estadísticas:', filters);
       
-      const response = await apiClient.patch(`/orders/${orderId}/items/${itemId}/progress`, stageData);
+      const response = await apiClient.get('/orders/stats', {
+        params: filters
+      });
       
       return response;
     } catch (error) {
-      console.error('❌ [orderService] Error actualizando progreso:', error);
+      console.error('❌ [orderService] Error obteniendo estadísticas:', error);
       throw this.handleError(error);
     }
+  },
+
+  // ==================== REPORTES ====================
+  
+  /**
+   * Obtener métricas del dashboard
+   */
+  async getDashboardStats(filters = {}) {
+    try {
+      console.log('📊 [orderService] Obteniendo stats del dashboard:', filters);
+      
+      const response = await apiClient.get('/orders/reports/dashboard', {
+        params: filters
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo dashboard:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Reporte de ventas por período
+   */
+  async getSalesReport(filters = {}) {
+    try {
+      console.log('💰 [orderService] Obteniendo reporte de ventas:', filters);
+      
+      const response = await apiClient.get('/orders/reports/sales', {
+        params: {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          groupBy: filters.groupBy || 'day',
+          ...filters
+        }
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo reporte ventas:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Reporte de productos más vendidos
+   */
+  async getTopProductsReport(filters = {}) {
+    try {
+      console.log('🏆 [orderService] Obteniendo productos top:', filters);
+      
+      const response = await apiClient.get('/orders/reports/top-products', {
+        params: {
+          limit: filters.limit || 10,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          ...filters
+        }
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo productos top:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Reporte de clientes frecuentes
+   */
+  async getTopCustomersReport(filters = {}) {
+    try {
+      console.log('👑 [orderService] Obteniendo clientes top:', filters);
+      
+      const response = await apiClient.get('/orders/reports/top-customers', {
+        params: {
+          limit: filters.limit || 10,
+          sortBy: filters.sortBy || 'totalSpent',
+          ...filters
+        }
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo clientes top:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Reporte de tiempos de producción
+   */
+  async getProductionReport(filters = {}) {
+    try {
+      console.log('⏱️ [orderService] Obteniendo reporte de producción:', filters);
+      
+      const response = await apiClient.get('/orders/reports/production', {
+        params: filters
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [orderService] Error obteniendo reporte producción:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  // ==================== UTILIDADES ====================
+  
+  /**
+   * Formatear orden para mostrar en la UI
+   */
+  formatOrderForDisplay(order) {
+    if (!order) return null;
+    
+    const statusLabels = {
+      pending_approval: 'Pendiente Aprobación',
+      quoted: 'Cotizado',
+      approved: 'Aprobado',
+      in_production: 'En Producción',
+      ready_for_delivery: 'Listo para Entrega',
+      delivered: 'Entregado',
+      cancelled: 'Cancelado',
+      on_hold: 'En Espera'
+    };
+    
+    const deliveryLabels = {
+      delivery: 'Entrega a domicilio',
+      meetup: 'Punto de encuentro'
+    };
+    
+    return {
+      ...order,
+      statusLabel: statusLabels[order.status] || order.status,
+      deliveryLabel: deliveryLabels[order.deliveryType] || order.deliveryType,
+      formattedTotal: new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(order.total || 0),
+      formattedCreatedAt: new Date(order.createdAt).toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      isCompleted: ['delivered', 'cancelled'].includes(order.status),
+      isPending: ['pending_approval', 'quoted'].includes(order.status),
+      canBeEdited: ['pending_approval', 'quoted', 'approved'].includes(order.status),
+      canBeCancelled: !['delivered', 'cancelled'].includes(order.status)
+    };
+  },
+
+  /**
+   * Obtener colores por estado
+   */
+  getStatusColor(status) {
+    const colors = {
+      pending_approval: '#f59e0b', // amber
+      quoted: '#06b6d4', // cyan  
+      approved: '#10b981', // emerald
+      in_production: '#3b82f6', // blue
+      ready_for_delivery: '#8b5cf6', // violet
+      delivered: '#22c55e', // green
+      cancelled: '#ef4444', // red
+      on_hold: '#6b7280' // gray
+    };
+    
+    return colors[status] || '#6b7280';
+  },
+
+  /**
+   * Validar datos de orden
+   */
+  validateOrderData(orderData) {
+    const errors = [];
+    
+    if (!orderData.designId) {
+      errors.push('ID de diseño requerido');
+    }
+    
+    if (!orderData.quantity || orderData.quantity < 1) {
+      errors.push('Cantidad debe ser mayor a 0');
+    }
+    
+    if (!orderData.deliveryType || !['delivery', 'meetup'].includes(orderData.deliveryType)) {
+      errors.push('Tipo de entrega inválido');
+    }
+    
+    if (orderData.deliveryType === 'delivery' && !orderData.deliveryAddress) {
+      errors.push('Dirección de entrega requerida');
+    }
+    
+    if (!orderData.paymentData || !orderData.paymentData.method) {
+      errors.push('Método de pago requerido');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   },
 
   /**
    * Manejo de errores centralizado
    */
   handleError(error) {
-    if (error.response) {
-      // Error de respuesta del servidor
-      const errorData = {
-        status: error.response.status,
-        message: error.response.data?.message || 'Error del servidor',
-        errors: error.response.data?.errors || null,
-        code: error.response.data?.error || 'SERVER_ERROR'
-      };
-      
-      // Logs específicos para diferentes errores
-      if (error.response.status === 401) {
-        console.error('❌ [orderService] Error de autenticación');
-      } else if (error.response.status === 403) {
-        console.error('❌ [orderService] Sin permisos');
-      } else if (error.response.status === 404) {
-        console.error('❌ [orderService] Recurso no encontrado');
-      }
-      
-      return errorData;
-    } else if (error.request) {
-      // Error de conexión
+    if (error.response?.data) {
       return {
-        status: 0,
-        message: 'Error de conexión. Verifica tu internet.',
-        code: 'NETWORK_ERROR'
-      };
-    } else {
-      // Error de configuración
-      return {
-        status: 0,
-        message: error.message || 'Error inesperado',
-        code: 'CLIENT_ERROR'
+        message: error.response.data.message || 'Error en el servicio de órdenes',
+        code: error.response.data.error || 'ORDER_ERROR',
+        statusCode: error.response.status
       };
     }
+    
+    if (error.code === 'NETWORK_ERROR') {
+      return {
+        message: 'Error de conexión. Verifica tu conexión a internet.',
+        code: 'NETWORK_ERROR'
+      };
+    }
+    
+    return {
+      message: error.message || 'Error desconocido en órdenes',
+      code: 'UNKNOWN_ERROR'
+    };
   }
 };
 

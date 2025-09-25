@@ -57,7 +57,6 @@ import {
   CheckCircle,
   XCircle
 } from '@phosphor-icons/react';
-import { usePaymentConfig, usePaymentStats, usePaymentActions } from '../../hooks/usePayments';
 import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
 import { usePaymentModals } from '../../hooks/usePaymentModals';
 import PaymentMethodConfigModal from '../../components/PaymentMethodModals/PaymentMethodConfigModal';
@@ -1095,7 +1094,7 @@ const PaymentMethods = () => {
                 <Button
                   variant="contained"
                   startIcon={<Plus size={20} weight="bold" />}
-                  onClick={() => handleOpenMethodDialog()}
+                  onClick={() => handleOpenConfigMethodDialog()}
                   sx={{
                     background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
                     color: 'white',
@@ -1127,7 +1126,7 @@ const PaymentMethods = () => {
       {isMobile && (
         <Fab
           color="primary"
-          onClick={() => handleOpenMethodDialog()}
+          onClick={() => handleOpenConfigMethodDialog()}
           sx={{
             position: 'fixed',
             bottom: { xs: 20, sm: 24 },
