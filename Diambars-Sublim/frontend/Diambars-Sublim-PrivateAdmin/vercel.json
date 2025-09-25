@@ -3,8 +3,14 @@
     "installCommand": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
     "framework": "vite",
     "outputDirectory": "dist",
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "https://expo2025-8bjn.onrender.com/api/$1"
+      }
+    ],
     "env": {
       "NODE_ENV": "production",
-      "VITE_API_URL": "https://expo2025-8bjn.onrender.com/api"
+      "VITE_API_URL": "/api"
     }
   }
