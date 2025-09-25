@@ -1,5 +1,5 @@
 import React from 'react';
-import useAdminReviews from '../../hooks/useAdminReviews'; // Ajusta la ruta según tu estructura
+import { useAdminReviews } from '../../hooks/useAdminReviews'; // Ajusta la ruta según tu estructura
 import {
   Box,
   Button,
@@ -50,10 +50,9 @@ const ReviewsManagement = () => {
     handleViewReview,
     handleClearFilters,
     fetchAllReviews,
-    getStats
+    getStats,
+    stats
   } = useAdminReviews();
-
-  const stats = getStats();
 
   const getStatusText = (status) => {
     const statusTexts = {

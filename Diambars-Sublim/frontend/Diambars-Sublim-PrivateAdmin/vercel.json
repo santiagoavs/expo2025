@@ -1,6 +1,6 @@
 {
-    "buildCommand": "npm ci --legacy-peer-deps && npm run build:vercel",
-    "installCommand": "npm ci --legacy-peer-deps",
+    "buildCommand": "npm run build:vercel-fix",
+    "installCommand": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
     "framework": "vite",
     "outputDirectory": "dist",
     "env": {

@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://192.168.56.1:4000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api',
   withCredentials: false, // IMPORTANTE: Panel admin NO usa cookies
   timeout: 15000,
   headers: {

@@ -259,59 +259,25 @@ export const getReviewStats = async (req, res) => {
   try {
     console.log('📊 [Reviews] Obteniendo estadísticas de reseñas');
 
-    // Obtener estadísticas básicas
+    // Obtener estadísticas básicas de forma simple
     const totalReviews = await Review.countDocuments();
     const pendingReviews = await Review.countDocuments({ status: 'pending' });
     const approvedReviews = await Review.countDocuments({ status: 'approved' });
     const rejectedReviews = await Review.countDocuments({ status: 'rejected' });
 
-    // Obtener rating promedio
-    const ratingStats = await Review.aggregate([
-      { $match: { status: 'approved' } },
-      {
-        $group: {
-          _id: null,
-          averageRating: { $avg: '$rating' },
-          totalRatings: { $sum: 1 },
-          ratingDistribution: {
-            $push: '$rating'
-          }
-        }
-      }
-    ]);
+    // Obtener rating promedio de forma simple
+    const approvedReviewsData = await Review.find({ status: 'approved' }, 'rating');
+    const totalRatings = approvedReviewsData.length;
+    const averageRating = totalRatings > 0 
+      ? Math.round((approvedReviewsData.reduce((sum, review) => sum + review.rating, 0) / totalRatings) * 10) / 10
+      : 0;
 
-    // Obtener distribución de ratings
-    const ratingDistribution = await Review.aggregate([
-      { $match: { status: 'approved' } },
-      {
-        $group: {
-          _id: '$rating',
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
-    // Obtener reseñas por mes (últimos 6 meses)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-    const monthlyStats = await Review.aggregate([
-      { $match: { createdAt: { $gte: sixMonthsAgo } } },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          count: { $sum: 1 },
-          approved: {
-            $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] }
-          }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
-    ]);
+    // Obtener distribución de ratings de forma simple
+    const ratingDistribution = [];
+    for (let i = 1; i <= 5; i++) {
+      const count = await Review.countDocuments({ status: 'approved', rating: i });
+      ratingDistribution.push({ _id: i, count });
+    }
 
     const stats = {
       overview: {
@@ -321,12 +287,12 @@ export const getReviewStats = async (req, res) => {
         rejected: rejectedReviews
       },
       rating: {
-        average: ratingStats[0]?.averageRating ? Math.round(ratingStats[0].averageRating * 10) / 10 : 0,
-        total: ratingStats[0]?.totalRatings || 0,
+        average: averageRating,
+        total: totalRatings,
         distribution: ratingDistribution
       },
       trends: {
-        monthly: monthlyStats
+        monthly: [] // Simplificado por ahora
       }
     };
 
