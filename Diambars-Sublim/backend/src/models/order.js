@@ -149,7 +149,11 @@ const orderSchema = new mongoose.Schema({
       'quoted',            // Cotizado, esperando pago/confirmación
       'approved',          // Aprobado, listo para producción
       'in_production',     // En producción
+      'quality_check',     // Control de calidad
+      'quality_approved',  // Calidad aprobada
+      'packaging',         // Empacando
       'ready_for_delivery', // Listo para entrega
+      'out_for_delivery',  // En camino/punto de encuentro
       'delivered',         // Entregado
       'completed',         // Completado y cerrado
       'cancelled',         // Cancelado
@@ -287,6 +291,32 @@ const orderSchema = new mongoose.Schema({
   actualReadyDate: Date,
   deliveredAt: Date,
   completedAt: Date,
+  
+  // Fotos de producción y calidad
+  productionPhotos: [{
+    stage: {
+      type: String,
+      enum: ['cutting', 'printing', 'pressing', 'quality_check', 'packaging'],
+      required: true
+    },
+    photoUrl: { 
+      type: String, 
+      required: true 
+    },
+    uploadedAt: { 
+      type: Date, 
+      default: Date.now 
+    },
+    uploadedBy: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Employee' 
+    },
+    notes: String,
+    isQualityPhoto: { 
+      type: Boolean, 
+      default: false 
+    }
+  }],
   
   // ==================== NOTAS Y COMUNICACIÓN ====================
   

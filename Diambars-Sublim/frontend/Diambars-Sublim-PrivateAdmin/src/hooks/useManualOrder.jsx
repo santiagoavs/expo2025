@@ -33,12 +33,17 @@ export const useManualOrder = () => {
       
       const response = await manualOrderService.createManualOrder(finalOrderData);
       
+      console.log('📝 [useManualOrder] Respuesta del servidor:', response);
+      
       if (response.success) {
+        const orderNumber = response.data.order?.orderNumber || response.data.orderNumber || 'N/A';
+        console.log('📝 [useManualOrder] OrderNumber extraído:', orderNumber);
         await Swal.fire({
           title: 'Pedido manual creado',
-          text: `Pedido ${response.data.orderNumber} creado exitosamente`,
+          text: `Pedido ${orderNumber} creado exitosamente`,
           icon: 'success',
-          confirmButtonColor: '#1F64BF'
+          confirmButtonColor: '#1F64BF',
+          zIndex: 10000 // Asegurar que esté por encima del modal
         });
         
         // Limpiar formulario

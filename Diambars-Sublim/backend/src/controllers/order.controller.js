@@ -49,11 +49,27 @@ orderController.createOrder = async (req, res) => {
       req.body.deliveryAddress = addressValidation.cleaned;
     }
 
+    // Buscar el diseño en la base de datos
+    const design = await Design.findById(req.body.designId).populate('product user');
+    if (!design) {
+      return res.status(404).json({
+        success: false,
+        message: "Diseño no encontrado",
+        error: 'DESIGN_NOT_FOUND'
+      });
+    }
+
     // Usar datos limpios de la validación
     const orderData = {
       ...orderValidation.cleaned,
-      userId: req.user._id,
-      isManualOrder: req.body.isManualOrder || false
+      design, // Pasar el objeto design completo
+      targetUserId: req.body.userId || req.user._id, // Usar userId del body o el usuario autenticado
+      isManualOrder: req.body.isManualOrder || false,
+      paymentData: req.body.paymentData, // Pasar los datos de pago
+      deliveryType: req.body.deliveryType,
+      deliveryAddress: req.body.deliveryAddress,
+      quantity: req.body.quantity || 1,
+      clientNotes: req.body.notes
     };
     
     // Crear pedido usando el servicio
@@ -68,7 +84,7 @@ orderController.createOrder = async (req, res) => {
       success: true,
       message: "Pedido creado exitosamente",
       data: {
-        order: newOrder.toSafeObject(),
+        order: newOrder.toPublicObject(),
         _links: {
           order: `/api/orders/${newOrder._id}`,
           tracking: `/api/orders/${newOrder._id}/tracking`
@@ -77,7 +93,10 @@ orderController.createOrder = async (req, res) => {
     });
 
   } catch (error) {
-    await session.abortTransaction();
+    // Solo hacer abort si la transacción no fue committeada
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.error("❌ Error en createOrder:", error);
     
     res.status(error.statusCode || 500).json({
@@ -640,6 +659,278 @@ orderController.updateOrderStatus = async (req, res) => {
     res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || "Error al actualizar estado",
+      error: error.code || 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtener detalles de pago de una orden
+ */
+orderController.getOrderPaymentDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const isAdmin = req.user.role && ['admin', 'manager'].includes(req.user.role);
+
+    // Validar ID de la orden
+    const orderIdValidation = validators.mongoId(id, 'ID de pedido');
+    if (!orderIdValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de pedido inválido",
+        error: orderIdValidation.error
+      });
+    }
+
+    // Buscar orden
+    const query = { _id: orderIdValidation.cleaned };
+    if (!isAdmin) {
+      query.user = userId; // Los usuarios solo pueden ver sus propias órdenes
+    }
+
+    const order = await Order.findOne(query)
+      .populate('user', 'name email phoneNumber')
+      .select('orderNumber status payment deliveryType deliveryAddress meetupDetails total subtotal deliveryFee tax createdAt');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido no encontrado",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Preparar respuesta con información de pago
+    const paymentDetails = {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      payment: {
+        method: order.payment?.method,
+        status: order.payment?.status,
+        totalPaid: order.payment?.totalPaid || 0,
+        balance: order.payment?.balance || order.total,
+        lastPaidAt: order.payment?.lastPaidAt,
+        requiresAdvancePayment: order.requiresAdvancePayment(),
+        paymentProgress: Math.round(((order.payment?.totalPaid || 0) / order.total) * 100)
+      },
+      financial: {
+        subtotal: order.subtotal,
+        deliveryFee: order.deliveryFee,
+        tax: order.tax,
+        total: order.total
+      },
+      delivery: {
+        type: order.deliveryType,
+        address: order.deliveryAddress,
+        meetupDetails: order.meetupDetails
+      },
+      createdAt: order.createdAt
+    };
+
+    // Si es admin, agregar información adicional
+    if (isAdmin) {
+      paymentDetails.payment.metadata = order.payment?.metadata;
+      paymentDetails.payment.primaryPaymentId = order.payment?.primaryPaymentId;
+      paymentDetails.user = {
+        name: order.user.name,
+        email: order.user.email,
+        phoneNumber: order.user.phoneNumber
+      };
+    }
+
+    res.status(200).json({
+      success: true,
+      data: paymentDetails
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getOrderPaymentDetails:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error al obtener detalles de pago",
+      error: error.code || 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtener línea de tiempo de una orden (para usuarios)
+ */
+orderController.getOrderTimeline = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const isAdmin = req.user.role && ['admin', 'manager'].includes(req.user.role);
+
+    // Validar ID de la orden
+    const orderIdValidation = validators.mongoId(id, 'ID de pedido');
+    if (!orderIdValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de pedido inválido",
+        error: orderIdValidation.error
+      });
+    }
+
+    // Buscar orden
+    const query = { _id: orderIdValidation.cleaned };
+    if (!isAdmin) {
+      query.user = userId;
+    }
+
+    const order = await Order.findOne(query)
+      .populate('statusHistory.changedBy', 'name email')
+      .populate('productionPhotos.uploadedBy', 'name')
+      .select('orderNumber status statusHistory productionPhotos createdAt quotedAt approvedAt actualReadyDate deliveredAt completedAt');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Pedido no encontrado",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Construir línea de tiempo
+    const timeline = [];
+
+    // Evento: Pedido creado
+    timeline.push({
+      event: 'order_created',
+      title: 'Pedido Creado',
+      description: 'Tu pedido ha sido recibido y está siendo revisado',
+      timestamp: order.createdAt,
+      status: 'completed',
+      icon: '📝'
+    });
+
+    // Evento: Cotizado
+    if (order.quotedAt) {
+      timeline.push({
+        event: 'quoted',
+        title: 'Pedido Cotizado',
+        description: 'Tu pedido ha sido cotizado y está esperando confirmación',
+        timestamp: order.quotedAt,
+        status: 'completed',
+        icon: '💰'
+      });
+    }
+
+    // Evento: Aprobado
+    if (order.approvedAt) {
+      timeline.push({
+        event: 'approved',
+        title: 'Pedido Aprobado',
+        description: 'Tu pedido ha sido aprobado y entrará en producción',
+        timestamp: order.approvedAt,
+        status: 'completed',
+        icon: '✅'
+      });
+    }
+
+    // Eventos de producción (basados en fotos)
+    const productionStages = {
+      'cutting': { title: 'Corte', icon: '✂️' },
+      'printing': { title: 'Impresión', icon: '🖨️' },
+      'pressing': { title: 'Prensado', icon: '🔥' },
+      'quality_check': { title: 'Control de Calidad', icon: '🔍' },
+      'packaging': { title: 'Empacado', icon: '📦' }
+    };
+
+    // Agrupar fotos por etapa
+    const photosByStage = order.productionPhotos.reduce((acc, photo) => {
+      if (!acc[photo.stage]) acc[photo.stage] = [];
+      acc[photo.stage].push(photo);
+      return acc;
+    }, {});
+
+    // Agregar eventos de producción
+    Object.entries(productionStages).forEach(([stage, config]) => {
+      const stagePhotos = photosByStage[stage] || [];
+      if (stagePhotos.length > 0) {
+        const latestPhoto = stagePhotos[stagePhotos.length - 1];
+        timeline.push({
+          event: `production_${stage}`,
+          title: config.title,
+          description: `Etapa de ${config.title.toLowerCase()} completada`,
+          timestamp: latestPhoto.uploadedAt,
+          status: 'completed',
+          icon: config.icon,
+          photos: stagePhotos.map(photo => ({
+            url: photo.photoUrl,
+            notes: photo.notes,
+            uploadedAt: photo.uploadedAt
+          }))
+        });
+      }
+    });
+
+    // Evento: Listo para entrega
+    if (order.actualReadyDate) {
+      timeline.push({
+        event: 'ready_for_delivery',
+        title: 'Listo para Entrega',
+        description: 'Tu pedido está listo y será enviado pronto',
+        timestamp: order.actualReadyDate,
+        status: 'completed',
+        icon: '🚚'
+      });
+    }
+
+    // Evento: Entregado
+    if (order.deliveredAt) {
+      timeline.push({
+        event: 'delivered',
+        title: 'Entregado',
+        description: 'Tu pedido ha sido entregado exitosamente',
+        timestamp: order.deliveredAt,
+        status: 'completed',
+        icon: '✅'
+      });
+    }
+
+    // Evento: Completado
+    if (order.completedAt) {
+      timeline.push({
+        event: 'completed',
+        title: 'Pedido Completado',
+        description: 'Tu pedido ha sido completado. ¡Gracias por tu compra!',
+        timestamp: order.completedAt,
+        status: 'completed',
+        icon: '🎉'
+      });
+    }
+
+    // Ordenar por fecha
+    timeline.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    // Marcar el evento actual
+    const currentStatusIndex = timeline.findIndex(event => 
+      event.event.includes(order.status) || 
+      (order.status === 'in_production' && event.event.startsWith('production_'))
+    );
+
+    if (currentStatusIndex !== -1) {
+      timeline[currentStatusIndex].status = 'current';
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        orderNumber: order.orderNumber,
+        currentStatus: order.status,
+        timeline,
+        totalEvents: timeline.length,
+        completedEvents: timeline.filter(e => e.status === 'completed').length
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getOrderTimeline:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error al obtener línea de tiempo",
       error: error.code || 'INTERNAL_ERROR'
     });
   }

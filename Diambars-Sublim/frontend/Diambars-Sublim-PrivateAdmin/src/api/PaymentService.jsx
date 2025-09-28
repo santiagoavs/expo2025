@@ -11,7 +11,7 @@ const paymentService = {
     try {
       console.log('💳 [paymentService] Procesando pago para orden:', orderId, paymentData);
       
-      const response = await apiClient.post(`/payments/orders/${orderId}/process`, paymentData);
+      const response = await apiClient.post(`/payments/create`, { orderId, ...paymentData });
       
       return response;
     } catch (error) {
@@ -81,7 +81,7 @@ const paymentService = {
     try {
       console.log('📊 [paymentService] Obteniendo estado de pagos:', orderId);
       
-      const response = await apiClient.get(`/payments/orders/${orderId}/status`);
+      const response = await apiClient.get(`/payments/status/${orderId}`);
       
       return response;
     } catch (error) {

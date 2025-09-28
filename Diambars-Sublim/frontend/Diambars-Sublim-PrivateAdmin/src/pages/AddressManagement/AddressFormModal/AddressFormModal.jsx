@@ -444,7 +444,8 @@ const AddressFormModal = ({
   editMode = false,
   addressToEdit = null,
   users = [],
-  loadingUsers = false
+  loadingUsers = false,
+  preSelectedUserId = null // Nueva prop para pre-seleccionar usuario
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -472,7 +473,7 @@ const AddressFormModal = ({
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    userId: '',
+    userId: preSelectedUserId || '', // Pre-seleccionar usuario si se proporciona
     label: '',
     recipient: '',
     phoneNumber: '',
@@ -489,9 +490,20 @@ const AddressFormModal = ({
   const [estimatedFee, setEstimatedFee] = useState(0);
   const [coordinatesFromMap, setCoordinatesFromMap] = useState(null);
 
+  // ==================== EFECTOS ====================
+  // Actualizar userId cuando cambie preSelectedUserId
+  useEffect(() => {
+    if (preSelectedUserId && preSelectedUserId !== formData.userId) {
+      setFormData(prev => ({
+        ...prev,
+        userId: preSelectedUserId
+      }));
+    }
+  }, [preSelectedUserId, formData.userId]);
+
   // ==================== DATOS CALCULADOS ====================
   const selectedUser = useMemo(() => {
-    return users.find(user => user.id === formData.userId) || null;
+    return users.find(user => (user.id || user._id) === formData.userId) || null;
   }, [users, formData.userId]);
 
   const availableMunicipalities = useMemo(() => {

@@ -222,6 +222,10 @@ app.use("/api/reviews", jsonMiddleware, reviewsRoutes);
 // ========== RUTAS DE DISEÑOS ==========
 app.use("/api/designs", jsonMiddleware, designRoutes);
 
+// ========== RUTAS DE PRODUCCIÓN ==========
+import productionRoutes from './src/routes/production.routes.js';
+app.use("/api/production", jsonMiddleware, productionRoutes);
+
 // ========== RUTAS DE PEDIDOS ==========
 // Webhook de Wompi sin autenticación y con raw body
 app.post('/api/orders/webhook/wompi', 

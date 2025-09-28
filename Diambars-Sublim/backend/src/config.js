@@ -32,6 +32,13 @@ export const config = {
     cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
     cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
   },
+  // ✅ CONFIGURACIÓN TWILIO PARA WHATSAPP
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    whatsappNumber: process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886',
+    isEnabled: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+  },
   // ✅ CONFIGURACIÓN WOMPI SIMPLIFICADA
   wompi: {
     // Determinar si está habilitado basado en presencia de claves

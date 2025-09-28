@@ -52,11 +52,12 @@ import {
   MapPin,
   Calendar,
   User,
-  Receipt
+  Receipt,
 } from '@phosphor-icons/react';
 
 import { useOrders, useDashboardStats } from '../../hooks/useOrders';
 import ManualOrderForm from './Components/ManualOrderForm';
+import OrderDetailsModal from './Components/OrderDetailModal';
 
 // Configuración global de SweetAlert2
 Swal.mixin({
@@ -554,8 +555,13 @@ const StatusChip = styled(Chip)(({ status, theme }) => {
       quoted: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
       approved: { bg: '#d1fae5', color: '#065f46', border: '#10b981' },
       in_production: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6' },
+      quality_check: { bg: '#fed7aa', color: '#9a3412', border: '#f97316' },
+      quality_approved: { bg: '#ecfccb', color: '#365314', border: '#84cc16' },
+      packaging: { bg: '#f3e8ff', color: '#581c87', border: '#a855f7' },
       ready_for_delivery: { bg: '#e9d5ff', color: '#7c2d12', border: '#8b5cf6' },
+      out_for_delivery: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
       delivered: { bg: '#dcfce7', color: '#166534', border: '#22c55e' },
+      completed: { bg: '#d1fae5', color: '#064e3b', border: '#059669' },
       cancelled: { bg: '#fee2e2', color: '#991b1b', border: '#ef4444' },
       on_hold: { bg: '#f3f4f6', color: '#374151', border: '#6b7280' }
     };
@@ -607,6 +613,7 @@ const Orders = () => {
 
   // ==================== ESTADOS LOCALES ====================
   const [showManualOrderModal, setShowManualOrderModal] = useState(false);
+  const [showOrderDetailsModal, setShowOrderDetailsModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOption, setSortOption] = useState('newest');
@@ -678,6 +685,12 @@ const Orders = () => {
   const handleOrderCreated = async () => {
     setShowManualOrderModal(false);
     await refreshOrders();
+  };
+
+  const handleViewOrderDetails = (order) => {
+    console.log('👁️ [Orders] Abriendo detalles de orden:', order._id);
+    setSelectedOrder(order);
+    setShowOrderDetailsModal(true);
   };
 
   const handleStatusChange = async (orderId, newStatus, orderNumber) => {
@@ -916,8 +929,13 @@ const Orders = () => {
                   <MenuItem value="quoted">Cotizado</MenuItem>
                   <MenuItem value="approved">Aprobado</MenuItem>
                   <MenuItem value="in_production">En Producción</MenuItem>
+                  <MenuItem value="quality_check">Control de Calidad</MenuItem>
+                  <MenuItem value="quality_approved">Calidad Aprobada</MenuItem>
+                  <MenuItem value="packaging">Empacando</MenuItem>
                   <MenuItem value="ready_for_delivery">Listo para Entrega</MenuItem>
+                  <MenuItem value="out_for_delivery">En Camino</MenuItem>
                   <MenuItem value="delivered">Entregado</MenuItem>
+                  <MenuItem value="completed">Completado</MenuItem>
                   <MenuItem value="cancelled">Cancelado</MenuItem>
                 </Select>
               </FormControl>
@@ -1079,20 +1097,36 @@ const Orders = () => {
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Más acciones">
-                          <IconButton
-                            onClick={(e) => handleMenuClick(e, order)}
-                            size="small"
-                            sx={{
-                              color: '#032CA6',
-                              '&:hover': {
-                                backgroundColor: alpha('#1F64BF', 0.08),
-                              }
-                            }}
-                          >
-                            <DotsThreeVertical size={18} weight="bold" />
-                          </IconButton>
-                        </Tooltip>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          <Tooltip title="Ver detalles">
+                            <IconButton
+                              onClick={() => handleViewOrderDetails(order)}
+                              size="small"
+                              sx={{
+                                color: '#10b981',
+                                '&:hover': {
+                                  backgroundColor: alpha('#10b981', 0.08),
+                                }
+                              }}
+                            >
+                              <Eye size={18} weight="bold" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Más acciones">
+                            <IconButton
+                              onClick={(e) => handleMenuClick(e, order)}
+                              size="small"
+                              sx={{
+                                color: '#032CA6',
+                                '&:hover': {
+                                  backgroundColor: alpha('#1F64BF', 0.08),
+                                }
+                              }}
+                            >
+                              <DotsThreeVertical size={18} weight="bold" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1302,6 +1336,20 @@ const Orders = () => {
             onOrderCreated={handleOrderCreated}
           />
         </Dialog>
+
+        {/* Modal de detalles de orden */}
+        <OrderDetailsModal
+          open={showOrderDetailsModal}
+          onClose={() => {
+            setShowOrderDetailsModal(false);
+            setSelectedOrder(null);
+          }}
+          order={selectedOrder}
+          onStatusChange={(orderId, newStatus) => {
+            // Refrescar órdenes después del cambio de estado
+            refreshOrders();
+          }}
+        />
       </OrdersContentWrapper>
     </OrdersPageContainer>
   );

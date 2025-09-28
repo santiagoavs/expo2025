@@ -1,6 +1,7 @@
 // services/notificationService.js - Servicio simplificado de notificaciones
 import nodemailer from 'nodemailer';
 import { config } from '../../config.js';
+import { whatsAppService } from '../whatsapp/WhatsAppService.js';
 
 const transporter = nodemailer.createTransport({
   host: config.email.host,
@@ -13,6 +14,22 @@ const transporter = nodemailer.createTransport({
 });
 
 export const notificationService = {
+
+  // ==================== CONFIGURACIÓN DE NOTIFICACIONES ====================
+  
+  /**
+   * Verificar si el email está disponible
+   */
+  async isEmailAvailable() {
+    try {
+      // Intentar crear una conexión de prueba
+      await transporter.verify();
+      return true;
+    } catch (error) {
+      console.log('⚠️ Email no disponible:', error.message);
+      return false;
+    }
+  },
 
   // ==================== NOTIFICACIONES DE PEDIDOS ====================
 
@@ -159,40 +176,64 @@ export const notificationService = {
   },
 
   /**
-   * Notificar actualización de estado al cliente
+   * Notificar actualización de estado al cliente (Email + WhatsApp)
    */
   async sendStatusUpdateNotification(data) {
     try {
-      const { orderNumber, newStatus, previousStatus, notes, userEmail, userName } = data;
+      const { orderNumber, newStatus, previousStatus, notes, userEmail, userName, userPhone, order } = data;
 
       const statusMessages = {
         'quoted': 'Tu pedido ha sido cotizado',
         'approved': 'Tu pedido ha sido aprobado',
         'in_production': 'Tu pedido está en producción',
+        'quality_check': 'Tu pedido está en control de calidad',
+        'quality_approved': 'Tu pedido ha pasado el control de calidad',
+        'packaging': 'Tu pedido está siendo empacado',
         'ready_for_delivery': 'Tu pedido está listo para entrega',
+        'out_for_delivery': 'Tu pedido está en camino',
         'delivered': 'Tu pedido ha sido entregado',
         'completed': 'Tu pedido ha sido completado',
         'cancelled': 'Tu pedido ha sido cancelado'
       };
 
-      const mailOptions = {
-        from: config.email.from,
-        to: userEmail,
-        subject: `📦 Actualización de Pedido - ${orderNumber}`,
-        html: `
-          <h2>${statusMessages[newStatus] || 'Actualización de tu pedido'}</h2>
-          <p><strong>Hola ${userName},</strong></p>
-          <p><strong>Pedido:</strong> ${orderNumber}</p>
-          <p><strong>Estado Anterior:</strong> ${previousStatus}</p>
-          <p><strong>Nuevo Estado:</strong> ${newStatus}</p>
-          ${notes ? `<p><strong>Notas:</strong> ${notes}</p>` : ''}
-          <br>
-          <p>Puedes ver más detalles en tu panel de cliente o rastrear tu pedido en línea.</p>
-        `
-      };
+      // Verificar si el email está disponible
+      const emailAvailable = await this.isEmailAvailable();
+      
+      if (emailAvailable) {
+        // Enviar email
+        const mailOptions = {
+          from: config.email.from,
+          to: userEmail,
+          subject: `📦 Actualización de Pedido - ${orderNumber}`,
+          html: `
+            <h2>${statusMessages[newStatus] || 'Actualización de tu pedido'}</h2>
+            <p><strong>Hola ${userName},</strong></p>
+            <p><strong>Pedido:</strong> ${orderNumber}</p>
+            <p><strong>Estado Anterior:</strong> ${previousStatus}</p>
+            <p><strong>Nuevo Estado:</strong> ${newStatus}</p>
+            ${notes ? `<p><strong>Notas:</strong> ${notes}</p>` : ''}
+            <br>
+            <p>Puedes ver más detalles en tu panel de cliente o rastrear tu pedido en línea.</p>
+          `
+        };
 
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Notificación de actualización de estado enviada');
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Notificación de actualización de estado enviada por email');
+      } else {
+        console.log('⚠️ Email no disponible - usando solo WhatsApp');
+      }
+
+      // Enviar WhatsApp si el usuario tiene número de teléfono
+      if (userPhone && order) {
+        try {
+          await whatsAppService.sendOrderUpdateWithPhoto(order, newStatus);
+          console.log('✅ Notificación de actualización de estado enviada por WhatsApp');
+        } catch (whatsappError) {
+          console.error('⚠️ Error enviando WhatsApp (no crítico):', whatsappError.message);
+        }
+      } else if (!emailAvailable && !userPhone) {
+        console.log('⚠️ No se puede notificar: Email y WhatsApp no disponibles');
+      }
 
     } catch (error) {
       console.error('❌ Error enviando notificación de actualización:', error);
@@ -447,6 +488,69 @@ export const notificationService = {
 
     } catch (error) {
       console.error('❌ Error enviando notificación de pago en efectivo:', error);
+    }
+  },
+
+  // ==================== NOTIFICACIONES DE FOTOS DE CALIDAD ====================
+
+  /**
+   * Enviar foto de calidad por WhatsApp
+   */
+  async sendQualityPhotoNotification(order, stage, photoUrl, notes = '') {
+    try {
+      if (!order.user.phoneNumber) {
+        console.log('⚠️ Usuario sin número de teléfono, saltando WhatsApp');
+        return;
+      }
+
+      const message = whatsAppService.buildQualityPhotoMessage(order, stage, photoUrl);
+      await whatsAppService.sendPhotoMessage(order.user.phoneNumber, message, photoUrl);
+      
+      console.log(`✅ Foto de calidad enviada por WhatsApp - Etapa: ${stage}`);
+      
+    } catch (error) {
+      console.error('❌ Error enviando foto de calidad por WhatsApp:', error);
+    }
+  },
+
+  /**
+   * Notificar pedido grande con adelanto
+   */
+  async sendLargeOrderAdvanceNotification(order, advanceAmount, totalAmount) {
+    try {
+      // Email al cliente
+      const mailOptions = {
+        from: config.email.from,
+        to: order.user.email,
+        subject: `💰 Pedido Grande - Adelanto Requerido - ${order.orderNumber}`,
+        html: `
+          <h2>Pedido Grande - Adelanto Requerido</h2>
+          <p><strong>Hola ${order.user.name},</strong></p>
+          <p><strong>Pedido:</strong> ${order.orderNumber}</p>
+          <p><strong>Total:</strong> $${totalAmount}</p>
+          <p><strong>Adelanto requerido:</strong> $${advanceAmount} (30%)</p>
+          <p><strong>Saldo restante:</strong> $${totalAmount - advanceAmount}</p>
+          <br>
+          <p>Para pedidos grandes requerimos un adelanto del 30% para comenzar la producción.</p>
+          <p>Puedes pagar el adelanto ahora y el saldo al recibir tu pedido.</p>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Notificación de adelanto enviada por email');
+
+      // WhatsApp si tiene número
+      if (order.user.phoneNumber) {
+        try {
+          await whatsAppService.sendLargeOrderAdvanceNotification(order, advanceAmount, totalAmount);
+          console.log('✅ Notificación de adelanto enviada por WhatsApp');
+        } catch (whatsappError) {
+          console.error('⚠️ Error enviando WhatsApp de adelanto:', whatsappError.message);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Error enviando notificación de adelanto:', error);
     }
   },
 

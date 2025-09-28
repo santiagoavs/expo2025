@@ -292,7 +292,7 @@ const manualOrderService = {
     const errors = [];
     
     // Validaciones básicas
-    if (!orderData.customerId && !orderData.customerData) {
+    if (!orderData.userId && !orderData.customerId && !orderData.customerData) {
       errors.push('Cliente requerido (ID existente o datos de nuevo cliente)');
     }
     

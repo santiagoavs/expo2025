@@ -37,12 +37,13 @@ import {
   Warning,
   Clock,
   Upload,
-  DownloadSimple,
-  ExpandMore,
-  RefreshCw
+  Download,
+  CaretDown,
+  ArrowsClockwise,
+  Plus
 } from '@phosphor-icons/react';
 
-import { usePayments, usePendingTransfers } from '../../hooks/usePayments';
+import { usePayments, usePendingTransfers } from '../../../hooks/usePayments';
 import Swal from 'sweetalert2';
 
 // ================ ESTILOS ================
@@ -333,7 +334,7 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
           {/* Información específica por método */}
           {payment.method === 'bank_transfer' && payment.transferDetails && (
             <Accordion sx={{ mt: 2 }}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
+              <AccordionSummary expandIcon={<CaretDown />}>
                 <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
                   Detalles de la transferencia
                 </Typography>
@@ -356,7 +357,7 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
                     <Grid item xs={12}>
                       <ActionButton
                         size="small"
-                        startIcon={<DownloadSimple size={14} />}
+                        startIcon={<Download size={14} />}
                         onClick={() => window.open(payment.transferDetails.proofUrl, '_blank')}
                       >
                         Ver comprobante
@@ -436,7 +437,7 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
             onClick={onRefresh}
             sx={{ color: '#1F64BF' }}
           >
-            <RefreshCw size={16} />
+            <ArrowsClockwise size={16} />
           </IconButton>
           <ActionButton
             size="small"

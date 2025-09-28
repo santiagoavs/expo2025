@@ -319,7 +319,7 @@ export const orderService = {
         options: design.productOptions || [],
         quantity,
         unitPrice,
-        subtotal,
+        totalPrice: subtotal, // Cambiar subtotal por totalPrice
         status: 'pending',
         productionStatus: 'not_started',
         productionStages: this.getInitialProductionStages()
@@ -1211,7 +1211,9 @@ export const orderService = {
       previousStatus,
       notes: cleanedNotes,
       userEmail: order.user.email,
-      userName: order.user.name
+      userName: order.user.name,
+      userPhone: order.user.phoneNumber,
+      order: order
     }).catch(console.error);
 
     return {

@@ -1,7 +1,7 @@
 // routes/order.routes.js - REORGANIZADO Y SIMPLIFICADO
 import { Router } from "express";
 import orderController from "../controllers/order.controller.js";
-import { processOrderPayment, confirmPayment, submitTransferProof, cancelPayment, getOrderPaymentStatus, getPaymentDetails, listPayments, getPendingTransfers, generateCashReport, handleWompiWebhook, resendTransferInstructions, rejectTransfer, getCustomerPaymentHistory } from "../controllers/payment.controller.js";
+import paymentController from "../controllers/payment.controller.js";
 import reportController from "../controllers/report.controller.js";
 import { authRequired, roleRequired } from "../middlewares/auth.middleware.js";
 import { validateRequest, validateMongoId } from "../middlewares/validation.middleware.js";
@@ -10,7 +10,7 @@ import { body, param, query } from "express-validator";
 const router = Router();
 
 // ==================== WEBHOOKS (SIN AUTENTICACIÓN) ====================
-router.post('/webhook/wompi', handleWompiWebhook);
+router.post('/webhook/wompi', paymentController.handleWompiWebhook);
 
 // ==================== RUTAS DE PEDIDOS ====================
 
@@ -112,6 +112,22 @@ router.post('/:id/cash-payment',
   body('paymentLocation').isLength({ min: 5, max: 200 }),
   validateRequest,
   orderController.registerCashPayment
+);
+
+// ==================== NUEVOS ENDPOINTS ====================
+
+// Obtener detalles de pago de una orden
+router.get('/:id/payment-details',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderPaymentDetails
+);
+
+// Obtener línea de tiempo de una orden (para usuarios)
+router.get('/:id/timeline',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderTimeline
 );
 
 // ==================== RUTAS DE PAGOS ====================

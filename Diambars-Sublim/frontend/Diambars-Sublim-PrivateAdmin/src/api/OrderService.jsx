@@ -289,8 +289,13 @@ const orderService = {
       quoted: 'Cotizado',
       approved: 'Aprobado',
       in_production: 'En Producción',
+      quality_check: 'Control de Calidad',
+      quality_approved: 'Calidad Aprobada',
+      packaging: 'Empacando',
       ready_for_delivery: 'Listo para Entrega',
+      out_for_delivery: 'En Camino',
       delivered: 'Entregado',
+      completed: 'Completado',
       cancelled: 'Cancelado',
       on_hold: 'En Espera'
     };
@@ -315,10 +320,10 @@ const orderService = {
         hour: '2-digit',
         minute: '2-digit'
       }),
-      isCompleted: ['delivered', 'cancelled'].includes(order.status),
+      isCompleted: ['delivered', 'completed', 'cancelled'].includes(order.status),
       isPending: ['pending_approval', 'quoted'].includes(order.status),
       canBeEdited: ['pending_approval', 'quoted', 'approved'].includes(order.status),
-      canBeCancelled: !['delivered', 'cancelled'].includes(order.status)
+      canBeCancelled: !['delivered', 'completed', 'cancelled'].includes(order.status)
     };
   },
 
@@ -331,8 +336,13 @@ const orderService = {
       quoted: '#06b6d4', // cyan  
       approved: '#10b981', // emerald
       in_production: '#3b82f6', // blue
+      quality_check: '#f97316', // orange
+      quality_approved: '#84cc16', // lime
+      packaging: '#a855f7', // purple
       ready_for_delivery: '#8b5cf6', // violet
+      out_for_delivery: '#06b6d4', // cyan
       delivered: '#22c55e', // green
+      completed: '#059669', // emerald-600
       cancelled: '#ef4444', // red
       on_hold: '#6b7280' // gray
     };
