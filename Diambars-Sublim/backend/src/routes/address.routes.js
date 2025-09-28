@@ -97,6 +97,12 @@ router.get('/',
   addressController.getUserAddresses
 );
 
+// Obtener direcciones de un usuario específico (Admin)
+router.get('/user/:userId',
+  validateMongoId('userId'),
+  addressController.getUserAddressesByUserId
+);
+
 // Obtener dirección específica
 router.get('/:id',
   validateMongoId('id'),
@@ -172,6 +178,11 @@ router.get('/delivery/fees',
 // Obtener todas las direcciones (admin)
 router.get('/admin/all',
   addressController.getAllAddresses
+);
+
+// Obtener estadísticas de direcciones (admin)
+router.get('/admin/statistics',
+  addressController.getStatistics
 );
 
 // Actualizar dirección (admin)

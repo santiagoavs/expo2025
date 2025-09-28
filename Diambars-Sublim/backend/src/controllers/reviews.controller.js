@@ -253,3 +253,62 @@ export const deleteReview = async (req, res) => {
     });
   }
 };
+
+// Obtener estadísticas de reseñas
+export const getReviewStats = async (req, res) => {
+  try {
+    console.log('📊 [Reviews] Obteniendo estadísticas de reseñas');
+
+    // Obtener estadísticas básicas de forma simple
+    const totalReviews = await Review.countDocuments();
+    const pendingReviews = await Review.countDocuments({ status: 'pending' });
+    const approvedReviews = await Review.countDocuments({ status: 'approved' });
+    const rejectedReviews = await Review.countDocuments({ status: 'rejected' });
+
+    // Obtener rating promedio de forma simple
+    const approvedReviewsData = await Review.find({ status: 'approved' }, 'rating');
+    const totalRatings = approvedReviewsData.length;
+    const averageRating = totalRatings > 0 
+      ? Math.round((approvedReviewsData.reduce((sum, review) => sum + review.rating, 0) / totalRatings) * 10) / 10
+      : 0;
+
+    // Obtener distribución de ratings de forma simple
+    const ratingDistribution = [];
+    for (let i = 1; i <= 5; i++) {
+      const count = await Review.countDocuments({ status: 'approved', rating: i });
+      ratingDistribution.push({ _id: i, count });
+    }
+
+    const stats = {
+      overview: {
+        total: totalReviews,
+        pending: pendingReviews,
+        approved: approvedReviews,
+        rejected: rejectedReviews
+      },
+      rating: {
+        average: averageRating,
+        total: totalRatings,
+        distribution: ratingDistribution
+      },
+      trends: {
+        monthly: [] // Simplificado por ahora
+      }
+    };
+
+    console.log(`✅ [Reviews] Estadísticas obtenidas: ${totalReviews} total`);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('❌ [Reviews] Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};

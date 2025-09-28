@@ -2,30 +2,29 @@
 import express from 'express';
 import {
   getPaymentConfigs,
-  getPublicPaymentConfig,
+  getAvailablePaymentMethods,
+  getPaymentConfigByType,
   upsertPaymentConfig,
+  updatePaymentConfig,
   deletePaymentConfig,
-  getPaymentStats,
-  getSupportedPaymentTypes
+  getPaymentConfigStats
 } from '../controllers/paymentConfig.controller.js';
 import { authRequired } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// Rutas públicas
-router.get('/public', getPublicPaymentConfig);
-router.get('/supported-types', getSupportedPaymentTypes);
+// Ruta pública para obtener métodos disponibles (SIN AUTENTICACIÓN)
+router.get('/public/available', getAvailablePaymentMethods);
 
 // Rutas protegidas (requieren autenticación)
 router.use(authRequired);
 
 // CRUD de configuraciones
 router.get('/', getPaymentConfigs);
+router.get('/stats', getPaymentConfigStats);
+router.get('/:type', getPaymentConfigByType);
 router.post('/', upsertPaymentConfig);
-router.put('/:type', upsertPaymentConfig);
+router.put('/:type', updatePaymentConfig);
 router.delete('/:type', deletePaymentConfig);
-
-// Estadísticas
-router.get('/stats', getPaymentStats);
 
 export default router;

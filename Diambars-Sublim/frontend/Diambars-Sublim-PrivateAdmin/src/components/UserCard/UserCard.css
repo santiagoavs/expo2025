@@ -13,9 +13,9 @@
 }
 
 .user-card:hover {
-  box-shadow: 0 12px 35px rgba(4, 13, 191, 0.15);
-  transform: translateY(-4px);
-  border-color: rgba(4, 13, 191, 0.2);
+  box-shadow: 0 4px 15px rgba(4, 13, 191, 0.1);
+  transform: translateY(-2px);
+  border-color: rgba(4, 13, 191, 0.15);
 }
 
 /* Header */
@@ -41,8 +41,8 @@
 }
 
 .user-card:hover .user-card-avatar {
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(4, 13, 191, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(4, 13, 191, 0.25);
 }
 
 .user-card-avatar-text {
@@ -87,23 +87,63 @@
 }
 
 .user-card-action-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(4, 13, 191, 0.1);
-  border: 1px solid rgba(4, 13, 191, 0.2);
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  background: rgba(4, 13, 191, 0.15);
+  border: 2px solid rgba(4, 13, 191, 0.3);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #040DBF;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+  position: relative;
+  box-shadow: 0 2px 8px rgba(4, 13, 191, 0.1);
+  overflow: hidden;
+}
+
+/* Efecto de brillo en hover como product cards */
+.user-card-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s ease;
+}
+
+.user-card-action-btn:hover::before {
+  left: 100%;
+}
+
+.user-card-action-btn svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: inherit;
 }
 
 .user-card-action-btn:hover {
-  background: #040DBF;
-  color: #ffffff;
-  transform: scale(1.05);
+  background: rgba(4, 13, 191, 0.2);
+  border-color: rgba(4, 13, 191, 0.4);
+  color: #040DBF;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 
+    0 4px 12px rgba(4, 13, 191, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.user-card-action-btn:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.user-card-action-btn:focus {
+  outline: 3px solid rgba(4, 13, 191, 0.3);
+  outline-offset: 2px;
 }
 
 .user-card-dropdown {

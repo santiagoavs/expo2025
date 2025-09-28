@@ -1,7 +1,7 @@
-// src/hooks/useOrders.js - Custom hooks para órdenes
+// src/hooks/useOrders.jsx - Hook personalizado para gestión de órdenes refactorizado
 import { useState, useEffect, useCallback, useRef } from 'react';
 import orderService from '../api/OrderService';
-import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 /**
  * Hook principal para gestión de órdenes
@@ -14,7 +14,9 @@ export const useOrders = (initialFilters = {}) => {
     page: 1,
     limit: 20,
     total: 0,
-    totalPages: 0
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false
   });
   const [filters, setFilters] = useState(initialFilters);
   const abortControllerRef = useRef(null);
@@ -49,7 +51,9 @@ export const useOrders = (initialFilters = {}) => {
         setPagination(prev => ({
           ...prev,
           total: response.data.pagination?.total || 0,
-          totalPages: response.data.pagination?.totalPages || 0
+          totalPages: response.data.pagination?.totalPages || 0,
+          hasNext: response.data.pagination?.hasNext || false,
+          hasPrev: response.data.pagination?.hasPrev || false
         }));
       } else {
         throw new Error(response.message || 'Error cargando órdenes');
@@ -70,12 +74,138 @@ export const useOrders = (initialFilters = {}) => {
   }, [filters, pagination.page, pagination.limit]);
 
   /**
+   * Obtener orden específica por ID
+   */
+  const getOrderById = useCallback(async (orderId) => {
+    try {
+      console.log('🔍 [useOrders] Obteniendo orden:', orderId);
+      
+      const response = await orderService.getOrderById(orderId);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Orden no encontrada');
+      }
+    } catch (error) {
+      console.error('❌ [useOrders] Error obteniendo orden:', error);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Crear nueva orden
+   */
+  const createOrder = useCallback(async (orderData) => {
+    try {
+      const validation = orderService.validateOrderData(orderData);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      const response = await orderService.createOrder(orderData);
+      
+      if (response.success) {
+        await Swal.fire({
+          title: 'Orden creada',
+          text: `Orden ${response.data.orderNumber || 'nueva'} creada exitosamente`,
+          icon: 'success',
+          confirmButtonColor: '#1F64BF'
+        });
+        
+        // Refrescar lista de órdenes
+        fetchOrders();
+        
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrders] Error creando orden:', error);
+      throw error;
+    }
+  }, [fetchOrders]);
+
+  /**
+   * Actualizar estado de una orden
+   */
+  const updateOrderStatus = useCallback(async (orderId, newStatus, notes = '') => {
+    try {
+      const response = await orderService.updateOrderStatus(orderId, newStatus, notes);
+      
+      if (response.success) {
+        await Swal.fire({
+          title: 'Estado actualizado',
+          text: `La orden ha sido marcada como "${newStatus}"`,
+          icon: 'success',
+          confirmButtonColor: '#1F64BF'
+        });
+        
+        // Actualizar orden en la lista local
+        setOrders(prev => prev.map(order => 
+          order._id === orderId 
+            ? { 
+                ...order, 
+                status: newStatus, 
+                statusLabel: orderService.formatOrderForDisplay({ status: newStatus }).statusLabel 
+              }
+            : order
+        ));
+        
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrders] Error actualizando estado:', error);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Búsqueda de órdenes
+   */
+  const searchOrders = useCallback(async (searchParams) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await orderService.searchOrders(searchParams);
+      
+      if (response.success) {
+        setOrders(response.data.orders || []);
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.pagination?.total || 0,
+          totalPages: response.data.pagination?.totalPages || 0
+        }));
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrders] Error en búsqueda:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
    * Actualizar filtros y recargar
    */
   const updateFilters = useCallback((newFilters) => {
     console.log('🔍 [useOrders] Actualizando filtros:', newFilters);
     setFilters(prev => ({ ...prev, ...newFilters }));
     setPagination(prev => ({ ...prev, page: 1 })); // Reset a primera página
+  }, []);
+
+  /**
+   * Limpiar filtros
+   */
+  const clearFilters = useCallback(() => {
+    console.log('🔄 [useOrders] Limpiando filtros');
+    setFilters({});
+    setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
   /**
@@ -109,250 +239,277 @@ export const useOrders = (initialFilters = {}) => {
   }, []);
 
   return {
+    // Estado
     orders,
     loading,
     error,
     pagination,
     filters,
+    
+    // Acciones
+    fetchOrders,
+    getOrderById,
+    createOrder,
+    updateOrderStatus,
+    searchOrders,
     updateFilters,
+    clearFilters,
     changePage,
     refreshOrders,
-    fetchOrders
+    
+    // Utilidades
+    hasOrders: orders.length > 0,
+    isEmpty: !loading && orders.length === 0,
+    getStatusColor: orderService.getStatusColor
   };
 };
 
 /**
- * Hook para orden individual
+ * Hook para estadísticas de órdenes
  */
-export const useOrder = (orderId) => {
-  const [order, setOrder] = useState(null);
+export const useOrderStats = (filters = {}) => {
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchOrder = useCallback(async () => {
-    if (!orderId) return;
-
+  const fetchStats = useCallback(async (customFilters = null) => {
     try {
       setLoading(true);
       setError(null);
-
-      console.log('🔍 [useOrder] Cargando orden:', orderId);
-      const response = await orderService.getOrderById(orderId);
-
+      
+      const currentFilters = customFilters || filters;
+      const response = await orderService.getOrderStats(currentFilters);
+      
       if (response.success) {
-        setOrder(response.data);
+        setStats(response.data);
       } else {
-        throw new Error(response.message || 'Error cargando orden');
+        throw new Error(response.message);
       }
-
     } catch (error) {
-      console.error('❌ [useOrder] Error cargando orden:', error);
-      setError(error.message || 'Error cargando orden');
-      setOrder(null);
+      console.error('❌ [useOrderStats] Error:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [filters]);
 
   useEffect(() => {
-    fetchOrder();
-  }, [fetchOrder]);
+    fetchStats();
+  }, [fetchStats]);
 
   return {
-    order,
+    stats,
     loading,
     error,
-    refetch: fetchOrder
+    refetch: fetchStats
   };
 };
 
 /**
- * Hook para acciones de órdenes (cotizar, actualizar estado, etc.)
+ * Hook para órdenes por usuario
  */
-export const useOrderActions = () => {
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * Enviar cotización
-   */
-  const submitQuote = useCallback(async (orderId, quoteData) => {
-    try {
-      setLoading(true);
-      console.log('💰 [useOrderActions] Enviando cotización:', orderId);
-
-      const response = await orderService.submitQuote(orderId, quoteData);
-
-      if (response.success) {
-        toast.success('Cotización enviada exitosamente');
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Error enviando cotización');
-      }
-
-    } catch (error) {
-      console.error('❌ [useOrderActions] Error enviando cotización:', error);
-      toast.error(error.message || 'Error enviando cotización');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Actualizar estado de orden
-   */
-  const updateStatus = useCallback(async (orderId, newStatus, notes = '') => {
-    try {
-      setLoading(true);
-      console.log('🔄 [useOrderActions] Actualizando estado:', orderId, newStatus);
-
-      const response = await orderService.updateOrderStatus(orderId, newStatus, notes);
-
-      if (response.success) {
-        toast.success('Estado actualizado exitosamente');
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Error actualizando estado');
-      }
-
-    } catch (error) {
-      console.error('❌ [useOrderActions] Error actualizando estado:', error);
-      toast.error(error.message || 'Error actualizando estado');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Cancelar orden
-   */
-  const cancelOrder = useCallback(async (orderId, reason = '') => {
-    try {
-      setLoading(true);
-      console.log('❌ [useOrderActions] Cancelando orden:', orderId);
-
-      const response = await orderService.cancelOrder(orderId, reason);
-
-      if (response.success) {
-        toast.success('Orden cancelada exitosamente');
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Error cancelando orden');
-      }
-
-    } catch (error) {
-      console.error('❌ [useOrderActions] Error cancelando orden:', error);
-      toast.error(error.message || 'Error cancelando orden');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Subir foto de producción
-   */
-  const uploadProductionPhoto = useCallback(async (orderId, photoData) => {
-    try {
-      setLoading(true);
-      console.log('📸 [useOrderActions] Subiendo foto:', orderId);
-
-      const response = await orderService.uploadProductionPhoto(orderId, photoData);
-
-      if (response.success) {
-        toast.success('Foto subida exitosamente');
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Error subiendo foto');
-      }
-
-    } catch (error) {
-      console.error('❌ [useOrderActions] Error subiendo foto:', error);
-      toast.error(error.message || 'Error subiendo foto');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Actualizar progreso de producción
-   */
-  const updateProductionProgress = useCallback(async (orderId, itemId, stageData) => {
-    try {
-      setLoading(true);
-      console.log('⚙️ [useOrderActions] Actualizando progreso:', orderId, itemId);
-
-      const response = await orderService.updateProductionProgress(orderId, itemId, stageData);
-
-      if (response.success) {
-        toast.success('Progreso actualizado exitosamente');
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Error actualizando progreso');
-      }
-
-    } catch (error) {
-      console.error('❌ [useOrderActions] Error actualizando progreso:', error);
-      toast.error(error.message || 'Error actualizando progreso');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return {
-    loading,
-    submitQuote,
-    updateStatus,
-    cancelOrder,
-    uploadProductionPhoto,
-    updateProductionProgress
-  };
-};
-
-/**
- * Hook para tracking de órdenes
- */
-export const useOrderTracking = (orderId) => {
-  const [tracking, setTracking] = useState(null);
+export const useUserOrders = (userId) => {
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTracking = useCallback(async () => {
-    if (!orderId) return;
-
+  const fetchUserOrders = useCallback(async (filters = {}) => {
+    if (!userId) return;
+    
     try {
       setLoading(true);
       setError(null);
-
-      console.log('📍 [useOrderTracking] Obteniendo tracking:', orderId);
-      const response = await orderService.getOrderTracking(orderId);
-
+      
+      const response = await orderService.getUserOrders(userId, filters);
+      
       if (response.success) {
-        setTracking(response.data);
+        setOrders(response.data.orders || []);
       } else {
-        throw new Error(response.message || 'Error obteniendo tracking');
+        throw new Error(response.message);
       }
-
     } catch (error) {
-      console.error('❌ [useOrderTracking] Error obteniendo tracking:', error);
-      setError(error.message || 'Error obteniendo tracking');
-      setTracking(null);
+      console.error('❌ [useUserOrders] Error:', error);
+      setError(error.message);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [userId]);
 
   useEffect(() => {
-    fetchTracking();
-  }, [fetchTracking]);
+    fetchUserOrders();
+  }, [fetchUserOrders]);
 
   return {
-    tracking,
+    orders,
     loading,
     error,
-    refetch: fetchTracking
+    refetch: fetchUserOrders,
+    hasOrders: orders.length > 0
   };
 };
+
+/**
+ * Hook para dashboard de órdenes (estadísticas principales)
+ */
+export const useDashboardStats = (filters = {}) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchDashboardStats = useCallback(async (customFilters = null) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const currentFilters = customFilters || filters;
+      const response = await orderService.getDashboardStats(currentFilters);
+      
+      if (response.success) {
+        setData(response.data);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useDashboardStats] Error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []); // Solo ejecutar una vez al montar
+
+  return {
+    data,
+    loading,
+    error,
+    refetch: fetchDashboardStats,
+    
+    // Métricas calculadas
+    todayOrders: data?.today?.totalOrders || 0,
+    todayRevenue: data?.today?.totalRevenue || 0,
+    monthOrders: data?.thisMonth?.totalOrders || 0,
+    monthRevenue: data?.thisMonth?.totalRevenue || 0,
+    ordersByStatus: data?.ordersByStatus || {},
+    inProduction: data?.production?.inProduction || 0,
+    readyForDelivery: data?.production?.readyForDelivery || 0
+  };
+};
+
+/**
+ * Hook para reportes de órdenes
+ */
+export const useOrderReports = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  /**
+   * Generar reporte de ventas
+   */
+  const generateSalesReport = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await orderService.getSalesReport(filters);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrderReports] Error reporte ventas:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Generar reporte de productos top
+   */
+  const generateTopProductsReport = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await orderService.getTopProductsReport(filters);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrderReports] Error productos top:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Generar reporte de clientes top
+   */
+  const generateTopCustomersReport = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await orderService.getTopCustomersReport(filters);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrderReports] Error clientes top:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Generar reporte de producción
+   */
+  const generateProductionReport = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await orderService.getProductionReport(filters);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrderReports] Error producción:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    loading,
+    error,
+    generateSalesReport,
+    generateTopProductsReport,
+    generateTopCustomersReport,
+    generateProductionReport
+  };
+};
+
+export default useOrders;

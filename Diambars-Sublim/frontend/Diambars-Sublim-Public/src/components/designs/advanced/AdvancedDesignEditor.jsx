@@ -6,8 +6,8 @@ import useImage from 'use-image';
 // Import modular system
 import { useKonvaCanvas } from '../../../hooks/useKonvaCanvas';
 import { useKonvaHistory } from '../../../hooks/useKonvaHistory';
-import { elementFactory } from '../../../services/ElementFactory';
-import { validationService } from '../../../services/ValidationService';
+import { ElementFactory } from '../../../services/ElementFactory';
+import { ValidationService } from '../../../services/validationService';
 import { CANVAS_CONFIG, DEFAULT_CUSTOMIZATION_AREAS } from '../../../utils/canvasConfig';
 import { debounce } from '../../../utils/helpers';
 import EditorToolbar from '../../EditorToolbar/EditorToolbar';
@@ -189,7 +189,7 @@ const AdvancedDesignEditor = ({
 
   // ==================== ELEMENT HANDLERS ====================
   const addTextElement = useCallback(() => {
-    const textElement = elementFactory.createText({
+    const textElement = ElementFactory.createTextElement({
       text: 'Nuevo Texto',
       x: 100,
       y: 100,
@@ -264,7 +264,7 @@ const AdvancedDesignEditor = ({
         const reader = new FileReader();
         reader.onload = (event) => {
           const area = customizationAreas[0];
-          const newElement = elementFactory.createImageElement({
+          const newElement = ElementFactory.createImageElement({
             x: area?.scaledPosition?.x + 20 || 50,
             y: area?.scaledPosition?.y + 20 || 50,
             width: 200,

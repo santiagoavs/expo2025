@@ -17,7 +17,7 @@ import {
   Briefcase
 } from '@phosphor-icons/react';
 import { useAuth } from '../../context/AuthContext';
-import ProfileService from '../../services/profileService';
+import ProfileService from '../../api/profileService';
 import Swal from 'sweetalert2';
 import './Profile.css';
 

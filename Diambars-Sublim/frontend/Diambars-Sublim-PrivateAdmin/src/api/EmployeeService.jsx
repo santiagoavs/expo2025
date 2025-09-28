@@ -17,9 +17,9 @@ export default {
   },
 
   // Crear nuevo empleado (registro - requiere Admin)
-  // Usa /api/employees/register según tu estructura de rutas
+  // Usa el endpoint de registro de empleados
   createEmployee: async (employeeData) => {
-    const response = await apiClient.post(`${BASE_URL}/register`, employeeData);
+    const response = await apiClient.post('/api/employees/register', employeeData);
     return response;
   },
 
@@ -39,6 +39,12 @@ export default {
   // NOTA: El backend usa DELETE pero hace soft delete internamente
   inactivateEmployee: async (id) => {
     const response = await apiClient.delete(`${BASE_URL}/${id}`);
+    return response;
+  },
+
+  // Eliminar empleado permanentemente (hard delete - requiere Admin)
+  hardDeleteEmployee: async (id) => {
+    const response = await apiClient.delete(`${BASE_URL}/${id}/hard`);
     return response;
   },
 

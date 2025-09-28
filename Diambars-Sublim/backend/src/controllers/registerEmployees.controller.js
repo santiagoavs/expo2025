@@ -92,7 +92,7 @@ registerEmployeesController.registerEmployee = async (req, res) => {
       password: passwordHash,
       phoneNumber: phoneNumber.trim(),
       dui: dui.trim(),
-      role: role || "Employee",
+      role: (role || "employee").toLowerCase(),
       active: active !== undefined ? active : true
     });
 

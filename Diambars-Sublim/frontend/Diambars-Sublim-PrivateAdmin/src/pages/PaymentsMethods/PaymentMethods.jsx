@@ -57,11 +57,9 @@ import {
   CheckCircle,
   XCircle
 } from '@phosphor-icons/react';
-import { usePaymentConfig, usePaymentStats, usePaymentActions, usePaymentMethods, usePaymentMethodActions } from '../../hooks/usePayments';
 import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
 import { usePaymentModals } from '../../hooks/usePaymentModals';
 import PaymentMethodConfigModal from '../../components/PaymentMethodModals/PaymentMethodConfigModal';
-import UserPaymentMethodModal from '../../components/PaymentMethodModals/UserPaymentMethodModal';
 import PaymentStatsModal from '../../components/PaymentMethodModals/PaymentStatsModal';
 import PaymentActionButtons from '../../components/PaymentMethodModals/PaymentActionButtons';
 import toast from 'react-hot-toast';
@@ -94,25 +92,18 @@ const PaymentMethods = () => {
     loading, 
     upsertConfig, 
     updateConfig, 
-    deleteConfig 
+    deleteConfig,
+    checkMethodExists
   } = usePaymentConfigManagement();
-  
-  // Hooks legacy para compatibilidad (tarjetas de usuarios)
-  const { methods, loading: methodsLoading, refreshMethods } = usePaymentMethods();
-  const { createMethod, updateMethod, deleteMethod, loading: actionLoading } = usePaymentMethodActions();
 
-  // Hook para gestión de modales
+  // Hook para gestión de modales (solo configuración del sistema)
   const {
     configModalOpen,
-    userMethodModalOpen,
     statsModalOpen,
     selectedConfigMethod,
-    selectedUserMethod,
     modalMode,
     openConfigModal,
     closeConfigModal,
-    openUserMethodModal,
-    closeUserMethodModal,
     openStatsModal,
     closeStatsModal
   } = usePaymentModals();
@@ -165,7 +156,7 @@ const PaymentMethods = () => {
     setMenuMethod(null);
   };
 
-  // Función para abrir diálogo de método de configuración
+  // Función para abrir diálogo de método de configuración (solo sistema)
   const handleOpenConfigMethodDialog = (method = null) => {
     if (method) {
       openConfigModal(method, 'edit');
@@ -174,42 +165,128 @@ const PaymentMethods = () => {
     }
   };
 
-  // Función para abrir diálogo de método de usuario
-  const handleOpenUserMethodDialog = (method = null) => {
-    if (method) {
-      openUserMethodModal(method, 'edit');
-    } else {
-      openUserMethodModal(null, 'create');
-    }
-  };
-
-  // Función para guardar método (ahora usa el nuevo sistema de configuración)
-  const handleSaveMethod = async () => {
+  // Función para guardar método de configuración del sistema
+  const handleSaveConfigMethod = async () => {
     try {
-      if (selectedMethod) {
-        await updateConfig(selectedMethod.type, methodForm);
-        toast.success('Método actualizado correctamente');
+      // Validar si ya existe un método del mismo tipo (solo para nuevos métodos)
+      if (!selectedConfigMethod && checkMethodExists(methodForm.type)) {
+        await Swal.fire({
+          title: 'Método ya existe',
+          text: `Ya existe un método de pago de tipo "${methodForm.type}". ¿Deseas editarlo en su lugar?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, editar',
+          cancelButtonText: 'Cancelar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
+        return;
+      }
+
+      if (selectedConfigMethod) {
+        await updateConfig(selectedConfigMethod.type, methodForm);
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Método de pago actualizado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
       } else {
         await upsertConfig(methodForm);
-        toast.success('Método creado correctamente');
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Método de pago creado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
       }
       
-      closeUserMethodModal();
+      closeConfigModal();
       setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
-      // setSelectedMethod(null); // Removed - using modal hooks now
     } catch (error) {
-      toast.error('Error al guardar el método');
+      // SweetAlert de error
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar el método de pago',
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
     }
   };
 
   // Función para eliminar método (ahora usa el nuevo sistema de configuración)
   const handleDeleteMethod = async (method) => {
     try {
-      await deleteConfig(method.type);
-      toast.success('Método eliminado correctamente');
-      handleMenuClose();
+      // SweetAlert de confirmación
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Deseas eliminar el método "${method.name}"? Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
+
+      if (result.isConfirmed) {
+        await deleteConfig(method.type);
+        
+        // SweetAlert de éxito
+        await Swal.fire({
+          title: '¡Eliminado!',
+          text: 'Método de pago eliminado correctamente',
+          icon: 'success',
+          confirmButtonText: 'Continuar',
+          customClass: {
+            popup: 'swal2-popup-custom',
+            title: 'swal2-title-custom',
+            content: 'swal2-content-custom'
+          }
+        });
+        
+        handleMenuClose();
+      }
     } catch (error) {
-      toast.error('Error al eliminar el método');
+      // SweetAlert de error
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al eliminar el método de pago',
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        customClass: {
+          popup: 'swal2-popup-custom',
+          title: 'swal2-title-custom',
+          content: 'swal2-content-custom'
+        }
+      });
     }
   };
 
@@ -245,7 +322,7 @@ const PaymentMethods = () => {
     };
   }, [stats, configs]);
 
-  if (loading || methodsLoading) {
+  if (loading) {
     return (
       <Box 
         sx={{ 
@@ -382,10 +459,8 @@ const PaymentMethods = () => {
             {/* Botones de acción optimizados */}
             <PaymentActionButtons
               onOpenConfigModal={() => openConfigModal()}
-              onOpenUserMethodModal={() => openUserMethodModal()}
               onOpenStatsModal={() => openStatsModal()}
               configs={configs}
-              userMethods={methods}
             />
           </Stack>
         </Paper>
@@ -1019,7 +1094,7 @@ const PaymentMethods = () => {
                 <Button
                   variant="contained"
                   startIcon={<Plus size={20} weight="bold" />}
-                  onClick={() => handleOpenMethodDialog()}
+                  onClick={() => handleOpenConfigMethodDialog()}
                   sx={{
                     background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
                     color: 'white',
@@ -1051,7 +1126,7 @@ const PaymentMethods = () => {
       {isMobile && (
         <Fab
           color="primary"
-          onClick={() => handleOpenMethodDialog()}
+          onClick={() => handleOpenConfigMethodDialog()}
           sx={{
             position: 'fixed',
             bottom: { xs: 20, sm: 24 },
@@ -1439,13 +1514,6 @@ const PaymentMethods = () => {
         mode={modalMode}
       />
 
-      {/* Modal de métodos de pago de usuarios */}
-      <UserPaymentMethodModal
-        open={userMethodModalOpen}
-        onClose={closeUserMethodModal}
-        selectedMethod={selectedUserMethod}
-        mode={modalMode}
-      />
 
       {/* Modal de estadísticas */}
       <PaymentStatsModal

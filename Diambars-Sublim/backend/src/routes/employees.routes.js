@@ -56,4 +56,12 @@ router.delete("/:id",
   employeesController.inactivateEmployee
 );
 
+// Eliminar empleado permanentemente (solo Admin)
+router.delete("/:id/hard", 
+  verifyToken, 
+  checkUserType("employee", "admin"), 
+  checkRole("Admin", "admin"), 
+  employeesController.hardDeleteEmployee
+);
+
 export default router;

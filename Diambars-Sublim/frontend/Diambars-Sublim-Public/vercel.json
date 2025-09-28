@@ -5,7 +5,7 @@
       "destination": "https://expo2025-8bjn.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!images|icons|videos|fonts|gifs|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|mp4|ttf|otf)).*)",
       "destination": "/index.html"
     }
   ],

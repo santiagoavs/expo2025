@@ -273,7 +273,7 @@ const AppContent = () => {
         path="/" 
         element={
           isAuthenticated ? 
-            <Navigate to="/catalog-management" replace /> : 
+            <Navigate to="/Dashboard" replace /> : 
             <Navigate to="/login" replace />
         } 
       />

@@ -8,6 +8,7 @@ import {
   deleteReview,
   approveReview,
   rejectReview,
+  getReviewStats,
 } from "../controllers/reviews.controller.js";
  
 const router = express.Router();
@@ -19,6 +20,9 @@ router.get("/public", getPublicReviews);
 // RUTAS ADMINISTRATIVAS (para el panel de admin)
 // Obtener todas las reseñas (incluyendo pendientes)
 router.get("/", getAllReviews);
+
+// Obtener estadísticas de reseñas
+router.get("/stats", getReviewStats);
 
 // Aprobar una reseña
 router.patch("/:id/approve", approveReview);

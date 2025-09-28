@@ -10,7 +10,7 @@ import { body, param, query } from "express-validator";
 const router = Router();
 
 // ==================== WEBHOOKS (SIN AUTENTICACIÓN) ====================
-router.post('/webhook/wompi', paymentController.wompiWebhook);
+router.post('/webhook/wompi', paymentController.handleWompiWebhook);
 
 // ==================== RUTAS DE PEDIDOS ====================
 
@@ -114,44 +114,26 @@ router.post('/:id/cash-payment',
   orderController.registerCashPayment
 );
 
+// ==================== NUEVOS ENDPOINTS ====================
+
+// Obtener detalles de pago de una orden
+router.get('/:id/payment-details',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderPaymentDetails
+);
+
+// Obtener línea de tiempo de una orden (para usuarios)
+router.get('/:id/timeline',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderTimeline
+);
+
 // ==================== RUTAS DE PAGOS ====================
 
-// Procesar pago digital (Wompi)
-router.post('/:id/payment/digital',
-  authRequired,
-  validateMongoId('id'),
-  body('customerData').optional().isObject(),
-  validateRequest,
-  paymentController.processDigitalPayment
-);
-
-// Registrar pago en efectivo (alias)
-router.post('/:id/payment/cash',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  paymentController.registerCashPayment
-);
-
-// Confirmar pago manual (admin)
-router.post('/:id/payment/confirm',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  validateMongoId('id'),
-  body('method').isIn(['cash', 'card', 'transfer']),
-  body('amount').optional().isFloat({ min: 0.01 }),
-  validateRequest,
-  paymentController.confirmManualPayment
-);
-
-// Simular pago (desarrollo/testing)
-router.post('/:id/payment/simulate',
-  authRequired,
-  validateMongoId('id'),
-  body('status').optional().isIn(['approved', 'declined']),
-  validateRequest,
-  paymentController.simulatePayment
-);
+// NOTA: Las rutas de pago han sido movidas a /api/payments/
+// Ver src/routes/payment.routes.js para las nuevas rutas de pago
 
 // ==================== RUTAS DE REPORTES ====================
 
@@ -201,26 +183,7 @@ router.get('/reports/production',
 
 // ==================== CONFIGURACIÓN DE PAGOS ====================
 
-// Obtener configuración pública de pagos
-router.get('/payment/config',
-  paymentController.getPaymentConfig
-);
-
-// Verificar estado de pagos
-router.get('/payment/status',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  paymentController.getPaymentStatus
-);
-
-// Estadísticas básicas de pagos
-router.get('/payment/stats',
-  authRequired,
-  roleRequired(['admin', 'manager']),
-  query('startDate').optional().isISO8601(),
-  query('endDate').optional().isISO8601(),
-  validateRequest,
-  paymentController.getBasicStats
-);
+// NOTA: Las rutas de configuración y estadísticas de pagos han sido movidas a /api/payments/
+// Ver src/routes/payment.routes.js para las nuevas rutas de pago
 
 export default router;

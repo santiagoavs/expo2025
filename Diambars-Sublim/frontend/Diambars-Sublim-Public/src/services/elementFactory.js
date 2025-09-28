@@ -1,167 +1,160 @@
-// Element Factory Service - Adapted from Private Admin for Public Project
-// Handles creation and management of design elements with validation
-
+// services/ElementFactory.js - FACTORY FOR ALL ELEMENT TYPES (CSS VERSION)
 export class ElementFactory {
-  static createTextElement(options = {}) {
-    const {
-      x = 50,
-      y = 50,
-      text = 'Nuevo texto',
-      fontSize = 24,
-      fontFamily = 'Arial',
-      fill = '#000000',
-      align = 'left',
-      areaId = 'area-1'
-    } = options;
+  generateId() {
+    return `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
 
+  // ==================== BASIC ELEMENTS ====================
+
+  createTextElement(config) {
     return {
-      id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: config.id || this.generateId(),
       type: 'text',
-      areaId,
-      konvaAttrs: {
-        x,
-        y,
-        text,
-        fontSize,
-        fontFamily,
-        fill,
-        align,
-        rotation: 0,
-        visible: true
-      },
-      metadata: {
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString()
-      }
+      text: config.text || 'Nuevo texto',
+      x: config.x || 0,
+      y: config.y || 0,
+      fontSize: config.fontSize || 24,
+      fontFamily: config.fontFamily || 'Arial',
+      fill: config.fill || '#000000',
+      width: config.width || 200,
+      align: config.align || 'left',
+      verticalAlign: config.verticalAlign || 'top',
+      fontWeight: config.fontWeight || 'normal',
+      fontStyle: config.fontStyle || 'normal',
+      textDecoration: config.textDecoration || '',
+      lineHeight: config.lineHeight || 1.2,
+      letterSpacing: config.letterSpacing || 0,
+      areaId: config.areaId || 'default-area',
+      rotation: config.rotation || 0,
+      opacity: config.opacity || 1,
+      visible: config.visible !== false,
+      draggable: config.draggable !== false,
+      listening: true, // Critical for event handling
+      ...config
     };
   }
 
-  static createImageElement(options = {}) {
-    const {
-      x = 50,
-      y = 50,
-      width = 200,
-      height = 150,
-      image,
-      areaId = 'area-1'
-    } = options;
-
-    if (!image) {
-      throw new Error('Image source is required for image elements');
-    }
-
-    return {
-      id: `image-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  createImageElement(config) {
+    const imageElement = {
+      id: config.id || this.generateId(),
       type: 'image',
-      areaId,
-      konvaAttrs: {
-        x,
-        y,
-        width,
-        height,
-        image,
-        rotation: 0,
-        visible: true
-      },
-      metadata: {
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        originalImage: image
-      }
+      x: config.x || 0,
+      y: config.y || 0,
+      width: config.width || 100,
+      height: config.height || 100,
+      imageUrl: config.imageUrl,
+      image: config.image,
+      originalName: config.originalName,
+      originalSize: config.originalSize,
+      crop: config.crop || null,
+      filters: config.filters || [],
+      opacity: config.opacity || 1,
+      rotation: config.rotation || 0,
+      visible: config.visible !== false,
+      draggable: config.draggable !== false,
+      listening: true, // Critical for event handling
+      areaId: config.areaId || 'default-area',
+      ...config
     };
+
+    // Validate image source
+    if (!imageElement.imageUrl && !imageElement.image) {
+      console.warn('ElementFactory: Image element created without image source');
+    }
+
+    return imageElement;
   }
 
-  static createShapeElement(shapeType = 'rect', options = {}) {
-    const {
-      x = 50,
-      y = 50,
-      fill = '#3F2724',
-      stroke = '#000000',
-      strokeWidth = 0,
-      areaId = 'area-1'
-    } = options;
-
+  createShapeElement(config) {
+    const shapeType = config.shapeType || 'rect';
+    
     const baseElement = {
-      id: `${shapeType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: config.id || this.generateId(),
       type: 'shape',
-      shapeType,
-      areaId,
-      konvaAttrs: {
-        x,
-        y,
-        fill,
-        stroke,
-        strokeWidth,
-        rotation: 0,
-        visible: true
-      },
-      metadata: {
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString()
-      }
+      shapeType: shapeType,
+      x: config.x || 0,
+      y: config.y || 0,
+      fill: config.fill || '#3F2724',
+      stroke: config.stroke || '#000000',
+      strokeWidth: config.strokeWidth || 0,
+      opacity: config.opacity || 1,
+      rotation: config.rotation || 0,
+      visible: config.visible !== false,
+      draggable: config.draggable !== false,
+      listening: true, // Critical for event handling
+      areaId: config.areaId || 'default-area',
+      ...config
     };
 
-    // Add shape-specific attributes
-    if (shapeType === 'circle') {
-      baseElement.konvaAttrs.radius = options.radius || 50;
-    } else if (shapeType === 'rect') {
-      baseElement.konvaAttrs.width = options.width || 100;
-      baseElement.konvaAttrs.height = options.height || 100;
+    // Add shape-specific properties
+    switch (shapeType) {
+      case 'rect':
+        return {
+          ...baseElement,
+          width: config.width || 100,
+          height: config.height || 100,
+          cornerRadius: config.cornerRadius || 0
+        };
+      
+      case 'circle':
+        return {
+          ...baseElement,
+          radius: config.radius || 50
+        };
+      
+      case 'ellipse':
+        return {
+          ...baseElement,
+          radiusX: config.radiusX || 50,
+          radiusY: config.radiusY || 30
+        };
+      
+      case 'line':
+        return {
+          ...baseElement,
+          points: config.points || [0, 0, 100, 100],
+          strokeWidth: config.strokeWidth || 2
+        };
+      
+      case 'polygon':
+        return {
+          ...baseElement,
+          points: config.points || [0, 0, 50, 100, 100, 0],
+          closed: config.closed !== false
+        };
+      
+      default:
+        console.warn(`ElementFactory: Unknown shape type: ${shapeType}`);
+        return baseElement;
     }
-
-    return baseElement;
   }
 
-  static updateElement(element, updates) {
-    if (!element || !element.id) {
-      throw new Error('Invalid element provided for update');
-    }
+  // ==================== ADVANCED ELEMENTS ====================
 
+  createGroupElement(config) {
     return {
-      ...element,
-      konvaAttrs: {
-        ...element.konvaAttrs,
-        ...updates
-      },
-      metadata: {
-        ...element.metadata,
-        lastModified: new Date().toISOString()
-      }
+      id: config.id || this.generateId(),
+      type: 'group',
+      x: config.x || 0,
+      y: config.y || 0,
+      rotation: config.rotation || 0,
+      scaleX: config.scaleX || 1,
+      scaleY: config.scaleY || 1,
+      opacity: config.opacity || 1,
+      visible: config.visible !== false,
+      draggable: config.draggable !== false,
+      children: config.children || [],
+      areaId: config.areaId || 'default-area',
+      ...config
     };
   }
 
-  static cloneElement(element, offsetX = 20, offsetY = 20) {
-    if (!element || !element.id) {
-      throw new Error('Invalid element provided for cloning');
-    }
+  // ==================== ELEMENT VALIDATION ====================
 
-    const clonedElement = {
-      ...element,
-      id: `${element.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      konvaAttrs: {
-        ...element.konvaAttrs,
-        x: (element.konvaAttrs.x || 0) + offsetX,
-        y: (element.konvaAttrs.y || 0) + offsetY
-      },
-      metadata: {
-        ...element.metadata,
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        clonedFrom: element.id
-      }
-    };
-
-    return clonedElement;
-  }
-
-  static validateElement(element) {
+  validateElement(element) {
     const errors = [];
 
-    if (!element) {
-      errors.push('Element is required');
-      return { isValid: false, errors };
-    }
-
+    // Basic validation
     if (!element.id) {
       errors.push('Element ID is required');
     }
@@ -170,60 +163,49 @@ export class ElementFactory {
       errors.push('Element type is required');
     }
 
-    if (!element.konvaAttrs) {
-      errors.push('Element konvaAttrs are required');
-    } else {
-      // Validate based on element type
-      switch (element.type) {
-        case 'text':
-          if (!element.konvaAttrs.text) {
-            errors.push('Text content is required for text elements');
-          }
-          if (!element.konvaAttrs.fontSize || element.konvaAttrs.fontSize <= 0) {
-            errors.push('Valid font size is required for text elements');
-          }
-          break;
+    if (typeof element.x !== 'number' || typeof element.y !== 'number') {
+      errors.push('Element position (x, y) must be numbers');
+    }
 
-        case 'image':
-          if (!element.konvaAttrs.image) {
-            errors.push('Image source is required for image elements');
-          }
-          if (!element.konvaAttrs.width || element.konvaAttrs.width <= 0) {
-            errors.push('Valid width is required for image elements');
-          }
-          if (!element.konvaAttrs.height || element.konvaAttrs.height <= 0) {
-            errors.push('Valid height is required for image elements');
-          }
-          break;
+    // Type-specific validation
+    switch (element.type) {
+      case 'text':
+        if (!element.text && element.text !== '') {
+          errors.push('Text element must have text property');
+        }
+        if (element.fontSize && (element.fontSize < 1 || element.fontSize > 500)) {
+          errors.push('Font size must be between 1 and 500');
+        }
+        break;
 
-        case 'shape':
-          if (!element.shapeType) {
-            errors.push('Shape type is required for shape elements');
-          }
-          if (element.shapeType === 'circle' && (!element.konvaAttrs.radius || element.konvaAttrs.radius <= 0)) {
-            errors.push('Valid radius is required for circle elements');
-          }
-          if (element.shapeType === 'rect') {
-            if (!element.konvaAttrs.width || element.konvaAttrs.width <= 0) {
-              errors.push('Valid width is required for rectangle elements');
-            }
-            if (!element.konvaAttrs.height || element.konvaAttrs.height <= 0) {
-              errors.push('Valid height is required for rectangle elements');
-            }
-          }
-          break;
+      case 'image':
+        if (!element.imageUrl && !element.image) {
+          errors.push('Image element must have imageUrl or image property');
+        }
+        if (element.width <= 0 || element.height <= 0) {
+          errors.push('Image dimensions must be positive');
+        }
+        break;
 
-        default:
-          errors.push(`Unknown element type: ${element.type}`);
-      }
+      case 'shape':
+        if (!element.shapeType) {
+          errors.push('Shape element must have shapeType property');
+        }
+        if (element.shapeType === 'circle' && (!element.radius || element.radius <= 0)) {
+          errors.push('Circle must have positive radius');
+        }
+        if (['rect', 'ellipse'].includes(element.shapeType)) {
+          if (!element.width || !element.height || element.width <= 0 || element.height <= 0) {
+            errors.push('Rectangle/Ellipse must have positive width and height');
+          }
+        }
+        break;
 
-      // Validate position
-      if (typeof element.konvaAttrs.x !== 'number') {
-        errors.push('Valid x position is required');
-      }
-      if (typeof element.konvaAttrs.y !== 'number') {
-        errors.push('Valid y position is required');
-      }
+      case 'group':
+        if (!Array.isArray(element.children)) {
+          errors.push('Group element must have children array');
+        }
+        break;
     }
 
     return {
@@ -232,108 +214,155 @@ export class ElementFactory {
     };
   }
 
-  static getElementBounds(element) {
-    if (!element || !element.konvaAttrs) {
-      return null;
-    }
+  // ==================== ELEMENT UTILITIES ====================
 
-    const { x = 0, y = 0, rotation = 0 } = element.konvaAttrs;
-    let width = 0, height = 0;
+  cloneElement(element) {
+    const cloned = JSON.parse(JSON.stringify(element));
+    cloned.id = this.generateId();
+    
+    // Offset position slightly for visual distinction
+    cloned.x = (cloned.x || 0) + 20;
+    cloned.y = (cloned.y || 0) + 20;
+    
+    return cloned;
+  }
 
+  getElementBounds(element) {
+    const x = element.x || 0;
+    const y = element.y || 0;
+    
+    let width = 0;
+    let height = 0;
+    
     switch (element.type) {
       case 'text':
-        // Approximate text bounds (would need actual measurement in real implementation)
-        const fontSize = element.konvaAttrs.fontSize || 24;
-        const textLength = (element.konvaAttrs.text || '').length;
-        width = textLength * fontSize * 0.6; // Approximate
-        height = fontSize * 1.2;
+        width = element.width || 200;
+        height = element.fontSize || 24;
         break;
-
       case 'image':
-        width = element.konvaAttrs.width || 0;
-        height = element.konvaAttrs.height || 0;
+        width = element.width || 100;
+        height = element.height || 100;
         break;
-
       case 'shape':
         if (element.shapeType === 'circle') {
-          const radius = element.konvaAttrs.radius || 0;
+          const radius = element.radius || 50;
           width = height = radius * 2;
         } else {
-          width = element.konvaAttrs.width || 0;
-          height = element.konvaAttrs.height || 0;
+          width = element.width || 100;
+          height = element.height || 100;
         }
         break;
+      default:
+        width = element.width || 100;
+        height = element.height || 100;
     }
-
+    
     return {
       x,
       y,
       width,
       height,
-      rotation,
+      right: x + width,
+      bottom: y + height,
       centerX: x + width / 2,
       centerY: y + height / 2
     };
   }
 
-  static isElementInArea(element, area) {
-    if (!element || !area || !area.scaledPosition) {
-      return false;
+  // ==================== ELEMENT TRANSFORMATIONS ====================
+
+  transformElement(element, transformation) {
+    const transformed = { ...element };
+    
+    if (transformation.translate) {
+      transformed.x = (transformed.x || 0) + transformation.translate.x;
+      transformed.y = (transformed.y || 0) + transformation.translate.y;
     }
-
-    const elementBounds = this.getElementBounds(element);
-    if (!elementBounds) return false;
-
-    const areaX = area.scaledPosition.x;
-    const areaY = area.scaledPosition.y;
-    const areaWidth = area.scaledPosition.width;
-    const areaHeight = area.scaledPosition.height;
-
-    // Check if element center is within area bounds
-    return (
-      elementBounds.centerX >= areaX &&
-      elementBounds.centerX <= areaX + areaWidth &&
-      elementBounds.centerY >= areaY &&
-      elementBounds.centerY <= areaY + areaHeight
-    );
+    
+    if (transformation.scale) {
+      if (element.type === 'shape' && element.shapeType === 'circle') {
+        transformed.radius = (transformed.radius || 50) * transformation.scale;
+      } else {
+        transformed.width = (transformed.width || 100) * transformation.scale;
+        transformed.height = (transformed.height || 100) * transformation.scale;
+      }
+    }
+    
+    if (transformation.rotate) {
+      transformed.rotation = (transformed.rotation || 0) + transformation.rotate;
+    }
+    
+    return transformed;
   }
 
-  static snapToGrid(value, gridSize = 10) {
-    return Math.round(value / gridSize) * gridSize;
-  }
+  // ==================== ELEMENT SERIALIZATION ====================
 
-  static constrainToArea(element, area) {
-    if (!element || !area || !area.scaledPosition) {
-      return element;
+  serializeElement(element) {
+    // Create a clean version for saving
+    const serialized = {
+      id: element.id,
+      type: element.type,
+      x: element.x,
+      y: element.y,
+      rotation: element.rotation || 0,
+      opacity: element.opacity || 1,
+      visible: element.visible !== false,
+      areaId: element.areaId
+    };
+
+    // Add type-specific properties
+    switch (element.type) {
+      case 'text':
+        Object.assign(serialized, {
+          text: element.text,
+          fontSize: element.fontSize,
+          fontFamily: element.fontFamily,
+          fill: element.fill,
+          width: element.width,
+          align: element.align,
+          fontWeight: element.fontWeight,
+          fontStyle: element.fontStyle,
+          textDecoration: element.textDecoration,
+          lineHeight: element.lineHeight,
+          letterSpacing: element.letterSpacing
+        });
+        break;
+
+      case 'image':
+        Object.assign(serialized, {
+          width: element.width,
+          height: element.height,
+          imageUrl: element.imageUrl,
+          originalName: element.originalName,
+          crop: element.crop,
+          filters: element.filters
+        });
+        break;
+
+      case 'shape':
+        Object.assign(serialized, {
+          shapeType: element.shapeType,
+          fill: element.fill,
+          stroke: element.stroke,
+          strokeWidth: element.strokeWidth
+        });
+        
+        if (element.shapeType === 'circle') {
+          serialized.radius = element.radius;
+        } else {
+          serialized.width = element.width;
+          serialized.height = element.height;
+        }
+        break;
+
+      case 'group':
+        serialized.children = element.children.map(child => this.serializeElement(child));
+        break;
     }
 
-    const elementBounds = this.getElementBounds(element);
-    if (!elementBounds) return element;
-
-    const areaX = area.scaledPosition.x;
-    const areaY = area.scaledPosition.y;
-    const areaWidth = area.scaledPosition.width;
-    const areaHeight = area.scaledPosition.height;
-
-    let newX = element.konvaAttrs.x;
-    let newY = element.konvaAttrs.y;
-
-    // Constrain X position
-    if (newX < areaX) {
-      newX = areaX;
-    } else if (newX + elementBounds.width > areaX + areaWidth) {
-      newX = areaX + areaWidth - elementBounds.width;
-    }
-
-    // Constrain Y position
-    if (newY < areaY) {
-      newY = areaY;
-    } else if (newY + elementBounds.height > areaY + areaHeight) {
-      newY = areaY + areaHeight - elementBounds.height;
-    }
-
-    return this.updateElement(element, { x: newX, y: newY });
+    return serialized;
   }
 }
 
-export default ElementFactory;
+// Export singleton instance
+export const elementFactory = new ElementFactory();

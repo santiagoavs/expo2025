@@ -1,0 +1,519 @@
+/* src/components/EmployeeModal/EmployeeModal.css */
+
+/* Bloquear scroll del body cuando el modal está abierto */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Asegurar que el html también esté bloqueado */
+html.modal-open {
+  overflow: hidden !important;
+}
+
+/* Overlay */
+.employee-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container */
+.employee-modal {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 24px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 900px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: perspective(1000px) rotateX(0deg);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-10deg) translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg) translateY(0);
+  }
+}
+
+/* Header */
+.employee-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+}
+
+.employee-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #010326 !important;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.employee-modal__title h3 {
+  margin: 0;
+  font-weight: 600;
+  color: #010326 !important;
+}
+
+.employee-modal__close {
+  background: rgba(148, 163, 184, 0.1);
+  border: none;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.employee-modal__close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  transform: scale(1.05);
+}
+
+/* Loading State */
+.employee-modal__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  gap: 16px;
+  color: #64748b;
+}
+
+.employee-modal__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Form */
+.employee-modal__form {
+  padding: 32px 32px 60px 32px;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+}
+
+.employee-modal__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* Sections */
+.employee-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.employee-modal__section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #010326 !important;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Fields */
+.employee-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.employee-modal__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #010326 !important;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.employee-modal__input-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.employee-modal__input {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #010326 !important;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.employee-modal__input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.employee-modal__input--error {
+  border-color: #ef4444;
+  box-shadow: 
+    0 0 0 3px rgba(239, 68, 68, 0.1),
+    0 1px 3px rgba(239, 68, 68, 0.1);
+}
+
+.employee-modal__textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.employee-modal__password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.employee-modal__password-toggle:hover {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Role Selection */
+.employee-modal__role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.employee-modal__role-option {
+  cursor: pointer;
+}
+
+.employee-modal__role-input {
+  display: none;
+}
+
+.employee-modal__role-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: perspective(1000px) rotateX(0deg);
+}
+
+.employee-modal__role-card:hover {
+  border-color: #3b82f6;
+  transform: perspective(1000px) rotateX(-2deg) translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.employee-modal__role-input:checked + .employee-modal__role-card {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-color: #1d4ed8;
+  color: white;
+  transform: perspective(1000px) rotateX(-1deg) translateY(-1px);
+  box-shadow: 
+    0 8px 25px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.employee-modal__role-icon {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 8px;
+  color: #010326 !important;
+}
+
+.employee-modal__role-label {
+  font-size: 12px;
+  font-weight: 500;
+  display: block;
+  color: #010326 !important;
+}
+
+/* Error Messages */
+.employee-modal__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Actions */
+.employee-modal__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  gap: 16px;
+}
+
+.employee-modal__actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+.employee-modal__btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.employee-modal__btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.employee-modal__btn:hover::before {
+  left: 100%;
+}
+
+.employee-modal__btn--primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  box-shadow: 
+    0 4px 12px rgba(59, 130, 246, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.employee-modal__btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(59, 130, 246, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.employee-modal__btn--secondary {
+  background: rgba(148, 163, 184, 0.1);
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.employee-modal__btn--secondary:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+  transform: translateY(-1px);
+}
+
+.employee-modal__btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 
+    0 4px 12px rgba(239, 68, 68, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.employee-modal__btn--danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(239, 68, 68, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.employee-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Delete Confirmation */
+.employee-modal__delete-confirm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.employee-modal__delete-content {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  max-width: 400px;
+  margin: 0 20px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.employee-modal__delete-icon {
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.employee-modal__delete-content h4 {
+  color: #010326 !important;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.employee-modal__delete-content p {
+  color: #010326 !important;
+  font-size: 14px;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.employee-modal__delete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .employee-modal {
+    width: 95vw;
+    max-height: 95vh;
+    border-radius: 20px;
+  }
+
+  .employee-modal__grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .employee-modal__form {
+    padding: 24px;
+  }
+
+  .employee-modal__header {
+    padding: 20px 24px;
+  }
+
+  .employee-modal__actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .employee-modal__actions-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .employee-modal__btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .employee-modal__role-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .employee-modal__role-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -43,8 +43,7 @@ import {
   useTopProductsReport, 
   useTopCustomersReport, 
   useProductionReport,
-  useReportExport,
-  useDateValidation
+  useReportExport
 } from '../../hooks/useReports';
 
 // Registrar componentes de Chart.js

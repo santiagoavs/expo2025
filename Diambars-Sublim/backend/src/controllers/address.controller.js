@@ -115,6 +115,43 @@ addressController.getUserAddresses = async (req, res) => {
 };
 
 /**
+ * Obtiene todas las direcciones de un usuario específico (Admin)
+ */
+addressController.getUserAddressesByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validar que userId sea un ID válido de MongoDB
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: "ID de usuario inválido",
+        error: 'INVALID_USER_ID'
+      });
+    }
+    
+    // Usar método estático del modelo para obtener direcciones del usuario específico
+    const addresses = await Address.getUserAddresses(userId);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        addresses,
+        deliveryFees: getDeliveryFeesMap()
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getUserAddressesByUserId:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener las direcciones del usuario",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
  * Obtiene una dirección específica por ID
  */
 addressController.getAddressById = async (req, res) => {
@@ -1240,6 +1277,73 @@ addressController.unsetDefaultAddressAdmin = async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: "Error al quitar la dirección predeterminada",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtener estadísticas de direcciones (admin)
+ */
+addressController.getStatistics = async (req, res) => {
+  try {
+    // Obtener estadísticas básicas
+    const totalAddresses = await Address.countDocuments({ isActive: true });
+    const activeAddresses = await Address.countDocuments({ isActive: true });
+    const inactiveAddresses = await Address.countDocuments({ isActive: false });
+    
+    // Distribución por departamento
+    const byDepartmentPipeline = [
+      { $match: { isActive: true } },
+      { $group: { _id: '$department', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ];
+    const departmentDistribution = await Address.aggregate(byDepartmentPipeline);
+    const byDepartment = departmentDistribution.reduce((acc, item) => {
+      acc[item._id] = item.count;
+      return acc;
+    }, {});
+    
+    // Distribución por usuario
+    const byUserPipeline = [
+      { $match: { isActive: true } },
+      { $group: { _id: '$user', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ];
+    const userDistribution = await Address.aggregate(byUserPipeline);
+    const byUser = userDistribution.reduce((acc, item) => {
+      acc[item._id] = item.count;
+      return acc;
+    }, {});
+    
+    // Direcciones creadas recientemente (últimos 30 días)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentlyCreated = await Address.countDocuments({
+      isActive: true,
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+    
+    const statistics = {
+      total: totalAddresses,
+      active: activeAddresses,
+      inactive: inactiveAddresses,
+      byDepartment,
+      byUser,
+      recentlyCreated
+    };
+    
+    res.status(200).json({
+      success: true,
+      data: statistics
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en getStatistics:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error al obtener estadísticas de direcciones",
       error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }

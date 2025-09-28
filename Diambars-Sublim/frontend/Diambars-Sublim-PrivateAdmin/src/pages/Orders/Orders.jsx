@@ -1,57 +1,63 @@
-// src/pages/Orders/Orders.jsx - Página de órdenes refactorizada con diseño moderno
+// src/pages/Orders/Orders.jsx - Página principal de gestión de órdenes
 import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Card, 
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+  InputAdornment,
+  Grid,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Chip,
+  Paper,
+  styled,
+  useTheme,
+  alpha,
+  Badge,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  IconButton,
   Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  FormControl,
-  InputLabel,
-  Pagination,
-  CircularProgress,
-  Alert,
   Tooltip,
-  Paper,
-  styled,
-  useTheme,
-  alpha,
-  Badge,
-  Skeleton,
-  InputAdornment
+  Dialog
 } from '@mui/material';
-import { 
-  Plus as AddIcon,
-  DotsThreeVertical as MoreVertIcon,
-  PencilSimple as EditIcon,
-  Eye as ViewIcon,
-  Truck as ShippingIcon,
-  ClipboardText as AssignmentIcon,
-  ArrowClockwise as RefreshIcon,
-  MagnifyingGlass as SearchIcon,
-  Clock,
-  CheckCircle,
-  TrendUp
+import {
+  Package,
+  Eye,
+  ShoppingCart,
+  TrendUp,
+  Plus,
+  Funnel,
+  MagnifyingGlass,
+  ArrowsClockwise,
+  ListBullets,
+  Broom,
+  DotsThreeVertical,
+  PencilSimple,
+  Trash,
+  CurrencyDollar,
+  Truck,
+  MapPin,
+  Calendar,
+  User,
+  Receipt,
 } from '@phosphor-icons/react';
-import { useNavigate } from 'react-router-dom';
-import { useOrders, useOrderActions } from '../../hooks/useOrders';
-import toast from 'react-hot-toast';
+
+import { useOrders, useDashboardStats } from '../../hooks/useOrders';
+import ManualOrderForm from './Components/ManualOrderForm';
+import OrderDetailsModal from './Components/OrderDetailModal';
 
 // Configuración global de SweetAlert2
 Swal.mixin({
@@ -62,7 +68,7 @@ Swal.mixin({
   didOpen: () => {
     const container = document.querySelector('.swal-overlay-custom');
     if (container) {
-      container.style.zIndex = '1500';
+      container.style.zIndex = '2000';
     }
   }
 });
@@ -306,19 +312,6 @@ const OrdersSecondaryActionButton = styled(IconButton)(({ theme }) => ({
   }
 }));
 
-// CONTENEDOR UNIFICADO ORDERS
-const OrdersUnifiedContainer = styled(Box)(({ theme }) => ({
-  width: '100%',
-  maxWidth: '100%',
-  margin: '0 auto',
-}));
-
-const OrdersStatsContainer = styled(OrdersUnifiedContainer)(({ theme }) => ({
-  marginBottom: '32px',
-  position: 'relative',
-  zIndex: 1,
-}));
-
 // GRID DE ESTADÍSTICAS ORDERS
 const OrdersStatsGrid = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -473,35 +466,6 @@ const OrdersStatLabel = styled(Typography)(({ variant, theme }) => ({
   }
 }));
 
-const OrdersStatChange = styled(Box)(({ variant, trend }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-  marginTop: 'auto',
-  padding: '6px 10px',
-  borderRadius: '8px',
-  background: variant === 'primary' 
-    ? 'rgba(255, 255, 255, 0.15)' 
-    : trend === 'up' 
-      ? alpha('#10B981', 0.1) 
-      : alpha('#EF4444', 0.1),
-  width: 'fit-content',
-}));
-
-const OrdersStatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
-  fontSize: '0.8rem',
-  fontWeight: 600,
-  color: variant === 'primary' 
-    ? 'white' 
-    : trend === 'up' 
-      ? '#10B981' 
-      : '#EF4444',
-  fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.75rem',
-  }
-}));
-
 const OrdersControlsSection = styled(OrdersModernCard)(({ theme }) => ({
   padding: '32px',
   marginBottom: '32px',
@@ -520,33 +484,6 @@ const OrdersControlsSection = styled(OrdersModernCard)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     padding: '20px',
     marginBottom: '20px',
-  }
-}));
-
-const OrdersControlsContent = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: '24px',
-  width: '100%',
-  [theme.breakpoints.down('lg')]: {
-    gap: '20px',
-  },
-  [theme.breakpoints.down('md')]: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: '18px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    gap: '16px',
-  }
-}));
-
-const OrdersSearchSection = styled(Box)(({ theme }) => ({
-  flex: 1,
-  minWidth: 0,
-  [theme.breakpoints.down('md')]: {
-    flex: 'none',
-    width: '100%',
   }
 }));
 
@@ -580,286 +517,318 @@ const OrdersModernTextField = styled(TextField)(({ theme }) => ({
   }
 }));
 
-const OrdersFiltersSection = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '14px',
-  flexWrap: 'wrap',
-  flexShrink: 0,
-  [theme.breakpoints.down('lg')]: {
-    gap: '12px',
-  },
-  [theme.breakpoints.down('md')]: {
-    justifyContent: 'flex-start',
-    gap: '12px',
-    width: '100%',
-  },
-  [theme.breakpoints.down('sm')]: {
-    justifyContent: 'center',
-    gap: '10px',
-    '& > *': {
-      minWidth: 'fit-content',
-    }
-  }
-}));
-
-const OrdersFilterChip = styled(Box)(({ theme, active }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '10px 14px',
-  borderRadius: '10px',
-  background: active ? alpha('#1F64BF', 0.1) : '#F2F2F2',
-  border: `1px solid ${active ? alpha('#1F64BF', 0.2) : 'transparent'}`,
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  fontSize: '0.9rem',
-  fontWeight: 500,
-  color: active ? '#1F64BF' : '#032CA6',
-  whiteSpace: 'nowrap',
-  fontFamily: "'Mona Sans'",
-  '&:hover': {
-    background: active ? alpha('#1F64BF', 0.15) : 'white',
-    transform: 'translateY(-1px)',
-  },
-  [theme.breakpoints.down('lg')]: {
-    padding: '8px 12px',
-    fontSize: '0.875rem',
-  },
-  [theme.breakpoints.down('sm')]: {
-    padding: '8px 10px',
-    fontSize: '0.8rem',
-  }
-}));
-
-const OrdersTableSection = styled(OrdersUnifiedContainer)({
-  marginBottom: '32px',
-  position: 'relative',
-  zIndex: 1,
-});
-
-const OrdersTable = styled(OrdersModernCard)(({ theme }) => ({
-  borderRadius: '16px',
+const OrdersTableContainer = styled(OrdersModernCard)(({ theme }) => ({
+  padding: '0',
   overflow: 'hidden',
-  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
-  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  marginBottom: '32px',
+  '& .MuiTableContainer-root': {
+    borderRadius: '16px',
+  }
 }));
 
-const StyledTableHead = styled(TableHead)(({ theme }) => ({
-  backgroundColor: alpha('#1F64BF', 0.04),
-  '& .MuiTableCell-head': {
-    fontWeight: 600,
-    color: '#010326',
-    textTransform: 'uppercase',
-    fontSize: '0.75rem',
-    letterSpacing: '0.05em',
-    fontFamily: "'Mona Sans'",
-    borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
+const OrdersTable = styled(Table)(({ theme }) => ({
+  '& .MuiTableHead-root': {
+    background: alpha('#1F64BF', 0.04),
   },
+  '& .MuiTableCell-head': {
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: '#032CA6',
+    borderBottom: `1px solid ${alpha('#1F64BF', 0.1)}`,
+    fontFamily: "'Mona Sans'",
+  },
+  '& .MuiTableCell-body': {
+    fontSize: '0.9rem',
+    color: '#010326',
+    borderBottom: `1px solid ${alpha('#1F64BF', 0.05)}`,
+    fontFamily: "'Mona Sans'",
+  },
+  '& .MuiTableRow-root:hover': {
+    backgroundColor: alpha('#1F64BF', 0.02),
+  }
 }));
 
 const StatusChip = styled(Chip)(({ status, theme }) => {
-  const colors = {
-    pending_approval: { bg: alpha('#f59e0b', 0.1), color: '#92400e' },
-    quoted: { bg: alpha('#3b82f6', 0.1), color: '#1e40af' },
-    approved: { bg: alpha('#10b981', 0.1), color: '#065f46' },
-    in_production: { bg: alpha('#8b5cf6', 0.1), color: '#3730a3' },
-    ready_for_delivery: { bg: alpha('#ec4899', 0.1), color: '#be185d' },
-    delivered: { bg: alpha('#10b981', 0.1), color: '#065f46' },
-    completed: { bg: alpha('#6b7280', 0.1), color: '#374151' },
-    cancelled: { bg: alpha('#ef4444', 0.1), color: '#991b1b' },
-    rejected: { bg: alpha('#ef4444', 0.1), color: '#991b1b' },
+  const getStatusStyles = (status) => {
+    const styles = {
+      pending_approval: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b' },
+      quoted: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
+      approved: { bg: '#d1fae5', color: '#065f46', border: '#10b981' },
+      in_production: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6' },
+      quality_check: { bg: '#fed7aa', color: '#9a3412', border: '#f97316' },
+      quality_approved: { bg: '#ecfccb', color: '#365314', border: '#84cc16' },
+      packaging: { bg: '#f3e8ff', color: '#581c87', border: '#a855f7' },
+      ready_for_delivery: { bg: '#e9d5ff', color: '#7c2d12', border: '#8b5cf6' },
+      out_for_delivery: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
+      delivered: { bg: '#dcfce7', color: '#166534', border: '#22c55e' },
+      completed: { bg: '#d1fae5', color: '#064e3b', border: '#059669' },
+      cancelled: { bg: '#fee2e2', color: '#991b1b', border: '#ef4444' },
+      on_hold: { bg: '#f3f4f6', color: '#374151', border: '#6b7280' }
+    };
+    return styles[status] || styles.on_hold;
   };
 
-  const statusColor = colors[status] || colors.pending_approval;
+  const statusStyles = getStatusStyles(status);
 
   return {
-    backgroundColor: statusColor.bg,
-    color: statusColor.color,
-    fontWeight: 600,
+    backgroundColor: statusStyles.bg,
+    color: statusStyles.color,
+    border: `1px solid ${statusStyles.border}`,
     fontSize: '0.75rem',
-    height: '28px',
-    borderRadius: '8px',
-    fontFamily: "'Mona Sans'",
-    border: `1px solid ${statusColor.color}20`,
+    fontWeight: 600,
+    height: '24px',
+    fontFamily: "'Mona Sans'"
   };
 });
 
+// ================ COMPONENTE PRINCIPAL ================
 const Orders = () => {
-  const navigate = useNavigate();
   const theme = useTheme();
   
-  // Estados locales
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [menuAnchor, setMenuAnchor] = useState(null);
-  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
-  const [quoteForm, setQuoteForm] = useState({
-    totalPrice: '',
-    deliveryFee: '',
-    tax: '',
-    notes: ''
-  });
-
-  // Hooks personalizados
+  // ==================== HOOKS ====================
   const {
     orders,
     loading,
     error,
     pagination,
     filters,
+    fetchOrders,
+    updateOrderStatus,
     updateFilters,
-    changePage,
-    refreshOrders
-  } = useOrders({
-    status: '',
-    deliveryType: '',
-    paymentStatus: '',
-    search: ''
-  });
+    clearFilters,
+    refreshOrders,
+    hasOrders,
+    isEmpty,
+    getStatusColor
+  } = useOrders();
 
-  const { loading: actionLoading, submitQuote } = useOrderActions();
+  const {
+    todayOrders,
+    todayRevenue,
+    monthOrders,
+    inProduction,
+    readyForDelivery,
+    loading: statsLoading
+  } = useDashboardStats();
 
-  // Calcular estadísticas
-  const stats = useMemo(() => {
-    const totalOrders = orders.length;
-    const pendingOrders = orders.filter(order => order.status === 'pending_approval').length;
-    const inProductionOrders = orders.filter(order => order.status === 'in_production').length;
-    const completedOrders = orders.filter(order => order.status === 'completed' || order.status === 'delivered').length;
-    
-    return [
-      {
-        id: 'total-orders',
-        title: "Total de Órdenes",
-        value: totalOrders,
-        change: "+12% este mes",
-        trend: "up",
-        icon: AssignmentIcon,
-        variant: "primary"
-      },
-      {
-        id: 'pending-orders',
-        title: "Pendientes",
-        value: pendingOrders,
-        change: `${pendingOrders}/${totalOrders} pendientes`,
-        trend: "up",
-        icon: Clock,
-        variant: "secondary"
-      },
-      {
-        id: 'production-orders',
-        title: "En Producción",
-        value: inProductionOrders,
-        change: "Órdenes activas",
-        trend: "up",
-        icon: ShippingIcon,
-        variant: "secondary"
-      },
-      {
-        id: 'completed-orders',
-        title: "Completadas",
-        value: completedOrders,
-        change: "Órdenes finalizadas",
-        trend: "up",
-        icon: CheckCircle,
-        variant: "secondary"
+  // ==================== ESTADOS LOCALES ====================
+  const [showManualOrderModal, setShowManualOrderModal] = useState(false);
+  const [showOrderDetailsModal, setShowOrderDetailsModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOption, setSortOption] = useState('newest');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  // ==================== EFECTOS ====================
+  useEffect(() => {
+    updateFilters({
+      search: searchQuery,
+      status: statusFilter === 'all' ? '' : statusFilter,
+      sort: sortOption
+    });
+  }, [searchQuery, statusFilter, sortOption, updateFilters]);
+
+  // ==================== CALCULADOS ====================
+  const stats = useMemo(() => [
+    {
+      id: 'today-orders',
+      title: "Órdenes de Hoy",
+      value: todayOrders,
+      change: "+12% vs ayer",
+      trend: "up",
+      icon: Package,
+      variant: "primary"
+    },
+    {
+      id: 'today-revenue',
+      title: "Ingresos de Hoy",
+      value: new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
+      }).format(todayRevenue),
+      change: `${todayRevenue.toFixed(0)}`,
+      trend: "up",
+      icon: CurrencyDollar,
+      variant: "secondary"
+    },
+    {
+      id: 'in-production',
+      title: "En Producción",
+      value: inProduction,
+      change: `${inProduction} órdenes activas`,
+      trend: "up",
+      icon: ShoppingCart,
+      variant: "secondary"
+    },
+    {
+      id: 'ready-delivery',
+      title: "Listas para Entrega",
+      value: readyForDelivery,
+      change: "Pendientes de envío",
+      trend: "up",
+      icon: Truck,
+      variant: "secondary"
+    }
+  ], [todayOrders, todayRevenue, inProduction, readyForDelivery]);
+
+  // ==================== MANEJADORES ====================
+  const handleCreateManualOrder = () => {
+    setShowManualOrderModal(true);
+  };
+
+  const handleCloseManualOrderModal = () => {
+    setShowManualOrderModal(false);
+  };
+
+  const handleOrderCreated = async () => {
+    setShowManualOrderModal(false);
+    await refreshOrders();
+  };
+
+  const handleViewOrderDetails = (order) => {
+    console.log('👁️ [Orders] Abriendo detalles de orden:', order._id);
+    setSelectedOrder(order);
+    setShowOrderDetailsModal(true);
+  };
+
+  const handleStatusChange = async (orderId, newStatus, orderNumber) => {
+    try {
+      const { isConfirmed } = await Swal.fire({
+        title: '¿Cambiar estado?',
+        text: `¿Cambiar estado de la orden ${orderNumber} a "${newStatus}"?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#1F64BF',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (isConfirmed) {
+        await updateOrderStatus(orderId, newStatus);
       }
-    ];
-  }, [orders]);
+    } catch (error) {
+      console.error('Error cambiando estado:', error);
+    }
+  };
 
-  // Funciones de manejo
-  const handleMenuOpen = (event, order) => {
-    setMenuAnchor(event.currentTarget);
+  const handleViewOrder = (order) => {
+    Swal.fire({
+      title: `Orden ${order.orderNumber}`,
+      html: `
+        <div style="text-align: left; padding: 20px; line-height: 1.6;">
+          <div style="margin-bottom: 12px;"><strong>Cliente:</strong> ${order.user?.name || 'N/A'}</div>
+          <div style="margin-bottom: 12px;"><strong>Estado:</strong> ${order.statusLabel}</div>
+          <div style="margin-bottom: 12px;"><strong>Total:</strong> ${order.formattedTotal}</div>
+          <div style="margin-bottom: 12px;"><strong>Entrega:</strong> ${order.deliveryLabel}</div>
+          <div style="margin-bottom: 12px;"><strong>Creado:</strong> ${order.formattedCreatedAt}</div>
+          ${order.clientNotes ? `<div style="margin-top: 16px;"><strong>Notas:</strong><br/><span style="color: #666;">${order.clientNotes}</span></div>` : ''}
+        </div>
+      `,
+      confirmButtonText: 'Cerrar',
+      confirmButtonColor: '#1F64BF',
+      width: 600,
+      customClass: {
+        container: 'swal-overlay-custom',
+        popup: 'swal-modal-custom'
+      }
+    });
+  };
+
+  const handleMenuClick = (event, order) => {
+    setAnchorEl(event.currentTarget);
     setSelectedOrder(order);
   };
 
   const handleMenuClose = () => {
-    setMenuAnchor(null);
+    setAnchorEl(null);
     setSelectedOrder(null);
   };
 
-  const handleViewOrder = (order) => {
-    navigate(`/orders/${order._id}`);
-    handleMenuClose();
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortOption('newest');
+    clearFilters();
   };
 
-  const handleEditOrder = (order) => {
-    navigate(`/orders/${order._id}/edit`);
-    handleMenuClose();
-  };
-
-  const handleQuoteOrder = (order) => {
-    setSelectedOrder(order);
-    setQuoteDialogOpen(true);
-    handleMenuClose();
-  };
-
-  const handleSubmitQuote = async () => {
-    if (!selectedOrder || !quoteForm.totalPrice) {
-      toast.error('Precio total es requerido');
-      return;
-    }
-
-    try {
-      await submitQuote(selectedOrder._id, {
-        totalPrice: parseFloat(quoteForm.totalPrice),
-        deliveryFee: parseFloat(quoteForm.deliveryFee) || 0,
-        tax: parseFloat(quoteForm.tax) || 0,
-        notes: quoteForm.notes
-      });
-
-      setQuoteDialogOpen(false);
-      setQuoteForm({ totalPrice: '', deliveryFee: '', tax: '', notes: '' });
-      refreshOrders();
-    } catch (error) {
-      console.error('Error enviando cotización:', error);
-    }
-  };
-
-  const handleFilterChange = (field, value) => {
-    updateFilters({ [field]: value });
-  };
-
-  const getStatusLabel = (status) => {
-    const labels = {
-      pending_approval: 'Pendiente Aprobación',
-      quoted: 'Cotizado',
-      approved: 'Aprobado',
-      in_production: 'En Producción',
-      ready_for_delivery: 'Listo Entrega',
-      delivered: 'Entregado',
-      completed: 'Completado',
-      cancelled: 'Cancelado',
-      rejected: 'Rechazado'
-    };
-    return labels[status] || status;
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-SV', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-SV', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  if (error) {
+  // ==================== RENDER ====================
+  if (loading && !hasOrders) {
     return (
       <OrdersPageContainer>
         <OrdersContentWrapper>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center', 
+            justifyContent: 'center',
+            minHeight: '60vh', 
+            gap: '24px' 
+          }}>
+            <CircularProgress 
+              size={48} 
+              sx={{ 
+                color: '#1F64BF',
+                filter: 'drop-shadow(0 4px 8px rgba(31, 100, 191, 0.3))'
+              }} 
+            />
+            <Typography variant="body1" sx={{ 
+              color: '#010326', 
+              fontWeight: 600, 
+              fontFamily: "'Mona Sans'" 
+            }}>
+              Cargando órdenes...
+            </Typography>
+          </Box>
+        </OrdersContentWrapper>
+      </OrdersPageContainer>
+    );
+  }
+
+  return (
+    <OrdersPageContainer>
+      <OrdersContentWrapper>
+        {/* Header Principal */}
+        <OrdersHeaderSection>
+          <OrdersHeaderContent>
+            <OrdersHeaderInfo>
+              <OrdersMainTitle>
+                Gestión de Órdenes
+              </OrdersMainTitle>
+              <OrdersMainDescription>
+                Administra todos los pedidos y controla el flujo de producción
+              </OrdersMainDescription>
+            </OrdersHeaderInfo>
+            
+            <OrdersHeaderActions>
+              <OrdersPrimaryActionButton
+                onClick={handleCreateManualOrder}
+                disabled={loading}
+                startIcon={<Plus size={18} weight="bold" />}
+              >
+                Pedido Manual
+              </OrdersPrimaryActionButton>
+              
+              <OrdersSecondaryActionButton
+                onClick={refreshOrders}
+                disabled={loading}
+                title="Refrescar órdenes"
+              >
+                <ArrowsClockwise size={20} weight="bold" />
+              </OrdersSecondaryActionButton>
+            </OrdersHeaderActions>
+          </OrdersHeaderContent>
+        </OrdersHeaderSection>
+
+        {/* Error Message */}
+        {error && (
           <OrdersModernCard sx={{ 
             p: 3, 
             mb: 4,
             background: alpha('#dc2626', 0.05),
             border: `1px solid ${alpha('#dc2626', 0.2)}`,
-            position: 'relative',
-            zIndex: 1,
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ color: '#dc2626', fontWeight: 500, fontFamily: "'Mona Sans'" }}>
@@ -868,7 +837,6 @@ const Orders = () => {
               <Button 
                 size="small" 
                 onClick={refreshOrders}
-                startIcon={<RefreshIcon size={18} weight="bold" />}
                 sx={{ 
                   color: '#dc2626',
                   fontWeight: 600,
@@ -880,48 +848,10 @@ const Orders = () => {
               </Button>
             </Box>
           </OrdersModernCard>
-        </OrdersContentWrapper>
-      </OrdersPageContainer>
-    );
-  }
-
-  return (
-    <OrdersPageContainer>
-      <OrdersContentWrapper>
-        {/* Header Principal */}
-        <OrdersHeaderSection sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
-          <OrdersHeaderContent>
-            <OrdersHeaderInfo>
-              <OrdersMainTitle sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
-                Gestión de Órdenes
-              </OrdersMainTitle>
-              <OrdersMainDescription sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
-                Administra pedidos, cotizaciones y seguimiento de producción
-              </OrdersMainDescription>
-            </OrdersHeaderInfo>
-            
-            <OrdersHeaderActions>
-              <OrdersPrimaryActionButton
-                onClick={() => navigate('/orders/create')}
-                disabled={loading}
-                startIcon={<AddIcon size={18} weight="bold" />}
-              >
-                Nueva Orden
-              </OrdersPrimaryActionButton>
-              
-              <OrdersSecondaryActionButton
-                onClick={refreshOrders}
-                disabled={loading}
-                title="Actualizar órdenes"
-              >
-                <RefreshIcon size={20} weight="bold" />
-              </OrdersSecondaryActionButton>
-            </OrdersHeaderActions>
-          </OrdersHeaderContent>
-        </OrdersHeaderSection>
+        )}
 
         {/* Estadísticas */}
-        <OrdersStatsContainer>
+        <Box sx={{ mb: 4 }}>
           <OrdersStatsGrid>
             {stats.map((stat) => (
               <OrdersStatCard key={stat.id} variant={stat.variant}>
@@ -938,421 +868,488 @@ const Orders = () => {
                     <stat.icon size={24} weight="duotone" />
                   </OrdersStatIconContainer>
                 </OrdersStatHeader>
-                <OrdersStatChange variant={stat.variant} trend={stat.trend}>
-                  <TrendUp size={12} weight="bold" />
-                  <OrdersStatTrendText variant={stat.variant} trend={stat.trend}>
-                    {stat.change}
-                  </OrdersStatTrendText>
-                </OrdersStatChange>
               </OrdersStatCard>
             ))}
           </OrdersStatsGrid>
-        </OrdersStatsContainer>
+        </Box>
 
         {/* Controles de búsqueda y filtros */}
         <OrdersControlsSection>
-          <OrdersControlsContent>
-            <OrdersSearchSection>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 3, 
+            alignItems: 'flex-start',
+            flexDirection: { xs: 'column', md: 'row' }
+          }}>
+            {/* Búsqueda */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <OrdersModernTextField
-                fullWidth
                 placeholder="Buscar por número de orden, cliente..."
-                value={filters.search || ''}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon size={18} weight="bold" color="#032CA6" />
+                      <MagnifyingGlass size={18} weight="bold" color="#032CA6" />
                     </InputAdornment>
                   ),
                 }}
               />
-            </OrdersSearchSection>
+            </Box>
 
-            <OrdersFiltersSection>
-              <OrdersFilterChip active={filters.status !== ''}>
-                <AssignmentIcon size={16} weight="bold" />
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <Select
-                    value={filters.status || ''}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                    displayEmpty
-                    sx={{
-                      border: 'none',
+            {/* Filtros */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              width: { xs: '100%', md: 'auto' }
+            }}>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    borderRadius: '12px',
+                    backgroundColor: '#F2F2F2',
+                    border: 'none',
+                    fontFamily: "'Mona Sans'",
+                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                    '&:hover': { backgroundColor: 'white' },
+                    '& .MuiSelect-select': { 
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
                       fontFamily: "'Mona Sans'",
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                      '& .MuiSelect-select': { 
-                        padding: 0,
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#010326',
-                        fontFamily: "'Mona Sans'",
-                      }
-                    }}
-                  >
-                    <MenuItem value="">Estado</MenuItem>
-                    <MenuItem value="pending_approval">Pendiente Aprobación</MenuItem>
-                    <MenuItem value="quoted">Cotizado</MenuItem>
-                    <MenuItem value="approved">Aprobado</MenuItem>
-                    <MenuItem value="in_production">En Producción</MenuItem>
-                    <MenuItem value="ready_for_delivery">Listo Entrega</MenuItem>
-                    <MenuItem value="delivered">Entregado</MenuItem>
-                    <MenuItem value="completed">Completado</MenuItem>
-                    <MenuItem value="cancelled">Cancelado</MenuItem>
-                  </Select>
-                </FormControl>
-              </OrdersFilterChip>
+                    }
+                  }}
+                >
+                  <MenuItem value="all">Todos los estados</MenuItem>
+                  <MenuItem value="pending_approval">Pendiente Aprobación</MenuItem>
+                  <MenuItem value="quoted">Cotizado</MenuItem>
+                  <MenuItem value="approved">Aprobado</MenuItem>
+                  <MenuItem value="in_production">En Producción</MenuItem>
+                  <MenuItem value="quality_check">Control de Calidad</MenuItem>
+                  <MenuItem value="quality_approved">Calidad Aprobada</MenuItem>
+                  <MenuItem value="packaging">Empacando</MenuItem>
+                  <MenuItem value="ready_for_delivery">Listo para Entrega</MenuItem>
+                  <MenuItem value="out_for_delivery">En Camino</MenuItem>
+                  <MenuItem value="delivered">Entregado</MenuItem>
+                  <MenuItem value="completed">Completado</MenuItem>
+                  <MenuItem value="cancelled">Cancelado</MenuItem>
+                </Select>
+              </FormControl>
 
-              <OrdersFilterChip active={filters.deliveryType !== ''}>
-                <ShippingIcon size={16} weight="bold" />
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <Select
-                    value={filters.deliveryType || ''}
-                    onChange={(e) => handleFilterChange('deliveryType', e.target.value)}
-                    displayEmpty
-                    sx={{
-                      border: 'none',
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <Select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  sx={{
+                    borderRadius: '12px',
+                    backgroundColor: '#F2F2F2',
+                    border: 'none',
+                    fontFamily: "'Mona Sans'",
+                    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                    '&:hover': { backgroundColor: 'white' },
+                    '& .MuiSelect-select': { 
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
                       fontFamily: "'Mona Sans'",
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                      '& .MuiSelect-select': { 
-                        padding: 0,
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#010326',
-                        fontFamily: "'Mona Sans'",
-                      }
-                    }}
-                  >
-                    <MenuItem value="">Entrega</MenuItem>
-                    <MenuItem value="delivery">Domicilio</MenuItem>
-                    <MenuItem value="meetup">Punto de Encuentro</MenuItem>
-                  </Select>
-                </FormControl>
-              </OrdersFilterChip>
+                    }
+                  }}
+                >
+                  <MenuItem value="newest">Más recientes</MenuItem>
+                  <MenuItem value="oldest">Más antiguos</MenuItem>
+                  <MenuItem value="total_desc">Mayor valor</MenuItem>
+                  <MenuItem value="total_asc">Menor valor</MenuItem>
+                </Select>
+              </FormControl>
 
-              <OrdersFilterChip active={filters.paymentStatus !== ''}>
-                <CheckCircle size={16} weight="bold" />
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <Select
-                    value={filters.paymentStatus || ''}
-                    onChange={(e) => handleFilterChange('paymentStatus', e.target.value)}
-                    displayEmpty
-                    sx={{
-                      border: 'none',
-                      fontFamily: "'Mona Sans'",
-                      '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
-                      '& .MuiSelect-select': { 
-                        padding: 0,
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: '#010326',
-                        fontFamily: "'Mona Sans'",
-                      }
-                    }}
-                  >
-                    <MenuItem value="">Pago</MenuItem>
-                    <MenuItem value="pending">Pendiente</MenuItem>
-                    <MenuItem value="paid">Pagado</MenuItem>
-                    <MenuItem value="failed">Fallido</MenuItem>
-                  </Select>
-                </FormControl>
-              </OrdersFilterChip>
-            </OrdersFiltersSection>
-          </OrdersControlsContent>
+              {(searchQuery || statusFilter !== 'all' || sortOption !== 'newest') && (
+                <Button
+                  onClick={handleClearFilters}
+                  startIcon={<Broom size={16} weight="bold" />}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#032CA6',
+                    backgroundColor: alpha('#032CA6', 0.1),
+                    fontFamily: "'Mona Sans'",
+                    '&:hover': {
+                      backgroundColor: alpha('#032CA6', 0.15),
+                    }
+                  }}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </Box>
+          </Box>
         </OrdersControlsSection>
 
         {/* Tabla de Órdenes */}
-        <OrdersTableSection>
-          <OrdersTable>
+        <OrdersTableContainer>
+          {loading && hasOrders && (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              p: 2,
+              backgroundColor: alpha('#1F64BF', 0.04)
+            }}>
+              <CircularProgress size={20} sx={{ color: '#1F64BF', mr: 2 }} />
+              <Typography variant="body2" sx={{ 
+                color: '#1F64BF', 
+                fontWeight: 600, 
+                fontFamily: "'Mona Sans'" 
+              }}>
+                Actualizando órdenes...
+              </Typography>
+            </Box>
+          )}
+
+          {hasOrders ? (
             <TableContainer>
-              <Table>
-                <StyledTableHead>
+              <OrdersTable>
+                <TableHead>
                   <TableRow>
                     <TableCell>Orden</TableCell>
                     <TableCell>Cliente</TableCell>
                     <TableCell>Estado</TableCell>
-                    <TableCell>Productos</TableCell>
                     <TableCell>Total</TableCell>
-                    <TableCell>Fecha</TableCell>
                     <TableCell>Entrega</TableCell>
-                    <TableCell align="center">Acciones</TableCell>
+                    <TableCell>Fecha</TableCell>
+                    <TableCell align="right">Acciones</TableCell>
                   </TableRow>
-                </StyledTableHead>
+                </TableHead>
                 <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                        <CircularProgress sx={{ color: '#1F64BF' }} />
-                      </TableCell>
-                    </TableRow>
-                  ) : orders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                        <Typography color="text.secondary" fontFamily="'Mona Sans'">
-                          No se encontraron órdenes
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    orders.map((order) => (
-                      <TableRow key={order._id} hover sx={{ '&:hover': { backgroundColor: alpha('#1F64BF', 0.02) } }}>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600} fontFamily="'Mona Sans'">
+                  {orders.map((order) => (
+                    <TableRow key={order._id}>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          <Typography variant="body2" sx={{ 
+                            fontWeight: 600,
+                            color: '#010326',
+                            fontFamily: "'Mona Sans'"
+                          }}>
                             #{order.orderNumber}
                           </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontFamily="'Mona Sans'">
-                            {order.user?.name || 'Cliente desconocido'}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" fontFamily="'Mona Sans'">
-                            {order.user?.email}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <StatusChip
-                            label={getStatusLabel(order.status)}
-                            status={order.status}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontFamily="'Mona Sans'">
-                            {order.items?.length || 0} producto(s)
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600} fontFamily="'Mona Sans'">
-                            {formatCurrency(order.total)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontFamily="'Mona Sans'">
-                            {formatDate(order.createdAt)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={order.deliveryType === 'delivery' ? <ShippingIcon size={16} weight="bold" /> : <AssignmentIcon size={16} weight="bold" />}
-                            label={order.deliveryType === 'delivery' ? 'Domicilio' : 'Punto Encuentro'}
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              fontFamily: "'Mona Sans'",
-                              borderColor: alpha('#1F64BF', 0.2),
-                              color: '#032CA6'
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="Más opciones">
-                            <IconButton
-                              onClick={(e) => handleMenuOpen(e, order)}
+                          {order.isManualOrder && (
+                            <Chip 
+                              label="Manual" 
                               size="small"
                               sx={{
+                                height: '18px',
+                                fontSize: '0.7rem',
+                                backgroundColor: alpha('#8b5cf6', 0.1),
+                                color: '#8b5cf6',
+                                fontWeight: 600,
+                                fontFamily: "'Mona Sans'"
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <User size={16} color="#032CA6" />
+                          <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'" }}>
+                            {order.user?.name || 'Cliente no disponible'}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip 
+                          label={order.statusLabel}
+                          status={order.status}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ 
+                          fontWeight: 600,
+                          color: '#010326',
+                          fontFamily: "'Mona Sans'"
+                        }}>
+                          {order.formattedTotal}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {order.deliveryType === 'delivery' ? (
+                            <Truck size={16} color="#032CA6" />
+                          ) : (
+                            <MapPin size={16} color="#032CA6" />
+                          )}
+                          <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'" }}>
+                            {order.deliveryLabel}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Calendar size={16} color="#032CA6" />
+                          <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'" }}>
+                            {order.formattedCreatedAt}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          <Tooltip title="Ver detalles">
+                            <IconButton
+                              onClick={() => handleViewOrderDetails(order)}
+                              size="small"
+                              sx={{
+                                color: '#10b981',
                                 '&:hover': {
-                                  backgroundColor: alpha('#1F64BF', 0.1)
+                                  backgroundColor: alpha('#10b981', 0.08),
                                 }
                               }}
                             >
-                              <MoreVertIcon size={20} weight="bold" />
+                              <Eye size={18} weight="bold" />
                             </IconButton>
                           </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                          <Tooltip title="Más acciones">
+                            <IconButton
+                              onClick={(e) => handleMenuClick(e, order)}
+                              size="small"
+                              sx={{
+                                color: '#032CA6',
+                                '&:hover': {
+                                  backgroundColor: alpha('#1F64BF', 0.08),
+                                }
+                              }}
+                            >
+                              <DotsThreeVertical size={18} weight="bold" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
-              </Table>
+              </OrdersTable>
             </TableContainer>
-
-            {/* Paginación */}
-            {pagination.totalPages > 1 && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
+          ) : (
+            <Box sx={{ 
+              p: 8, 
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3
+            }}>
+              <Box sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                backgroundColor: alpha('#1F64BF', 0.1),
+                display: 'flex',
                 alignItems: 'center',
-                p: 3,
-                gap: 2,
-                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'center',
+                color: '#1F64BF'
               }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => changePage(pagination.page - 1)}
-                  disabled={!pagination.hasPrev || loading}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderColor: alpha('#1F64BF', 0.3),
-                    color: '#1F64BF',
-                    minWidth: { xs: '100%', sm: 'auto' },
-                    fontFamily: "'Mona Sans'",
-                    '&:hover': {
-                      borderColor: '#1F64BF',
-                      backgroundColor: alpha('#1F64BF', 0.05),
-                    },
-                    '&:disabled': {
-                      borderColor: alpha('#1F64BF', 0.1),
-                      color: alpha('#1F64BF', 0.3),
-                    }
-                  }}
-                >
-                  ← Anterior
-                </Button>
-                
-                <OrdersModernCard sx={{ 
-                  px: 3, 
-                  py: 1,
-                  minWidth: { xs: '100%', sm: 'auto' },
-                  textAlign: 'center'
-                }}>
-                  <Typography variant="body2" sx={{ color: '#032CA6', fontWeight: 600, fontFamily: "'Mona Sans'" }}>
-                    {pagination.page} de {pagination.totalPages}
-                  </Typography>
-                </OrdersModernCard>
-                
-                <Button
-                  variant="outlined"
-                  onClick={() => changePage(pagination.page + 1)}
-                  disabled={!pagination.hasNext || loading}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderColor: alpha('#1F64BF', 0.3),
-                    color: '#1F64BF',
-                    minWidth: { xs: '100%', sm: 'auto' },
-                    fontFamily: "'Mona Sans'",
-                    '&:hover': {
-                      borderColor: '#1F64BF',
-                      backgroundColor: alpha('#1F64BF', 0.05),
-                    },
-                    '&:disabled': {
-                      borderColor: alpha('#1F64BF', 0.1),
-                      color: alpha('#1F64BF', 0.3),
-                    }
-                  }}
-                >
-                  Siguiente →
-                </Button>
+                <Package size={32} weight="duotone" />
               </Box>
-            )}
-          </OrdersTable>
-        </OrdersTableSection>
+              <Box>
+                <Typography variant="h6" sx={{ 
+                  color: '#010326', 
+                  fontWeight: 600,
+                  mb: 1,
+                  fontFamily: "'Mona Sans'" 
+                }}>
+                  {searchQuery || statusFilter !== 'all' 
+                    ? 'No hay órdenes que coincidan' 
+                    : 'No hay órdenes registradas'
+                  }
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  color: '#032CA6', 
+                  maxWidth: 400,
+                  mx: 'auto',
+                  fontFamily: "'Mona Sans'" 
+                }}>
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'Intenta ajustar los filtros de búsqueda o crear una nueva orden'
+                    : 'Comienza creando tu primera orden o pedido manual'
+                  }
+                </Typography>
+              </Box>
+              <OrdersPrimaryActionButton
+                onClick={handleCreateManualOrder}
+                startIcon={<Plus size={18} weight="bold" />}
+              >
+                Crear Pedido Manual
+              </OrdersPrimaryActionButton>
+            </Box>
+          )}
+        </OrdersTableContainer>
 
-        {/* Menu de Acciones */}
+        {/* Paginación */}
+        {pagination.totalPages > 1 && (
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}>
+            <Button
+              variant="outlined"
+              onClick={() => fetchOrders({ ...filters, page: pagination.page - 1 })}
+              disabled={!pagination.hasPrev || loading}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderColor: alpha('#1F64BF', 0.3),
+                color: '#1F64BF',
+                minWidth: { xs: '100%', sm: 'auto' },
+                fontFamily: "'Mona Sans'",
+                '&:hover': {
+                  borderColor: '#1F64BF',
+                  backgroundColor: alpha('#1F64BF', 0.05),
+                },
+                '&:disabled': {
+                  borderColor: alpha('#1F64BF', 0.1),
+                  color: alpha('#1F64BF', 0.3),
+                }
+              }}
+            >
+              ← Anterior
+            </Button>
+            
+            <OrdersModernCard sx={{ 
+              px: 3, 
+              py: 1,
+              minWidth: { xs: '100%', sm: 'auto' },
+              textAlign: 'center'
+            }}>
+              <Typography variant="body2" sx={{ 
+                color: '#032CA6', 
+                fontWeight: 600,
+                fontFamily: "'Mona Sans'" 
+              }}>
+                Página {pagination.page} de {pagination.totalPages}
+              </Typography>
+            </OrdersModernCard>
+            
+            <Button
+              variant="outlined"
+              onClick={() => fetchOrders({ ...filters, page: pagination.page + 1 })}
+              disabled={!pagination.hasNext || loading}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderColor: alpha('#1F64BF', 0.3),
+                color: '#1F64BF',
+                minWidth: { xs: '100%', sm: 'auto' },
+                fontFamily: "'Mona Sans'",
+                '&:hover': {
+                  borderColor: '#1F64BF',
+                  backgroundColor: alpha('#1F64BF', 0.05),
+                },
+                '&:disabled': {
+                  borderColor: alpha('#1F64BF', 0.1),
+                  color: alpha('#1F64BF', 0.3),
+                }
+              }}
+            >
+              Siguiente →
+            </Button>
+          </Box>
+        )}
+
+        {/* Menú de acciones */}
         <Menu
-          anchorEl={menuAnchor}
-          open={Boolean(menuAnchor)}
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
           onClose={handleMenuClose}
           PaperProps={{
             sx: {
               borderRadius: '12px',
-              boxShadow: '0 4px 24px rgba(1, 3, 38, 0.12)',
-              border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+              boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)',
+              border: `1px solid ${alpha('#1F64BF', 0.08)}`
             }
           }}
         >
-          <MenuItem onClick={() => handleViewOrder(selectedOrder)} sx={{ fontFamily: "'Mona Sans'" }}>
-            <ViewIcon size={18} weight="bold" style={{ marginRight: '8px' }} />
-            Ver Detalles
+          <MenuItem 
+            onClick={() => {
+              handleViewOrder(selectedOrder);
+              handleMenuClose();
+            }}
+            sx={{ fontFamily: "'Mona Sans'", gap: 1 }}
+          >
+            <Eye size={16} weight="bold" />
+            Ver detalles
           </MenuItem>
-          <MenuItem onClick={() => handleEditOrder(selectedOrder)} sx={{ fontFamily: "'Mona Sans'" }}>
-            <EditIcon size={18} weight="bold" style={{ marginRight: '8px' }} />
-            Editar
-          </MenuItem>
-          {selectedOrder?.status === 'pending_approval' && (
-            <MenuItem onClick={() => handleQuoteOrder(selectedOrder)} sx={{ fontFamily: "'Mona Sans'" }}>
-              <AssignmentIcon size={18} weight="bold" style={{ marginRight: '8px' }} />
-              Cotizar
+          
+          {selectedOrder?.canBeEdited && (
+            <MenuItem 
+              onClick={() => {
+                handleStatusChange(
+                  selectedOrder._id, 
+                  'in_production', 
+                  selectedOrder.orderNumber
+                );
+                handleMenuClose();
+              }}
+              sx={{ fontFamily: "'Mona Sans'", gap: 1 }}
+            >
+              <PencilSimple size={16} weight="bold" />
+              Pasar a producción
             </MenuItem>
           )}
+          
+          <MenuItem 
+            onClick={() => {
+              // Abrir modal de pagos
+              handleMenuClose();
+            }}
+            sx={{ fontFamily: "'Mona Sans'", gap: 1 }}
+          >
+            <Receipt size={16} weight="bold" />
+            Ver pagos
+          </MenuItem>
         </Menu>
 
-        {/* Dialog de Cotización */}
+        {/* Modal de pedido manual */}
         <Dialog
-          open={quoteDialogOpen}
-          onClose={() => setQuoteDialogOpen(false)}
-          maxWidth="sm"
+          open={showManualOrderModal}
+          onClose={handleCloseManualOrderModal}
+          maxWidth="lg"
           fullWidth
           PaperProps={{
             sx: {
               borderRadius: '16px',
-              boxShadow: '0 4px 24px rgba(1, 3, 38, 0.12)',
+              boxShadow: '0 24px 64px rgba(1, 3, 38, 0.12)'
             }
           }}
         >
-          <DialogTitle sx={{ fontFamily: "'Mona Sans'", fontWeight: 600, color: '#010326' }}>
-            Cotizar Orden #{selectedOrder?.orderNumber}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-              <TextField
-                label="Precio Total *"
-                type="number"
-                value={quoteForm.totalPrice}
-                onChange={(e) => setQuoteForm(prev => ({ ...prev, totalPrice: e.target.value }))}
-                InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1, fontFamily: "'Mona Sans'" }}>$</Typography>
-                }}
-                required
-                sx={{ fontFamily: "'Mona Sans'" }}
-              />
-              <TextField
-                label="Costo de Envío"
-                type="number"
-                value={quoteForm.deliveryFee}
-                onChange={(e) => setQuoteForm(prev => ({ ...prev, deliveryFee: e.target.value }))}
-                InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1, fontFamily: "'Mona Sans'" }}>$</Typography>
-                }}
-                sx={{ fontFamily: "'Mona Sans'" }}
-              />
-              <TextField
-                label="Impuestos"
-                type="number"
-                value={quoteForm.tax}
-                onChange={(e) => setQuoteForm(prev => ({ ...prev, tax: e.target.value }))}
-                InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1, fontFamily: "'Mona Sans'" }}>$</Typography>
-                }}
-                sx={{ fontFamily: "'Mona Sans'" }}
-              />
-              <TextField
-                label="Notas (opcional)"
-                multiline
-                rows={3}
-                value={quoteForm.notes}
-                onChange={(e) => setQuoteForm(prev => ({ ...prev, notes: e.target.value }))}
-                sx={{ fontFamily: "'Mona Sans'" }}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button 
-              onClick={() => setQuoteDialogOpen(false)}
-              sx={{ fontFamily: "'Mona Sans'", textTransform: 'none' }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmitQuote}
-              variant="contained"
-              disabled={actionLoading || !quoteForm.totalPrice}
-              sx={{
-                background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-                fontFamily: "'Mona Sans'",
-                textTransform: 'none',
-                borderRadius: '8px',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-                }
-              }}
-            >
-              {actionLoading ? <CircularProgress size={20} /> : 'Enviar Cotización'}
-            </Button>
-          </DialogActions>
+          <ManualOrderForm
+            open={showManualOrderModal}
+            onClose={handleCloseManualOrderModal}
+            onOrderCreated={handleOrderCreated}
+          />
         </Dialog>
+
+        {/* Modal de detalles de orden */}
+        <OrderDetailsModal
+          open={showOrderDetailsModal}
+          onClose={() => {
+            setShowOrderDetailsModal(false);
+            setSelectedOrder(null);
+          }}
+          order={selectedOrder}
+          onStatusChange={(orderId, newStatus) => {
+            // Refrescar órdenes después del cambio de estado
+            refreshOrders();
+          }}
+        />
       </OrdersContentWrapper>
     </OrdersPageContainer>
   );

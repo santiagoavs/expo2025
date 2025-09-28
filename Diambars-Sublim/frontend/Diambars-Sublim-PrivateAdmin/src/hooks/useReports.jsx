@@ -1,252 +1,216 @@
-// src/hooks/useReports.js - Custom hooks para reportes
-import { useState, useEffect, useCallback } from 'react';
+// src/hooks/useReports.jsx - Hook personalizado para reportes refactorizado
+import { useState, useEffect, useCallback, useRef } from 'react';
 import reportService from '../api/ReportService';
-import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 /**
- * Hook para métricas del dashboard
+ * Hook principal para dashboard stats
  */
 export const useDashboardStats = (initialFilters = {}) => {
-  const [stats, setStats] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
 
-  const fetchStats = useCallback(async (customFilters = null) => {
+  const fetchDashboardStats = useCallback(async (customFilters = null) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const currentFilters = customFilters || filters;
-      console.log('📊 [useDashboardStats] Obteniendo stats:', currentFilters);
-
       const response = await reportService.getDashboardStats(currentFilters);
-
+      
       if (response.success) {
-        setStats(response.data);
+        setData(response.data);
       } else {
-        throw new Error(response.message || 'Error obteniendo estadísticas');
+        throw new Error(response.message);
       }
-
     } catch (error) {
       console.error('❌ [useDashboardStats] Error:', error);
-      setError(error.message || 'Error obteniendo estadísticas');
-      setStats(null);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useDashboardStats] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    fetchDashboardStats();
+  }, []); // Solo ejecutar una vez al montar
 
   return {
-    stats,
+    data,
     loading,
     error,
-    filters,
-    updateFilters,
-    refetch: fetchStats
+    refetch: fetchDashboardStats,
+    updateFilters: setFilters,
+    
+    // Métricas calculadas
+    todayOrders: data?.today?.totalOrders || 0,
+    todayRevenue: data?.today?.totalRevenue || 0,
+    monthOrders: data?.thisMonth?.totalOrders || 0,
+    monthRevenue: data?.thisMonth?.totalRevenue || 0,
+    ordersByStatus: data?.ordersByStatus || {},
+    inProduction: data?.production?.inProduction || 0,
+    readyForDelivery: data?.production?.readyForDelivery || 0
   };
 };
 
 /**
- * Hook para reporte de ventas
+ * Hook para reportes de ventas
  */
 export const useSalesReport = (initialFilters = {}) => {
-  const [salesData, setSalesData] = useState(null);
-  const [chartData, setChartData] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    groupBy: 'day',
-    ...initialFilters
-  });
+  const [filters, setFilters] = useState(initialFilters);
 
   const fetchSalesReport = useCallback(async (customFilters = null) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const currentFilters = customFilters || filters;
       
-      // Validar rango de fechas
-      if (currentFilters.startDate && currentFilters.endDate) {
-        const validation = reportService.validateDateRange(
-          currentFilters.startDate,
-          currentFilters.endDate
-        );
-        
-        if (!validation.valid) {
-          throw new Error(validation.error);
-        }
+      // Validar filtros
+      const validation = reportService.validateReportFilters(currentFilters);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
       }
-
-      console.log('💰 [useSalesReport] Obteniendo reporte ventas:', currentFilters);
-
+      
       const response = await reportService.getSalesReport(currentFilters);
-
+      
       if (response.success) {
-        setSalesData(response.data);
-        // Formatear datos para gráficos
-        const formatted = reportService.formatChartData(response.data.chartData || [], 'line');
-        setChartData(formatted);
+        setData(response.data);
       } else {
-        throw new Error(response.message || 'Error obteniendo reporte');
+        throw new Error(response.message);
       }
-
     } catch (error) {
       console.error('❌ [useSalesReport] Error:', error);
-      setError(error.message || 'Error obteniendo reporte de ventas');
-      setSalesData(null);
-      setChartData(null);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useSalesReport] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
-  useEffect(() => {
-    fetchSalesReport();
-  }, [fetchSalesReport]);
+  const exportSalesReport = useCallback(async (format = 'excel') => {
+    try {
+      const filename = `ventas_${filters.startDate || 'all'}_${Date.now()}`;
+      
+      if (format === 'excel') {
+        await reportService.exportToExcel('sales', filters, filename);
+      } else {
+        await reportService.exportToPDF('sales', filters, filename);
+      }
+      
+      await Swal.fire({
+        title: 'Exportado',
+        text: `Reporte exportado como ${format.toUpperCase()}`,
+        icon: 'success',
+        confirmButtonColor: '#1F64BF'
+      });
+    } catch (error) {
+      console.error('❌ [useSalesReport] Error exportando:', error);
+      throw error;
+    }
+  }, [filters]);
 
   return {
-    salesData,
-    chartData,
+    data,
     loading,
     error,
     filters,
-    updateFilters,
-    refetch: fetchSalesReport
+    fetchSalesReport,
+    exportSalesReport,
+    updateFilters: setFilters,
+    hasData: !!data
   };
 };
 
 /**
- * Hook para productos más vendidos
+ * Hook para productos top
  */
-export const useTopProductsReport = (initialFilters = {}) => {
-  const [productsData, setProductsData] = useState(null);
-  const [chartData, setChartData] = useState(null);
+export const useTopProductsReport = (initialFilters = { limit: 10 }) => {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    limit: 10,
-    ...initialFilters
-  });
+  const [filters, setFilters] = useState(initialFilters);
 
   const fetchTopProducts = useCallback(async (customFilters = null) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const currentFilters = customFilters || filters;
-      console.log('🏆 [useTopProductsReport] Obteniendo productos top:', currentFilters);
-
       const response = await reportService.getTopProductsReport(currentFilters);
-
+      
       if (response.success) {
-        setProductsData(response.data);
-        // Formatear datos para gráficos
-        const formatted = reportService.formatChartData(response.data.products || [], 'bar');
-        setChartData(formatted);
+        setData(response.data);
       } else {
-        throw new Error(response.message || 'Error obteniendo productos');
+        throw new Error(response.message);
       }
-
     } catch (error) {
       console.error('❌ [useTopProductsReport] Error:', error);
-      setError(error.message || 'Error obteniendo productos top');
-      setProductsData(null);
-      setChartData(null);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useTopProductsReport] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
   useEffect(() => {
     fetchTopProducts();
-  }, [fetchTopProducts]);
+  }, []); // Solo ejecutar una vez al montar
 
   return {
-    productsData,
-    chartData,
+    data,
     loading,
     error,
-    filters,
-    updateFilters,
-    refetch: fetchTopProducts
+    fetchTopProducts,
+    updateFilters: setFilters,
+    hasData: !!data
   };
 };
 
 /**
- * Hook para clientes frecuentes
+ * Hook para clientes top
  */
-export const useTopCustomersReport = (initialFilters = {}) => {
-  const [customersData, setCustomersData] = useState(null);
+export const useTopCustomersReport = (initialFilters = { limit: 10, sortBy: 'totalSpent' }) => {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    limit: 10,
-    sortBy: 'totalSpent',
-    ...initialFilters
-  });
+  const [filters, setFilters] = useState(initialFilters);
 
   const fetchTopCustomers = useCallback(async (customFilters = null) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const currentFilters = customFilters || filters;
-      console.log('👥 [useTopCustomersReport] Obteniendo clientes top:', currentFilters);
-
       const response = await reportService.getTopCustomersReport(currentFilters);
-
+      
       if (response.success) {
-        setCustomersData(response.data);
+        setData(response.data);
       } else {
-        throw new Error(response.message || 'Error obteniendo clientes');
+        throw new Error(response.message);
       }
-
     } catch (error) {
       console.error('❌ [useTopCustomersReport] Error:', error);
-      setError(error.message || 'Error obteniendo clientes top');
-      setCustomersData(null);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useTopCustomersReport] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
   useEffect(() => {
     fetchTopCustomers();
-  }, [fetchTopCustomers]);
+  }, []); // Solo ejecutar una vez al montar
 
   return {
-    customersData,
+    data,
     loading,
     error,
-    filters,
-    updateFilters,
-    refetch: fetchTopCustomers
+    fetchTopCustomers,
+    updateFilters: setFilters,
+    hasData: !!data
   };
 };
 
@@ -254,7 +218,7 @@ export const useTopCustomersReport = (initialFilters = {}) => {
  * Hook para reporte de producción
  */
 export const useProductionReport = (initialFilters = {}) => {
-  const [productionData, setProductionData] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
@@ -263,98 +227,118 @@ export const useProductionReport = (initialFilters = {}) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const currentFilters = customFilters || filters;
-      console.log('⏱️ [useProductionReport] Obteniendo reporte producción:', currentFilters);
-
       const response = await reportService.getProductionReport(currentFilters);
-
+      
       if (response.success) {
-        setProductionData(response.data);
+        setData(response.data);
       } else {
-        throw new Error(response.message || 'Error obteniendo reporte');
+        throw new Error(response.message);
       }
-
     } catch (error) {
       console.error('❌ [useProductionReport] Error:', error);
-      setError(error.message || 'Error obteniendo reporte de producción');
-      setProductionData(null);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useProductionReport] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
-
   useEffect(() => {
     fetchProductionReport();
-  }, [fetchProductionReport]);
+  }, []); // Solo ejecutar una vez al montar
 
   return {
-    productionData,
+    data,
     loading,
     error,
-    filters,
-    updateFilters,
-    refetch: fetchProductionReport
+    fetchProductionReport,
+    updateFilters: setFilters,
+    hasData: !!data,
+    
+    // Métricas calculadas
+    averageProductionTime: data?.summary?.averageProductionDays || 0,
+    onTimeRate: data?.summary?.onTimeRate || 0,
+    totalOrdersAnalyzed: data?.summary?.totalOrders || 0
   };
 };
 
 /**
- * Hook para reportes personalizados
+ * Hook para reportes de pagos
  */
-export const useCustomReport = (reportType) => {
-  const [reportData, setReportData] = useState(null);
+export const usePaymentReports = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({});
 
-  const fetchCustomReport = useCallback(async (customFilters = null) => {
-    if (!reportType) return;
-
+  const getPaymentMethodsReport = useCallback(async (filters = {}) => {
     try {
       setLoading(true);
       setError(null);
-
-      const currentFilters = customFilters || filters;
-      console.log('🔧 [useCustomReport] Obteniendo reporte personalizado:', reportType, currentFilters);
-
-      const response = await reportService.getCustomReport(reportType, currentFilters);
-
+      
+      const response = await reportService.getPaymentMethodsReport(filters);
+      
       if (response.success) {
-        setReportData(response.data);
+        return response.data;
       } else {
-        throw new Error(response.message || 'Error obteniendo reporte');
+        throw new Error(response.message);
       }
-
     } catch (error) {
-      console.error('❌ [useCustomReport] Error:', error);
-      setError(error.message || 'Error obteniendo reporte personalizado');
-      setReportData(null);
+      console.error('❌ [usePaymentReports] Error métodos pago:', error);
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
-  }, [reportType, filters]);
-
-  const updateFilters = useCallback((newFilters) => {
-    console.log('🔍 [useCustomReport] Actualizando filtros:', newFilters);
-    setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
 
-  useEffect(() => {
-    fetchCustomReport();
-  }, [fetchCustomReport]);
+  const getCashReport = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await reportService.getCashReport(filters);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [usePaymentReports] Error efectivo:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getPendingTransfersReport = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await reportService.getPendingTransfersReport();
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [usePaymentReports] Error transferencias pendientes:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
-    reportData,
     loading,
     error,
-    filters,
-    updateFilters,
-    refetch: fetchCustomReport
+    getPaymentMethodsReport,
+    getCashReport,
+    getPendingTransfersReport
   };
 };
 
@@ -363,171 +347,191 @@ export const useCustomReport = (reportType) => {
  */
 export const useReportExport = () => {
   const [loading, setLoading] = useState(false);
-
-  /**
-   * Exportar a Excel
-   */
-  const exportToExcel = useCallback(async (reportType, filters = {}) => {
-    try {
-      setLoading(true);
-      console.log('📄 [useReportExport] Exportando Excel:', reportType);
-
-      const response = await reportService.exportReportToExcel(reportType, filters);
-      
-      if (response.success) {
-        toast.success('Reporte descargado exitosamente');
-        return response;
-      } else {
-        throw new Error('Error exportando reporte');
-      }
-
-    } catch (error) {
-      console.error('❌ [useReportExport] Error exportando Excel:', error);
-      toast.error(error.message || 'Error exportando reporte');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Exportar a PDF
-   */
-  const exportToPDF = useCallback(async (reportType, filters = {}) => {
-    try {
-      setLoading(true);
-      console.log('📑 [useReportExport] Exportando PDF:', reportType);
-
-      const response = await reportService.exportReportToPDF(reportType, filters);
-      
-      if (response.success) {
-        toast.success('Reporte descargado exitosamente');
-        return response;
-      } else {
-        throw new Error('Error exportando reporte');
-      }
-
-    } catch (error) {
-      console.error('❌ [useReportExport] Error exportando PDF:', error);
-      toast.error(error.message || 'Error exportando reporte');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return {
-    loading,
-    exportToExcel,
-    exportToPDF
-  };
-};
-
-/**
- * Hook para opciones de filtrado
- */
-export const useReportFilters = () => {
-  const [filterOptions, setFilterOptions] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchFilterOptions = useCallback(async () => {
+  const exportReport = useCallback(async (reportType, format = 'excel', filters = {}, filename = null) => {
     try {
       setLoading(true);
       setError(null);
-
-      console.log('⚙️ [useReportFilters] Obteniendo opciones de filtro');
-
-      const response = await reportService.getFilterOptions();
-
-      if (response.success) {
-        setFilterOptions(response.data);
+      
+      const finalFilename = filename || `${reportType}_${Date.now()}`;
+      
+      if (format === 'excel') {
+        await reportService.exportToExcel(reportType, filters, finalFilename);
+      } else if (format === 'pdf') {
+        await reportService.exportToPDF(reportType, filters, finalFilename);
       } else {
-        throw new Error(response.message || 'Error obteniendo opciones');
+        throw new Error(`Formato no soportado: ${format}`);
       }
-
+      
+      await Swal.fire({
+        title: 'Exportado exitosamente',
+        text: `El reporte se ha exportado como ${format.toUpperCase()}`,
+        icon: 'success',
+        confirmButtonColor: '#1F64BF'
+      });
+      
+      return true;
     } catch (error) {
-      console.error('❌ [useReportFilters] Error:', error);
-      setError(error.message || 'Error obteniendo opciones de filtro');
-      setFilterOptions(null);
+      console.error('❌ [useReportExport] Error:', error);
+      setError(error.message);
+      
+      await Swal.fire({
+        title: 'Error al exportar',
+        text: error.message || 'No se pudo exportar el reporte',
+        icon: 'error',
+        confirmButtonColor: '#1F64BF'
+      });
+      
+      throw error;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchFilterOptions();
-  }, [fetchFilterOptions]);
-
   return {
-    filterOptions,
+    exportReport,
     loading,
-    error,
-    refetch: fetchFilterOptions
+    error
   };
 };
 
 /**
- * Hook para validación de fechas en reportes
+ * Hook para comparación de períodos
  */
-export const useDateValidation = () => {
-  const validateRange = useCallback((startDate, endDate) => {
-    return reportService.validateDateRange(startDate, endDate);
-  }, []);
+export const usePeriodComparison = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const getPresetRanges = useCallback(() => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const lastWeek = new Date(today);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    
-    const lastMonth = new Date(today);
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
-    
-    const last3Months = new Date(today);
-    last3Months.setMonth(last3Months.getMonth() - 3);
-    
-    const lastYear = new Date(today);
-    lastYear.setFullYear(lastYear.getFullYear() - 1);
-
-    return {
-      today: {
-        startDate: today.toISOString().split('T')[0],
-        endDate: today.toISOString().split('T')[0],
-        label: 'Hoy'
-      },
-      yesterday: {
-        startDate: yesterday.toISOString().split('T')[0],
-        endDate: yesterday.toISOString().split('T')[0],
-        label: 'Ayer'
-      },
-      lastWeek: {
-        startDate: lastWeek.toISOString().split('T')[0],
-        endDate: today.toISOString().split('T')[0],
-        label: 'Últimos 7 días'
-      },
-      lastMonth: {
-        startDate: lastMonth.toISOString().split('T')[0],
-        endDate: today.toISOString().split('T')[0],
-        label: 'Último mes'
-      },
-      last3Months: {
-        startDate: last3Months.toISOString().split('T')[0],
-        endDate: today.toISOString().split('T')[0],
-        label: 'Últimos 3 meses'
-      },
-      lastYear: {
-        startDate: lastYear.toISOString().split('T')[0],
-        endDate: today.toISOString().split('T')[0],
-        label: 'Último año'
+  const comparePeriods = useCallback(async (currentPeriod, previousPeriod) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await reportService.getPeriodComparison(currentPeriod, previousPeriod);
+      
+      if (response.success) {
+        setData(response.data);
+        return response.data;
+      } else {
+        throw new Error(response.message);
       }
-    };
+    } catch (error) {
+      console.error('❌ [usePeriodComparison] Error:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   return {
-    validateRange,
-    getPresetRanges
+    data,
+    loading,
+    error,
+    comparePeriods,
+    
+    // Utilidades
+    hasComparison: !!data,
+    revenueGrowth: data?.comparison?.revenue?.growth || 0,
+    ordersGrowth: data?.comparison?.orders?.growth || 0,
+    aovGrowth: data?.comparison?.averageOrderValue?.growth || 0
   };
 };
+
+/**
+ * Hook para reportes personalizados
+ */
+export const useCustomReports = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const generateCustomReport = useCallback(async (reportConfig) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await reportService.getCustomReport(reportConfig);
+      
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useCustomReports] Error:', error);
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    generateCustomReport,
+    loading,
+    error
+  };
+};
+
+/**
+ * Hook principal que combina todos los reportes
+ */
+export const useReports = (initialConfig = {}) => {
+  const dashboardStats = useDashboardStats(initialConfig.dashboard);
+  const salesReport = useSalesReport(initialConfig.sales);
+  const topProducts = useTopProductsReport(initialConfig.products);
+  const topCustomers = useTopCustomersReport(initialConfig.customers);
+  const productionReport = useProductionReport(initialConfig.production);
+  const paymentReports = usePaymentReports();
+  const reportExport = useReportExport();
+  const periodComparison = usePeriodComparison();
+  const customReports = useCustomReports();
+
+  // Estado general
+  const isAnyLoading = 
+    dashboardStats.loading || 
+    salesReport.loading || 
+    topProducts.loading || 
+    topCustomers.loading || 
+    productionReport.loading ||
+    paymentReports.loading ||
+    reportExport.loading ||
+    periodComparison.loading ||
+    customReports.loading;
+
+  const hasAnyError = 
+    dashboardStats.error || 
+    salesReport.error || 
+    topProducts.error || 
+    topCustomers.error || 
+    productionReport.error ||
+    paymentReports.error ||
+    reportExport.error ||
+    periodComparison.error ||
+    customReports.error;
+
+  return {
+    // Sub-hooks
+    dashboardStats,
+    salesReport,
+    topProducts,
+    topCustomers,
+    productionReport,
+    paymentReports,
+    reportExport,
+    periodComparison,
+    customReports,
+    
+    // Estado general
+    isAnyLoading,
+    hasAnyError,
+    
+    // Utilidades
+    dateRangePresets: reportService.getDateRangePresets(),
+    validateFilters: reportService.validateReportFilters
+  };
+};
+
+export default useReports;
