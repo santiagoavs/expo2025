@@ -1,0 +1,185 @@
+ Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ 🔧 [apiClient] Configuración inicial: Object
+ Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot
+console.error @ react-konva.js?v=12f97629:27244
+design-hub:1 [Intervention] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://localhost:5173/fonts/AestheticMoment.ttf
+ 🔍 [AuthContext] Verificando estado de autenticación...
+ 🚀 [apiClient] === REQUEST START ===
+ 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/auth/checkAuth
+ 🔧 [apiClient] Método: GET
+ 📋 [apiClient] Headers enviados: AxiosHeaders
+ 🍪 [apiClient] WithCredentials: true
+ 🍪 [apiClient] App pública - usando solo cookies
+ 🚀 [apiClient] === REQUEST END ===
+ ✅ [apiClient] === RESPONSE SUCCESS START ===
+ 🎯 [apiClient] URL: /auth/checkAuth
+ 📊 [apiClient] Status: 200
+ 📋 [apiClient] Headers recibidos: AxiosHeaders
+ 🍪 [apiClient] Set-Cookie header: undefined
+ 📥 [apiClient] Datos recibidos: Object
+ ✅ [apiClient] === RESPONSE SUCCESS END ===
+ ✅ [AuthContext] Usuario autenticado via cookies: Object
+ EnhancedDesignEditorModal props: Object
+ 🎨 [useDesigns] Obteniendo diseños del usuario: Object
+ 📋 [DesignService] Obteniendo diseños del usuario: Object
+ EnhancedDesignEditorModal props: Object
+ 🚀 [apiClient] === REQUEST START ===
+ 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+ 🔧 [apiClient] Método: GET
+ 📋 [apiClient] Headers enviados: AxiosHeaders
+ 🍪 [apiClient] WithCredentials: true
+ 🍪 [apiClient] App pública - usando solo cookies
+ 🚀 [apiClient] === REQUEST END ===
+design-hub:1 [Intervention] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://localhost:5173/fonts/MonaSans.ttf
+ ✅ [apiClient] === RESPONSE SUCCESS START ===
+ 🎯 [apiClient] URL: /designs/my-designs?includeDetails=true&limit=50
+ 📊 [apiClient] Status: 200
+ 📋 [apiClient] Headers recibidos: AxiosHeaders
+ 🍪 [apiClient] Set-Cookie header: undefined
+ 📥 [apiClient] Datos recibidos: Object
+ ✅ [apiClient] === RESPONSE SUCCESS END ===
+ ✅ [DesignService] Diseños obtenidos: 5
+ EnhancedDesignEditorModal props: Object
+ ✅ [useDesigns] Diseños cargados: Object
+ EnhancedDesignEditorModal props: Object
+ 🔍 [useDesigns] Obteniendo diseño por ID: 68d2cd43ada53bd092ee0d0a
+ 🔍 [DesignService] Obteniendo diseño por ID: 68d2cd43ada53bd092ee0d0a
+ 🚀 [apiClient] === REQUEST START ===
+ 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/68d2cd43ada53bd092ee0d0a
+ 🔧 [apiClient] Método: GET
+ 📋 [apiClient] Headers enviados: AxiosHeaders
+ 🍪 [apiClient] WithCredentials: true
+ 🍪 [apiClient] App pública - usando solo cookies
+ 🚀 [apiClient] === REQUEST END ===
+ ✅ [apiClient] === RESPONSE SUCCESS START ===
+ 🎯 [apiClient] URL: /designs/68d2cd43ada53bd092ee0d0a
+ 📊 [apiClient] Status: 200
+ 📋 [apiClient] Headers recibidos: AxiosHeaders
+ 🍪 [apiClient] Set-Cookie header: undefined
+ 📥 [apiClient] Datos recibidos: Object
+ ✅ [apiClient] === RESPONSE SUCCESS END ===
+ ✅ [DesignService] Diseño obtenido exitosamente
+ ✅ [useDesigns] Diseño obtenido: Object
+ EnhancedDesignEditorModal props: Object
+ === DESIGN DATA DEBUGGING ===
+ Full design object: Object
+ Design data extracted: Object
+ Initial elements found: Array(2)
+ Elements length: 2
+EnhancedDesignEditorModal.jsx:71 Initial product color: #f06060
+EnhancedDesignEditorModal.jsx:72 Product data: Object
+EnhancedDesignEditorModal.jsx:73 === END DEBUG ===
+AdvancedDesignEditor.jsx:175 🎯 Customization area processed: Object
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:684 Rendering shape element: undefined Object
+AdvancedDesignEditor.jsx:700 Normalized shape element: Object
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:646 Rendering image element: undefined
+AdvancedDesignEditor.jsx:647 Full image element: Object
+AdvancedDesignEditor.jsx:648 konvaAttrs: Object
+AdvancedDesignEditor.jsx:649 metadata: Object
+AdvancedDesignEditor.jsx:661 Image URL extracted: undefined
+AdvancedDesignEditor.jsx:662 All possible URL fields: Object
+react-konva.js?v=12f97629:27244 Warning: Each child in a list should have a unique "key" prop.
+
+Check the render method of `AdvancedDesignEditor`. See https://reactjs.org/link/warning-keys for more information.
+    at ShapeRenderer (http://localhost:5173/src/components/designs/advanced/Shapes.jsx?t=1758647631775:237:33)
+    at AdvancedDesignEditor (http://localhost:5173/src/components/designs/advanced/AdvancedDesignEditor.jsx?t=1758647754111:82:3)
+    at EnhancedDesignEditorModal (http://localhost:5173/src/components/designs/EnhancedDesignEditorModal.jsx?t=1758647754111:22:3)
+    at div
+    at DesignHub (http://localhost:5173/src/pages/designs/designHub.jsx?t=1758647754111:27:22)
+    at DesignHubWithProduct (http://localhost:5173/src/App.jsx?t=1758647754111:39:26)
+    at ProtectedRoute (http://localhost:5173/src/components/auth/protectedRoute.jsx:21:27)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=12f97629:5654:26)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=12f97629:6390:3)
+    at App
+    at AuthProvider (http://localhost:5173/src/context/authContext.jsx:27:32)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=12f97629:6333:13)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=12f97629:9417:3)
+console.error @ react-konva.js?v=12f97629:27244
+Shapes.jsx:185 ShapeRenderer - element: Object
+Shapes.jsx:186 ShapeRenderer - actualType: custom
+react-konva.js?v=12f97629:704 Konva warning: Node has no parent. zIndex parameter is ignored.
+warn @ react-konva.js?v=12f97629:704
+AdvancedDesignEditor.jsx:34 UrlImage - src: undefined image loaded: false
+AdvancedDesignEditor.jsx:37 UrlImage - No image loaded for src: undefined
+useKonvaCanvas.js:13 useKonvaCanvas - Loading initial elements: Array(2)
+useKonvaCanvas.js:256 Updating transformer for selected elements: Array(0)
+AdvancedDesignEditor.jsx:80 AdvancedDesignEditor - Setting product color: #f06060
+AdvancedDesignEditor.jsx:87 AdvancedDesignEditor - Initial Elements: Array(2)
+AdvancedDesignEditor.jsx:88 AdvancedDesignEditor - Initial Product Color: #f06060
+AdvancedDesignEditor.jsx:89 AdvancedDesignEditor - Canvas Elements: Array(2)
+AdvancedDesignEditor.jsx:138 Product: Object
+AdvancedDesignEditor.jsx:139 Product Image URL: https://res.cloudinary.com/dbd5hzctg/image/upload/v1757837136/products/main/svckrguhz5rjrbzyfn6h.png
+AdvancedDesignEditor.jsx:140 Product Image loaded: false
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:684 Rendering shape element: undefined Object
+AdvancedDesignEditor.jsx:700 Normalized shape element: Object
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:646 Rendering image element: undefined
+AdvancedDesignEditor.jsx:647 Full image element: Object
+AdvancedDesignEditor.jsx:648 konvaAttrs: Object
+AdvancedDesignEditor.jsx:649 metadata: Object
+AdvancedDesignEditor.jsx:661 Image URL extracted: undefined
+AdvancedDesignEditor.jsx:662 All possible URL fields: Object
+Shapes.jsx:185 ShapeRenderer - element: Object
+Shapes.jsx:186 ShapeRenderer - actualType: custom
+AdvancedDesignEditor.jsx:34 UrlImage - src: undefined image loaded: false
+AdvancedDesignEditor.jsx:37 UrlImage - No image loaded for src: undefined
+react-konva.js?v=12f97629:26974 ReactKonva: You are using "zIndex" attribute for a Konva node.
+react-konva may get confused with ordering. Just define correct order of elements in your render function of a component.
+For more info see: https://github.com/konvajs/react-konva/issues/194
+
+applyNodeProps @ react-konva.js?v=12f97629:26974
+react-konva.js?v=12f97629:26981 ReactKonva: You have a Konva node with draggable = true and position defined but no onDragMove or onDragEnd events are handled.
+Position of a node will be changed during drag&drop, so you should update state of the react app as well.
+Consider to add onDragMove or onDragEnd events.
+For more info see: https://github.com/konvajs/react-konva/issues/256
+
+applyNodeProps @ react-konva.js?v=12f97629:26981
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:684 Rendering shape element: undefined Object
+AdvancedDesignEditor.jsx:700 Normalized shape element: Object
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:646 Rendering image element: undefined
+AdvancedDesignEditor.jsx:647 Full image element: Object
+AdvancedDesignEditor.jsx:648 konvaAttrs: Object
+AdvancedDesignEditor.jsx:649 metadata: Object
+AdvancedDesignEditor.jsx:661 Image URL extracted: undefined
+AdvancedDesignEditor.jsx:662 All possible URL fields: Object
+Shapes.jsx:185 ShapeRenderer - element: Object
+Shapes.jsx:186 ShapeRenderer - actualType: custom
+AdvancedDesignEditor.jsx:34 UrlImage - src: undefined image loaded: false
+AdvancedDesignEditor.jsx:37 UrlImage - No image loaded for src: undefined
+AdvancedDesignEditor.jsx:138 Product: Object
+AdvancedDesignEditor.jsx:139 Product Image URL: https://res.cloudinary.com/dbd5hzctg/image/upload/v1757837136/products/main/svckrguhz5rjrbzyfn6h.png
+AdvancedDesignEditor.jsx:140 Product Image loaded: true
+AdvancedDesignEditor.jsx:142 Product Image dimensions: 612 x 408
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:684 Rendering shape element: undefined Object
+AdvancedDesignEditor.jsx:700 Normalized shape element: Object
+AdvancedDesignEditor.jsx:623 Rendering element: Object
+AdvancedDesignEditor.jsx:646 Rendering image element: undefined
+AdvancedDesignEditor.jsx:647 Full image element: Object
+AdvancedDesignEditor.jsx:648 konvaAttrs: Object
+AdvancedDesignEditor.jsx:649 metadata: Object
+AdvancedDesignEditor.jsx:661 Image URL extracted: undefined
+AdvancedDesignEditor.jsx:662 All possible URL fields: Object
+Shapes.jsx:185 ShapeRenderer - element: Object
+Shapes.jsx:186 ShapeRenderer - actualType: custom
+AdvancedDesignEditor.jsx:34 UrlImage - src: undefined image loaded: false
+AdvancedDesignEditor.jsx:37 UrlImage - No image loaded for src: undefined
+AdvancedDesignEditor.jsx:623 Rendering element: {konvaAttrs: {…}, metadata: {…}, type: 'shape', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+AdvancedDesignEditor.jsx:684 Rendering shape element: undefined {konvaAttrs: {…}, metadata: {…}, type: 'shape', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+AdvancedDesignEditor.jsx:700 Normalized shape element: {konvaAttrs: {…}, metadata: {…}, type: 'shape', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+AdvancedDesignEditor.jsx:623 Rendering element: {konvaAttrs: {…}, metadata: {…}, type: 'image', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+AdvancedDesignEditor.jsx:646 Rendering image element: undefined
+AdvancedDesignEditor.jsx:647 Full image element: {konvaAttrs: {…}, metadata: {…}, type: 'image', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+AdvancedDesignEditor.jsx:648 konvaAttrs: {crop: {…}, fillPatternScale: {…}, fillPatternOffset: {…}, shadowOffset: {…}, x: 311, …}
+AdvancedDesignEditor.jsx:649 metadata: {source: 'upload', tags: Array(0)}
+AdvancedDesignEditor.jsx:661 Image URL extracted: undefined
+AdvancedDesignEditor.jsx:662 All possible URL fields: {metadata.imageUrl: undefined, metadata.src: undefined, konvaAttrs.src: undefined, konvaAttrs.imageUrl: undefined, element.imageUrl: undefined, …}
+Shapes.jsx:185 ShapeRenderer - element: {konvaAttrs: {…}, metadata: {…}, type: 'shape', areaId: '68c6774f7e935ee0d426946c', isLocked: false, …}
+Shapes.jsx:186 ShapeRenderer - actualType: custom
+AdvancedDesignEditor.jsx:34 UrlImage - src: undefined image loaded: false
+AdvancedDesignEditor.jsx:37 UrlImage - No image loaded for src: undefined

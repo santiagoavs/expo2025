@@ -371,16 +371,51 @@ class DesignService {
    */
   prepareFromKonvaEditor(elements, productColorFilter) {
     try {
-      const processedElements = elements.map(el => ({
-        type: el.type,
-        areaId: el.areaId,
-        konvaAttrs: {
-          ...el.konvaAttrs,
-          // Remover propiedades que no necesita el backend
-          id: undefined,
-          draggable: undefined
+      const processedElements = elements.map(el => {
+        console.log('🔄 Processing element for backend:', el);
+        
+        const processedElement = {
+          type: el.type,
+          areaId: el.areaId,
+          shapeType: el.shapeType, // Preserve shapeType for shapes
+          konvaAttrs: {
+            ...el.konvaAttrs,
+            // Remove only React-specific properties, keep all positioning data
+            draggable: undefined,
+            listening: undefined
+          }
+        };
+        
+        // For custom shapes, ensure all critical data is preserved
+        if (el.type === 'shape' && el.shapeType === 'custom') {
+          console.log('💾 Preserving custom shape data:', {
+            id: el.id,
+            points: el.points,
+            position: { x: el.x, y: el.y },
+            dimensions: { width: el.width, height: el.height }
+          });
+          
+          // Ensure all custom shape properties are in konvaAttrs
+          processedElement.konvaAttrs = {
+            ...processedElement.konvaAttrs,
+            id: el.id,
+            x: el.x,
+            y: el.y,
+            points: el.points,
+            width: el.width,
+            height: el.height,
+            fill: el.fill,
+            stroke: el.stroke,
+            strokeWidth: el.strokeWidth,
+            closed: el.closed,
+            lineCap: el.lineCap,
+            lineJoin: el.lineJoin
+          };
         }
-      }));
+        
+        console.log('✅ Processed element:', processedElement);
+        return processedElement;
+      });
       
       return {
         elements: processedElements,

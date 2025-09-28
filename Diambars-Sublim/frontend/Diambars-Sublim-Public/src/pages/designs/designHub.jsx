@@ -571,7 +571,7 @@ const DesignHub = ({ initialProductId = null }) => {
         onClose={() => setEditorModal({ isOpen: false, design: null })}
         design={editorModal.design}
         onSave={handleSaveDesign}
-        product={editorModal.design?.product}
+        product={editorModal.design?.design?.product || editorModal.design?.product}
         onDesignUpdate={handleDesignUpdate}
       />
 

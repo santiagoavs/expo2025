@@ -6,7 +6,6 @@
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -117,6 +116,15 @@
   font-size: 1.2rem;
   line-height: 1;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke-width: 1.5;
 }
 
 .tool-label {
@@ -167,6 +175,11 @@
     font-size: 1rem;
   }
   
+  .tool-icon svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  
   .tool-label {
     font-size: 0.65rem;
   }
@@ -201,6 +214,11 @@
   
   .tool-icon {
     font-size: 0.9rem;
+  }
+  
+  .tool-icon svg {
+    width: 0.9rem;
+    height: 0.9rem;
   }
   
   .tool-label {

@@ -153,13 +153,26 @@ export const KonvaCustomShape = ({ element, isSelected, onSelect, onTransform })
     closed, 
     lineCap, 
     lineJoin,
+    x,
+    y,
     ...otherProps 
   } = element;
+
+  // For custom shapes, points should be relative to the element position
+  // The Line component will be positioned at x,y and points are relative to that
+  console.log('🎨 Rendering custom shape:', {
+    id,
+    position: { x: x || 0, y: y || 0 },
+    points: points || [],
+    pointsLength: (points || []).length
+  });
 
   return (
     <Line
       id={id}
       name={id}
+      x={x || 0}
+      y={y || 0}
       points={points || []}
       fill={fill || '#1f64bf'}
       stroke={stroke || '#164a8a'}
@@ -180,13 +193,15 @@ export const KonvaCustomShape = ({ element, isSelected, onSelect, onTransform })
 
 export const ShapeRenderer = ({ element, isSelected, onSelect, onTransform }) => {
   const { shapeType, type } = element;
-
-  // Handle both 'type' and 'shapeType' for compatibility
   const actualType = shapeType || type;
+  
+  console.log('ShapeRenderer - element:', element);
+  console.log('ShapeRenderer - actualType:', actualType);
 
   switch (actualType) {
     case 'line':
     case 'custom':
+    case 'shape': // Handle generic 'shape' type
       return (
         <KonvaCustomShape
           element={element}
@@ -345,7 +360,10 @@ export const createShapeElement = (shapeType, properties = {}) => {
         points: properties.points || [],
         closed: properties.closed !== undefined ? properties.closed : true,
         lineCap: properties.lineCap || 'round',
-        lineJoin: properties.lineJoin || 'round'
+        lineJoin: properties.lineJoin || 'round',
+        // Ensure width and height are set for custom shapes
+        width: properties.width || 100,
+        height: properties.height || 100
       };
     
     default:
@@ -378,6 +396,8 @@ export const getShapeDefaults = (shapeType) => {
     
     case 'triangle':
     case 'pentagon':
+      return { ...defaults, radius: 40 };
+    
     case 'hexagon':
     case 'octagon':
       return { ...defaults, radius: 40 };

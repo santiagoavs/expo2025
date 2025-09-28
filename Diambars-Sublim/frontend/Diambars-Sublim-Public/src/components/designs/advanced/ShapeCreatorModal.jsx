@@ -1,6 +1,24 @@
 // ShapeCreatorModal.jsx - Modal for creating custom shapes with traditional CSS
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Circle, Rect, Star, RegularPolygon } from 'react-konva';
+import { 
+  PiSquare, 
+  PiCircle, 
+  PiTriangle, 
+  PiStar, 
+  PiPolygon,
+  PiHexagon, 
+  PiOctagon, 
+  PiPencil,
+  PiPalette,
+  PiRectangle,
+  PiRuler,
+  PiEye,
+  PiX,
+  PiCheck,
+  PiTrash,
+  PiPlus
+} from 'react-icons/pi';
 import './ShapeCreatorModal.css';
 
 const ShapeCreatorModal = ({ 
@@ -27,14 +45,14 @@ const ShapeCreatorModal = ({
   const stageRef = useRef();
 
   const shapeTemplates = [
-    { id: 'rect', label: 'Rectángulo', icon: '⬜' },
-    { id: 'circle', label: 'Círculo', icon: '⭕' },
-    { id: 'triangle', label: 'Triángulo', icon: '🔺' },
-    { id: 'star', label: 'Estrella', icon: '⭐' },
-    { id: 'pentagon', label: 'Pentágono', icon: '⬟' },
-    { id: 'hexagon', label: 'Hexágono', icon: '⬡' },
-    { id: 'octagon', label: 'Octágono', icon: '⯃' },
-    { id: 'custom', label: 'Personalizada', icon: '✏️' }
+    { id: 'rect', label: 'Rectángulo', icon: <PiSquare /> },
+    { id: 'circle', label: 'Círculo', icon: <PiCircle /> },
+    { id: 'triangle', label: 'Triángulo', icon: <PiTriangle /> },
+    { id: 'star', label: 'Estrella', icon: <PiStar /> },
+    { id: 'pentagon', label: 'Pentágono', icon: <PiPolygon /> },
+    { id: 'hexagon', label: 'Hexágono', icon: <PiHexagon /> },
+    { id: 'octagon', label: 'Octágono', icon: <PiOctagon /> },
+    { id: 'custom', label: 'Personalizada', icon: <PiPencil /> }
   ];
 
   // ==================== EVENT HANDLERS ====================
@@ -327,11 +345,11 @@ const ShapeCreatorModal = ({
         {/* Header */}
         <div className="shape-creator-header">
           <div className="header-title">
-            <span className="header-icon">🎨</span>
+            <span className="header-icon"><PiPalette /></span>
             <h2>Creador de Formas Personalizadas</h2>
           </div>
           <button className="close-button" onClick={handleClose}>
-            ✕
+            <PiX />
           </button>
         </div>
 
@@ -340,7 +358,7 @@ const ShapeCreatorModal = ({
           {/* Canvas Section */}
           <div className="canvas-section">
             <div className="section-header">
-              <h3>🎨 Lienzo de Dibujo</h3>
+              <h3><PiRectangle /> Lienzo de Dibujo</h3>
             </div>
             
             <div className="preview-canvas">
@@ -396,7 +414,7 @@ const ShapeCreatorModal = ({
                     className={`control-button ${isDrawing ? 'active' : ''}`}
                     onClick={() => setIsDrawing(!isDrawing)}
                   >
-                    {isDrawing ? '✓ Dibujando...' : '✏️ Iniciar dibujo'}
+                    {isDrawing ? <><PiCheck /> Dibujando...</> : <><PiPencil /> Iniciar dibujo</>}
                   </button>
                   
                   <button
@@ -404,7 +422,7 @@ const ShapeCreatorModal = ({
                     onClick={clearCustomShape}
                     disabled={customPoints.length === 0}
                   >
-                    🗑️ Limpiar
+                    <PiTrash /> Limpiar
                   </button>
 
                   {customPoints.length > 0 && (
@@ -416,7 +434,7 @@ const ShapeCreatorModal = ({
               ) : (
                 <div className="preview-info">
                   <span className="preview-label">
-                    👁️ Vista previa de {shapeTemplates.find(t => t.id === selectedTemplate)?.label}
+                    <PiEye /> Vista previa de {shapeTemplates.find(t => t.id === selectedTemplate)?.label}
                   </span>
                   <span className="preview-hint">
                     Ajusta las propiedades para ver los cambios en tiempo real
@@ -430,7 +448,7 @@ const ShapeCreatorModal = ({
           <div className="controls-section">
             {/* Shape Templates */}
             <div className="property-group">
-              <h4>📐 Tipo de Forma</h4>
+              <h4><PiRuler /> Tipo de Forma</h4>
               <div className="shape-grid">
                 {shapeTemplates.map(template => (
                   <button
@@ -452,7 +470,7 @@ const ShapeCreatorModal = ({
             {/* Star Configuration */}
             {selectedTemplate === 'star' && (
               <div className="property-group">
-                <h4>⭐ Configuración de Estrella</h4>
+                <h4><PiStar /> Configuración de Estrella</h4>
                 
                 <div className="property-item">
                   <label>Puntas: {starProperties.numPoints}</label>
@@ -500,7 +518,7 @@ const ShapeCreatorModal = ({
 
             {/* Visual Properties */}
             <div className="property-group">
-              <h4>🎨 Propiedades Visuales</h4>
+              <h4><PiPalette /> Propiedades Visuales</h4>
               
               <div className="property-item">
                 <label>Color de relleno</label>
@@ -557,7 +575,7 @@ const ShapeCreatorModal = ({
               className="footer-button primary"
               onClick={finishCustomShape}
             >
-              ✓ Crear Forma Personalizada
+              <PiCheck /> Crear Forma Personalizada
             </button>
           )}
           
@@ -566,7 +584,7 @@ const ShapeCreatorModal = ({
               className="footer-button primary"
               onClick={() => createPresetShape(selectedTemplate)}
             >
-              ➕ Agregar {shapeTemplates.find(t => t.id === selectedTemplate)?.label}
+              <PiPlus /> Agregar {shapeTemplates.find(t => t.id === selectedTemplate)?.label}
             </button>
           )}
         </div>

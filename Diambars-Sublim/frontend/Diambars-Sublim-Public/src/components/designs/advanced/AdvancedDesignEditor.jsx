@@ -31,6 +31,13 @@ const calculateScaledDimensions = (width, height, scale = 0.8) => {
 // Image component with proper loading
 const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransformEnd, x = 0, y = 0, rotation = 0, draggable = true, visible = true }) => {
   const [image] = useImage(src || '', 'anonymous');
+  console.log('UrlImage - src:', src, 'image loaded:', !!image);
+  
+  if (!image) {
+    console.log('UrlImage - No image loaded for src:', src);
+    return null;
+  }
+  
   return (
     <KonvaImage
       id={id}
@@ -66,6 +73,21 @@ const AdvancedDesignEditor = ({
   const [productColorFilter, setProductColorFilter] = useState(initialProductColor);
   const [showShapeCreator, setShowShapeCreator] = useState(false);
   const [activeTool, setActiveTool] = useState('select');
+
+  // Update product color when initialProductColor changes
+  useEffect(() => {
+    if (initialProductColor && initialProductColor !== '#ffffff') {
+      console.log('AdvancedDesignEditor - Setting product color:', initialProductColor);
+      setProductColorFilter(initialProductColor);
+    }
+  }, [initialProductColor]);
+
+  // Debug logging for initial data
+  useEffect(() => {
+    console.log('AdvancedDesignEditor - Initial Elements:', initialElements);
+    console.log('AdvancedDesignEditor - Initial Product Color:', initialProductColor);
+    console.log('AdvancedDesignEditor - Canvas Elements:', canvasHook.elements);
+  }, [initialElements, initialProductColor, canvasHook.elements]);
 
   // ==================== PRODUCT IMAGE ====================
   const productImageUrl = product?.mainImage || product?.image || product?.images?.[0];
@@ -179,7 +201,7 @@ const AdvancedDesignEditor = ({
     });
     
     canvasHook.addElement(textElement);
-    historyHook.saveState();
+    historyHook.addToHistory(canvasHook.elements, 'add');
   }, [canvasHook, historyHook]);
 
   const addShapeElement = useCallback((shapeType, properties) => {
@@ -190,19 +212,45 @@ const AdvancedDesignEditor = ({
     });
     
     canvasHook.addElement(shapeElement);
-    historyHook.saveState();
+    historyHook.addToHistory(canvasHook.elements, 'add');
   }, [canvasHook, historyHook]);
 
   const addCustomShapeElement = useCallback((points, properties) => {
+    // Calculate bounding box of the custom shape to determine proper position
+    const minX = Math.min(...points.filter((_, i) => i % 2 === 0));
+    const minY = Math.min(...points.filter((_, i) => i % 2 === 1));
+    const maxX = Math.max(...points.filter((_, i) => i % 2 === 0));
+    const maxY = Math.max(...points.filter((_, i) => i % 2 === 1));
+    
+    // Convert absolute points to relative points (relative to element position)
+    const relativePoints = points.map((point, index) => {
+      if (index % 2 === 0) {
+        // X coordinate - make relative to minX
+        return point - minX;
+      } else {
+        // Y coordinate - make relative to minY
+        return point - minY;
+      }
+    });
+    
     const customShapeElement = createShapeElement('custom', {
-      points,
-      x: 0,
-      y: 0,
+      points: relativePoints,
+      x: minX, // Use actual position from bounding box
+      y: minY, // Use actual position from bounding box
+      width: maxX - minX,
+      height: maxY - minY,
       ...properties
     });
     
+    console.log('🎯 Creating custom shape with:', {
+      originalPoints: points,
+      relativePoints: relativePoints,
+      position: { x: minX, y: minY },
+      dimensions: { width: maxX - minX, height: maxY - minY }
+    });
+    
     canvasHook.addElement(customShapeElement);
-    historyHook.saveState();
+    historyHook.addToHistory(canvasHook.elements, 'add');
   }, [canvasHook, historyHook]);
 
   const addImageElement = useCallback(() => {
@@ -240,29 +288,41 @@ const AdvancedDesignEditor = ({
 
   // ==================== EVENT HANDLERS ====================
   const handleCanvasClick = useCallback((e) => {
-    // Don't interfere with transformer interactions
-    if (e.target.getClassName() === 'Transformer' || 
-        e.target.getParent()?.getClassName() === 'Transformer') {
-      return;
-    }
-    
-    // Check if we clicked on the stage background or layer (not on an element)
-    const clickedOnEmpty = e.target === e.target.getStage() || 
-                          e.target.getClassName() === 'Layer' ||
-                          e.target.attrs.listening === false;
-    
-    if (clickedOnEmpty) {
+    // Only clear selection if clicking on the stage itself (empty area)
+    if (e.target === e.target.getStage() || e.target.getClassName() === 'Layer') {
+      console.log('🖱️ Canvas clicked - clearing selection');
       canvasHook.clearSelection();
     }
   }, [canvasHook]);
 
-  const handleElementClick = useCallback((elementId, e) => {
-    if (e) {
-      e.cancelBubble = true; // Prevent event bubbling
+  const handleStageDragStart = useCallback((e) => {
+    // Only allow panning when clicking on empty space (not on elements)
+    if (e.target === e.target.getStage()) {
+      canvasHook.setIsDragging(true);
     }
-    console.log('🎯 Element clicked:', elementId);
-    console.log('🎯 Event target:', e?.target?.getClassName());
-    canvasHook.selectElement(elementId);
+  }, [canvasHook]);
+
+  const handleStageDragEnd = useCallback(() => {
+    canvasHook.setIsDragging(false);
+  }, [canvasHook]);
+
+  const handleStageMouseMove = useCallback((e) => {
+    if (!canvasHook.isDragging) return;
+    
+    const stage = e.target.getStage();
+    const newPos = {
+      x: stage.x(),
+      y: stage.y()
+    };
+    
+    canvasHook.setCanvasPosition(newPos);
+  }, [canvasHook]);
+
+  const handleElementClick = useCallback((elementId, e) => {
+    e.cancelBubble = true;
+    e.evt.stopPropagation();
+    console.log('🖱️ Element clicked:', elementId);
+    canvasHook.selectElement(elementId, e.evt.ctrlKey || e.evt.metaKey);
   }, [canvasHook]);
 
   const handleDragEnd = useCallback((elementId, e) => {
@@ -273,26 +333,13 @@ const AdvancedDesignEditor = ({
     historyHook.addToHistory(canvasHook.elements, 'move');
   }, [canvasHook, historyHook]);
 
-  const handleTransformEnd = useCallback((elementId, node) => {
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    node.scaleX(1);
-    node.scaleY(1);
-    
-    const updates = {
-      x: Math.round(node.x()),
-      y: Math.round(node.y()),
-      rotation: Math.round(node.rotation()),
-    };
-    
-    if (node.className === 'Text' || node.className === 'Image' || node.className === 'Rect') {
-      updates.width = Math.round(node.width() * scaleX);
-      updates.height = Math.round(node.height() * scaleY);
-      updates.rotation = Math.round(node.rotation());
+  const duplicateSelectedElement = useCallback(() => {
+    if (canvasHook.selectedElementIds.length === 1) {
+      const duplicatedId = canvasHook.duplicateElement(canvasHook.selectedElementIds[0]);
+      if (duplicatedId) {
+        historyHook.addToHistory(canvasHook.elements, 'duplicate');
+      }
     }
-    
-    canvasHook.updateElement(elementId, updates);
-    historyHook.addToHistory(canvasHook.elements, 'transform');
   }, [canvasHook, historyHook]);
 
   const deleteSelectedElement = useCallback(() => {
@@ -302,14 +349,111 @@ const AdvancedDesignEditor = ({
     }
   }, [canvasHook, historyHook]);
 
-  const duplicateSelectedElement = useCallback(() => {
-    if (canvasHook.selectedElementIds.length === 1) {
-      const duplicatedId = canvasHook.duplicateElement(canvasHook.selectedElementIds[0]);
-      if (duplicatedId) {
-        historyHook.addToHistory(canvasHook.elements, 'duplicate');
+  const handleTransformEnd = useCallback((elementId, node) => {
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    
+    // Get the element to determine its type
+    const element = canvasHook.elements.find(el => el.id === elementId);
+    if (!element) return;
+    
+    let newAttrs = {
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      rotation: Math.round(node.rotation())
+    };
+    
+    // Handle different element types differently
+    if (element.type === 'shape' && (element.shapeType === 'custom' || element.shapeType === 'line')) {
+      // For custom shapes (Line components with points), scale the points array
+      if (element.points && Array.isArray(element.points)) {
+        const scaledPoints = element.points.map((point, index) => {
+          if (index % 2 === 0) {
+            // X coordinate - scale relative to element position
+            return point * scaleX;
+          } else {
+            // Y coordinate - scale relative to element position
+            return point * scaleY;
+          }
+        });
+        newAttrs.points = scaledPoints;
+        
+        // Update element dimensions based on scaled points
+        const minX = Math.min(...scaledPoints.filter((_, i) => i % 2 === 0));
+        const minY = Math.min(...scaledPoints.filter((_, i) => i % 2 === 1));
+        const maxX = Math.max(...scaledPoints.filter((_, i) => i % 2 === 0));
+        const maxY = Math.max(...scaledPoints.filter((_, i) => i % 2 === 1));
+        
+        newAttrs.width = maxX - minX;
+        newAttrs.height = maxY - minY;
       }
+      
+      // Reset the node's scale to prevent accumulation
+      node.scaleX(1);
+      node.scaleY(1);
+    } else if (element.type === 'shape' || element.type === 'rect' || element.type === 'circle') {
+      // For regular shapes, update width/height and reset scale
+      newAttrs.width = Math.max(10, Math.round((node.width() || element.width || 100) * scaleX));
+      newAttrs.height = Math.max(10, Math.round((node.height() || element.height || 100) * scaleY));
+      
+      // Reset the node's scale to prevent accumulation
+      node.scaleX(1);
+      node.scaleY(1);
+    } else if (element.type === 'text') {
+      // For text, update fontSize instead of width/height
+      const newFontSize = Math.max(8, Math.round((element.fontSize || 24) * Math.max(scaleX, scaleY)));
+      newAttrs.fontSize = newFontSize;
+      
+      // Reset scale
+      node.scaleX(1);
+      node.scaleY(1);
+    } else if (element.type === 'image') {
+      // For images, update width/height
+      newAttrs.width = Math.max(10, Math.round((element.width || 100) * scaleX));
+      newAttrs.height = Math.max(10, Math.round((element.height || 100) * scaleY));
+      
+      // Reset scale
+      node.scaleX(1);
+      node.scaleY(1);
     }
+    
+    canvasHook.updateElement(elementId, newAttrs);
+    historyHook.addToHistory(canvasHook.elements, 'transform');
   }, [canvasHook, historyHook]);
+
+  const handleWheelZoom = useCallback((e) => {
+    e.evt.preventDefault();
+    
+    const stage = canvasHook.stageRef.current;
+    if (!stage) return;
+    
+    const oldScale = canvasHook.zoom;
+    const pointer = stage.getPointerPosition();
+    
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+    const scaleBy = 1.05;
+    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    
+    // Clamp zoom to min/max values
+    const clampedScale = Math.max(
+      CANVAS_CONFIG.minZoom,
+      Math.min(CANVAS_CONFIG.maxZoom, newScale)
+    );
+    
+    canvasHook.setZoom(clampedScale);
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
+    };
+    
+    canvasHook.setCanvasPosition(newPos);
+  }, [canvasHook]);
 
   // ==================== KEYBOARD SHORTCUTS ====================
   useEffect(() => {
@@ -365,6 +509,22 @@ const AdvancedDesignEditor = ({
           konvaAttrs.image = imageUrl;
         }
         
+        // For custom shapes, ensure points and position are properly saved
+        if (type === 'shape' && shapeType === 'custom' && el.points) {
+          konvaAttrs.points = [...el.points]; // Ensure points array is preserved
+          konvaAttrs.x = el.x || 0;
+          konvaAttrs.y = el.y || 0;
+          konvaAttrs.width = el.width;
+          konvaAttrs.height = el.height;
+          
+          console.log('💾 Saving custom shape:', {
+            id: el.id,
+            points: el.points,
+            position: { x: el.x, y: el.y },
+            dimensions: { width: el.width, height: el.height }
+          });
+        }
+        
         return {
           type,
           areaId,
@@ -387,7 +547,7 @@ const AdvancedDesignEditor = ({
         {/* Header */}
         <div className="editor-header">
           <div className="editor-title">
-            <h2>Editor de Diseños Avanzado</h2>
+            <h2>Editor de diseños</h2>
             <p>{product?.name}</p>
           </div>
           <button onClick={onClose} className="close-btn">✕</button>
@@ -436,12 +596,17 @@ const AdvancedDesignEditor = ({
               ref={canvasHook.stageRef}
               width={CANVAS_CONFIG.width}
               height={CANVAS_CONFIG.height}
-              scaleX={1}
-              scaleY={1}
-              x={0}
-              y={0}
+              scaleX={canvasHook.zoom}
+              scaleY={canvasHook.zoom}
+              x={canvasHook.canvasPosition.x}
+              y={canvasHook.canvasPosition.y}
+              draggable={true}
               onMouseDown={handleCanvasClick}
               onTouchStart={handleCanvasClick}
+              onWheel={handleWheelZoom}
+              onDragStart={handleStageDragStart}
+              onDragEnd={handleStageDragEnd}
+              onDragMove={handleStageMouseMove}
               style={{ display: 'block' }}
             >
               <Layer ref={canvasHook.layerRef}>
@@ -503,25 +668,104 @@ const AdvancedDesignEditor = ({
                   />
                 ))}
 
-                {/* Design elements */}
+                {/* Canvas Elements */}
                 {canvasHook.elements.map((element) => {
+                  console.log('Rendering element:', element);
+                  
+                  // Extract properties from konvaAttrs if they exist
+                  const konvaAttrs = element.konvaAttrs || {};
+                  const metadata = element.metadata || {};
+                  
                   const commonProps = {
                     id: element.id,
-                    name: element.id, // Important: Konva uses name for findOne
-                    x: element.x || 0,
-                    y: element.y || 0,
-                    rotation: element.rotation || 0,
-                    opacity: element.opacity || 1,
+                    name: element.id,
+                    x: konvaAttrs.x || element.x || 0,
+                    y: konvaAttrs.y || element.y || 0,
+                    rotation: konvaAttrs.rotation || element.rotation || 0,
+                    opacity: konvaAttrs.opacity || element.opacity || 1,
                     visible: element.visible !== false,
                     draggable: element.draggable !== false,
-                    listening: true, // Critical: Enable event listening
+                    listening: true,
                     onClick: (e) => handleElementClick(element.id, e),
                     onTap: (e) => handleElementClick(element.id, e),
                     onDragEnd: (e) => handleDragEnd(element.id, e),
                     onTransformEnd: (e) => handleTransformEnd(element.id, e.target)
                   };
-
-                  if (element.type === 'text') {
+                  
+                  if (element.type === 'image') {
+                    console.log('Rendering image element:', element.id);
+                    console.log('Full image element:', JSON.stringify(element, null, 2));
+                    console.log('konvaAttrs:', JSON.stringify(konvaAttrs, null, 2));
+                    console.log('metadata:', JSON.stringify(metadata, null, 2));
+                    
+                    // Try multiple possible locations for image URL including fill pattern
+                    const imageUrl = metadata.imageUrl || 
+                                     metadata.src || 
+                                     konvaAttrs.src || 
+                                     konvaAttrs.imageUrl ||
+                                     konvaAttrs.fillPatternImage ||
+                                     konvaAttrs.image ||
+                                     element.imageUrl || 
+                                     element.src ||
+                                     element.url ||
+                                     element.image;
+                    
+                    console.log('Image URL extracted:', imageUrl);
+                    console.log('All possible URL fields:', {
+                      'metadata.imageUrl': metadata.imageUrl,
+                      'metadata.src': metadata.src,
+                      'konvaAttrs.src': konvaAttrs.src,
+                      'konvaAttrs.imageUrl': konvaAttrs.imageUrl,
+                      'konvaAttrs.fillPatternImage': konvaAttrs.fillPatternImage,
+                      'konvaAttrs.image': konvaAttrs.image,
+                      'element.imageUrl': element.imageUrl,
+                      'element.src': element.src,
+                      'element.url': element.url,
+                      'element.image': element.image
+                    });
+                    
+                    // Log all konvaAttrs keys to see what properties are available
+                    console.log('konvaAttrs keys:', Object.keys(konvaAttrs));
+                    console.log('element keys:', Object.keys(element));
+                    
+                    return (
+                      <UrlImage
+                        key={element.id}
+                        id={element.id}
+                        src={imageUrl}
+                        width={konvaAttrs.width || element.width || 200}
+                        height={konvaAttrs.height || element.height || 150}
+                        {...commonProps}
+                      />
+                    );
+                  } else if (element.type === 'shape') {
+                    console.log('Rendering shape element:', element.id, element);
+                    // Create a normalized element for ShapeRenderer
+                    const normalizedElement = {
+                      ...element,
+                      ...konvaAttrs,
+                      shapeType: metadata.shapeType || element.shapeType || 'custom',
+                      // Merge konvaAttrs into the element for ShapeRenderer
+                      x: konvaAttrs.x || element.x || 0,
+                      y: konvaAttrs.y || element.y || 0,
+                      width: konvaAttrs.width || element.width,
+                      height: konvaAttrs.height || element.height,
+                      points: konvaAttrs.points || element.points,
+                      fill: konvaAttrs.fill || element.fill,
+                      stroke: konvaAttrs.stroke || element.stroke,
+                      strokeWidth: konvaAttrs.strokeWidth || element.strokeWidth
+                    };
+                    console.log('Normalized shape element:', normalizedElement);
+                    return (
+                      <ShapeRenderer
+                        key={element.id}
+                        element={normalizedElement}
+                        isSelected={canvasHook.selectedElementId === element.id}
+                        onSelect={(e) => handleElementClick(element.id, e)}
+                        onTransform={(e) => handleTransformEnd(element.id, e.target)}
+                      />
+                    );
+                  } else if (element.type === 'text') {
                     return (
                       <KonvaText
                         key={element.id}
@@ -535,28 +779,8 @@ const AdvancedDesignEditor = ({
                         height={element.height}
                       />
                     );
-                  } else if (element.type === 'image') {
-                    return (
-                      <UrlImage
-                        key={element.id}
-                        id={element.id}
-                        src={element.imageUrl}
-                        width={element.width || 200}
-                        height={element.height || 150}
-                        {...commonProps}
-                      />
-                    );
-                  } else if (element.type === 'shape') {
-                    return (
-                      <ShapeRenderer
-                        key={element.id}
-                        element={element}
-                        isSelected={canvasHook.selectedElementId === element.id}
-                        onSelect={(e) => handleElementClick(element.id, e)}
-                        onTransform={(e) => handleTransformEnd(element.id, e.target)}
-                      />
-                    );
                   }
+                  console.log('Unknown element type:', element.type, element);
                   return null;
                 })}
 
@@ -634,7 +858,7 @@ const AdvancedDesignEditor = ({
             </label>
           </div>
           <button onClick={handleSave} className="save-btn">
-            Guardar Diseño
+            Guardar diseño
           </button>
         </div>
 

@@ -5,8 +5,8 @@ import { deepClone } from '../utils/helpers';
 
 export const useKonvaHistory = (initialElements = []) => {
   // ==================== STATE ====================
-  const [currentIndex, setCurrentIndex] = useState(-1);
-  const historyRef = useRef([]);
+  const [currentIndex, setCurrentIndex] = useState(initialElements.length > 0 ? 0 : -1);
+  const historyRef = useRef(initialElements.length > 0 ? [{ elements: initialElements, timestamp: Date.now(), action: 'initial' }] : []);
   const isUndoRedoRef = useRef(false);
   
   // ==================== HISTORY MANAGEMENT ====================
