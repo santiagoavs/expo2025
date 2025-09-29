@@ -21,10 +21,10 @@ function UserInfo() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Cargar los datos del usuario cuando el componente se monta o cuando user cambia
+  // Cargar los datos del usuario solo cuando el componente se monta
   useEffect(() => {
-    if (user) {
-      console.log('Usuario completo en useEffect:', user);
+    if (user && Object.keys(originalData).length === 0) {
+      console.log('Cargando datos iniciales del usuario:', user);
       
       // Compatibilidad: usar phoneNumber o phone según lo que esté disponible
       const phoneValue = user.phoneNumber || user.phone || '';
@@ -35,11 +35,11 @@ function UserInfo() {
         email: user.email || ''
       };
       
-      console.log('Datos del usuario cargados:', userData);
+      console.log('Datos iniciales del usuario cargados:', userData);
       setFormData(userData);
       setOriginalData(userData);
     }
-  }, [user]);
+  }, [user, originalData]); // Solo se ejecuta cuando user cambia y originalData está vacío
 
   // Validaciones
   const validateForm = () => {
@@ -95,6 +95,8 @@ function UserInfo() {
 
   // Verificar si hay cambios
   const hasChanges = () => {
+    // Solo comparar si originalData no está vacío
+    if (Object.keys(originalData).length === 0) return false;
     return JSON.stringify(formData) !== JSON.stringify(originalData);
   };
 

@@ -240,6 +240,8 @@
   width: 30px;
   height: 30px;
   border: 3px solid #f3f3f3;
+  margin: 0 auto;
+  display: block;
   border-top: 3px solid #3F2724;
   border-radius: 50%;
   animation: spin 1s linear infinite;
