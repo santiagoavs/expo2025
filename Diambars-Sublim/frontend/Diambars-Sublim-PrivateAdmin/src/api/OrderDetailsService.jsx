@@ -46,19 +46,19 @@ export const orderDetailsService = {
   },
 
   /**
-   * Subir foto de producción
+   * Subir foto de control de calidad
    */
   async uploadProductionPhoto(orderId, photoData) {
     try {
-      console.log('📸 [OrderDetailsService] Subiendo foto de producción:', orderId, photoData.stage);
+      console.log('📸 [OrderDetailsService] Subiendo foto de control de calidad:', orderId);
       
       const formData = new FormData();
       formData.append('photo', photoData.file);
-      formData.append('stage', photoData.stage);
+      formData.append('stage', 'quality_check'); // Siempre es control de calidad
       formData.append('notes', photoData.notes || '');
-      formData.append('isQualityPhoto', photoData.isQualityPhoto || false);
+      formData.append('orderId', orderId);
       
-      const response = await apiClient.post(`/production/orders/${orderId}/photos`, formData, {
+      const response = await apiClient.post(`/orders/${orderId}/upload-photo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

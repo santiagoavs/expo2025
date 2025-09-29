@@ -688,7 +688,6 @@ const Orders = () => {
   };
 
   const handleViewOrderDetails = (order) => {
-    console.log('👁️ [Orders] Abriendo detalles de orden:', order._id);
     setSelectedOrder(order);
     setShowOrderDetailsModal(true);
   };

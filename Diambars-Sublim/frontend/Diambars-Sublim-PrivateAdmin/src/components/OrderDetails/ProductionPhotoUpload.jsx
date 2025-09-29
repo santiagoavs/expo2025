@@ -1,4 +1,4 @@
-// components/OrderDetails/ProductionPhotoUpload.jsx - Componente para subir fotos de producción
+// components/OrderDetails/ProductionPhotoUpload.jsx - Componente para subir fotos de control de calidad
 import React, { useState, useRef } from 'react';
 import {
   Dialog,
@@ -9,16 +9,10 @@ import {
   Box,
   Typography,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Card,
   CardContent,
   IconButton,
   Alert,
-  FormControlLabel,
-  Checkbox,
   LinearProgress,
   Portal
 } from '@mui/material';
@@ -29,57 +23,64 @@ import {
   Image as ImageIcon
 } from '@phosphor-icons/react';
 import { useOrderDetails } from '../../hooks/useOrderDetails';
+import Swal from 'sweetalert2';
 
 const ProductionPhotoUpload = ({ 
   isOpen, 
   onClose, 
   orderId, 
-  orderNumber,
-  currentOrderStatus,
+  orderNumber, 
   onPhotoUploaded 
 }) => {
   const { loading, uploadProductionPhoto } = useOrderDetails();
   
+  // Configurar SweetAlert2 con z-index alto
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .swal2-container {
+        z-index: 9999 !important;
+      }
+      .swal-highest-z-index {
+        z-index: 9999 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
+  
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [stage, setStage] = useState('');
-  const [notes, setNotes] = useState('');
-  const [isQualityPhoto, setIsQualityPhoto] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
   const fileInputRef = useRef(null);
-
-  // Etapas que permiten subir fotos (solo las importantes)
-  const photoAllowedStages = [
-    { value: 'in_production', label: 'En Producción 🏭' },
-    { value: 'quality_check', label: 'Control de Calidad 🔍' },
-    { value: 'quality_approved', label: 'Calidad Aprobada ✅' },
-    { value: 'packaging', label: 'Empacando 📦' },
-    { value: 'ready_for_delivery', label: 'Listo para Entrega 🚚' }
-  ];
-
-  // Etapas de producción específicas para las fotos
-  const productionStages = [
-    { value: 'cutting', label: 'Corte ✂️' },
-    { value: 'printing', label: 'Impresión 🖨️' },
-    { value: 'pressing', label: 'Prensado 🔥' },
-    { value: 'quality_check', label: 'Control de Calidad 🔍' },
-    { value: 'packaging', label: 'Empacado 📦' }
-  ];
-
-  // Verificar si la etapa actual permite subir fotos
-  const canUploadPhotos = photoAllowedStages.some(stage => stage.value === currentOrderStatus);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        alert('Por favor selecciona un archivo de imagen válido');
+        Swal.fire({
+          icon: 'error',
+          title: 'Archivo inválido',
+          text: 'Por favor selecciona un archivo de imagen válido',
+          customClass: 'swal-highest-z-index'
+        });
         return;
       }
 
       // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('El archivo es demasiado grande. Máximo 5MB permitido');
+        Swal.fire({
+          icon: 'error',
+          title: 'Archivo muy grande',
+          text: 'El archivo es demasiado grande. Máximo 5MB permitido',
+          customClass: 'swal-highest-z-index'
+        });
         return;
       }
 
@@ -95,44 +96,74 @@ const ProductionPhotoUpload = ({
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !stage) {
-      alert('Por favor selecciona una foto y una etapa de producción');
+    if (!selectedFile) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Foto requerida',
+        text: 'Por favor selecciona una foto',
+        customClass: 'swal-highest-z-index'
+      });
+      return;
+    }
+
+    if (!adminNotes.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nota requerida',
+        text: 'Por favor agrega una nota del control de calidad',
+        customClass: 'swal-highest-z-index'
+      });
       return;
     }
 
     try {
       const photoData = {
         file: selectedFile,
-        stage,
-        notes,
-        isQualityPhoto
+        stage: 'quality_check',
+        notes: adminNotes
       };
 
       await uploadProductionPhoto(orderId, photoData);
       
-      // Limpiar formulario
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setStage('');
-      setNotes('');
-      setIsQualityPhoto(false);
+      // Notificar éxito
+      onPhotoUploaded && onPhotoUploaded();
       
-      // Notificar al componente padre
-      onPhotoUploaded?.();
+      // Mostrar éxito con SweetAlert2
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Control de Calidad Enviado!',
+        text: 'La foto se ha subido exitosamente y se ha enviado un correo de aprobación al cliente.',
+        customClass: 'swal-highest-z-index',
+        confirmButtonText: 'Entendido'
+      });
       
-      onClose();
+      // Cerrar modal
+      handleClose();
+      
     } catch (error) {
       console.error('Error subiendo foto:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al subir foto',
+        text: 'Error subiendo la foto. Intenta de nuevo.',
+        customClass: 'swal-highest-z-index'
+      });
     }
   };
 
   const handleClose = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
-    setStage('');
-    setNotes('');
-    setIsQualityPhoto(false);
+    setAdminNotes('');
     onClose();
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -140,110 +171,110 @@ const ProductionPhotoUpload = ({
       <Dialog
         open={isOpen}
         onClose={handleClose}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
-        disablePortal={false}
         PaperProps={{
           sx: {
-            borderRadius: '16px',
-            zIndex: 1400
+            borderRadius: 3,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            zIndex: 2000
           }
         }}
-        sx={{
-          zIndex: 1400
+        slotProps={{
+          backdrop: {
+            sx: { zIndex: 2000 }
+          }
         }}
       >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        pb: 2
-      }}>
-        <Box>
-          <Typography variant="h6" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-            Subir Foto de Producción
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Pedido: {orderNumber}
-          </Typography>
-        </Box>
-        <IconButton onClick={handleClose} size="small">
-          <X size={20} />
-        </IconButton>
-      </DialogTitle>
-
-      <DialogContent sx={{ px: 3 }}>
-        {loading && (
-          <Box sx={{ mb: 2 }}>
-            <LinearProgress />
-            <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mt: 1 }}>
-              Subiendo foto...
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          pb: 1,
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Camera size={24} color="#2563eb" />
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#1f2937' }}>
+              Control de Calidad - Orden #{orderNumber}
             </Typography>
           </Box>
-        )}
+          <IconButton onClick={handleClose} size="small">
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
 
-        {/* Verificación de permisos */}
-        {!canUploadPhotos && (
-          <Alert severity="warning" sx={{ mb: 3, borderRadius: '8px' }}>
+        <DialogContent sx={{ p: 3 }}>
+          <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              <strong>No se pueden subir fotos en esta etapa</strong><br/>
-              Solo se pueden subir fotos en las siguientes etapas: En Producción, Control de Calidad, Calidad Aprobada, Empacando, o Listo para Entrega.
+              <strong>Control de Calidad:</strong> Sube una foto del producto terminado para que el cliente pueda aprobar o rechazar la calidad. 
+              Se enviará un correo con la foto y opciones de aprobación.
             </Typography>
           </Alert>
-        )}
 
-        {canUploadPhotos && (
-          <>
-            {/* Información del estado actual */}
-            <Alert severity="info" sx={{ mb: 3, borderRadius: '8px' }}>
-              <Typography variant="body2">
-                <strong>Estado actual:</strong> {photoAllowedStages.find(s => s.value === currentOrderStatus)?.label || currentOrderStatus}
-              </Typography>
-            </Alert>
-
-        {/* Selección de Archivo */}
-        <Card sx={{ mb: 3, border: '2px dashed #e0e0e0', backgroundColor: '#fafafa' }}>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            {previewUrl ? (
-              <Box>
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '200px',
-                    borderRadius: '8px',
-                    marginBottom: '16px'
-                  }}
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {selectedFile?.name}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+              📸 Foto del Producto
+            </Typography>
+            
+            {!selectedFile ? (
+              <Card 
+                sx={{ 
+                  border: '2px dashed #d1d5db',
+                  borderRadius: 2,
+                  p: 3,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    borderColor: '#2563eb',
+                    backgroundColor: '#f8fafc'
+                  }
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera size={48} color="#9ca3af" />
+                <Typography variant="body2" sx={{ mt: 1, color: '#6b7280' }}>
+                  Haz clic para seleccionar una foto
                 </Typography>
-                <Button
-                  variant="outlined"
-                  onClick={() => fileInputRef.current?.click()}
-                  startIcon={<Camera size={16} />}
-                >
-                  Cambiar Foto
-                </Button>
-              </Box>
+                <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                  JPG, PNG, GIF (máximo 5MB)
+                </Typography>
+              </Card>
             ) : (
-              <Box>
-                <ImageIcon size={48} color="#9e9e9e" />
-                <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
-                  Seleccionar Foto
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Arrastra una imagen aquí o haz clic para seleccionar
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={() => fileInputRef.current?.click()}
-                  startIcon={<Upload size={16} />}
-                >
-                  Seleccionar Archivo
-                </Button>
-              </Box>
+              <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                <Box sx={{ position: 'relative' }}>
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    style={{ 
+                      width: '100%', 
+                      height: '200px', 
+                      objectFit: 'cover' 
+                    }} 
+                  />
+                  <IconButton
+                    onClick={handleRemoveFile}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0,0,0,0.7)'
+                      }
+                    }}
+                    size="small"
+                  >
+                    <X size={16} />
+                  </IconButton>
+                </Box>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                    {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </Typography>
+                </CardContent>
+              </Card>
             )}
             
             <input
@@ -253,85 +284,62 @@ const ProductionPhotoUpload = ({
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />
-          </CardContent>
-        </Card>
+          </Box>
 
-        {/* Etapa de Producción */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Etapa de Producción</InputLabel>
-          <Select
-            value={stage}
-            onChange={(e) => {
-              console.log('📸 [ProductionPhotoUpload] Cambiando etapa a:', e.target.value);
-              setStage(e.target.value);
-            }}
-            label="Etapa de Producción"
-          >
-            {productionStages.map((stageOption) => (
-              <MenuItem key={stageOption.value} value={stageOption.value}>
-                {stageOption.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Notas */}
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Notas (opcional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Describe el progreso, detalles técnicos, o cualquier observación..."
-          sx={{ mb: 3 }}
-        />
-
-
-        {/* Foto de Calidad */}
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={isQualityPhoto}
-              onChange={(e) => setIsQualityPhoto(e.target.checked)}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+              📝 Nota del Control de Calidad
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              placeholder="Describe el estado del producto, detalles importantes, o cualquier observación para el cliente..."
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
             />
-          }
-          label={
-            <Box>
-              <Typography variant="body2">
-                Foto de Calidad
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Se enviará al cliente por WhatsApp para aprobación
+          </Box>
+
+          {loading && (
+            <Box sx={{ mt: 2 }}>
+              <LinearProgress />
+              <Typography variant="body2" sx={{ mt: 1, textAlign: 'center', color: '#6b7280' }}>
+                Subiendo foto y enviando correo...
               </Typography>
             </Box>
-          }
-          sx={{ mb: 2 }}
-        />
+          )}
+        </DialogContent>
 
-        {isQualityPhoto && (
-          <Alert severity="info" sx={{ borderRadius: '8px' }}>
-            Esta foto se enviará automáticamente al cliente por WhatsApp para que pueda revisar la calidad del trabajo.
-          </Alert>
-        )}
-          </>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={handleClose} variant="outlined" disabled={loading}>
-          Cancelar
-        </Button>
-        <Button 
-          onClick={handleUpload} 
-          variant="contained"
-          disabled={!selectedFile || !stage || loading}
-          startIcon={<Upload size={16} />}
-        >
-          {loading ? 'Subiendo...' : 'Subir Foto'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={handleClose}
+            sx={{ 
+              color: '#6b7280',
+              '&:hover': { backgroundColor: '#f3f4f6' }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpload}
+            disabled={!selectedFile || !adminNotes.trim() || loading}
+            variant="contained"
+            startIcon={<Upload size={20} />}
+            sx={{
+              backgroundColor: '#2563eb',
+              '&:hover': { backgroundColor: '#1d4ed8' },
+              '&:disabled': { backgroundColor: '#d1d5db' }
+            }}
+          >
+            {loading ? 'Enviando...' : 'Enviar Control de Calidad'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Portal>
   );
 };

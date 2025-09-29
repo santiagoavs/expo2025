@@ -58,12 +58,16 @@ import {
   ArrowClockwise,
   Phone
 } from '@phosphor-icons/react';
+import { toast } from 'react-hot-toast';
+import Swal from 'sweetalert2';
+import apiClient from '../../../api/ApiClient';
 
 // import { useOrderPaymentStatus } from '../../../hooks/usePayments';
 import PaymentStatusPanel from './PaymentStatusPanel';
 import PaymentDetailsModal from '../../../components/OrderDetails/PaymentDetailsModal';
 import OrderTimelineModal from '../../../components/OrderDetails/OrderTimelineModal';
 import ProductionPhotoUpload from '../../../components/OrderDetails/ProductionPhotoUpload';
+import QualityControlPanel from '../../../components/QualityControl/QualityControlPanel';
 
 // ================ ESTILOS MODERNOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
@@ -134,7 +138,9 @@ const StatusChip = styled(Chip)(({ status, theme }) => {
       delivered: { bg: '#dcfce7', color: '#166534', border: '#22c55e' },
       completed: { bg: '#d1fae5', color: '#064e3b', border: '#059669' },
       cancelled: { bg: '#fee2e2', color: '#991b1b', border: '#ef4444' },
-      on_hold: { bg: '#f3f4f6', color: '#374151', border: '#6b7280' }
+      on_hold: { bg: '#f3f4f6', color: '#374151', border: '#6b7280' },
+      returned: { bg: '#fef2f2', color: '#dc2626', border: '#ef4444' },
+      refunded: { bg: '#f0fdf4', color: '#166534', border: '#22c55e' }
     };
     return styles[status] || styles.on_hold;
   };
@@ -179,8 +185,19 @@ const InfoValue = styled(Typography)(({ theme }) => ({
 
 // ================ COMPONENTE PRINCIPAL ================
 const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
+  // Si no hay orden, no renderizar el modal
+  if (!order) {
+    return null;
+  }
+
+  // Si el modal no está abierto, no renderizar
+  if (!open) {
+    return null;
+  }
+
   const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
   
   // Estados para modales
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
@@ -189,6 +206,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
   const [showStatusChange, setShowStatusChange] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  const [showQualityControl, setShowQualityControl] = useState(false);
 
   // Hook para estado de pagos (temporalmente deshabilitado)
   // const {
@@ -246,38 +264,163 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     { value: 'ready_for_delivery', label: 'Listo para Entrega', icon: Truck },
     { value: 'out_for_delivery', label: 'En Camino', icon: Truck },
     { value: 'delivered', label: 'Entregado', icon: CheckCircle },
-    { value: 'cancelled', label: 'Cancelado', icon: X }
+    { value: 'completed', label: 'Completado', icon: CheckCircle },
+    { value: 'cancelled', label: 'Cancelado', icon: X },
+    { value: 'on_hold', label: 'En Espera', icon: Warning },
+    { value: 'returned', label: 'Devolución', icon: X },
+    { value: 'refunded', label: 'Reembolsado', icon: CheckCircle }
   ];
 
-  // Verificar si se puede subir fotos
-  const canUploadPhotos = ['in_production', 'quality_check', 'quality_approved', 'packaging', 'ready_for_delivery'].includes(order?.status);
+  // Función auxiliar para obtener el teléfono (compatible con órdenes existentes y nuevas)
+  const getUserPhone = () => {
+    // Usar orderDetails si está disponible (datos del backend), sino usar order (datos de la lista)
+    const currentOrder = orderDetails || order;
+    const currentUser = currentOrder?.user;
+    
+    const phoneNumber = currentUser?.phoneNumber;
+    const phone = currentUser?.phone;
+    const result = phoneNumber || phone || null;
+    
+    return result;
+  };
+
+  // Solo se puede subir fotos en control de calidad
+  const canUploadPhotos = order?.status === 'quality_check';
 
   // Verificar si tiene teléfono para WhatsApp
-  const hasPhoneNumber = order?.user?.phone && order.user.phone.trim() !== '';
+  const hasPhoneNumber = getUserPhone() && getUserPhone().trim() !== '';
+
+
+  // Cargar detalles completos de la orden cuando se abra el modal
+  useEffect(() => {
+    if (open && order && order._id) {
+      setLoading(true);
+      
+      // Hacer consulta al backend para obtener detalles completos
+      fetch(`http://localhost:4000/api/orders/${order._id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setOrderDetails(data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error cargando detalles de la orden:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [open, order]);
 
   // Manejar cambio de estado
   const handleStatusChange = async () => {
     if (!newStatus || newStatus === order?.status) return;
     
+    // Mostrar confirmación con SweetAlert2
+    const result = await Swal.fire({
+      title: '¿Confirmar cambio de estado?',
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Estado actual:</strong> ${availableStatuses.find(s => s.value === order?.status)?.label || order?.status}</p>
+          <p><strong>Nuevo estado:</strong> ${availableStatuses.find(s => s.value === newStatus)?.label || newStatus}</p>
+          <p style="color: #f59e0b; font-weight: 600;">⚠️ Esta acción no se puede deshacer</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#6366f1',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, cambiar estado',
+      cancelButtonText: 'Cancelar',
+      customClass: 'swal-highest-z-index',
+      zIndex: 100000
+    });
+    
+    if (!result.isConfirmed) {
+      return;
+    }
+    
     setStatusChangeLoading(true);
     try {
-      // Aquí iría la llamada a la API para cambiar el estado
-      console.log('🔄 Cambiando estado de', order?.status, 'a', newStatus);
+      console.log('🔄 Cambiando estado de orden:', order._id);
+      console.log('🔄 Nuevo estado:', newStatus);
+      console.log('🔄 URL:', `/orders/${order._id}/status`);
       
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Llamada al API para cambiar el estado
+      const response = await apiClient.put(`/orders/${order._id}/status`, {
+        newStatus,
+        reason: `Cambio de estado por administrador`
+      });
       
-      // Llamar callback del padre
-      onStatusChange?.(order?._id, newStatus);
-      
-      setShowStatusChange(false);
-      setNewStatus('');
+      if (response.success) {
+        // Llamar callback del padre para actualizar la UI
+        onStatusChange?.(order?._id, newStatus);
+        
+        setShowStatusChange(false);
+        setNewStatus('');
+        
+        // Mostrar mensaje de éxito con SweetAlert2
+        await Swal.fire({
+          title: '¡Estado cambiado!',
+          text: `El estado se cambió exitosamente a ${availableStatuses.find(s => s.value === newStatus)?.label || newStatus}`,
+          icon: 'success',
+          confirmButtonColor: '#10b981',
+          customClass: 'swal-highest-z-index',
+          zIndex: 100000
+        });
+      } else {
+        throw new Error(response.message);
+      }
     } catch (error) {
       console.error('Error cambiando estado:', error);
+      
+      // Mostrar error con SweetAlert2
+      await Swal.fire({
+        title: 'Error',
+        text: error.message || 'Error cambiando estado',
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+        customClass: 'swal-highest-z-index',
+        zIndex: 100000
+      });
     } finally {
       setStatusChangeLoading(false);
     }
   };
+
+  // Configurar SweetAlert2 globalmente con z-index alto
+  useEffect(() => {
+    // Configurar SweetAlert2 globalmente
+    Swal.mixin({
+      customClass: {
+        popup: 'swal-highest-z-index'
+      },
+      zIndex: 100000
+    });
+    
+    // Agregar CSS global para SweetAlert2
+    const style = document.createElement('style');
+    style.textContent = `
+      .swal2-container {
+        z-index: 100000 !important;
+      }
+      .swal-highest-z-index {
+        z-index: 100000 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   // Forzar z-index del dropdown
   useEffect(() => {
@@ -447,7 +590,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
                   
                   <InfoRow>
                     <InfoLabel>Teléfono:</InfoLabel>
-                    <InfoValue>{order?.user?.phone || 'N/A'}</InfoValue>
+                    <InfoValue>{getUserPhone() || 'N/A'}</InfoValue>
                   </InfoRow>
                   
                   {order?.user?.totalOrders && (
@@ -715,6 +858,36 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
               Timeline
             </Button>
 
+            {/* Botón de Control de Calidad */}
+            <Button
+              onClick={() => {
+                console.log('🔍 [OrderDetailModal] Abriendo panel de control de calidad para orden:', order?._id);
+                setShowQualityControl(true);
+              }}
+              variant="contained"
+              size="small"
+              startIcon={<CheckCircle size={16} />}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontFamily: "'Mona Sans'",
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                },
+                '&:active': {
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              Control de Calidad
+            </Button>
+
             {/* Botón de Cambio de Estado */}
             <Button
               onClick={() => setShowStatusChange(true)}
@@ -759,7 +932,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
                     variant="contained"
                     size="small"
                     startIcon={<Camera size={16} />}
-                    disabled={!hasPhoneNumber}
+                    disabled={!canUploadPhotos}
                     sx={{
                       borderRadius: '12px',
                       textTransform: 'none',
@@ -987,12 +1160,18 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
         orderNumber={order?.orderNumber}
       />
 
+      <QualityControlPanel
+        open={showQualityControl}
+        onClose={() => setShowQualityControl(false)}
+        orderId={order?._id}
+        orderNumber={order?.orderNumber}
+      />
+
       <ProductionPhotoUpload
         isOpen={showPhotoUpload}
         onClose={() => setShowPhotoUpload(false)}
         orderId={order?._id}
         orderNumber={order?.orderNumber}
-        currentOrderStatus={order?.status}
         onPhotoUploaded={() => {
           // Opcional: recargar datos si es necesario
           console.log('Foto subida exitosamente');

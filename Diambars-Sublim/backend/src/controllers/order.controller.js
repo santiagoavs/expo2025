@@ -7,6 +7,7 @@ import { orderService } from "../services/order.service.js";
 import { paymentProcessor } from "../services/payment/PaymentProcessor.js";
 import { validators } from "../utils/validators.utils.js";
 import { notificationService } from "../services/email/notification.service.js";
+import { qualityApprovalService } from "../services/email/quality-approval.service.js";
 
 const orderController = {};
 
@@ -551,7 +552,11 @@ orderController.getOrderById = async (req, res) => {
     }
 
     const order = await Order.findById(orderIdValidation.cleaned)
-      .populate('user', 'name email phone')
+      .populate({
+        path: 'user',
+        select: 'name email phoneNumber phone', // Incluir ambos campos por compatibilidad
+        options: { strictPopulate: false } // Permitir campos que no existen
+      })
       .populate('items.product', 'name images category description')
       .populate('items.design', 'name previewImage elements customizationAreas');
 
@@ -561,6 +566,22 @@ orderController.getOrderById = async (req, res) => {
         message: "Orden no encontrada",
         error: 'ORDER_NOT_FOUND'
       });
+    }
+
+    // Si no tiene phoneNumber, hacer consulta directa
+    if (order.user && !order.user.phoneNumber && !order.user.phone) {
+      try {
+        const User = (await import('../models/users.js')).default;
+        const fullUser = await User.findById(order.user._id).select('name email phoneNumber phone');
+        
+        // Actualizar el objeto user con los datos completos
+        if (fullUser) {
+          order.user.phoneNumber = fullUser.phoneNumber;
+          order.user.phone = fullUser.phone;
+        }
+      } catch (error) {
+        console.error('Error consultando usuario:', error);
+      }
     }
 
     // Verificar permisos (admin puede ver todas, usuario solo las suyas)
@@ -780,7 +801,6 @@ orderController.getOrderTimeline = async (req, res) => {
     }
 
     const order = await Order.findOne(query)
-      .populate('statusHistory.changedBy', 'name email')
       .populate('productionPhotos.uploadedBy', 'name')
       .select('orderNumber status statusHistory productionPhotos createdAt quotedAt approvedAt actualReadyDate deliveredAt completedAt');
 
@@ -802,7 +822,8 @@ orderController.getOrderTimeline = async (req, res) => {
       description: 'Tu pedido ha sido recibido y está siendo revisado',
       timestamp: order.createdAt,
       status: 'completed',
-      icon: '📝'
+      icon: '📝',
+      changedBy: 'Sistema'
     });
 
     // Evento: Cotizado
@@ -813,7 +834,8 @@ orderController.getOrderTimeline = async (req, res) => {
         description: 'Tu pedido ha sido cotizado y está esperando confirmación',
         timestamp: order.quotedAt,
         status: 'completed',
-        icon: '💰'
+        icon: '💰',
+        changedBy: 'Sistema'
       });
     }
 
@@ -825,7 +847,47 @@ orderController.getOrderTimeline = async (req, res) => {
         description: 'Tu pedido ha sido aprobado y entrará en producción',
         timestamp: order.approvedAt,
         status: 'completed',
-        icon: '✅'
+        icon: '✅',
+        changedBy: 'Sistema'
+      });
+    }
+
+    // Evento: En Producción
+    if (order.status === 'in_production' || order.status === 'quality_check' || order.status === 'quality_approved' || order.status === 'packaging') {
+      timeline.push({
+        event: 'in_production',
+        title: 'En Producción',
+        description: 'Tu pedido está siendo fabricado',
+        timestamp: order.approvedAt || order.createdAt,
+        status: 'completed',
+        icon: '🏭',
+        changedBy: 'Sistema'
+      });
+    }
+
+    // Evento: Control de Calidad
+    if (order.status === 'quality_check' || order.status === 'quality_approved' || order.status === 'packaging') {
+      timeline.push({
+        event: 'quality_check',
+        title: 'Control de Calidad',
+        description: 'Tu pedido está en etapa de control de calidad',
+        timestamp: order.approvedAt || order.createdAt,
+        status: order.status === 'quality_approved' ? 'completed' : 'current',
+        icon: '🔍',
+        changedBy: 'Sistema'
+      });
+    }
+
+    // Evento: Calidad Aprobada
+    if (order.status === 'quality_approved' || order.status === 'packaging') {
+      timeline.push({
+        event: 'quality_approved',
+        title: 'Calidad Aprobada',
+        description: 'La calidad de tu pedido ha sido aprobada',
+        timestamp: order.approvedAt || order.createdAt,
+        status: 'completed',
+        icon: '✅',
+        changedBy: 'Sistema'
       });
     }
 
@@ -857,6 +919,7 @@ orderController.getOrderTimeline = async (req, res) => {
           timestamp: latestPhoto.uploadedAt,
           status: 'completed',
           icon: config.icon,
+          changedBy: 'Sistema',
           photos: stagePhotos.map(photo => ({
             url: photo.photoUrl,
             notes: photo.notes,
@@ -874,7 +937,8 @@ orderController.getOrderTimeline = async (req, res) => {
         description: 'Tu pedido está listo y será enviado pronto',
         timestamp: order.actualReadyDate,
         status: 'completed',
-        icon: '🚚'
+        icon: '🚚',
+        changedBy: 'Sistema'
       });
     }
 
@@ -886,7 +950,8 @@ orderController.getOrderTimeline = async (req, res) => {
         description: 'Tu pedido ha sido entregado exitosamente',
         timestamp: order.deliveredAt,
         status: 'completed',
-        icon: '✅'
+        icon: '✅',
+        changedBy: 'Sistema'
       });
     }
 
@@ -898,7 +963,67 @@ orderController.getOrderTimeline = async (req, res) => {
         description: 'Tu pedido ha sido completado. ¡Gracias por tu compra!',
         timestamp: order.completedAt,
         status: 'completed',
-        icon: '🎉'
+        icon: '🎉',
+        changedBy: 'Sistema'
+      });
+    }
+
+    // Procesar eventos del statusHistory
+    if (order.statusHistory && order.statusHistory.length > 0) {
+      order.statusHistory.forEach((historyItem, index) => {
+        // Validar que el statusHistory tenga timestamp
+        if (!historyItem.timestamp) {
+          console.log('⚠️ [Timeline] StatusHistory item sin timestamp:', historyItem);
+          return;
+        }
+
+        let changedByName = 'Sistema';
+        if (historyItem.changedBy && typeof historyItem.changedBy === 'object') {
+          changedByName = historyItem.changedBy.name || 'Usuario';
+        } else if (historyItem.changedByModel === 'User' || historyItem.changedByModel === 'Employee') {
+          changedByName = 'Usuario';
+        }
+
+        // Mapear estados a nombres más legibles
+        const statusMap = {
+          'pending': 'Pendiente',
+          'pending_approval': 'Pendiente de Aprobación',
+          'approved': 'Aprobado',
+          'in_production': 'En Producción',
+          'quality_check': 'Control de Calidad',
+          'quality_approved': 'Calidad Aprobada',
+          'packaging': 'Empacado',
+          'out_for_delivery': 'En Camino',
+          'delivered': 'Entregado',
+          'completed': 'Completado',
+          'cancelled': 'Cancelado',
+          'returned': 'Devuelto',
+          'refunded': 'Reembolsado'
+        };
+
+        // Determinar el estado basado en el contexto del historyItem
+        let currentStatus = order.status; // Estado actual por defecto
+        if (historyItem.previousStatus) {
+          // Si hay previousStatus, el estado actual es el que se cambió
+          currentStatus = order.status;
+        }
+
+        const statusName = statusMap[currentStatus] || currentStatus;
+        const eventTitle = historyItem.previousStatus 
+          ? `Cambio de Estado: ${statusMap[historyItem.previousStatus] || historyItem.previousStatus} → ${statusName}`
+          : `Estado: ${statusName}`;
+
+        timeline.push({
+          event: `status_change_${index}`,
+          title: eventTitle,
+          description: historyItem.notes || `Estado actualizado a ${statusName}`,
+          timestamp: historyItem.timestamp,
+          status: 'completed',
+          icon: '🔄',
+          changedBy: changedByName,
+          originalStatus: currentStatus,
+          previousStatus: historyItem.previousStatus
+        });
       });
     }
 
@@ -914,6 +1039,19 @@ orderController.getOrderTimeline = async (req, res) => {
     if (currentStatusIndex !== -1) {
       timeline[currentStatusIndex].status = 'current';
     }
+
+    // Debug: Log del timeline generado
+    console.log('📊 [Timeline] Timeline generado:', {
+      orderNumber: order.orderNumber,
+      currentStatus: order.status,
+      totalEvents: timeline.length,
+      timelineEvents: timeline.map(e => ({
+        event: e.event,
+        title: e.title,
+        status: e.status,
+        timestamp: e.timestamp
+      }))
+    });
 
     res.status(200).json({
       success: true,
@@ -936,5 +1074,596 @@ orderController.getOrderTimeline = async (req, res) => {
   }
 };
 
+/**
+ * Obtener datos de control de calidad de una orden
+ */
+orderController.getQualityControlData = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+
+    // Validar ID de orden
+    if (!orderId || !orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de orden inválido"
+      });
+    }
+
+    // Buscar orden con datos de control de calidad
+    const order = await Order.findById(orderId)
+      .populate('user', 'name email phoneNumber phone')
+      .select('orderNumber status statusHistory productionPhotos createdAt user');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Orden no encontrada"
+      });
+    }
+
+    // Procesar datos de control de calidad
+    const qualityControlData = {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      currentStatus: order.status,
+      lastUpdate: order.updatedAt,
+      client: {
+        name: order.user?.name || 'N/A',
+        email: order.user?.email || 'N/A',
+        phone: order.user?.phoneNumber || order.user?.phone || 'N/A'
+      },
+      stats: {
+        totalAttempts: 0,
+        approvedCount: 0,
+        rejectedCount: 0,
+        pendingCount: 0
+      },
+      attempts: []
+    };
+
+    // Procesar intentos de control de calidad desde statusHistory
+    if (order.statusHistory && order.statusHistory.length > 0) {
+      const qualityAttempts = order.statusHistory.filter(item => 
+        item.notes && (
+          item.notes.includes('control de calidad') || 
+          item.notes.includes('Foto de control') ||
+          item.notes.includes('Calidad aprobada') ||
+          item.notes.includes('Calidad rechazada')
+        )
+      );
+
+      qualityControlData.attempts = qualityAttempts.map((attempt, index) => {
+        let status = 'pending';
+        let clientResponse = null;
+
+        // Determinar estado basado en las notas
+        if (attempt.notes.includes('Calidad aprobada')) {
+          status = 'approved';
+        } else if (attempt.notes.includes('Calidad rechazada')) {
+          status = 'rejected';
+        } else if (attempt.notes.includes('Foto de control')) {
+          status = 'sent';
+        }
+
+        // Buscar respuesta del cliente en el historial
+        const clientResponseItem = order.statusHistory.find(item => 
+          item.timestamp > attempt.timestamp && 
+          item.notes && (
+            item.notes.includes('Calidad aprobada por el cliente') ||
+            item.notes.includes('Calidad rechazada por el cliente')
+          )
+        );
+
+        if (clientResponseItem) {
+          clientResponse = {
+            approved: clientResponseItem.notes.includes('aprobada'),
+            notes: clientResponseItem.notes,
+            responseDate: clientResponseItem.timestamp
+          };
+        }
+
+        return {
+          attemptNumber: index + 1,
+          status: status,
+          notes: attempt.notes,
+          timestamp: attempt.timestamp,
+          changedBy: attempt.changedBy,
+          clientResponse: clientResponse
+        };
+      });
+
+      // Calcular estadísticas
+      qualityControlData.stats.totalAttempts = qualityControlData.attempts.length;
+      qualityControlData.stats.approvedCount = qualityControlData.attempts.filter(a => a.status === 'approved').length;
+      qualityControlData.stats.rejectedCount = qualityControlData.attempts.filter(a => a.status === 'rejected').length;
+      qualityControlData.stats.pendingCount = qualityControlData.attempts.filter(a => a.status === 'pending' || a.status === 'sent').length;
+    }
+
+    console.log('📊 [QualityControl] Datos generados:', {
+      orderNumber: order.orderNumber,
+      totalAttempts: qualityControlData.stats.totalAttempts,
+      currentStatus: qualityControlData.currentStatus
+    });
+
+    res.status(200).json({
+      success: true,
+      data: qualityControlData
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getQualityControlData:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message
+    });
+  }
+};
+
 // Exportar el controlador con métodos validados
+/**
+ * Cambiar estado de una orden con validaciones
+ */
+orderController.changeOrderStatus = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+    const { newStatus, reason, skipValidation = false } = req.body;
+    const adminId = req.user._id;
+
+    // Validar ID de orden
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de orden inválido",
+        error: 'INVALID_ORDER_ID'
+      });
+    }
+
+    // Buscar la orden
+    const order = await Order.findById(orderId).populate('user', 'name email phoneNumber');
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Orden no encontrada",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Estados válidos
+    const validStatuses = [
+      'pending_approval', 'quoted', 'approved', 'in_production', 
+      'quality_check', 'quality_approved', 'packaging', 
+      'ready_for_delivery', 'out_for_delivery', 'delivered', 
+      'completed', 'cancelled', 'on_hold', 'returned', 'refunded'
+    ];
+
+    if (!validStatuses.includes(newStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Estado inválido",
+        error: 'INVALID_STATUS'
+      });
+    }
+
+    // No permitir cambiar al mismo estado
+    if (order.status === newStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "La orden ya está en ese estado",
+        error: 'SAME_STATUS'
+      });
+    }
+
+    // Validaciones de flujo de negocio
+    if (!skipValidation) {
+      const validationResult = await validateStatusChange(order, newStatus);
+      if (!validationResult.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: validationResult.message,
+          error: 'STATUS_CHANGE_VALIDATION_FAILED',
+          warnings: validationResult.warnings
+        });
+      }
+    }
+
+    // Actualizar estado
+    const previousStatus = order.status;
+    order.status = newStatus;
+    
+    // Agregar al historial
+    order.statusHistory.push({
+      status: newStatus,
+      changedAt: new Date(),
+      changedBy: adminId,
+      reason: reason || 'Cambio de estado por administrador',
+      previousStatus: previousStatus
+    });
+
+    await order.save();
+
+    // Notificar al cliente si es necesario
+    if (shouldNotifyCustomer(previousStatus, newStatus)) {
+      await notificationService.sendStatusUpdateNotification({
+        orderNumber: order.orderNumber,
+        newStatus: newStatus,
+        previousStatus: previousStatus,
+        userEmail: order.user.email,
+        userName: order.user.name,
+        userPhone: order.user.phoneNumber,
+        order: order
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Estado cambiado de ${previousStatus} a ${newStatus}`,
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        previousStatus,
+        newStatus,
+        changedAt: new Date(),
+        changedBy: adminId
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en changeOrderStatus:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error cambiando estado de orden",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Registrar pago en efectivo
+ */
+orderController.registerCashPayment = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+    const { amountReceived, changeGiven, notes } = req.body;
+    const adminId = req.user._id;
+
+    // Validar ID de orden
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de orden inválido",
+        error: 'INVALID_ORDER_ID'
+      });
+    }
+
+    // Buscar la orden
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Orden no encontrada",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Validar que sea pago en efectivo
+    if (order.payment.method !== 'cash') {
+      return res.status(400).json({
+        success: false,
+        message: "Esta orden no es de pago en efectivo",
+        error: 'NOT_CASH_PAYMENT'
+      });
+    }
+
+    // Validar montos
+    if (amountReceived < order.total) {
+      return res.status(400).json({
+        success: false,
+        message: "El monto recibido es menor al total de la orden",
+        error: 'INSUFFICIENT_PAYMENT'
+      });
+    }
+
+    // Registrar pago en efectivo
+    order.payment.cashPayment = {
+      received: true,
+      receivedAt: new Date(),
+      receivedBy: adminId,
+      amountReceived: amountReceived,
+      changeGiven: changeGiven || 0,
+      notes: notes || ''
+    };
+
+    // Actualizar estado de pago
+    order.payment.status = 'completed';
+    order.payment.totalPaid = order.total;
+    order.payment.balance = 0;
+    order.payment.lastPaidAt = new Date();
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Pago en efectivo registrado exitosamente",
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        amountReceived,
+        changeGiven,
+        total: order.total,
+        receivedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en registerCashPayment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error registrando pago en efectivo",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Registrar devolución
+ */
+orderController.registerReturn = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+    const { returnReason, returnDescription, refundAmount, refundMethod } = req.body;
+    const adminId = req.user._id;
+
+    // Validar ID de orden
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de orden inválido",
+        error: 'INVALID_ORDER_ID'
+      });
+    }
+
+    // Buscar la orden
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Orden no encontrada",
+        error: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Registrar devolución
+    order.payment.returnInfo = {
+      isReturned: true,
+      returnedAt: new Date(),
+      returnedBy: adminId,
+      returnReason,
+      returnDescription,
+      refundAmount: refundAmount || order.total,
+      refundMethod,
+      refundedAt: new Date(),
+      refundedBy: adminId
+    };
+
+    // Cambiar estado a devuelto
+    order.status = 'returned';
+    order.statusHistory.push({
+      status: 'returned',
+      changedAt: new Date(),
+      changedBy: adminId,
+      reason: `Devolución registrada: ${returnDescription}`,
+      previousStatus: order.status
+    });
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Devolución registrada exitosamente",
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        returnReason,
+        refundAmount,
+        refundMethod,
+        returnedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en registerReturn:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error registrando devolución",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// ==================== FUNCIONES AUXILIARES ====================
+
+/**
+ * Validar cambio de estado
+ */
+async function validateStatusChange(order, newStatus) {
+  const warnings = [];
+  
+  // Validar que el pago esté completo para ciertos estados
+  const paymentRequiredStates = ['in_production', 'quality_check', 'packaging', 'ready_for_delivery', 'out_for_delivery', 'delivered'];
+  
+  // Para pagos en efectivo, solo validar pago hasta 'ready_for_delivery'
+  if (order.payment.method === 'cash') {
+    const cashPaymentRequiredStates = ['ready_for_delivery', 'out_for_delivery', 'delivered'];
+    if (cashPaymentRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      return {
+        isValid: false,
+        message: "Para pagos en efectivo, el pago se registra al momento de la entrega",
+        warnings: []
+      };
+    }
+  } else {
+    // Para otros métodos de pago, validar pago desde 'in_production'
+    if (paymentRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      return {
+        isValid: false,
+        message: "No se puede avanzar a este estado sin pago completo",
+        warnings: []
+      };
+    }
+  }
+
+  // Validar saltos de etapas
+  const statusOrder = [
+    'pending_approval', 'quoted', 'approved', 'in_production', 
+    'quality_check', 'quality_approved', 'packaging', 
+    'ready_for_delivery', 'out_for_delivery', 'delivered', 'completed'
+  ];
+  
+  const currentIndex = statusOrder.indexOf(order.status);
+  const newIndex = statusOrder.indexOf(newStatus);
+  
+  if (newIndex > currentIndex + 1) {
+    warnings.push("Estás saltando etapas del proceso. ¿Estás seguro?");
+  }
+
+  // Validar control de calidad
+  if (newStatus === 'packaging' && order.status !== 'quality_approved') {
+    warnings.push("¿Estás seguro de saltar el control de calidad?");
+  }
+
+  return {
+    isValid: true,
+    warnings
+  };
+}
+
+/**
+ * Determinar si se debe notificar al cliente
+ */
+function shouldNotifyCustomer(previousStatus, newStatus) {
+  const notificationStates = ['approved', 'in_production', 'quality_check', 'quality_approved', 'packaging', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'completed'];
+  return notificationStates.includes(newStatus);
+}
+
+/**
+ * Subir foto de producción y enviar correo de aprobación
+ */
+orderController.uploadProductionPhoto = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+    const { stage, notes } = req.body;
+    const photo = req.file;
+
+    // Validar ID de orden
+    if (!orderId || !orderId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID de orden inválido"
+      });
+    }
+
+    // Validar que se subió una foto
+    if (!photo) {
+      return res.status(400).json({
+        success: false,
+        message: "Foto requerida"
+      });
+    }
+
+    // Validar notas
+    if (!notes || notes.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Notas del control de calidad requeridas"
+      });
+    }
+
+    // Buscar la orden
+    const order = await Order.findById(orderId)
+      .populate('user', 'name email phoneNumber');
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Orden no encontrada"
+      });
+    }
+
+    // Verificar que esté en control de calidad
+    if (order.status !== 'quality_check') {
+      return res.status(400).json({
+        success: false,
+        message: "La orden debe estar en etapa de control de calidad"
+      });
+    }
+
+    // Crear URL de la foto
+    const photoUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/uploads/${photo.filename}`;
+    
+    console.log('📸 [OrderController] Foto subida:', {
+      filename: photo.filename,
+      path: photo.path,
+      size: photo.size,
+      photoUrl: photoUrl,
+      orderId: orderId,
+      stage: stage,
+      notes: notes
+    });
+    
+    // Verificar que el archivo existe
+    const fs = await import('fs');
+    if (fs.existsSync(photo.path)) {
+      console.log('✅ [OrderController] Archivo existe en:', photo.path);
+    } else {
+      console.log('❌ [OrderController] Archivo NO existe en:', photo.path);
+    }
+
+    // Agregar foto al historial de la orden
+    order.statusHistory.push({
+      status: 'quality_check',
+      timestamp: new Date(),
+      notes: `Foto de control de calidad subida: ${notes}`,
+      updatedBy: req.user?._id || 'admin',
+      photoUrl: photoUrl,
+      adminNotes: notes
+    });
+
+    await order.save();
+
+    // Enviar correo de aprobación de calidad
+    const emailResult = await qualityApprovalService.sendQualityApprovalEmail(
+      order, 
+      photoUrl, 
+      notes
+    );
+
+    if (emailResult.success) {
+      console.log('✅ [OrderController] Foto subida y correo enviado para orden:', order.orderNumber);
+    } else {
+      console.log('⚠️ [OrderController] Foto subida pero correo no enviado:', emailResult.error);
+    }
+
+    res.json({
+      success: true,
+      message: "Foto subida exitosamente y correo de aprobación enviado",
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        photoUrl: photoUrl,
+        emailSent: emailResult.success,
+        emailError: emailResult.error || null
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [OrderController] Error subiendo foto de producción:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message
+    });
+  }
+};
+
 export default orderController;

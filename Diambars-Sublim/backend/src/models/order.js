@@ -157,7 +157,9 @@ const orderSchema = new mongoose.Schema({
       'delivered',         // Entregado
       'completed',         // Completado y cerrado
       'cancelled',         // Cancelado
-      'on_hold'           // En espera/pausado
+      'on_hold',          // En espera/pausado
+      'returned',         // Devolución
+      'refunded'          // Reembolsado
     ],
     default: 'pending_approval'
   },
@@ -213,6 +215,35 @@ const orderSchema = new mongoose.Schema({
       requiresAdvancePayment: { type: Boolean, default: false },
       advancePercentage: { type: Number, min: 0, max: 100 },
       paymentNotes: String
+    },
+    
+    // Información específica para pagos en efectivo
+    cashPayment: {
+      received: { type: Boolean, default: false },
+      receivedAt: Date,
+      receivedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      amountReceived: { type: Number, min: 0 },
+      changeGiven: { type: Number, min: 0, default: 0 },
+      notes: String
+    },
+    
+    // Información de devoluciones
+    returnInfo: {
+      isReturned: { type: Boolean, default: false },
+      returnedAt: Date,
+      returnedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      returnReason: {
+        type: String,
+        enum: ['defective_product', 'wrong_size', 'customer_request', 'quality_issue', 'other']
+      },
+      returnDescription: String,
+      refundAmount: { type: Number, min: 0 },
+      refundMethod: {
+        type: String,
+        enum: ['cash', 'bank_transfer', 'wompi']
+      },
+      refundedAt: Date,
+      refundedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     }
   },
   

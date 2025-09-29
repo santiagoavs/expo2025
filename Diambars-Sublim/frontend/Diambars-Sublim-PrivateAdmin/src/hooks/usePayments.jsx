@@ -345,7 +345,8 @@ export const usePendingTransfers = () => {
       const response = await paymentService.getPendingTransfers();
       
       if (response.success) {
-        const formattedTransfers = (response.data || []).map(transfer => 
+        const transfers = response.data?.transfers || [];
+        const formattedTransfers = transfers.map(transfer => 
           paymentService.formatPaymentForDisplay(transfer)
         );
         setTransfers(formattedTransfers);

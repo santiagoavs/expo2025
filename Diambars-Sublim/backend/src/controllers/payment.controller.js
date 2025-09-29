@@ -214,4 +214,110 @@ paymentController.handleWompiWebhook = async (req, res) => {
   }
 };
 
+/**
+ * Listar pagos con paginación
+ */
+paymentController.listPayments = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status, method } = req.query;
+    const userId = req.user._id;
+
+    // Construir filtros
+    const filters = { user: userId };
+    if (status) filters['payment.status'] = status;
+    if (method) filters['payment.method'] = method;
+
+    // Buscar órdenes con paginación
+    const orders = await Order.find(filters)
+      .populate('user', 'name email phoneNumber')
+      .populate('items.product', 'name images')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Order.countDocuments(filters);
+
+    // Formatear datos de pagos
+    const payments = orders.map(order => ({
+      id: order._id,
+      orderNumber: order.orderNumber,
+      amount: order.total,
+      status: order.payment.status,
+      method: order.payment.method,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      user: order.user,
+      items: order.items
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        payments,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en listPayments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error listando pagos",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Obtener transferencias pendientes
+ */
+paymentController.getPendingTransfers = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Buscar órdenes con transferencias bancarias pendientes
+    const orders = await Order.find({
+      user: userId,
+      'payment.method': 'bank_transfer',
+      'payment.status': { $in: ['pending', 'processing'] }
+    })
+    .populate('user', 'name email phoneNumber')
+    .populate('items.product', 'name images')
+    .sort({ createdAt: -1 });
+
+    // Formatear transferencias pendientes
+    const pendingTransfers = orders.map(order => ({
+      id: order._id,
+      orderNumber: order.orderNumber,
+      amount: order.total,
+      status: order.payment.status,
+      createdAt: order.createdAt,
+      user: order.user,
+      items: order.items,
+      bankDetails: order.payment.metadata?.bankDetails || null
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        transfers: pendingTransfers,
+        count: pendingTransfers.length
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getPendingTransfers:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error obteniendo transferencias pendientes",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
 export default paymentController;
