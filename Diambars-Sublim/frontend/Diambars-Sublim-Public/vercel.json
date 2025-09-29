@@ -1,11 +1,24 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://expo2025-8bjn.onrender.com/api/$1"
     },
     {
-      "source": "/((?!images|icons|videos|fonts|gifs|.*\\.(png|jpg|jpeg|gif|svg|ico|webp|mp4|ttf|otf)).*)",
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "text/html"
+        },
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "application/xhtml\\+xml"
+        }
+      ],
       "destination": "/index.html"
     }
   ],
