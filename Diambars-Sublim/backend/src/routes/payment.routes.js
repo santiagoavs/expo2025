@@ -33,6 +33,18 @@ router.get('/status/:orderId',
   paymentController.getPaymentStatus
 );
 
+// Listar pagos con paginación
+router.get('/',
+  authRequired,
+  paymentController.listPayments
+);
+
+// Obtener transferencias pendientes
+router.get('/transfers/pending',
+  authRequired,
+  paymentController.getPendingTransfers
+);
+
 // Webhook de Wompi (sin autenticación)
 router.post('/wompi/webhook',
   paymentController.handleWompiWebhook

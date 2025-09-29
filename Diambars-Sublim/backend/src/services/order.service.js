@@ -383,7 +383,7 @@ export const orderService = {
     }
 
     const order = await Order.findById(idValidation.cleaned)
-      .populate('user', 'name email phone')
+      .populate('user', 'name email phoneNumber')
       .populate('items.product', 'name images')
       .populate('items.design', 'name previewImage');
 

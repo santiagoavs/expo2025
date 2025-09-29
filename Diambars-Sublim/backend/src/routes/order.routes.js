@@ -1,11 +1,36 @@
 // routes/order.routes.js - REORGANIZADO Y SIMPLIFICADO
 import { Router } from "express";
+import multer from 'multer';
+import path from 'path';
 import orderController from "../controllers/order.controller.js";
 import paymentController from "../controllers/payment.controller.js";
 import reportController from "../controllers/report.controller.js";
 import { authRequired, roleRequired } from "../middlewares/auth.middleware.js";
 import { validateRequest, validateMongoId } from "../middlewares/validation.middleware.js";
 import { body, param, query } from "express-validator";
+
+// Configurar multer para subida de archivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'production-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB máximo
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos de imagen'), false);
+    }
+  }
+});
 
 const router = Router();
 
@@ -135,6 +160,21 @@ router.get('/:id/timeline',
 // NOTA: Las rutas de pago han sido movidas a /api/payments/
 // Ver src/routes/payment.routes.js para las nuevas rutas de pago
 
+// Subir foto de producción
+router.post('/:id/upload-photo',
+  authRequired,
+  validateMongoId('id'),
+  upload.single('photo'),
+  orderController.uploadProductionPhoto
+);
+
+// Obtener datos de control de calidad
+router.get('/:id/quality-control',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getQualityControlData
+);
+
 // ==================== RUTAS DE REPORTES ====================
 
 // Dashboard con métricas generales
@@ -185,5 +225,51 @@ router.get('/reports/production',
 
 // NOTA: Las rutas de configuración y estadísticas de pagos han sido movidas a /api/payments/
 // Ver src/routes/payment.routes.js para las nuevas rutas de pago
+
+// ==================== GESTIÓN DE ESTADOS Y PAGOS ====================
+
+// Cambiar estado de orden
+router.put('/:id/status',
+  authRequired,
+  validateMongoId('id'),
+  body('newStatus')
+    .notEmpty()
+    .withMessage('Nuevo estado requerido'),
+  validateRequest,
+  orderController.changeOrderStatus
+);
+
+// Registrar pago en efectivo
+router.post('/:id/cash-payment',
+  authRequired,
+  validateMongoId('id'),
+  body('amountReceived')
+    .isNumeric()
+    .withMessage('Monto recibido debe ser numérico'),
+  body('changeGiven')
+    .optional()
+    .isNumeric()
+    .withMessage('Cambio debe ser numérico'),
+  validateRequest,
+  orderController.registerCashPayment
+);
+
+// Registrar devolución
+router.post('/:id/return',
+  authRequired,
+  validateMongoId('id'),
+  body('returnReason')
+    .notEmpty()
+    .withMessage('Razón de devolución requerida'),
+  body('returnDescription')
+    .notEmpty()
+    .withMessage('Descripción de devolución requerida'),
+  body('refundAmount')
+    .optional()
+    .isNumeric()
+    .withMessage('Monto de reembolso debe ser numérico'),
+  validateRequest,
+  orderController.registerReturn
+);
 
 export default router;

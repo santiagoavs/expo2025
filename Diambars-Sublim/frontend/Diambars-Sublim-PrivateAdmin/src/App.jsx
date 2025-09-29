@@ -22,6 +22,7 @@ import ReviewsManagement from './pages/ReviewsManagement/ReviewsManagement';
 import ReportsPage from './pages/ReportsPage/ReportsPage';
 import PaymentMethods from './pages/PaymentsMethods/PaymentMethods';
 import AddressManagement from './pages/AddressManagement/AddressManagement';
+import QualityApprovalPage from './pages/QualityApproval/QualityApprovalPage';
 //Ruta catch-all
 import NotFound404 from './pages/NotFound404/NotFound404';
 
@@ -43,6 +44,18 @@ const PublicLayout = ({ children }) => {
   return (
     <div className="app-layout app-layout--public">
       {children}
+    </div>
+  );
+};
+
+// Layout para páginas públicas con Footer (sin Navbar)
+const PublicLayoutWithFooter = ({ children }) => {
+  return (
+    <div className="app-layout app-layout--public">
+      <main className="app-main">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 };
@@ -107,6 +120,14 @@ const AppContent = () => {
           <PublicLayout>
             <NewPasswordPage />
           </PublicLayout>
+        } 
+      />
+      <Route 
+        path="/quality-approval/:orderId" 
+        element={
+          <PublicLayoutWithFooter>
+            <QualityApprovalPage />
+          </PublicLayoutWithFooter>
         } 
       />
       

@@ -25,6 +25,7 @@ import reviewsRoutes from "./src/routes/reviews.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js";
 import paymentConfigRoutes from "./src/routes/paymentConfig.routes.js";
 import contactRoutes from "./src/routes/contact.routes.js";
+import qualityApprovalRoutes from "./src/routes/quality-approval.routes.js";
 
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
@@ -120,7 +121,8 @@ const dirs = [
   "public/uploads/designs", 
   "public/uploads/categories",
   "public/uploads/orders",
-  "public/uploads/temp"
+  "public/uploads/temp",
+  "uploads" // Carpeta para fotos de producción
 ].map(dir => path.join(__dirname, dir));
 
 dirs.forEach(dir => {
@@ -251,6 +253,9 @@ app.use("/api/orders", conditionalJsonMiddleware, orderRoutes);
 
 // ========== RUTAS DE PAGOS (NUEVA ARQUITECTURA) ==========
 app.use("/api/payments", jsonMiddleware, paymentRoutes);
+
+// ========== RUTAS DE APROBACIÓN DE CALIDAD ==========
+app.use("/api/quality-approval", jsonMiddleware, qualityApprovalRoutes);
 
 // ==================== RUTAS DE CONFIGURACIÓN ====================
 
