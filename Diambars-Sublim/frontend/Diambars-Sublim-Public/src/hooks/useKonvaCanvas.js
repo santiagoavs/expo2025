@@ -6,44 +6,6 @@ import { debounce } from '../utils/helpers';
 export const useKonvaCanvas = (initialElements = [], customizationAreas = []) => {
   // ==================== STATE ====================
   const [elements, setElements] = useState(initialElements);
-  
-  // Update elements when initialElements changes (for editing existing designs)
-  useEffect(() => {
-    if (initialElements && initialElements.length > 0) {
-      console.log('useKonvaCanvas - Loading initial elements:', initialElements);
-      
-      // Process elements to ensure proper coordinate system for custom shapes
-      const processedElements = initialElements.map(element => {
-        // Handle custom shapes with proper coordinate normalization
-        if (element.type === 'shape' && element.shapeType === 'custom' && element.points) {
-          console.log('🔄 Processing custom shape on load:', {
-            id: element.id,
-            originalPoints: element.points,
-            position: { x: element.x, y: element.y }
-          });
-          
-          // Ensure the element has proper position and dimensions
-          const processedElement = {
-            ...element,
-            x: element.x || 0,
-            y: element.y || 0,
-            points: element.points || [],
-            width: element.width || 100,
-            height: element.height || 100
-          };
-          
-          return processedElement;
-        }
-        
-        return element;
-      });
-      
-      setElements(processedElements);
-    } else if (initialElements && initialElements.length === 0) {
-      // Clear elements if initialElements is explicitly empty
-      setElements([]);
-    }
-  }, [initialElements]);
   const [selectedElementIds, setSelectedElementIds] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
@@ -221,7 +183,7 @@ export const useKonvaCanvas = (initialElements = [], customizationAreas = []) =>
     }
     
     updateElement(elementId, snappedPosition);
-  }, [updateElement, elements]);
+  }, [updateElement]);
   
   const moveSelectedElements = useCallback((deltaX, deltaY) => {
     selectedElementIds.forEach(elementId => {

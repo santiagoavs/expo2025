@@ -1,4 +1,4 @@
-// src/components/designs/advanced/AdvancedDesignEditor.jsx - VERSIÓN OPTIMIZADA FINAL
+// src/components/designs/advanced/AdvancedDesignEditor.jsx - MODERNIZED DESIGN EDITOR (CSS VERSION)
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Rect as KonvaRect, Circle as KonvaCircle, Transformer } from 'react-konva';
 import useImage from 'use-image';
@@ -8,18 +8,28 @@ import { useKonvaCanvas } from '../../../hooks/useKonvaCanvas';
 import { useKonvaHistory } from '../../../hooks/useKonvaHistory';
 import { elementFactory } from '../../../services/ElementFactory';
 import { CANVAS_CONFIG, DEFAULT_CUSTOMIZATION_AREAS } from '../../../utils/canvasConfig';
+import { debounce } from '../../../utils/helpers';
 import EditorToolbar from '../../EditorToolbar/EditorToolbar';
 import UnifiedPanel from '../../UnifiedPanel/UnifiedPanel';
 import ShapeCreatorModal from './ShapeCreatorModal';
 import { ShapeRenderer, createShapeElement } from './Shapes';
 import './AdvancedDesignEditor.css';
 
+// Utility functions
+const calculateScaledDimensions = (width, height, scale = 0.8) => {
+  const scaledWidth = width * scale;
+  const scaledHeight = height * scale;
+  return {
+    width: scaledWidth,
+    height: scaledHeight,
+    x: (CANVAS_CONFIG.width - scaledWidth) / 2,
+    y: (CANVAS_CONFIG.height - scaledHeight) / 2
+  };
+};
+
 // Image component with proper loading
-const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransformEnd, onDragStart, x = 0, y = 0, rotation = 0, draggable = true, visible = true }) => {
+const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransformEnd, x = 0, y = 0, rotation = 0, draggable = true, visible = true }) => {
   const [image] = useImage(src || '', 'anonymous');
-  
-  if (!image) return null;
-  
   return (
     <KonvaImage
       id={id}
@@ -35,7 +45,6 @@ const UrlImage = ({ id, src, width, height, onClick, onTap, onDragEnd, onTransfo
       onTap={onTap}
       onDragEnd={onDragEnd}
       onTransformEnd={onTransformEnd}
-      onDragStart={onDragStart}
     />
   );
 };
@@ -52,15 +61,10 @@ const AdvancedDesignEditor = ({
   const canvasHook = useKonvaCanvas(initialElements, DEFAULT_CUSTOMIZATION_AREAS);
   const historyHook = useKonvaHistory(initialElements);
   
+  const [showUnifiedPanel, setShowUnifiedPanel] = useState(false);
   const [productColorFilter, setProductColorFilter] = useState(initialProductColor);
   const [showShapeCreator, setShowShapeCreator] = useState(false);
-
-  // Update product color when initialProductColor changes
-  useEffect(() => {
-    if (initialProductColor && initialProductColor !== '#ffffff') {
-      setProductColorFilter(initialProductColor);
-    }
-  }, [initialProductColor]);
+  const [activeTool, setActiveTool] = useState('select');
 
   // ==================== PRODUCT IMAGE ====================
   const productImageUrl = product?.mainImage || product?.image || product?.images?.[0];
@@ -71,27 +75,33 @@ const AdvancedDesignEditor = ({
   
   useEffect(() => {
     if (productImage && productColorFilter && productColorFilter !== '#ffffff') {
+      // Create a canvas to generate the color mask
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = productImage.width;
       canvas.height = productImage.height;
       
+      // Draw the original image
       ctx.drawImage(productImage, 0, 0);
+      
+      // Get image data to detect transparent pixels
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      // Create mask: fill non-transparent pixels with the selected color
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = productColorFilter;
       
       for (let i = 0; i < data.length; i += 4) {
         const alpha = data[i + 3];
-        if (alpha > 0) {
+        if (alpha > 0) { // Non-transparent pixel
           const x = (i / 4) % canvas.width;
           const y = Math.floor((i / 4) / canvas.width);
           ctx.fillRect(x, y, 1, 1);
         }
       }
       
+      // Convert canvas to image
       const maskImg = new Image();
       maskImg.onload = () => setColorMaskImage(maskImg);
       maskImg.src = canvas.toDataURL();
@@ -99,6 +109,16 @@ const AdvancedDesignEditor = ({
       setColorMaskImage(null);
     }
   }, [productImage, productColorFilter]);
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('Product:', product);
+    console.log('Product Image URL:', productImageUrl);
+    console.log('Product Image loaded:', !!productImage);
+    if (productImage) {
+      console.log('Product Image dimensions:', productImage.width, 'x', productImage.height);
+    }
+  }, [product, productImageUrl, productImage]);
   
   const productImageConfig = useMemo(() => {
     if (!productImage) return null;
@@ -123,10 +143,18 @@ const AdvancedDesignEditor = ({
     if (!product?.customizationAreas) return DEFAULT_CUSTOMIZATION_AREAS;
     
     return product.customizationAreas.map((area, index) => {
+      // Use original coordinates directly - no additional scaling
       const x = area.position?.x || area.x || 0;
       const y = area.position?.y || area.y || 0;
       const width = area.position?.width || area.width || 200;
       const height = area.position?.height || area.height || 100;
+      
+      console.log('🎯 Customization area processed:', {
+        id: area._id || area.id || `area-${index}`,
+        name: area.name,
+        original: area.position || { x: area.x, y: area.y, width: area.width, height: area.height },
+        final: { x, y, width, height }
+      });
       
       return {
         ...area,
@@ -161,34 +189,19 @@ const AdvancedDesignEditor = ({
     });
     
     canvasHook.addElement(shapeElement);
-    historyHook.addToHistory(canvasHook.elements, 'add');
+    historyHook.saveState();
   }, [canvasHook, historyHook]);
 
   const addCustomShapeElement = useCallback((points, properties) => {
-    const minX = Math.min(...points.filter((_, i) => i % 2 === 0));
-    const minY = Math.min(...points.filter((_, i) => i % 2 === 1));
-    const maxX = Math.max(...points.filter((_, i) => i % 2 === 0));
-    const maxY = Math.max(...points.filter((_, i) => i % 2 === 1));
-    
-    const relativePoints = points.map((point, index) => {
-      if (index % 2 === 0) {
-        return point - minX;
-      } else {
-        return point - minY;
-      }
-    });
-    
     const customShapeElement = createShapeElement('custom', {
-      points: relativePoints,
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
+      points,
+      x: 0,
+      y: 0,
       ...properties
     });
     
     canvasHook.addElement(customShapeElement);
-    historyHook.addToHistory(canvasHook.elements, 'add');
+    historyHook.saveState();
   }, [canvasHook, historyHook]);
 
   const addImageElement = useCallback(() => {
@@ -214,6 +227,7 @@ const AdvancedDesignEditor = ({
           canvasHook.addElement(newElement);
           canvasHook.selectElement(newElement.id);
           historyHook.addToHistory(canvasHook.elements, 'add_image');
+          setActiveTool('select');
         };
         reader.readAsDataURL(file);
       }
@@ -221,6 +235,7 @@ const AdvancedDesignEditor = ({
     
     input.click();
   }, [customizationAreas, canvasHook, historyHook]);
+
 
   // ==================== EVENT HANDLERS ====================
   const handleCanvasClick = useCallback((e) => {
@@ -240,21 +255,12 @@ const AdvancedDesignEditor = ({
     }
   }, [canvasHook]);
 
-  const handleStageDragStart = useCallback((e) => {
-    // Only allow stage panning when clicking on empty space
-    const clickedOnEmpty = e.target === e.target.getStage() || 
-                          e.target.getClassName() === 'Layer';
-    
-    if (!clickedOnEmpty) {
-      // Clicked on an element, prevent stage from dragging
-      e.target.getStage().stopDrag();
-    }
-  }, []);
-
   const handleElementClick = useCallback((elementId, e) => {
     if (e) {
-      e.cancelBubble = true;
+      e.cancelBubble = true; // Prevent event bubbling
     }
+    console.log('🎯 Element clicked:', elementId);
+    console.log('🎯 Event target:', e?.target?.getClassName());
     canvasHook.selectElement(elementId);
   }, [canvasHook]);
 
@@ -266,13 +272,26 @@ const AdvancedDesignEditor = ({
     historyHook.addToHistory(canvasHook.elements, 'move');
   }, [canvasHook, historyHook]);
 
-  const duplicateSelectedElement = useCallback(() => {
-    if (canvasHook.selectedElementIds.length === 1) {
-      const duplicatedId = canvasHook.duplicateElement(canvasHook.selectedElementIds[0]);
-      if (duplicatedId) {
-        historyHook.addToHistory(canvasHook.elements, 'duplicate');
-      }
+  const handleTransformEnd = useCallback((elementId, node) => {
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    node.scaleX(1);
+    node.scaleY(1);
+    
+    const updates = {
+      x: Math.round(node.x()),
+      y: Math.round(node.y()),
+      rotation: Math.round(node.rotation()),
+    };
+    
+    if (node.className === 'Text' || node.className === 'Image' || node.className === 'Rect') {
+      updates.width = Math.round(node.width() * scaleX);
+      updates.height = Math.round(node.height() * scaleY);
+      updates.rotation = Math.round(node.rotation());
     }
+    
+    canvasHook.updateElement(elementId, updates);
+    historyHook.addToHistory(canvasHook.elements, 'transform');
   }, [canvasHook, historyHook]);
 
   const deleteSelectedElement = useCallback(() => {
@@ -282,98 +301,14 @@ const AdvancedDesignEditor = ({
     }
   }, [canvasHook, historyHook]);
 
-  const handleTransformEnd = useCallback((elementId, node) => {
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    
-    const element = canvasHook.elements.find(el => el.id === elementId);
-    if (!element) return;
-    
-    let newAttrs = {
-      x: Math.round(node.x()),
-      y: Math.round(node.y()),
-      rotation: Math.round(node.rotation())
-    };
-    
-    // Handle custom shapes with points array
-    if (element.type === 'shape' && (element.shapeType === 'custom' || element.shapeType === 'line')) {
-      if (element.points && Array.isArray(element.points)) {
-        const scaledPoints = element.points.map((point, index) => {
-          if (index % 2 === 0) {
-            return point * scaleX;
-          } else {
-            return point * scaleY;
-          }
-        });
-        newAttrs.points = scaledPoints;
-        
-        const minX = Math.min(...scaledPoints.filter((_, i) => i % 2 === 0));
-        const minY = Math.min(...scaledPoints.filter((_, i) => i % 2 === 1));
-        const maxX = Math.max(...scaledPoints.filter((_, i) => i % 2 === 0));
-        const maxY = Math.max(...scaledPoints.filter((_, i) => i % 2 === 1));
-        
-        newAttrs.width = maxX - minX;
-        newAttrs.height = maxY - minY;
+  const duplicateSelectedElement = useCallback(() => {
+    if (canvasHook.selectedElementIds.length === 1) {
+      const duplicatedId = canvasHook.duplicateElement(canvasHook.selectedElementIds[0]);
+      if (duplicatedId) {
+        historyHook.addToHistory(canvasHook.elements, 'duplicate');
       }
-      
-      node.scaleX(1);
-      node.scaleY(1);
-    } else if (element.type === 'shape' || element.type === 'rect' || element.type === 'circle') {
-      newAttrs.width = Math.max(10, Math.round((node.width() || element.width || 100) * scaleX));
-      newAttrs.height = Math.max(10, Math.round((node.height() || element.height || 100) * scaleY));
-      
-      node.scaleX(1);
-      node.scaleY(1);
-    } else if (element.type === 'text') {
-      const newFontSize = Math.max(8, Math.round((element.fontSize || 24) * Math.max(scaleX, scaleY)));
-      newAttrs.fontSize = newFontSize;
-      
-      node.scaleX(1);
-      node.scaleY(1);
-    } else if (element.type === 'image') {
-      newAttrs.width = Math.max(10, Math.round((element.width || 100) * scaleX));
-      newAttrs.height = Math.max(10, Math.round((element.height || 100) * scaleY));
-      
-      node.scaleX(1);
-      node.scaleY(1);
     }
-    
-    canvasHook.updateElement(elementId, newAttrs);
-    historyHook.addToHistory(canvasHook.elements, 'transform');
   }, [canvasHook, historyHook]);
-
-  const handleWheelZoom = useCallback((e) => {
-    e.evt.preventDefault();
-    
-    const stage = canvasHook.stageRef.current;
-    if (!stage) return;
-    
-    const oldScale = canvasHook.zoom;
-    const pointer = stage.getPointerPosition();
-    
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-    
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
-    const scaleBy = 1.05;
-    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    
-    const clampedScale = Math.max(
-      CANVAS_CONFIG.minZoom,
-      Math.min(CANVAS_CONFIG.maxZoom, newScale)
-    );
-    
-    canvasHook.setZoom(clampedScale);
-    
-    const newPos = {
-      x: pointer.x - mousePointTo.x * clampedScale,
-      y: pointer.y - mousePointTo.y * clampedScale,
-    };
-    
-    canvasHook.setCanvasPosition(newPos);
-  }, [canvasHook]);
 
   // ==================== KEYBOARD SHORTCUTS ====================
   useEffect(() => {
@@ -416,6 +351,7 @@ const AdvancedDesignEditor = ({
   const handleSave = useCallback(() => {
     const designData = {
       elements: canvasHook.elements.map(el => {
+        // Extract element properties excluding React/internal properties
         const { id, type, areaId, shapeType, imageUrl, ...elementProps } = el;
         
         const konvaAttrs = {
@@ -423,16 +359,9 @@ const AdvancedDesignEditor = ({
           ...elementProps
         };
         
+        // For image elements, map imageUrl to image (backend expects 'image' property)
         if (type === 'image' && imageUrl) {
           konvaAttrs.image = imageUrl;
-        }
-        
-        if (type === 'shape' && shapeType === 'custom' && el.points) {
-          konvaAttrs.points = [...el.points];
-          konvaAttrs.x = el.x || 0;
-          konvaAttrs.y = el.y || 0;
-          konvaAttrs.width = el.width;
-          konvaAttrs.height = el.height;
         }
         
         return {
@@ -445,7 +374,7 @@ const AdvancedDesignEditor = ({
       productColorFilter: productColorFilter !== '#ffffff' ? productColorFilter : null
     };
     
-    console.log('💾 Guardando diseño');
+    console.log('💾 Saving design data:', designData);
     onSave(designData);
   }, [canvasHook.elements, productColorFilter, onSave]);
 
@@ -457,7 +386,7 @@ const AdvancedDesignEditor = ({
         {/* Header */}
         <div className="editor-header">
           <div className="editor-title">
-            <h2>Editor de diseños</h2>
+            <h2>Editor de Diseños Avanzado</h2>
             <p>{product?.name}</p>
           </div>
           <button onClick={onClose} className="close-btn">✕</button>
@@ -506,15 +435,12 @@ const AdvancedDesignEditor = ({
               ref={canvasHook.stageRef}
               width={CANVAS_CONFIG.width}
               height={CANVAS_CONFIG.height}
-              scaleX={canvasHook.zoom}
-              scaleY={canvasHook.zoom}
-              x={canvasHook.canvasPosition.x}
-              y={canvasHook.canvasPosition.y}
-              draggable={true}
+              scaleX={1}
+              scaleY={1}
+              x={0}
+              y={0}
               onMouseDown={handleCanvasClick}
               onTouchStart={handleCanvasClick}
-              onWheel={handleWheelZoom}
-              onDragStart={handleStageDragStart}
               style={{ display: 'block' }}
             >
               <Layer ref={canvasHook.layerRef}>
@@ -546,7 +472,7 @@ const AdvancedDesignEditor = ({
                   />
                 )}
 
-                {/* Product color mask */}
+                {/* Product color mask - only affects non-transparent pixels */}
                 {colorMaskImage && productImageConfig && (
                   <KonvaImage
                     image={colorMaskImage}
@@ -576,32 +502,39 @@ const AdvancedDesignEditor = ({
                   />
                 ))}
 
-                {/* Canvas Elements */}
+                {/* Design elements */}
                 {canvasHook.elements.map((element) => {
                   const commonProps = {
                     id: element.id,
-                    name: element.id,
+                    name: element.id, // Important: Konva uses name for findOne
                     x: element.x || 0,
                     y: element.y || 0,
                     rotation: element.rotation || 0,
                     opacity: element.opacity || 1,
                     visible: element.visible !== false,
-                    draggable: true,
-                    listening: true,
+                    draggable: element.draggable !== false,
+                    listening: true, // Critical: Enable event listening
                     onClick: (e) => handleElementClick(element.id, e),
                     onTap: (e) => handleElementClick(element.id, e),
                     onDragEnd: (e) => handleDragEnd(element.id, e),
-                    onTransformEnd: (e) => handleTransformEnd(element.id, e.target),
-                    onDragStart: (e) => {
-                      e.cancelBubble = true;
-                      const stage = e.target.getStage();
-                      if (stage) {
-                        stage.stopDrag();
-                      }
-                    }
+                    onTransformEnd: (e) => handleTransformEnd(element.id, e.target)
                   };
-                  
-                  if (element.type === 'image') {
+
+                  if (element.type === 'text') {
+                    return (
+                      <KonvaText
+                        key={element.id}
+                        {...commonProps}
+                        text={element.text || ''}
+                        fontSize={element.fontSize || 24}
+                        fontFamily={element.fontFamily || 'Arial'}
+                        fill={element.fill || '#000000'}
+                        align={element.align || 'left'}
+                        width={element.width}
+                        height={element.height}
+                      />
+                    );
+                  } else if (element.type === 'image') {
                     return (
                       <UrlImage
                         key={element.id}
@@ -622,20 +555,6 @@ const AdvancedDesignEditor = ({
                         onTransform={(e) => handleTransformEnd(element.id, e.target)}
                       />
                     );
-                  } else if (element.type === 'text') {
-                    return (
-                      <KonvaText
-                        key={element.id}
-                        {...commonProps}
-                        text={element.text || ''}
-                        fontSize={element.fontSize || 24}
-                        fontFamily={element.fontFamily || 'Arial'}
-                        fill={element.fill || '#000000'}
-                        align={element.align || 'left'}
-                        width={element.width}
-                        height={element.height}
-                      />
-                    );
                   }
                   return null;
                 })}
@@ -644,6 +563,7 @@ const AdvancedDesignEditor = ({
                 <Transformer
                   ref={canvasHook.transformerRef}
                   boundBoxFunc={(oldBox, newBox) => {
+                    // Limit minimum size
                     if (newBox.width < 10 || newBox.height < 10) {
                       return oldBox;
                     }
@@ -674,9 +594,11 @@ const AdvancedDesignEditor = ({
                   shouldOverdrawWholeArea={true}
                   listening={true}
                   onMouseDown={(e) => {
+                    // Prevent canvas click handler from interfering
                     e.cancelBubble = true;
                   }}
                   onTouchStart={(e) => {
+                    // Prevent canvas click handler from interfering
                     e.cancelBubble = true;
                   }}
                 />
@@ -711,7 +633,7 @@ const AdvancedDesignEditor = ({
             </label>
           </div>
           <button onClick={handleSave} className="save-btn">
-            Guardar diseño
+            Guardar Diseño
           </button>
         </div>
 
