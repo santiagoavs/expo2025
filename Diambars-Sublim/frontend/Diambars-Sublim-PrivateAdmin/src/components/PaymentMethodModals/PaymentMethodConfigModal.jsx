@@ -1,4 +1,3 @@
-// components/PaymentMethodModals/PaymentMethodConfigModal.jsx - Modal para configuración de métodos de pago
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,44 +12,149 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
-  Box,
-  Typography,
   Stack,
-  Paper,
-  Chip,
-  CircularProgress,
+  Typography,
+  Box,
   useTheme,
   useMediaQuery,
+  styled,
   alpha
 } from '@mui/material';
 import {
-  Gear,
-  CreditCard,
-  CurrencyDollar,
-  Bank,
-  CheckCircle,
-  XCircle,
-  Plus,
+  Check,
+  X,
   PencilSimple
 } from '@phosphor-icons/react';
-import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
+import paymentConfigService from '../../api/PaymentConfigService';
 import toast from 'react-hot-toast';
 
-const PaymentMethodConfigModal = ({ open, onClose, selectedMethod = null, mode = 'create' }) => {
+// ================ ESTILOS MODERNOS PARA MODAL ================
+const ModernDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    borderRadius: '20px',
+    border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+    boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)',
+    fontFamily: "'Mona Sans'",
+    [theme.breakpoints.down('md')]: {
+      borderRadius: '16px',
+      margin: '16px',
+    }
+  }
+}));
+
+const ModernDialogTitle = styled(DialogTitle)(({ theme }) => ({
+  fontSize: '1.5rem',
+  fontWeight: '700',
+  color: '#010326',
+  fontFamily: "'Mona Sans'",
+  padding: '32px 32px 16px 32px',
+  borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  [theme.breakpoints.down('md')]: {
+    padding: '24px 24px 12px 24px',
+    fontSize: '1.3rem',
+  }
+}));
+
+const ModernDialogContent = styled(DialogContent)(({ theme }) => ({
+  padding: '24px 32px',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('md')]: {
+    padding: '20px 24px',
+  }
+}));
+
+const ModernDialogActions = styled(DialogActions)(({ theme }) => ({
+  padding: '16px 32px 32px 32px',
+  borderTop: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  gap: '12px',
+  [theme.breakpoints.down('md')]: {
+    padding: '12px 24px 24px 24px',
+    flexDirection: 'column',
+    '& > *': {
+      width: '100%'
+    }
+  }
+}));
+
+const ModernButton = styled(Button)(({ theme }) => ({
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontSize: '1rem',
+  fontFamily: "'Mona Sans'",
+  fontWeight: '600',
+  padding: '12px 24px',
+  minHeight: '48px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 2px 8px rgba(1, 3, 38, 0.1)',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 16px rgba(1, 3, 38, 0.15)',
+  },
+  [theme.breakpoints.down('md')]: {
+    minHeight: '52px',
+  }
+}));
+
+const ModernTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    fontSize: '1rem',
+    fontFamily: "'Mona Sans'",
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#032CA6',
+      }
+    },
+    '&.Mui-focused': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#032CA6',
+        borderWidth: '2px',
+      }
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontFamily: "'Mona Sans'",
+    fontWeight: '500',
+    '&.Mui-focused': {
+      color: '#032CA6',
+    }
+  }
+}));
+
+const ModernFormControl = styled(FormControl)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    fontSize: '1rem',
+    fontFamily: "'Mona Sans'",
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#032CA6',
+      }
+    },
+    '&.Mui-focused': {
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#032CA6',
+        borderWidth: '2px',
+      }
+    }
+  },
+  '& .MuiInputLabel-root': {
+    fontFamily: "'Mona Sans'",
+    fontWeight: '500',
+    '&.Mui-focused': {
+      color: '#032CA6',
+    }
+  }
+}));
+
+const PaymentMethodConfigModal = ({ open, onClose, selectedMethod = null, mode = 'create', onSave }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isExtraSmall = useMediaQuery(theme.breakpoints.down(480));
 
-  // Hooks
-  const { 
-    configs, 
-    loading, 
-    upsertConfig, 
-    updateConfig, 
-    deleteConfig 
-  } = usePaymentConfigManagement();
-
-  // Estados locales
+  // Estados simples
   const [formData, setFormData] = useState({
     name: '',
     type: 'wompi',
@@ -58,64 +162,44 @@ const PaymentMethodConfigModal = ({ open, onClose, selectedMethod = null, mode =
     message: '',
     config: {}
   });
+  const [saving, setSaving] = useState(false);
 
-  const [actionLoading, setActionLoading] = useState(false);
-
-  // Tipos de métodos soportados
-  const supportedTypes = [
-    {
-      value: 'wompi',
-      label: 'Wompi Digital',
-      icon: CreditCard,
-      color: '#1F64BF',
-      description: 'Pagos con tarjeta en línea'
-    },
-    {
-      value: 'cash',
-      label: 'Efectivo',
-      icon: CurrencyDollar,
-      color: '#10B981',
-      description: 'Pago contra entrega'
-    },
-    {
-      value: 'bank_transfer',
-      label: 'Transferencia Bancaria',
-      icon: Bank,
-      color: '#8B5CF6',
-      description: 'Transferencia bancaria'
-    },
-    {
-      value: 'credit_card',
-      label: 'Tarjeta de Crédito',
-      icon: CreditCard,
-      color: '#F59E0B',
-      description: 'Tarjeta de crédito/débito'
-    }
+  // Tipos soportados
+  const paymentTypes = [
+    { value: 'wompi', label: 'Wompi', color: '#8B5CF6' },
+    { value: 'cash', label: 'Efectivo', color: '#10B981' },
+    { value: 'bank_transfer', label: 'Transferencia Bancaria', color: '#3B82F6' },
+    { value: 'credit_card', label: 'Tarjeta de Crédito', color: '#F59E0B' }
   ];
 
-  // Inicializar formulario
+  // Inicializar formulario cuando se abre el modal
   useEffect(() => {
-    if (selectedMethod && mode === 'edit') {
-      setFormData({
-        name: selectedMethod.name || '',
-        type: selectedMethod.type || 'wompi',
-        enabled: selectedMethod.enabled || false,
-        message: selectedMethod.message || '',
-        config: selectedMethod.config || {}
-      });
-    } else {
-      setFormData({
-        name: '',
-        type: 'wompi',
-        enabled: true,
-        message: '',
-        config: {}
-      });
+    if (open) {
+      if (selectedMethod && mode === 'edit') {
+        // Mapear tipo 'bank' a 'bank_transfer'
+        const mappedType = selectedMethod.type === 'bank' ? 'bank_transfer' : selectedMethod.type;
+        
+        setFormData({
+          name: selectedMethod.name || '',
+          type: mappedType,
+          enabled: selectedMethod.enabled || false,
+          message: selectedMethod.message || '',
+          config: selectedMethod.config || {}
+        });
+      } else {
+        setFormData({
+          name: '',
+          type: 'wompi',
+          enabled: true,
+          message: '',
+          config: {}
+        });
+      }
     }
-  }, [selectedMethod, mode, open]);
+  }, [open, selectedMethod, mode]);
 
-  // Manejar cambios en el formulario
-  const handleInputChange = (field, value) => {
+  // Manejar cambios
+  const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -125,487 +209,235 @@ const PaymentMethodConfigModal = ({ open, onClose, selectedMethod = null, mode =
   // Manejar guardar
   const handleSave = async () => {
     try {
-      setActionLoading(true);
-
-      if (!formData.name.trim()) {
-        toast.error('El nombre es requerido');
-        return;
-      }
-
-      if (mode === 'edit' && selectedMethod) {
-        await updateConfig(selectedMethod.type, formData);
-        toast.success('Método actualizado exitosamente');
-      } else {
-        await upsertConfig(formData);
-        toast.success('Método creado exitosamente');
-      }
-
-      onClose();
+      setSaving(true);
+      await onSave(formData);
     } catch (error) {
-      console.error('Error guardando método:', error);
-      toast.error(error.message || 'Error guardando método');
+      console.error('Error guardando método de pago:', error);
+      toast.error('Error al guardar el método de pago');
     } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Manejar eliminar
-  const handleDelete = async () => {
-    try {
-      if (!selectedMethod) return;
-
-      setActionLoading(true);
-      await deleteConfig(selectedMethod.type);
-      toast.success('Método eliminado exitosamente');
-      onClose();
-    } catch (error) {
-      console.error('Error eliminando método:', error);
-      toast.error(error.message || 'Error eliminando método');
-    } finally {
-      setActionLoading(false);
+      setSaving(false);
     }
   };
 
   // Obtener tipo seleccionado
-  const selectedType = supportedTypes.find(type => type.value === formData.type);
+  const selectedType = paymentTypes.find(type => type.value === formData.type);
 
   return (
-    <Dialog
+    <ModernDialog
       open={open}
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      fullScreen={isExtraSmall}
-      PaperProps={{
-        elevation: 0,
-        sx: {
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: isExtraSmall ? 0 : 3,
-          border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-          boxShadow: '0 16px 64px rgba(31, 100, 191, 0.16)',
-          m: isExtraSmall ? 0 : 2,
-          maxHeight: '90vh'
-        }
-      }}
+      fullScreen={isMobile}
     >
-      <DialogTitle
-        sx={{
-          p: { xs: 3, md: 4 },
-          pb: 2,
-          borderBottom: `1px solid ${alpha('#1F64BF', 0.06)}`
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={2}>
+      <ModernDialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box
             sx={{
-              width: 48,
-              height: 48,
+              p: 1.5,
               borderRadius: 2,
+              backgroundColor: alpha('#032CA6', 0.1),
+              color: '#032CA6',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              background: alpha('#1F64BF', 0.1),
-              color: '#1F64BF'
+              justifyContent: 'center'
             }}
           >
-            {mode === 'edit' ? <PencilSimple size={24} weight="duotone" /> : <Plus size={24} weight="duotone" />}
+            <PencilSimple size={24} />
           </Box>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                fontSize: { xs: '1.25rem', md: '1.5rem' },
-                fontWeight: 700,
-                color: '#010326',
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              {mode === 'edit' ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#64748B',
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              {mode === 'edit' ? 'Modifica la configuración del método' : 'Configura un nuevo método de pago'}
-            </Typography>
-          </Box>
-        </Stack>
-      </DialogTitle>
+          {mode === 'create' ? 'Crear Método de Pago' : 'Editar Método de Pago'}
+        </Box>
+      </ModernDialogTitle>
 
-      <DialogContent sx={{ p: { xs: 3, md: 4 }, maxHeight: 'calc(90vh - 180px)', overflowY: 'auto' }}>
-        <Stack spacing={4} sx={{ pt: 2 }}>
-          {/* Información básica */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 3,
-              border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-              background: alpha('#1F64BF', 0.02)
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                fontSize: '1.125rem',
-                fontWeight: 700,
-                color: '#010326',
-                mb: 3,
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              Información Básica
-            </Typography>
+      <ModernDialogContent>
+        <Stack spacing={3}>
+          {/* Nombre del método */}
+          <ModernTextField
+            id="method-name"
+            name="name"
+            label="Nombre del método"
+            value={formData.name}
+            onChange={(e) => handleChange('name', e.target.value)}
+            fullWidth
+            variant="outlined"
+            placeholder="Ej: Pago en efectivo"
+            required
+          />
 
+          {/* Tipo de método */}
+          <ModernFormControl fullWidth>
+            <InputLabel id="method-type-label">Tipo de método</InputLabel>
+            <Select
+              id="method-type"
+              name="type"
+              labelId="method-type-label"
+              value={formData.type}
+              onChange={(e) => handleChange('type', e.target.value)}
+              label="Tipo de método"
+            >
+              {paymentTypes.map((type) => (
+                <MenuItem key={type.value} value={type.value}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        backgroundColor: type.color
+                      }}
+                    />
+                    {type.label}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </ModernFormControl>
+
+          {/* Mensaje para el cliente */}
+          <ModernTextField
+            id="method-message"
+            name="message"
+            label="Mensaje para el cliente"
+            value={formData.message}
+            onChange={(e) => handleChange('message', e.target.value)}
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={3}
+            placeholder="Ej: Paga en efectivo al momento de la entrega"
+          />
+
+          {/* Campos específicos para efectivo */}
+          {formData.type === 'cash' && (
             <Stack spacing={3}>
-              <TextField
-                label="Nombre del método"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                fullWidth
-                variant="outlined"
-                placeholder="Ej: Tarjeta de Crédito Visa"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    fontSize: '1rem',
-                    fontFamily: "'Mona Sans'"
-                  }
-                }}
-              />
-
-              <FormControl fullWidth>
-                <InputLabel sx={{ fontFamily: "'Mona Sans'" }}>Tipo de método</InputLabel>
-                <Select
-                  value={formData.type}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  label="Tipo de método"
-                  sx={{
-                    borderRadius: 2,
-                    fontSize: '1rem',
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  {supportedTypes.map((type) => {
-                    const IconComponent = type.icon;
-                    return (
-                      <MenuItem key={type.value} value={type.value} sx={{ fontFamily: "'Mona Sans'" }}>
-                        <Stack direction="row" alignItems="center" spacing={2}>
-                          <IconComponent size={20} weight="duotone" style={{ color: type.color }} />
-                          <Box>
-                            <Typography variant="body1" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                              {type.label}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748B', fontFamily: "'Mona Sans'" }}>
-                              {type.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-
-              <TextField
+              <ModernTextField
+                id="cash-message"
+                name="cashMessage"
                 label="Mensaje para el cliente"
-                value={formData.message}
-                onChange={(e) => handleInputChange('message', e.target.value)}
+                value={formData.config.cashMessage || ''}
+                onChange={(e) => handleChange('config', { ...formData.config, cashMessage: e.target.value })}
                 fullWidth
-                multiline
-                rows={3}
                 variant="outlined"
                 placeholder="Ej: Paga en efectivo al momento de la entrega"
+              />
+              <ModernTextField
+                id="cash-instructions"
+                name="instructions"
+                label="Instrucciones adicionales"
+                value={formData.config.instructions || ''}
+                onChange={(e) => handleChange('config', { ...formData.config, instructions: e.target.value })}
+                fullWidth
+                variant="outlined"
+                multiline
+                rows={3}
+                placeholder="Ej: Tener el cambio exacto, solo billetes, etc."
+              />
+            </Stack>
+          )}
+
+          {/* Campos específicos para transferencia bancaria */}
+          {formData.type === 'bank_transfer' && (
+            <Stack spacing={3}>
+              <ModernTextField
+                id="bank-name"
+                name="bankName"
+                label="Nombre del banco"
+                value={formData.config.bankName || ''}
+                onChange={(e) => handleChange('config', { ...formData.config, bankName: e.target.value })}
+                fullWidth
+                variant="outlined"
+                placeholder="Ej: Banco de Bogotá"
+              />
+              <ModernTextField
+                id="account-number"
+                name="accountNumber"
+                label="Número de cuenta"
+                value={formData.config.accountNumber || ''}
+                onChange={(e) => handleChange('config', { ...formData.config, accountNumber: e.target.value })}
+                fullWidth
+                variant="outlined"
+                placeholder="Ej: 1234567890"
+              />
+              <ModernTextField
+                id="account-type"
+                name="accountType"
+                label="Tipo de cuenta"
+                value={formData.config.accountType || ''}
+                onChange={(e) => handleChange('config', { ...formData.config, accountType: e.target.value })}
+                fullWidth
+                variant="outlined"
+                placeholder="Ej: Ahorros"
+              />
+            </Stack>
+          )}
+
+          {/* Estado habilitado */}
+          <FormControlLabel
+            control={
+              <Switch
+                id="method-enabled"
+                name="enabled"
+                checked={formData.enabled}
+                onChange={(e) => handleChange('enabled', e.target.checked)}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    fontSize: '1rem',
-                    fontFamily: "'Mona Sans'"
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#032CA6',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#032CA6',
                   }
                 }}
               />
-            </Stack>
-          </Paper>
-
-          {/* Configuración específica del tipo */}
-          {selectedType && (
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: `2px solid ${alpha(selectedType.color, 0.1)}`,
-                background: alpha(selectedType.color, 0.02)
-              }}
-            >
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: alpha(selectedType.color, 0.1),
-                    color: selectedType.color
-                  }}
-                >
-                  {selectedType && <selectedType.icon size={20} weight="duotone" />}
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontSize: '1.125rem',
-                      fontWeight: 700,
-                      color: '#010326',
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    Configuración de {selectedType.label}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748B',
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    {selectedType.description}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {/* Campos específicos según el tipo */}
-              {formData.type === 'wompi' && (
-                <Stack spacing={3}>
-                  <TextField
-                    label="Clave Pública"
-                    value={formData.config.publicKey || ''}
-                    onChange={(e) => handleInputChange('config', { ...formData.config, publicKey: e.target.value })}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="pk_test_..."
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        fontSize: '1rem',
-                        fontFamily: "'Mona Sans'"
-                      }
-                    }}
-                  />
-                  <TextField
-                    label="Clave Privada"
-                    type="password"
-                    value={formData.config.privateKey || ''}
-                    onChange={(e) => handleInputChange('config', { ...formData.config, privateKey: e.target.value })}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="sk_test_..."
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        fontSize: '1rem',
-                        fontFamily: "'Mona Sans'"
-                      }
-                    }}
-                  />
-                </Stack>
-              )}
-
-              {formData.type === 'bank_transfer' && (
-                <Stack spacing={3}>
-                  <TextField
-                    label="Nombre del Banco"
-                    value={formData.config.bankName || ''}
-                    onChange={(e) => handleInputChange('config', { ...formData.config, bankName: e.target.value })}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Ej: Banco de Bogotá"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        fontSize: '1rem',
-                        fontFamily: "'Mona Sans'"
-                      }
-                    }}
-                  />
-                  <TextField
-                    label="Número de Cuenta"
-                    value={formData.config.accountNumber || ''}
-                    onChange={(e) => handleInputChange('config', { ...formData.config, accountNumber: e.target.value })}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="1234567890"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        fontSize: '1rem',
-                        fontFamily: "'Mona Sans'"
-                      }
-                    }}
-                  />
-                  <TextField
-                    label="Titular de la Cuenta"
-                    value={formData.config.accountHolder || ''}
-                    onChange={(e) => handleInputChange('config', { ...formData.config, accountHolder: e.target.value })}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Nombre del titular"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        fontSize: '1rem',
-                        fontFamily: "'Mona Sans'"
-                      }
-                    }}
-                  />
-                </Stack>
-              )}
-            </Paper>
-          )}
-
-          {/* Estado del método */}
-          <Paper
-            elevation={0}
+            }
+            label="Método habilitado"
             sx={{
-              p: 3,
-              borderRadius: 3,
-              background: alpha('#1F64BF', 0.04),
-              border: `1px solid ${alpha('#1F64BF', 0.08)}`
+              '& .MuiFormControlLabel-label': {
+                fontSize: '1rem',
+                fontFamily: "'Mona Sans'",
+                fontWeight: '500'
+              }
             }}
-          >
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.enabled}
-                  onChange={(e) => handleInputChange('enabled', e.target.checked)}
-                  size="medium"
-                />
-              }
-              label={
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontWeight: 600,
-                      color: '#010326',
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    Habilitar método
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: '#64748B',
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    Los clientes podrán usar este método para realizar pagos
-                  </Typography>
-                </Box>
-              }
-              sx={{ alignItems: 'flex-start', m: 0 }}
-            />
-          </Paper>
+          />
         </Stack>
-      </DialogContent>
+      </ModernDialogContent>
 
-      <DialogActions
-        sx={{
-          p: { xs: 3, md: 4 },
-          pt: 2,
-          borderTop: `1px solid ${alpha('#1F64BF', 0.06)}`,
-          gap: 2
-        }}
-      >
-        <Button
+      <ModernDialogActions>
+        <ModernButton
           onClick={onClose}
           variant="outlined"
+          startIcon={<X size={20} />}
+          disabled={saving}
           sx={{
-            borderRadius: 2,
-            py: 1.5,
-            px: 4,
-            fontSize: '1rem',
-            fontWeight: 600,
-            textTransform: 'none',
-            fontFamily: "'Mona Sans'",
-            borderColor: alpha('#64748B', 0.2),
-            color: '#64748B',
-            minHeight: 48,
-            flex: { xs: 1, sm: 'none' },
+            borderColor: '#6B7280',
+            color: '#6B7280',
             '&:hover': {
-              borderColor: '#64748B',
-              background: alpha('#64748B', 0.04)
+              borderColor: '#374151',
+              backgroundColor: alpha('#6B7280', 0.04),
             }
           }}
         >
           Cancelar
-        </Button>
-
-        {mode === 'edit' && (
-          <Button
-            onClick={handleDelete}
-            variant="outlined"
-            disabled={actionLoading}
-            sx={{
-              borderRadius: 2,
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              fontFamily: "'Mona Sans'",
-              borderColor: alpha('#EF4444', 0.2),
-              color: '#EF4444',
-              minHeight: 48,
-              flex: { xs: 1, sm: 'none' },
-              '&:hover': {
-                borderColor: '#EF4444',
-                background: alpha('#EF4444', 0.04)
-              }
-            }}
-          >
-            {actionLoading ? <CircularProgress size={20} color="inherit" /> : 'Eliminar'}
-          </Button>
-        )}
-
-        <Button
+        </ModernButton>
+        <ModernButton
           onClick={handleSave}
           variant="contained"
-          disabled={actionLoading || !formData.name.trim()}
+          startIcon={<Check size={20} />}
+          disabled={saving || !formData.name.trim()}
           sx={{
-            background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-            borderRadius: 2,
-            py: 1.5,
-            px: 4,
-            fontSize: '1rem',
-            fontWeight: 600,
-            textTransform: 'none',
-            fontFamily: "'Mona Sans'",
-            boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
-            minHeight: 48,
-            flex: { xs: 1, sm: 'none' },
+            backgroundColor: '#032CA6',
             '&:hover': {
-              background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-              boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)'
+              backgroundColor: '#021A7A',
+            },
+            '&:disabled': {
+              backgroundColor: '#9CA3AF',
+              color: '#FFFFFF'
             }
           }}
         >
-          {actionLoading ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : (
-            mode === 'edit' ? 'Actualizar Método' : 'Crear Método'
-          )}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          {saving ? 'Guardando...' : 'Guardar'}
+        </ModernButton>
+      </ModernDialogActions>
+    </ModernDialog>
   );
 };
 

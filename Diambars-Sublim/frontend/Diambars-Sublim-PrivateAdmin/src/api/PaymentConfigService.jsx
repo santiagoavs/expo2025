@@ -13,6 +13,7 @@ const paymentConfigService = {
       
       const response = await apiClient.get('/payment-config');
       
+      console.log('🔍 [paymentConfigService] Respuesta recibida:', response);
       return response;
     } catch (error) {
       console.error('❌ [paymentConfigService] Error obteniendo configuraciones:', error);
@@ -32,6 +33,22 @@ const paymentConfigService = {
       return response;
     } catch (error) {
       console.error('❌ [paymentConfigService] Error obteniendo configuración pública:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Crear nueva configuración de método de pago
+   */
+  async createPaymentConfig(configData) {
+    try {
+      console.log('➕ [paymentConfigService] Creando nueva configuración:', configData.type);
+      
+      const response = await apiClient.post('/payment-config', configData);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ [paymentConfigService] Error creando configuración:', error);
       throw this.handleError(error);
     }
   },

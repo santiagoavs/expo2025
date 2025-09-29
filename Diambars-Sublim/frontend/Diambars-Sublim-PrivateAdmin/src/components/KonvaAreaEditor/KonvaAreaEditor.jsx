@@ -7,6 +7,7 @@ import { useUnifiedCanvasCentering } from '../KonvaDesignEditor/hooks/useUnified
 import { GridPattern } from './components/GridPattern';
 import { ExportService } from './services/ExportService';
 import Swal from 'sweetalert2';
+import './KonvaAreaEditor.css';
 import {
   Box,
   Button,
@@ -41,10 +42,17 @@ Swal.mixin({
     popup: 'swal-modal-custom'
   },
   didOpen: () => {
-    const container = document.querySelector('.swal-overlay-custom');
-    if (container) {
-      container.style.zIndex = '3000'; // Mayor que el editor (2000)
-    }
+    // Aplicar z-index alto a todos los elementos de SweetAlert2
+    const containers = document.querySelectorAll('.swal-overlay-custom, .swal2-container');
+    containers.forEach(container => {
+      container.style.zIndex = '9999';
+      container.style.position = 'fixed';
+    });
+    
+    const popups = document.querySelectorAll('.swal-modal-custom, .swal2-popup');
+    popups.forEach(popup => {
+      popup.style.zIndex = '10000';
+    });
   }
 });
 
@@ -483,7 +491,7 @@ const KonvaAreaEditor = ({
         container: 'swal-overlay-custom',
         popup: 'swal-modal-custom'
       },
-      zIndex: 3000
+      zIndex: 9999
     });
 
     if (isConfirmed) {
@@ -591,7 +599,7 @@ const KonvaAreaEditor = ({
           container: 'swal-overlay-custom',
           popup: 'swal-modal-custom'
         },
-        zIndex: 3000
+        zIndex: 9999
       });
       return;
     }
@@ -753,7 +761,7 @@ const KonvaAreaEditor = ({
                           container: 'swal-overlay-custom',
                           popup: 'swal-modal-custom'
                         },
-                        zIndex: 3000
+                        zIndex: 9999
                       });
                     }
                   }
@@ -769,7 +777,7 @@ const KonvaAreaEditor = ({
                       container: 'swal-overlay-custom',
                       popup: 'swal-modal-custom'
                     },
-                    zIndex: 3000
+                    zIndex: 9999
                   });
                 }
               }}

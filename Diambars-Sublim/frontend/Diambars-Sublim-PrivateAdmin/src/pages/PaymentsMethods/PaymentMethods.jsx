@@ -1,82 +1,236 @@
-// src/pages/PaymentMethods/PaymentMethods.jsx - Diseño UX/UI Mejorado
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Swal from 'sweetalert2';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Button,
+  Card,
+  CardContent,
   Grid,
+  Chip,
   IconButton,
   Menu,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  FormControl,
-  InputLabel,
-  Switch,
-  FormControlLabel,
-  Chip,
-  Alert,
-  CircularProgress,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
   ListItemIcon,
-  ListItemSecondaryAction,
-  Paper,
-  Container,
-  Stack,
-  Card,
-  CardContent,
+  ListItemText,
   useTheme,
   useMediaQuery,
-  alpha,
-  Fab
+  Stack,
+  Divider,
+  Alert,
+  CircularProgress,
+  Paper,
+  styled,
+  alpha
 } from '@mui/material';
 import {
   Plus,
-  CreditCard,
-  Bank,
-  CurrencyDollar,
-  DotsThreeVertical,
+  DotsThree,
   PencilSimple,
   Trash,
-  Eye,
-  Gear,
-  TrendUp,
   ChartBar,
-  MagnifyingGlass,
-  Funnel,
-  Broom,
-  ArrowsClockwise,
+  CreditCard,
+  Bank,
+  Money,
   CheckCircle,
   XCircle
 } from '@phosphor-icons/react';
-import { usePaymentConfigManagement } from '../../hooks/usePaymentConfig';
 import { usePaymentModals } from '../../hooks/usePaymentModals';
 import PaymentMethodConfigModal from '../../components/PaymentMethodModals/PaymentMethodConfigModal';
 import PaymentStatsModal from '../../components/PaymentMethodModals/PaymentStatsModal';
-import PaymentActionButtons from '../../components/PaymentMethodModals/PaymentActionButtons';
+import paymentConfigService from '../../api/PaymentConfigService';
 import toast from 'react-hot-toast';
 
-// Configuración global de SweetAlert2
-Swal.mixin({
-  customClass: {
-    container: 'swal-overlay-custom',
-    popup: 'swal-modal-custom'
-  },
-  didOpen: () => {
-    const container = document.querySelector('.swal-overlay-custom');
-    if (container) {
-      container.style.zIndex = '1500';
-    }
-  }
+// ================ ESTILOS MODERNOS RESPONSIVE - PAYMENT METHODS ================
+const PaymentPageContainer = styled(Box)({
+  minHeight: '100vh',
+  fontFamily: "'Mona Sans'",
+  background: 'white',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
 });
+
+const PaymentContentWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '1600px',
+  margin: '0 auto',
+  paddingTop: '120px',
+  paddingBottom: '40px',
+  paddingLeft: '32px',
+  paddingRight: '32px',
+  minHeight: 'calc(100vh - 120px)',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1400px',
+    paddingLeft: '28px',
+    paddingRight: '28px',
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '1200px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    paddingTop: '110px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: '100px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+  }
+}));
+
+const PaymentModernCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '16px',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  fontFamily: "'Mona Sans'",
+  '&:hover': {
+    boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
+  }
+}));
+
+const PaymentHeaderSection = styled(PaymentModernCard)(({ theme }) => ({
+  padding: '40px',
+  marginBottom: '32px',
+  fontWeight: '700 !important',
+  background: 'white',
+  position: 'relative',
+  zIndex: 1,
+  width: '100%',
+  boxSizing: 'border-box',
+  [theme.breakpoints.down('lg')]: {
+    padding: '32px',
+  },
+  [theme.breakpoints.down('md')]: {
+    padding: '24px',
+    marginBottom: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '20px',
+    marginBottom: '20px',
+  }
+}));
+
+const PaymentHeaderContent = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '32px',
+  width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    gap: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    gap: '16px',
+  }
+}));
+
+const PaymentHeaderInfo = styled(Box)(({ theme }) => ({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  justifyContent: 'center',
+  [theme.breakpoints.down('md')]: {
+    alignItems: 'center',
+    textAlign: 'center',
+  }
+}));
+
+const PaymentMainTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '2.5rem',
+  fontWeight: '700 !important',
+  color: '#010326',
+  marginBottom: '12px',
+  letterSpacing: '-0.025em',
+  lineHeight: 1.2,
+  textAlign: 'left',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '2.2rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.8rem',
+    textAlign: 'center',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.6rem',
+  }
+}));
+
+const PaymentMainDescription = styled(Typography)(({ theme }) => ({
+  fontSize: '1.1rem',
+  color: '#032CA6',
+  fontWeight: '700 !important',
+  lineHeight: 1.6,
+  opacity: 0.9,
+  textAlign: 'left',
+  maxWidth: '600px',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('md')]: {
+    textAlign: 'center',
+    maxWidth: '100%',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1rem',
+  }
+}));
+
+const PaymentActionsSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    width: '100%',
+    gap: '12px',
+  }
+}));
+
+const PaymentModernButton = styled(Button)(({ theme }) => ({
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontSize: '1rem',
+  fontFamily: "'Mona Sans'",
+  fontWeight: '600',
+  padding: '12px 24px',
+  minHeight: '48px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 2px 8px rgba(1, 3, 38, 0.1)',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 16px rgba(1, 3, 38, 0.15)',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+    minHeight: '52px',
+  }
+}));
+
+const PaymentMethodCard = styled(PaymentModernCard)(({ theme }) => ({
+  padding: '24px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)',
+    transform: 'translateY(-4px)',
+  },
+  [theme.breakpoints.down('md')]: {
+    padding: '20px',
+  }
+}));
 
 const PaymentMethods = () => {
   const theme = useTheme();
@@ -85,18 +239,45 @@ const PaymentMethods = () => {
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isExtraSmall = useMediaQuery(theme.breakpoints.down(480));
 
-  // Hooks para configuración de métodos de pago del sistema
-  const { 
-    configs, 
-    stats, 
-    loading, 
-    upsertConfig, 
-    updateConfig, 
-    deleteConfig,
-    checkMethodExists
-  } = usePaymentConfigManagement();
+  // Estados locales simples
+  const [configs, setConfigs] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Hook para gestión de modales (solo configuración del sistema)
+  // Cargar configuraciones
+  const loadConfigs = async () => {
+    try {
+      setLoading(true);
+      const response = await paymentConfigService.getPaymentConfigs();
+      if (response.success) {
+        setConfigs(response.configs || []);
+      }
+    } catch (error) {
+      console.error('Error cargando configuraciones:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar estadísticas
+  const loadStats = async () => {
+    try {
+      const response = await paymentConfigService.getPaymentStats();
+      if (response.success) {
+        setStats(response.stats);
+      }
+    } catch (error) {
+      console.error('Error cargando estadísticas:', error);
+    }
+  };
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    loadConfigs();
+    loadStats();
+  }, []);
+
+  // Hook para gestión de modales
   const {
     configModalOpen,
     statsModalOpen,
@@ -108,44 +289,11 @@ const PaymentMethods = () => {
     closeStatsModal
   } = usePaymentModals();
 
-  // Estados locales
+  // Estados para menús
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuMethod, setMenuMethod] = useState(null);
-  const [updatingConfig, setUpdatingConfig] = useState(null);
 
-  // Función para actualizar configuración con debounce
-  const handleConfigUpdate = useCallback(async (type, updates) => {
-    if (updatingConfig === type) return; // Evitar múltiples actualizaciones simultáneas
-    
-    try {
-      setUpdatingConfig(type);
-      const existingConfig = configs?.find(c => c.type === type);
-      if (existingConfig) {
-        await updateConfig(type, {
-          type: existingConfig.type,
-          name: existingConfig.name,
-          enabled: existingConfig.enabled,
-          config: existingConfig.config,
-          message: existingConfig.message,
-          ...updates
-        });
-      }
-    } catch (error) {
-      console.error('Error actualizando configuración:', error);
-    } finally {
-      setUpdatingConfig(null);
-    }
-  }, [configs, updateConfig, updatingConfig]);
-
-  // Estados del formulario
-  const [methodForm, setMethodForm] = useState({
-    name: '',
-    type: 'wompi',
-    enabled: true,
-    config: {}
-  });
-
-  // Función para abrir menú de acciones
+  // Manejar menú
   const handleMenuOpen = (event, method) => {
     setAnchorEl(event.currentTarget);
     setMenuMethod(method);
@@ -156,7 +304,7 @@ const PaymentMethods = () => {
     setMenuMethod(null);
   };
 
-  // Función para abrir diálogo de método de configuración (solo sistema)
+  // Abrir modal de configuración
   const handleOpenConfigMethodDialog = (method = null) => {
     if (method) {
       openConfigModal(method, 'edit');
@@ -165,1365 +313,348 @@ const PaymentMethods = () => {
     }
   };
 
-  // Función para guardar método de configuración del sistema
-  const handleSaveConfigMethod = async () => {
+  // Guardar método de configuración
+  const handleSaveConfigMethod = async (configData) => {
     try {
-      // Validar si ya existe un método del mismo tipo (solo para nuevos métodos)
-      if (!selectedConfigMethod && checkMethodExists(methodForm.type)) {
-        await Swal.fire({
-          title: 'Método ya existe',
-          text: `Ya existe un método de pago de tipo "${methodForm.type}". ¿Deseas editarlo en su lugar?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, editar',
-          cancelButtonText: 'Cancelar',
-          customClass: {
-            popup: 'swal2-popup-custom',
-            title: 'swal2-title-custom',
-            content: 'swal2-content-custom'
-          }
-        });
-        return;
-      }
-
-      if (selectedConfigMethod) {
-        await updateConfig(selectedConfigMethod.type, methodForm);
-        
-        // SweetAlert de éxito
-        await Swal.fire({
-          title: '¡Éxito!',
-          text: 'Método de pago actualizado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Continuar',
-          customClass: {
-            popup: 'swal2-popup-custom',
-            title: 'swal2-title-custom',
-            content: 'swal2-content-custom'
-          }
-        });
+      if (modalMode === 'create') {
+        await paymentConfigService.createPaymentConfig(configData);
+        toast.success('Método de pago creado exitosamente');
       } else {
-        await upsertConfig(methodForm);
-        
-        // SweetAlert de éxito
-        await Swal.fire({
-          title: '¡Éxito!',
-          text: 'Método de pago creado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Continuar',
-          customClass: {
-            popup: 'swal2-popup-custom',
-            title: 'swal2-title-custom',
-            content: 'swal2-content-custom'
-          }
-        });
+        await paymentConfigService.updatePaymentConfig(selectedConfigMethod.type, configData);
+        toast.success('Método de pago actualizado exitosamente');
       }
       
+      await loadConfigs();
+      await loadStats();
       closeConfigModal();
-      setMethodForm({ name: '', type: 'wompi', enabled: true, config: {} });
     } catch (error) {
-      // SweetAlert de error
-      await Swal.fire({
-        title: 'Error',
-        text: 'Error al guardar el método de pago',
-        icon: 'error',
-        confirmButtonText: 'Reintentar',
-        customClass: {
-          popup: 'swal2-popup-custom',
-          title: 'swal2-title-custom',
-          content: 'swal2-content-custom'
-        }
-      });
+      console.error('Error guardando método de pago:', error);
+      toast.error('Error al guardar el método de pago');
     }
   };
 
-  // Función para eliminar método (ahora usa el nuevo sistema de configuración)
-  const handleDeleteMethod = async (method) => {
+  // Eliminar método de configuración
+  const handleDeleteConfigMethod = async (type) => {
     try {
-      // SweetAlert de confirmación
-      const result = await Swal.fire({
-        title: '¿Estás seguro?',
-        text: `¿Deseas eliminar el método "${method.name}"? Esta acción no se puede deshacer.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        customClass: {
-          popup: 'swal2-popup-custom',
-          title: 'swal2-title-custom',
-          content: 'swal2-content-custom'
-        }
-      });
-
-      if (result.isConfirmed) {
-        await deleteConfig(method.type);
-        
-        // SweetAlert de éxito
-        await Swal.fire({
-          title: '¡Eliminado!',
-          text: 'Método de pago eliminado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Continuar',
-          customClass: {
-            popup: 'swal2-popup-custom',
-            title: 'swal2-title-custom',
-            content: 'swal2-content-custom'
-          }
-        });
-        
-        handleMenuClose();
-      }
+      await paymentConfigService.deletePaymentConfig(type);
+      toast.success('Método de pago eliminado exitosamente');
+      await loadConfigs();
+      await loadStats();
     } catch (error) {
-      // SweetAlert de error
-      await Swal.fire({
-        title: 'Error',
-        text: 'Error al eliminar el método de pago',
-        icon: 'error',
-        confirmButtonText: 'Reintentar',
-        customClass: {
-          popup: 'swal2-popup-custom',
-          title: 'swal2-title-custom',
-          content: 'swal2-content-custom'
-        }
-      });
+      console.error('Error eliminando método de pago:', error);
+      toast.error('Error al eliminar el método de pago');
+    }
+    handleMenuClose();
+  };
+
+  // Obtener icono del método
+  const getMethodIcon = (type) => {
+    switch (type) {
+      case 'wompi':
+        return <CreditCard size={24} />;
+      case 'cash':
+        return <Money size={24} />;
+      case 'bank_transfer':
+        return <Bank size={24} />;
+      case 'credit_card':
+        return <CreditCard size={24} />;
+      default:
+        return <CreditCard size={24} />;
     }
   };
 
-  // Función para obtener icono del método
-  const getMethodIcon = (type) => {
-    const icons = {
-      wompi: <CreditCard size={20} weight="duotone" />,
-      cash: <CurrencyDollar size={20} weight="duotone" />,
-      bank: <Bank size={20} weight="duotone" />,
-      card: <CreditCard size={20} weight="duotone" />
-    };
-    return icons[type] || <CreditCard size={20} weight="duotone" />;
+  // Obtener color del método
+  const getMethodColor = (type) => {
+    switch (type) {
+      case 'wompi':
+        return '#8B5CF6';
+      case 'cash':
+        return '#10B981';
+      case 'bank_transfer':
+        return '#3B82F6';
+      case 'credit_card':
+        return '#F59E0B';
+      default:
+        return '#6B7280';
+    }
   };
 
-  // Función para formatear moneda
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0
-    }).format(amount);
+  // Obtener nombre del método
+  const getMethodName = (type) => {
+    switch (type) {
+      case 'wompi':
+        return 'Wompi';
+      case 'cash':
+        return 'Efectivo';
+      case 'bank_transfer':
+        return 'Transferencia Bancaria';
+      case 'credit_card':
+        return 'Tarjeta de Crédito';
+      default:
+        return type;
+    }
   };
-
-  // Calcular estadísticas
-  const paymentStats = useMemo(() => {
-    if (!stats) return { totalPayments: 0, totalAmount: 0, successRate: 0, activeMethods: 0 };
-    
-    return {
-      totalPayments: stats.totalPayments || 0,
-      totalAmount: stats.totalAmount || 0,
-      successRate: stats.successRate || 0,
-      activeMethods: configs?.filter(c => c.enabled).length || 0
-    };
-  }, [stats, configs]);
-
-  if (loading) {
-    return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          background: '#FAFBFC'
-        }}
-      >
-        <CircularProgress size={48} thickness={3.6} />
-      </Box>
-    );
-  }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'white',
-        fontFamily: "'Mona Sans', system-ui, sans-serif",
-        pt: {
-          xs: 10,
-          sm: 12,
-          md: 14,
-          lg: 16
-        },
-        pb: { xs: 4, sm: 6, md: 8 }
-      }}
-    >
-      {/* Container principal optimizado */}
-      <Container 
-        maxWidth={false}
-        sx={{
-          maxWidth: '100%',
-          mx: 'auto',
-          px: {
-            xs: 1.5,
-            sm: 2,
-            md: 2.5,
-            lg: 3,
-            xl: 4
-          },
-          width: '100%'
-        }}
-      >
-        {/* HEADER SECTION - Diseño mejorado */}
-        <Paper
-          elevation={0}
-          sx={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: { xs: 3, md: 4 },
-            border: `1px solid ${alpha('#1F64BF', 0.06)}`,
-            boxShadow: '0 8px 32px rgba(31, 100, 191, 0.08)',
-            p: {
-              xs: 2.5,
-              sm: 3,
-              md: 3.5,
-              lg: 4
-            },
-            mb: { xs: 2.5, sm: 3, md: 4 },
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '200px',
-              height: '200px',
-              background: 'radial-gradient(circle, rgba(31, 100, 191, 0.03) 0%, transparent 70%)',
-              borderRadius: '50%',
-              transform: 'translate(50px, -50px)'
-            }
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'center', lg: 'center' }}
-            spacing={{ xs: 4, lg: 6 }}
-            sx={{ 
-              textAlign: { xs: 'center', lg: 'left' },
-              position: 'relative',
-              zIndex: 1,
-              minHeight: { lg: '120px' }
-            }}
-          >
-            {/* Información del header mejorada */}
-            <Box sx={{ flex: 1, maxWidth: { lg: '70%' } }}>
-              <Typography
-                variant="h1"
-                sx={{
-                  fontSize: {
-                    xs: '2rem',
-                    sm: '2.25rem',
-                    md: '2.5rem',
-                    lg: '2.75rem'
-                  },
-                  fontWeight: 800,
-                  color: '#010326',
-                  mb: { xs: 2, md: 3 },
-                  letterSpacing: '-0.03em',
-                  lineHeight: { xs: 1.1, md: 1.05 },
-                  fontFamily: "'Mona Sans'",
-                  background: 'linear-gradient(135deg, #010326 0%, #1F64BF 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
+    <PaymentPageContainer>
+      <PaymentContentWrapper>
+        {/* Header Section */}
+        <PaymentHeaderSection>
+          <PaymentHeaderContent>
+            <PaymentHeaderInfo>
+              <PaymentMainTitle>
                 Métodos de Pago
-              </Typography>
-              <Typography
-                variant="h6"
+              </PaymentMainTitle>
+              <PaymentMainDescription>
+                Gestiona los métodos de pago disponibles para tus clientes
+              </PaymentMainDescription>
+            </PaymentHeaderInfo>
+            
+            <PaymentActionsSection>
+              <PaymentModernButton
+                variant="contained"
+                startIcon={<Plus size={20} />}
+                onClick={() => handleOpenConfigMethodDialog()}
                 sx={{
-                  fontSize: {
-                    xs: '1rem',
-                    sm: '1.125rem',
-                    md: '1.125rem'
-                  },
-                  color: '#64748B',
-                  fontWeight: 500,
-                  lineHeight: 1.6,
-                  maxWidth: { md: '600px', lg: '100%' },
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                Gestiona de forma inteligente todos los métodos de pago disponibles para tus clientes con análisis en tiempo real
-              </Typography>
-            </Box>
-
-            {/* Botones de acción optimizados */}
-            <PaymentActionButtons
-              onOpenConfigModal={() => openConfigModal()}
-              onOpenStatsModal={() => openStatsModal()}
-              configs={configs}
-            />
-          </Stack>
-        </Paper>
-
-        {/* ESTADÍSTICAS - Grid fluido y adaptativo */}
-        <Box sx={{ mb: { xs: 3, md: 4 } }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontSize: { xs: '1.25rem', md: '1.375rem' },
-              fontWeight: 700,
-              color: '#010326',
-              mb: { xs: 3, md: 4 },
-              fontFamily: "'Mona Sans'"
-            }}
-          >
-            Estadísticas Generales
-          </Typography>
-          
-          <Box
-            sx={{
-              display: 'grid',
-              gap: { xs: 1.5, sm: 2, md: 2.5 },
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(4, 1fr)'
-              }
-            }}
-          >
-            {/* Estadística principal */}
-            <Paper
-              elevation={0}
-              sx={{
-                background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-                color: 'white',
-                borderRadius: { xs: 3, md: 4 },
-                p: { xs: 2.5, md: 3 },
-                position: 'relative',
-                overflow: 'hidden',
-                minHeight: { xs: 140, md: 160 },
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gridColumn: { xs: '1', sm: '1 / -1', lg: '1' },
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: -20,
-                  right: -20,
-                  width: 100,
-                  height: 100,
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }
-              }}
-            >
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-                <Box
-                  sx={{
-                    width: { xs: 48, md: 56 },
-                    height: { xs: 48, md: 56 },
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <ChartBar size={isMobile ? 24 : 28} weight="duotone" />
-                </Box>
-              </Stack>
-              
-              <Box>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontSize: { xs: '2rem', md: '2.25rem' },
-                    fontWeight: 800,
-                    lineHeight: 1,
-                    mb: 1,
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  {paymentStats.totalPayments.toLocaleString()}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: { xs: '0.875rem', md: '1rem' },
-                    fontWeight: 500,
-                    opacity: 0.9,
-                    mb: 2,
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  Pagos Procesados
-                </Typography>
-                
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    backdropFilter: 'blur(10px)',
-                    width: 'fit-content'
-                  }}
-                >
-                  <TrendUp size={14} weight="bold" />
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    +12% este mes
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-
-            {/* Otras estadísticas */}
-            {[
-              {
-                icon: CurrencyDollar,
-                value: formatCurrency(paymentStats.totalAmount),
-                label: 'Monto Total',
-                trend: '+15%',
-                color: '#10B981'
-              },
-              {
-                icon: TrendUp,
-                value: `${paymentStats.successRate}%`,
-                label: 'Tasa de Éxito',
-                trend: '+3%',
-                color: '#8B5CF6'
-              },
-              {
-                icon: CreditCard,
-                value: paymentStats.activeMethods,
-                label: 'Métodos Activos',
-                trend: 'Disponibles',
-                color: '#F59E0B'
-              }
-            ].map((stat, index) => (
-              <Paper
-                key={index}
-                elevation={0}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(20px)',
-                  borderRadius: { xs: 3, md: 4 },
-                  border: `1px solid ${alpha('#1F64BF', 0.06)}`,
-                  p: { xs: 2.5, md: 3 },
-                  minHeight: { xs: 140, md: 160 },
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  backgroundColor: '#032CA6',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 12px 40px rgba(31, 100, 191, 0.12)'
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '4px',
-                    background: `linear-gradient(90deg, ${stat.color}, ${alpha(stat.color, 0.6)})`,
-                    borderRadius: '4px 4px 0 0'
+                    backgroundColor: '#021A7A',
                   }
                 }}
               >
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
-                  <Box
-                    sx={{
-                      width: { xs: 48, md: 56 },
-                      height: { xs: 48, md: 56 },
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: alpha(stat.color, 0.1),
-                      color: stat.color
-                    }}
-                  >
-                    <stat.icon size={isMobile ? 24 : 28} weight="duotone" />
-                  </Box>
-                </Stack>
-                
-                <Box>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontSize: { xs: '1.75rem', md: '1.875rem' },
-                      fontWeight: 700,
-                      lineHeight: 1.1,
-                      mb: 1,
-                      color: '#010326',
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    {stat.value}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: { xs: '0.875rem', md: '1rem' },
-                      fontWeight: 500,
-                      color: '#64748B',
-                      mb: 2,
-                      fontFamily: "'Mona Sans'"
-                    }}
-                  >
-                    {stat.label}
-                  </Typography>
-                  
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      px: 2,
-                      py: 1,
-                      borderRadius: 2,
-                      background: alpha(stat.color, 0.1),
-                      width: 'fit-content'
-                    }}
-                  >
-                    <TrendUp size={14} weight="bold" style={{ color: stat.color }} />
-                    <Typography
-                      variant="caption"
+                Agregar Método
+              </PaymentModernButton>
+              
+              <PaymentModernButton
+                variant="outlined"
+                startIcon={<ChartBar size={20} />}
+                onClick={openStatsModal}
+                sx={{
+                  borderColor: '#032CA6',
+                  color: '#032CA6',
+                  '&:hover': {
+                    borderColor: '#021A7A',
+                    backgroundColor: alpha('#032CA6', 0.04),
+                  }
+                }}
+              >
+                Ver Estadísticas
+              </PaymentModernButton>
+            </PaymentActionsSection>
+          </PaymentHeaderContent>
+        </PaymentHeaderSection>
+
+        {/* Lista de métodos */}
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={40} sx={{ color: '#032CA6' }} />
+          </Box>
+        ) : configs.length === 0 ? (
+          <PaymentModernCard sx={{ p: 4, textAlign: 'center' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#032CA6',
+                fontWeight: 600,
+                mb: 2,
+                fontFamily: "'Mona Sans'"
+              }}
+            >
+              No hay métodos de pago configurados
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#6B7280',
+                mb: 3,
+                fontFamily: "'Mona Sans'"
+              }}
+            >
+              Agrega un método de pago para comenzar
+            </Typography>
+            <PaymentModernButton
+              variant="contained"
+              startIcon={<Plus size={20} />}
+              onClick={() => handleOpenConfigMethodDialog()}
+              sx={{
+                backgroundColor: '#032CA6',
+                '&:hover': {
+                  backgroundColor: '#021A7A',
+                }
+              }}
+            >
+              Agregar Primer Método
+            </PaymentModernButton>
+          </PaymentModernCard>
+        ) : (
+          <Grid container spacing={3}>
+            {configs.map((config) => (
+              <Grid item xs={12} sm={6} md={4} key={config.type}>
+                <PaymentMethodCard>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Box
                       sx={{
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        color: stat.color,
-                        fontFamily: "'Mona Sans'"
+                        p: 2,
+                        borderRadius: 3,
+                        backgroundColor: `${getMethodColor(config.type)}15`,
+                        color: getMethodColor(config.type),
+                        mr: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
-                      {stat.trend}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Paper>
-            ))}
-          </Box>
-        </Box>
-
-        {/* ESTADO DE CONFIGURACIÓN - Layout adaptativo */}
-        <Box sx={{ mb: { xs: 3, md: 4 } }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontSize: { xs: '1.25rem', md: '1.375rem' },
-              fontWeight: 700,
-              color: '#010326',
-              mb: { xs: 3, md: 4 },
-              fontFamily: "'Mona Sans'"
-            }}
-          >
-            Estado de Configuración
-          </Typography>
-          
-          <Box
-            sx={{
-              display: 'grid',
-              gap: { xs: 1.5, sm: 2, md: 2.5 },
-              gridTemplateColumns: {
-                xs: '1fr',
-                md: 'repeat(3, 1fr)'
-              }
-            }}
-          >
-            {[
-              { icon: CreditCard, name: 'Wompi Digital', type: 'wompi', description: 'Pagos con tarjeta en línea' },
-              { icon: CurrencyDollar, name: 'Efectivo', type: 'cash', description: 'Pago contra entrega' },
-              { icon: Bank, name: 'Transferencia', type: 'bank', description: 'Transferencia bancaria' }
-            ].map((item, index) => {
-              const configItem = configs?.find(c => c.type === item.type);
-              const isEnabled = configItem?.enabled;
-              
-              return (
-                <Paper
-                  key={index}
-                  elevation={0}
-                  sx={{
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: { xs: 3, md: 4 },
-                    border: `2px solid ${isEnabled ? alpha('#10B981', 0.2) : alpha('#EF4444', 0.2)}`,
-                    p: { xs: 2.5, md: 3 },
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 32px ${alpha(isEnabled ? '#10B981' : '#EF4444', 0.16)}`
-                    }
-                  }}
-                >
-                  <Stack spacing={3}>
-                    <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
-                      <Box
-                        sx={{
-                          width: { xs: 56, md: 64 },
-                          height: { xs: 56, md: 64 },
-                          borderRadius: 2.5,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: alpha(isEnabled ? '#10B981' : '#EF4444', 0.1),
-                          color: isEnabled ? '#10B981' : '#EF4444'
-                        }}
-                      >
-                        <item.icon size={isMobile ? 28 : 32} weight="duotone" />
-                      </Box>
-                      
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Chip
-                          icon={isEnabled ? <CheckCircle size={16} weight="fill" /> : <XCircle size={16} weight="fill" />}
-                          label={isEnabled ? 'Activo' : 'Inactivo'}
-                          color={isEnabled ? 'success' : 'error'}
-                          variant="filled"
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                            height: 32,
-                            fontFamily: "'Mona Sans'"
-                          }}
-                        />
-                      </Box>
-                    </Stack>
-                    
-                    <Box>
+                      {getMethodIcon(config.type)}
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
                       <Typography
                         variant="h6"
                         sx={{
-                          fontSize: { xs: '1.1rem', md: '1.125rem' },
                           fontWeight: 700,
                           color: '#010326',
-                          mb: 1,
-                          fontFamily: "'Mona Sans'"
+                          fontSize: '1.1rem',
+                          fontFamily: "'Mona Sans'",
+                          mb: 0.5
                         }}
                       >
-                        {item.name}
+                        {config.name || getMethodName(config.type)}
                       </Typography>
                       <Typography
                         variant="body2"
                         sx={{
-                          fontSize: { xs: '0.875rem', md: '1rem' },
-                          color: '#64748B',
-                          fontFamily: "'Mona Sans'",
-                          lineHeight: 1.5
-                        }}
-                      >
-                        {item.description}
-                      </Typography>
-                    </Box>
-                    
-                    {configItem?.message && (
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          background: alpha('#64748B', 0.05),
-                          border: `1px solid ${alpha('#64748B', 0.1)}`
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: '0.8rem',
-                            color: '#64748B',
-                            fontFamily: "'Mona Sans'",
-                            fontStyle: 'italic'
-                          }}
-                        >
-                          "{configItem.message}"
-                        </Typography>
-                      </Box>
-                    )}
-                  </Stack>
-                </Paper>
-              );
-            })}
-          </Box>
-        </Box>
-
-        {/* LISTA DE MÉTODOS - Diseño moderno */}
-        <Paper
-          elevation={0}
-          sx={{
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: { xs: 3, md: 4 },
-            border: `1px solid ${alpha('#1F64BF', 0.06)}`,
-            overflow: 'hidden'
-          }}
-        >
-          <Box sx={{ p: { xs: 2.5, md: 3 } }}>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ mb: { xs: 3, md: 4 } }}
-            >
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: alpha('#1F64BF', 0.1),
-                    color: '#1F64BF'
-                  }}
-                >
-                  <CreditCard size={24} weight="duotone" />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontSize: { xs: '1.25rem', md: '1.375rem' },
-                    fontWeight: 700,
-                    color: '#010326',
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  Métodos Configurados
-                </Typography>
-              </Stack>
-              
-              {configs && configs.length > 0 && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: '#64748B',
-                    fontFamily: "'Mona Sans'",
-                    fontSize: '0.875rem',
-                    background: alpha('#1F64BF', 0.08),
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2
-                  }}
-                >
-                  {configs.length} método{configs.length !== 1 ? 's' : ''} configurado{configs.length !== 1 ? 's' : ''}
-                </Typography>
-              )}
-            </Stack>
-
-            {configs && configs.length > 0 ? (
-              <Box
-                sx={{
-                  '& .MuiListItem-root': {
-                    borderRadius: 2,
-                    mb: 1,
-                    border: `1px solid ${alpha('#1F64BF', 0.06)}`,
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      background: 'rgba(255, 255, 255, 0.8)',
-                      transform: 'translateX(4px)',
-                      boxShadow: '0 4px 20px rgba(31, 100, 191, 0.08)'
-                    }
-                  }
-                }}
-              >
-                <List sx={{ p: 0 }}>
-                  {configs.map((method, index) => (
-                    <React.Fragment key={method.type}>
-                      <ListItem
-                        sx={{
-                          px: { xs: 2, md: 3 },
-                          py: { xs: 2, md: 2.5 },
-                          minHeight: { xs: 72, md: 80 }
-                        }}
-                      >
-                        <ListItemIcon sx={{ minWidth: { xs: 56, md: 64 } }}>
-                          <Box
-                            sx={{
-                              width: { xs: 40, md: 48 },
-                              height: { xs: 40, md: 48 },
-                              borderRadius: 2,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: method.enabled ? alpha('#10B981', 0.1) : alpha('#EF4444', 0.1),
-                              color: method.enabled ? '#10B981' : '#EF4444'
-                            }}
-                          >
-                            {getMethodIcon(method.type)}
-                          </Box>
-                        </ListItemIcon>
-                        
-                        <ListItemText
-                          primary={
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontSize: { xs: '1rem', md: '1.125rem' },
-                                  fontWeight: 600,
-                                  color: '#010326',
-                                  fontFamily: "'Mona Sans'"
-                                }}
-                              >
-                                {method.name}
-                              </Typography>
-                              <Chip
-                                label={method.enabled ? 'Activo' : 'Inactivo'}
-                                color={method.enabled ? 'success' : 'error'}
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  fontFamily: "'Mona Sans'"
-                                }}
-                              />
-                            </Stack>
-                          }
-                          secondary={
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontSize: { xs: '0.875rem', md: '1rem' },
-                                color: '#64748B',
-                                fontFamily: "'Mona Sans'",
-                                mt: 0.5
-                              }}
-                            >
-                              Tipo: {method.type.charAt(0).toUpperCase() + method.type.slice(1)} • 
-                              Configurado el {new Date(method.createdAt || Date.now()).toLocaleDateString('es-ES')}
-                            </Typography>
-                          }
-                        />
-                        
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            onClick={(e) => handleMenuOpen(e, method)}
-                            sx={{
-                              width: { xs: 40, md: 48 },
-                              height: { xs: 40, md: 48 },
-                              borderRadius: 2,
-                              color: '#64748B',
-                              border: `1px solid ${alpha('#64748B', 0.1)}`,
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                background: alpha('#1F64BF', 0.08),
-                                color: '#1F64BF',
-                                transform: 'scale(1.05)'
-                              }
-                            }}
-                          >
-                            <DotsThreeVertical size={isMobile ? 18 : 20} weight="bold" />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    </React.Fragment>
-                  ))}
-                </List>
-              </Box>
-            ) : (
-              <Box
-                sx={{
-                  py: { xs: 6, md: 8 },
-                  textAlign: 'center',
-                  borderRadius: 3,
-                  background: alpha('#64748B', 0.02),
-                  border: `2px dashed ${alpha('#64748B', 0.1)}`
-                }}
-              >
-                <Box
-                  sx={{
-                    width: { xs: 80, md: 96 },
-                    height: { xs: 80, md: 96 },
-                    borderRadius: 3,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: alpha('#64748B', 0.05),
-                    color: '#64748B',
-                    mx: 'auto',
-                    mb: 3
-                  }}
-                >
-                  <CreditCard size={isMobile ? 36 : 48} weight="duotone" />
-                </Box>
-                
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontSize: { xs: '1.25rem', md: '1.5rem' },
-                    fontWeight: 700,
-                    color: '#010326',
-                    mb: 2,
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  No hay métodos configurados
-                </Typography>
-                
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: { xs: '1rem', md: '1.125rem' },
-                    color: '#64748B',
-                    mb: 4,
-                    maxWidth: '400px',
-                    mx: 'auto',
-                    lineHeight: 1.6,
-                    fontFamily: "'Mona Sans'"
-                  }}
-                >
-                  Agrega tu primer método de pago para comenzar a recibir pagos de tus clientes
-                </Typography>
-                
-                <Button
-                  variant="contained"
-                  startIcon={<Plus size={20} weight="bold" />}
-                  onClick={() => handleOpenConfigMethodDialog()}
-                  sx={{
-                    background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-                    color: 'white',
-                    borderRadius: 2.5,
-                    py: 2,
-                    px: 4,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    fontFamily: "'Mona Sans'",
-                    boxShadow: '0 8px 24px rgba(31, 100, 191, 0.24)',
-                    minHeight: 56,
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 12px 32px rgba(31, 100, 191, 0.32)'
-                    }
-                  }}
-                >
-                  Agregar Primer Método
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </Paper>
-      </Container>
-
-      {/* FAB para dispositivos móviles */}
-      {isMobile && (
-        <Fab
-          color="primary"
-          onClick={() => handleOpenConfigMethodDialog()}
-          sx={{
-            position: 'fixed',
-            bottom: { xs: 20, sm: 24 },
-            right: { xs: 20, sm: 24 },
-            background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-            width: { xs: 56, sm: 64 },
-            height: { xs: 56, sm: 64 },
-            boxShadow: '0 8px 32px rgba(31, 100, 191, 0.32)',
-            zIndex: 1000,
-            '&:hover': {
-              background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-              transform: 'scale(1.1)'
-            }
-          }}
-        >
-          <Plus size={24} weight="bold" />
-        </Fab>
-      )}
-
-      {/* Menú de acciones mejorado */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 2,
-            border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-            boxShadow: '0 8px 32px rgba(31, 100, 191, 0.16)',
-            minWidth: 180,
-            py: 1
-          }
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            handleOpenConfigMethodDialog(menuMethod);
-            handleMenuClose();
-          }}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: 1.5,
-            mx: 1,
-            mb: 0.5,
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              background: alpha('#1F64BF', 0.08)
-            }
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: alpha('#1F64BF', 0.1),
-                color: '#1F64BF'
-              }}
-            >
-              <PencilSimple size={16} weight="bold" />
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 600,
-                color: '#010326',
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              Editar método
-            </Typography>
-          </Stack>
-        </MenuItem>
-        
-        <MenuItem
-          onClick={() => {
-            handleDeleteMethod(menuMethod);
-            handleMenuClose();
-          }}
-          sx={{
-            py: 1.5,
-            px: 2,
-            borderRadius: 1.5,
-            mx: 1,
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              background: alpha('#EF4444', 0.08)
-            }
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: alpha('#EF4444', 0.1),
-                color: '#EF4444'
-              }}
-            >
-              <Trash size={16} weight="bold" />
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 600,
-                color: '#EF4444',
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              Eliminar método
-            </Typography>
-          </Stack>
-        </MenuItem>
-      </Menu>
-
-      {/* Dialog legacy removido - usando UserPaymentMethodModal ahora */}
-
-      {/* Diálogo de configuración mejorado */}
-      <Dialog
-        open={configModalOpen}
-        onClose={closeConfigModal}
-        maxWidth="md"
-        fullWidth
-        fullScreen={isExtraSmall}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: isExtraSmall ? 0 : 3,
-            border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-            boxShadow: '0 16px 64px rgba(31, 100, 191, 0.16)',
-            m: isExtraSmall ? 0 : 2,
-            maxHeight: '90vh'
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            p: { xs: 3, md: 4 },
-            pb: 2,
-            borderBottom: `1px solid ${alpha('#1F64BF', 0.06)}`
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: alpha('#1F64BF', 0.1),
-                color: '#1F64BF'
-              }}
-            >
-              <Gear size={24} weight="duotone" />
-            </Box>
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontSize: { xs: '1.25rem', md: '1.5rem' },
-                  fontWeight: 700,
-                  color: '#010326',
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                Configuración de Pagos
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#64748B',
-                  fontFamily: "'Mona Sans'"
-                }}
-              >
-                Configura los métodos de pago disponibles
-              </Typography>
-            </Box>
-          </Stack>
-        </DialogTitle>
-        
-        <DialogContent sx={{ p: { xs: 3, md: 4 }, maxHeight: 'calc(90vh - 180px)', overflowY: 'auto' }}>
-          <Stack spacing={4} sx={{ pt: 2 }}>
-            {/* Configuraciones por tipo - diseño mejorado */}
-            {[
-              {
-                type: 'wompi',
-                title: 'Wompi - Pagos Digitales',
-                icon: CreditCard,
-                color: '#1F64BF',
-                fields: [
-                  { key: 'publicKey', label: 'Clave Pública', type: 'text' },
-                  { key: 'privateKey', label: 'Clave Privada', type: 'password' }
-                ]
-              },
-              {
-                type: 'cash',
-                title: 'Efectivo',
-                icon: CurrencyDollar,
-                color: '#10B981',
-                fields: [
-                  { key: 'message', label: 'Mensaje para el cliente', type: 'textarea', placeholder: 'Ej: Paga en efectivo al momento de la entrega' }
-                ]
-              },
-              {
-                type: 'bank',
-                title: 'Transferencia Bancaria',
-                icon: Bank,
-                color: '#8B5CF6',
-                fields: [
-                  { key: 'bankName', label: 'Banco', type: 'text' },
-                  { key: 'accountNumber', label: 'Número de cuenta', type: 'text' },
-                  { key: 'accountType', label: 'Tipo de cuenta', type: 'text', placeholder: 'Ej: Ahorros, Corriente' },
-                  { key: 'accountHolder', label: 'Titular de la cuenta', type: 'text' },
-                  { key: 'instructions', label: 'Instrucciones adicionales', type: 'textarea', placeholder: 'Ej: Enviar comprobante por WhatsApp' }
-                ]
-              }
-            ].map((configType, index) => (
-              <Paper
-                key={index}
-                elevation={0}
-                sx={{
-                  p: { xs: 3, md: 4 },
-                  borderRadius: 3,
-                  border: `2px solid ${alpha(configType.color, 0.1)}`,
-                  background: alpha(configType.color, 0.02)
-                }}
-              >
-                <Stack spacing={3}>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                      <Box
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: alpha(configType.color, 0.1),
-                          color: configType.color
-                        }}
-                      >
-                        <configType.icon size={24} weight="duotone" />
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontSize: { xs: '1.125rem', md: '1.25rem' },
-                          fontWeight: 700,
-                          color: '#010326',
+                          color: '#6B7280',
+                          fontSize: '0.9rem',
                           fontFamily: "'Mona Sans'"
                         }}
                       >
-                        {configType.title}
+                        {getMethodName(config.type)}
                       </Typography>
-                    </Stack>
-                    
-                    <Switch
-                      checked={configs?.find(c => c.type === configType.type)?.enabled || false}
-                      onChange={(e) => {
-                        handleConfigUpdate(configType.type, { enabled: e.target.checked });
+                    </Box>
+                    <IconButton
+                      onClick={(e) => handleMenuOpen(e, config)}
+                      sx={{
+                        color: '#6B7280',
+                        borderRadius: 2,
+                        '&:hover': {
+                          backgroundColor: alpha('#032CA6', 0.08),
+                          color: '#032CA6'
+                        }
                       }}
-                      size="medium"
-                    />
-                  </Stack>
-                  
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gap: 3,
-                      gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: configType.fields.length > 2 ? 'repeat(2, 1fr)' : '1fr'
-                      }
-                    }}
-                  >
-                    {configType.fields.map((field, fieldIndex) => (
-                      <TextField
-                        key={fieldIndex}
-                        label={field.label}
-                        type={field.type === 'password' ? 'password' : 'text'}
-                        multiline={field.type === 'textarea'}
-                        rows={field.type === 'textarea' ? 3 : 1}
-                        value={configs?.find(c => c.type === configType.type)?.[field.key] || ''}
-                        onChange={(e) => {
-                          handleConfigUpdate(configType.type, { 
-                            config: { ...configs?.find(c => c.type === configType.type)?.config, [field.key]: e.target.value }
-                          });
-                        }}
-                        fullWidth
-                        variant="outlined"
-                        placeholder={field.placeholder}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            fontFamily: "'Mona Sans'"
-                          },
-                          gridColumn: field.type === 'textarea' ? { sm: '1 / -1' } : 'auto'
-                        }}
-                      />
-                    ))}
+                    >
+                      <DotsThree size={20} />
+                    </IconButton>
                   </Box>
-                </Stack>
-              </Paper>
+
+                  <Box sx={{ mb: 3 }}>
+                    <Chip
+                      icon={config.enabled ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                      label={config.enabled ? 'Habilitado' : 'Deshabilitado'}
+                      color={config.enabled ? 'success' : 'error'}
+                      size="small"
+                      sx={{
+                        borderRadius: 3,
+                        fontSize: '0.8rem',
+                        fontFamily: "'Mona Sans'",
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
+
+                  {config.message && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#6B7280',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.6,
+                        fontFamily: "'Mona Sans'"
+                      }}
+                    >
+                      {config.message}
+                    </Typography>
+                  )}
+                </PaymentMethodCard>
+              </Grid>
             ))}
-          </Stack>
-        </DialogContent>
-        
-        <DialogActions
-          sx={{
-            p: { xs: 3, md: 4 },
-            pt: 2,
-            borderTop: `1px solid ${alpha('#1F64BF', 0.06)}`,
-            gap: 2
+          </Grid>
+        )}
+
+        {/* Menú de acciones */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              minWidth: 180,
+              boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)',
+              border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+              mt: 1
+            }
           }}
         >
-          <Button
-            onClick={closeConfigModal}
-            variant="outlined"
-            sx={{
-              borderRadius: 2,
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              fontFamily: "'Mona Sans'",
-              borderColor: alpha('#64748B', 0.2),
-              color: '#64748B',
-              minHeight: 48,
-              flex: { xs: 1, sm: 'none' }
-            }}
-          >
-            Cerrar
-          </Button>
-          
-          <Button
-            variant="contained"
+          <MenuItem
             onClick={() => {
-              toast.success('Configuración guardada correctamente');
-              closeConfigModal();
+              handleOpenConfigMethodDialog(menuMethod);
+              handleMenuClose();
             }}
             sx={{
-              background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
               borderRadius: 2,
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 600,
-              textTransform: 'none',
+              mx: 1,
+              my: 0.5,
               fontFamily: "'Mona Sans'",
-              boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
-              minHeight: 48,
-              flex: { xs: 1, sm: 'none' }
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: alpha('#032CA6', 0.08),
+                color: '#032CA6'
+              }
             }}
           >
-            Guardar Configuración
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <ListItemIcon>
+              <PencilSimple size={20} />
+            </ListItemIcon>
+            <ListItemText primary="Editar" />
+          </MenuItem>
+          <MenuItem
+            onClick={() => handleDeleteConfigMethod(menuMethod?.type)}
+            sx={{
+              borderRadius: 2,
+              mx: 1,
+              my: 0.5,
+              color: '#DC2626',
+              fontFamily: "'Mona Sans'",
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: alpha('#DC2626', 0.08),
+                color: '#DC2626'
+              }
+            }}
+          >
+            <ListItemIcon>
+              <Trash size={20} />
+            </ListItemIcon>
+            <ListItemText primary="Eliminar" />
+          </MenuItem>
+        </Menu>
 
-      {/* Modal de configuración de métodos de pago */}
-      <PaymentMethodConfigModal
-        open={configModalOpen}
-        onClose={closeConfigModal}
-        selectedMethod={selectedConfigMethod}
-        mode={modalMode}
-      />
+        {/* Modales */}
+        <PaymentMethodConfigModal
+          open={configModalOpen}
+          onClose={closeConfigModal}
+          selectedMethod={selectedConfigMethod}
+          mode={modalMode}
+          onSave={handleSaveConfigMethod}
+        />
 
-
-      {/* Modal de estadísticas */}
-      <PaymentStatsModal
-        open={statsModalOpen}
-        onClose={closeStatsModal}
-      />
-    </Box>
+        <PaymentStatsModal
+          open={statsModalOpen}
+          onClose={closeStatsModal}
+          stats={stats}
+        />
+      </PaymentContentWrapper>
+    </PaymentPageContainer>
   );
 };
-
-PaymentMethods.displayName = 'PaymentMethods';
 
 export default PaymentMethods;

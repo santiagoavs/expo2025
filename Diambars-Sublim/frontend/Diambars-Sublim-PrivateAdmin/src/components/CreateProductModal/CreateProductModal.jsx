@@ -745,9 +745,12 @@ const CreateProductModal = ({
       {
         name: 'Nueva Opción',
         label: 'Nueva Opción',
-        type: 'dropdown',
+        type: 'color', // ✅ CORREGIDO: Usar un tipo válido del enum
         required: false,
-        values: [{ label: 'Opción 1', value: 'option1', additionalPrice: 0, inStock: true }]
+        values: [{ label: 'Opción 1', value: 'option1', additionalPrice: 0, inStock: true }],
+        metadata: {
+          displayType: 'dropdown' // ✅ CORREGIDO: dropdown va en metadata.displayType
+        }
       }
     ]);
   };
@@ -768,9 +771,24 @@ const CreateProductModal = ({
   };
 
   const handleOptionChange = (optionIndex, field, value) => {
-    setProductOptions(prev => prev.map((option, i) => 
-      i === optionIndex ? { ...option, [field]: value } : option
-    ));
+    setProductOptions(prev => prev.map((option, i) => {
+      if (i === optionIndex) {
+        if (field.includes('.')) {
+          // Manejar campos anidados como metadata.displayType
+          const [parentField, childField] = field.split('.');
+          return {
+            ...option,
+            [parentField]: {
+              ...option[parentField],
+              [childField]: value
+            }
+          };
+        } else {
+          return { ...option, [field]: value };
+        }
+      }
+      return option;
+    }));
   };
 
   const handleOptionValueChange = (optionIndex, valueIndex, field, value) => {
@@ -1536,9 +1554,26 @@ const CreateProductModal = ({
                                   value={option.type}
                                   onChange={(e) => handleOptionChange(optionIndex, 'type', e.target.value)}
                                 >
+                                  <MenuItem value="color">Color</MenuItem>
+                                  <MenuItem value="size">Tamaño</MenuItem>
+                                  <MenuItem value="material">Material</MenuItem>
+                                  <MenuItem value="style">Estilo</MenuItem>
+                                  <MenuItem value="finish">Acabado</MenuItem>
+                                  <MenuItem value="quantity">Cantidad</MenuItem>
+                                </StyledSelect>
+                              </FormControl>
+                            </FormField>
+                            <FormField>
+                              <FormLabel>Tipo de visualización</FormLabel>
+                              <FormControl fullWidth>
+                                <StyledSelect
+                                  value={option.metadata?.displayType || 'dropdown'}
+                                  onChange={(e) => handleOptionChange(optionIndex, 'metadata.displayType', e.target.value)}
+                                >
                                   <MenuItem value="dropdown">Lista desplegable</MenuItem>
                                   <MenuItem value="buttons">Botones</MenuItem>
                                   <MenuItem value="color-picker">Selector de color</MenuItem>
+                                  <MenuItem value="slider">Deslizador</MenuItem>
                                 </StyledSelect>
                               </FormControl>
                             </FormField>

@@ -1,0 +1,32 @@
+/* Estilos para SweetAlert2 en KonvaAreaEditor */
+.swal-overlay-custom {
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.swal-modal-custom {
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Asegurar que el backdrop de SweetAlert2 esté por encima del editor */
+.swal2-container {
+  z-index: 9999 !important;
+}
+
+.swal2-popup {
+  z-index: 10000 !important;
+}
+
+/* Estilos adicionales para el editor */
+.konva-area-editor-overlay {
+  z-index: 2000;
+}
+
+.konva-area-editor-container {
+  z-index: 2001;
+}

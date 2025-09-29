@@ -37,7 +37,7 @@ export const usePaymentConfigs = () => {
 
   useEffect(() => {
     fetchConfigs();
-  }, [fetchConfigs]);
+  }, []); // Remover fetchConfigs de las dependencias para evitar bucle infinito
 
   // Función para verificar si ya existe un método del mismo tipo
   const checkMethodExists = useCallback((type) => {
@@ -87,7 +87,7 @@ export const usePublicPaymentConfig = () => {
 
   useEffect(() => {
     fetchPublicConfig();
-  }, [fetchPublicConfig]);
+  }, []); // Remover fetchPublicConfig de las dependencias para evitar bucle infinito
 
   return {
     publicConfig,
@@ -131,7 +131,7 @@ export const usePaymentConfigStats = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, []); // Remover fetchStats de las dependencias para evitar bucle infinito
 
   return {
     stats,
@@ -158,7 +158,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
       const response = await paymentConfigService.upsertPaymentConfig(configData);
 
       if (response.success) {
-        // Refrescar datos automáticamente
+        // Refrescar datos automáticamente solo si las funciones están disponibles
         if (refetchConfigs) await refetchConfigs();
         if (refetchStats) await refetchStats();
         return response.config;
@@ -173,7 +173,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refetchConfigs, refetchStats]);
 
   /**
    * Actualizar configuración existente
@@ -186,7 +186,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
       const response = await paymentConfigService.updatePaymentConfig(type, configData);
 
       if (response.success) {
-        // Refrescar datos automáticamente
+        // Refrescar datos automáticamente solo si las funciones están disponibles
         if (refetchConfigs) await refetchConfigs();
         if (refetchStats) await refetchStats();
         return response.config;
@@ -201,7 +201,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refetchConfigs, refetchStats]);
 
   /**
    * Eliminar configuración
@@ -214,7 +214,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
       const response = await paymentConfigService.deletePaymentConfig(type);
 
       if (response.success) {
-        // Refrescar datos automáticamente
+        // Refrescar datos automáticamente solo si las funciones están disponibles
         if (refetchConfigs) await refetchConfigs();
         if (refetchStats) await refetchStats();
         return response;
@@ -229,7 +229,7 @@ export const usePaymentConfigActions = (refetchConfigs, refetchStats) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refetchConfigs, refetchStats]);
 
   return {
     loading,
@@ -273,7 +273,7 @@ export const useSupportedPaymentTypes = () => {
 
   useEffect(() => {
     fetchSupportedTypes();
-  }, [fetchSupportedTypes]);
+  }, []); // Remover fetchSupportedTypes de las dependencias para evitar bucle infinito
 
   return {
     supportedTypes,
@@ -289,11 +289,12 @@ export const useSupportedPaymentTypes = () => {
 export const usePaymentConfigManagement = () => {
   const { configs, loading: configsLoading, error: configsError, refetch: refetchConfigs, checkMethodExists } = usePaymentConfigs();
   const { stats, loading: statsLoading, error: statsError, refetch: refetchStats } = usePaymentConfigStats();
-  const { loading: actionsLoading, upsertConfig, updateConfig, deleteConfig } = usePaymentConfigActions(refetchConfigs, refetchStats);
+  const { loading: actionsLoading, upsertConfig, updateConfig, deleteConfig } = usePaymentConfigActions();
 
   const handleUpsertConfig = useCallback(async (configData) => {
     try {
       const result = await upsertConfig(configData);
+      // Refrescar datos después de la operación
       await refetchConfigs();
       await refetchStats();
       return result;
@@ -305,6 +306,7 @@ export const usePaymentConfigManagement = () => {
   const handleUpdateConfig = useCallback(async (type, configData) => {
     try {
       const result = await updateConfig(type, configData);
+      // Refrescar datos después de la operación
       await refetchConfigs();
       await refetchStats();
       return result;
@@ -316,6 +318,7 @@ export const usePaymentConfigManagement = () => {
   const handleDeleteConfig = useCallback(async (type) => {
     try {
       const result = await deleteConfig(type);
+      // Refrescar datos después de la operación
       await refetchConfigs();
       await refetchStats();
       return result;

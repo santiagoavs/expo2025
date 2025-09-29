@@ -76,78 +76,64 @@ import OrderTimelineModal from '../../../components/OrderDetails/OrderTimelineMo
 import ProductionPhotoUpload from '../../../components/OrderDetails/ProductionPhotoUpload';
 import QualityControlPanel from '../../../components/QualityControl/QualityControlPanel';
 
-// ================ ESTILOS MODERNOS ================
+// ================ ESTILOS MODERNOS MEJORADOS ================
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    borderRadius: '20px',
-    boxShadow: `
-      0 32px 80px rgba(1, 3, 38, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-    `,
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    border: '1px solid rgba(99, 102, 241, 0.1)',
-    maxWidth: '1000px',
+    borderRadius: '24px',
+    boxShadow: '0 24px 60px rgba(31, 100, 191, 0.12)',
+    background: 'white',
+    border: '1px solid rgba(31, 100, 191, 0.08)',
+    maxWidth: '1200px',
     width: '95%',
     height: '90vh',
     overflow: 'hidden',
-    backdropFilter: 'blur(20px)',
     display: 'flex',
     flexDirection: 'column'
   }
 }));
 
 const DialogTitleStyled = styled(DialogTitle)(({ theme }) => ({
+  background: 'white',
+  color: '#010326',
+  padding: '24px 32px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '24px 32px',
   borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  fontFamily: "'Mona Sans'",
-  fontWeight: 700,
-  fontSize: '1.5rem',
-  color: '#010326'
+  position: 'relative'
 }));
 
 const ModernCard = styled(Card)(({ theme }) => ({
   borderRadius: '16px',
-  border: `1px solid ${alpha('#6366f1', 0.1)}`,
-  boxShadow: `
-    0 8px 32px rgba(99, 102, 241, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1)
-  `,
-  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
-  backdropFilter: 'blur(10px)',
-  transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  boxShadow: '0 2px 8px rgba(31, 100, 191, 0.04)',
+  background: 'white',
+  transition: 'all 0.2s ease',
+  height: '100%',
   '&:hover': {
-    boxShadow: `
-      0 12px 40px rgba(99, 102, 241, 0.12),
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2)
-    `,
-    border: `1px solid ${alpha('#6366f1', 0.2)}`
+    boxShadow: '0 4px 16px rgba(31, 100, 191, 0.08)',
+    transform: 'translateY(-1px)'
   }
 }));
 
 const StatusChip = styled(Chip)(({ status, theme }) => {
   const getStatusStyles = (status) => {
     const styles = {
-      pending_approval: { bg: '#fef3c7', color: '#92400e', border: '#f59e0b' },
-      quoted: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
-      approved: { bg: '#d1fae5', color: '#065f46', border: '#10b981' },
-      in_production: { bg: '#dbeafe', color: '#1e40af', border: '#3b82f6' },
-      quality_check: { bg: '#fed7aa', color: '#9a3412', border: '#f97316' },
-      quality_approved: { bg: '#ecfccb', color: '#365314', border: '#84cc16' },
-      packaging: { bg: '#f3e8ff', color: '#581c87', border: '#a855f7' },
-      ready_for_delivery: { bg: '#e9d5ff', color: '#7c2d12', border: '#8b5cf6' },
-      out_for_delivery: { bg: '#cffafe', color: '#0e7490', border: '#06b6d4' },
-      delivered: { bg: '#dcfce7', color: '#166534', border: '#22c55e' },
-      completed: { bg: '#d1fae5', color: '#064e3b', border: '#059669' },
-      cancelled: { bg: '#fee2e2', color: '#991b1b', border: '#ef4444' },
-      on_hold: { bg: '#f3f4f6', color: '#374151', border: '#6b7280' },
-      returned: { bg: '#fef2f2', color: '#dc2626', border: '#ef4444' },
-      refunded: { bg: '#f0fdf4', color: '#166534', border: '#22c55e' }
+      pending_approval: { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B', glow: 'rgba(245, 158, 11, 0.2)' },
+      quoted: { bg: '#CFFAFE', color: '#0E7490', border: '#06B6D4', glow: 'rgba(6, 182, 212, 0.2)' },
+      approved: { bg: '#D1FAE5', color: '#065F46', border: '#10B981', glow: 'rgba(16, 185, 129, 0.2)' },
+      in_production: { bg: '#DBEAFE', color: '#1E40AF', border: '#3B82F6', glow: 'rgba(59, 130, 246, 0.2)' },
+      quality_check: { bg: '#FED7AA', color: '#9A3412', border: '#F97316', glow: 'rgba(249, 115, 22, 0.2)' },
+      quality_approved: { bg: '#ECFCCB', color: '#365314', border: '#84CC16', glow: 'rgba(132, 204, 22, 0.2)' },
+      packaging: { bg: '#F3E8FF', color: '#581C87', border: '#A855F7', glow: 'rgba(168, 85, 247, 0.2)' },
+      ready_for_delivery: { bg: '#E9D5FF', color: '#7C2D12', border: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.2)' },
+      out_for_delivery: { bg: '#CFFAFE', color: '#0E7490', border: '#06B6D4', glow: 'rgba(6, 182, 212, 0.2)' },
+      delivered: { bg: '#DCFCE7', color: '#166534', border: '#22C55E', glow: 'rgba(34, 197, 94, 0.2)' },
+      completed: { bg: '#D1FAE5', color: '#064E3B', border: '#059669', glow: 'rgba(5, 150, 105, 0.2)' },
+      cancelled: { bg: '#FEE2E2', color: '#991B1B', border: '#EF4444', glow: 'rgba(239, 68, 68, 0.2)' },
+      on_hold: { bg: '#F3F4F6', color: '#374151', border: '#6B7280', glow: 'rgba(107, 114, 128, 0.2)' },
+      returned: { bg: '#FEF2F2', color: '#DC2626', border: '#EF4444', glow: 'rgba(239, 68, 68, 0.2)' },
+      refunded: { bg: '#F0FDF4', color: '#166534', border: '#22C55E', glow: 'rgba(34, 197, 94, 0.2)' }
     };
     return styles[status] || styles.on_hold;
   };
@@ -157,37 +143,169 @@ const StatusChip = styled(Chip)(({ status, theme }) => {
   return {
     backgroundColor: statusStyles.bg,
     color: statusStyles.color,
-    border: `1px solid ${statusStyles.border}`,
+    border: `2px solid ${statusStyles.border}`,
     fontSize: '0.875rem',
-    fontWeight: 600,
-    height: '28px',
-    fontFamily: "'Mona Sans'"
+    fontWeight: 700,
+    height: '32px',
+    fontFamily: "'Mona Sans'",
+    borderRadius: '12px',
+    padding: '0 14px',
+    boxShadow: `0 4px 12px ${statusStyles.glow}`,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: `0 6px 20px ${statusStyles.glow}`
+    }
   };
 });
+
+const InfoCard = styled(ModernCard)(({ theme }) => ({
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px'
+}));
 
 const InfoRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '12px 0',
+  alignItems: 'flex-start',
+  padding: '10px 0',
   borderBottom: `1px solid ${alpha('#1F64BF', 0.05)}`,
+  transition: 'all 0.15s ease',
   '&:last-child': {
     borderBottom: 'none'
+  },
+  '&:hover': {
+    backgroundColor: alpha('#1F64BF', 0.02),
+    borderRadius: '8px',
+    padding: '10px 8px'
   }
 }));
 
 const InfoLabel = styled(Typography)(({ theme }) => ({
   fontFamily: "'Mona Sans'",
-  fontWeight: 500,
-  color: '#6b7280',
-  fontSize: '0.9rem'
+  fontWeight: 600,
+  color: '#6B7280',
+  fontSize: '0.875rem',
+  letterSpacing: '0.01em'
 }));
 
 const InfoValue = styled(Typography)(({ theme }) => ({
   fontFamily: "'Mona Sans'",
   fontWeight: 600,
   color: '#010326',
-  fontSize: '0.9rem'
+  fontSize: '0.9rem',
+  textAlign: 'right'
+}));
+
+const SectionHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  marginBottom: '16px',
+  paddingBottom: '12px',
+  borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontFamily: "'Mona Sans'",
+  fontWeight: 700,
+  fontSize: '0.95rem',
+  color: '#010326',
+  letterSpacing: '-0.01em'
+}));
+
+const ActionButtonsContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '10px',
+  flexWrap: 'wrap',
+  padding: '20px 32px',
+  background: 'white',
+  borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  justifyContent: 'center',
+  alignItems: 'center'
+}));
+
+const ModernButton = styled(Button)(({ variant: buttonVariant }) => {
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
+      color: 'white',
+      boxShadow: '0 4px 16px rgba(31, 100, 191, 0.3)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
+        boxShadow: '0 6px 24px rgba(31, 100, 191, 0.4)',
+        transform: 'translateY(-2px)'
+      }
+    },
+    success: {
+      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      color: 'white',
+      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        boxShadow: '0 6px 24px rgba(16, 185, 129, 0.4)',
+        transform: 'translateY(-2px)'
+      }
+    },
+    info: {
+      background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+      color: 'white',
+      boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+        boxShadow: '0 6px 24px rgba(59, 130, 246, 0.4)',
+        transform: 'translateY(-2px)'
+      }
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
+      color: 'white',
+      boxShadow: '0 4px 16px rgba(249, 115, 22, 0.3)',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #EA580C 0%, #DC2626 100%)',
+        boxShadow: '0 6px 24px rgba(249, 115, 22, 0.4)',
+        transform: 'translateY(-2px)'
+      }
+    },
+    outlined: {
+      borderColor: '#1F64BF',
+      color: '#1F64BF',
+      background: 'white',
+      border: '2px solid',
+      '&:hover': {
+        borderColor: '#032CA6',
+        background: alpha('#1F64BF', 0.05),
+        transform: 'translateY(-2px)'
+      }
+    }
+  };
+
+  const selectedVariant = variants[buttonVariant] || variants.outlined;
+
+  return {
+    borderRadius: '14px',
+    textTransform: 'none',
+    fontFamily: "'Mona Sans'",
+    fontWeight: 600,
+    fontSize: '0.875rem',
+    padding: '10px 20px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ...selectedVariant
+  };
+});
+
+const ProductItem = styled(Box)(({ theme }) => ({
+  padding: '14px',
+  borderRadius: '12px',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  background: 'white',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(31, 100, 191, 0.08)',
+    transform: 'translateY(-1px)'
+  }
 }));
 
 // ================ COMPONENTE PRINCIPAL ================
@@ -215,28 +333,33 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
   const [showQualityControl, setShowQualityControl] = useState(false);
 
   // Hook para estado de pagos (temporalmente deshabilitado)
-  // const {
-  //   paymentStatus,
-  //   loading: paymentLoading,
-  //   refetch: refetchPayments
-  // } = useOrderPaymentStatus(order?._id);
-  
-  // Valores temporales mientras implementamos correctamente
   const paymentStatus = null;
   const paymentLoading = false;
   const refetchPayments = () => {};
 
-
   // Formatear fecha
   const formatDate = (date) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    
+    try {
+      const dateObj = new Date(date);
+      
+      // Verificar si la fecha es válida
+      if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida';
+      }
+      
+      return dateObj.toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', error, 'Fecha original:', date);
+      return 'Error en fecha';
+    }
   };
 
   // Obtener icono por estado
@@ -273,16 +396,13 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     { value: 'refunded', label: 'Reembolsado', icon: CheckCircle }
   ];
 
-  // Función auxiliar para obtener el teléfono (compatible con órdenes existentes y nuevas)
+  // Función auxiliar para obtener el teléfono
   const getUserPhone = () => {
-    // Usar orderDetails si está disponible (datos del backend), sino usar order (datos de la lista)
     const currentOrder = orderDetails || order;
     const currentUser = currentOrder?.user;
-    
     const phoneNumber = currentUser?.phoneNumber;
     const phone = currentUser?.phone;
     const result = phoneNumber || phone || null;
-    
     return result;
   };
 
@@ -292,13 +412,11 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
   // Verificar si tiene teléfono para WhatsApp
   const hasPhoneNumber = getUserPhone() && getUserPhone().trim() !== '';
 
-
   // Cargar detalles completos de la orden cuando se abra el modal
   useEffect(() => {
     if (open && order && order._id) {
       setLoading(true);
       
-      // Hacer consulta al backend para obtener detalles completos
       fetch(`http://localhost:4000/api/orders/${order._id}`, {
         method: 'GET',
         headers: {
@@ -323,7 +441,6 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
 
   // Función helper para SweetAlert2 con configuración robusta
   const showSwalAlert = async (config) => {
-    // Forzar renderizado fuera del contexto del MUI Dialog
     const swalConfig = {
       ...config,
       customClass: 'swal-highest-z-index',
@@ -331,11 +448,9 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
       allowEscapeKey: true,
       focusConfirm: false,
       didOpen: () => {
-        // Forzar z-index después de abrir
         const swalContainer = document.querySelector('.swal2-container');
         if (swalContainer) {
           swalContainer.style.zIndex = '1000000';
-          // Mover al body si está dentro del modal
           if (swalContainer.parentElement !== document.body) {
             document.body.appendChild(swalContainer);
           }
@@ -350,13 +465,11 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
   const handleStatusChange = async () => {
     if (!newStatus || newStatus === order?.status) return;
     
-    // ✅ OBTENER INFORMACIÓN DE VALIDACIÓN DE PAGO
     const paymentMethod = order?.payment?.method;
     const paymentStatus = order?.payment?.status;
     const validationInfo = getPaymentValidationInfo(paymentMethod, order?.status);
     const restrictions = getPaymentRestrictions(paymentMethod, newStatus);
     
-    // Mostrar confirmación con SweetAlert2
     const result = await showSwalAlert({
       title: '¿Confirmar cambio de estado?',
       html: `
@@ -391,24 +504,16 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     
     setStatusChangeLoading(true);
     try {
-      console.log('🔄 Cambiando estado de orden:', order._id);
-      console.log('🔄 Nuevo estado:', newStatus);
-      console.log('🔄 URL:', `/orders/${order._id}/status`);
-      
-      // Llamada al API para cambiar el estado
       const response = await apiClient.put(`/orders/${order._id}/status`, {
         newStatus,
         reason: `Cambio de estado por administrador`
       });
       
       if (response.success) {
-        // Llamar callback del padre para actualizar la UI
         onStatusChange?.(order?._id, newStatus);
-        
         setShowStatusChange(false);
         setNewStatus('');
         
-        // Mostrar mensaje de éxito con SweetAlert2
         await showSwalAlert({
           title: '¡Estado cambiado!',
           text: `El estado se cambió exitosamente a ${availableStatuses.find(s => s.value === newStatus)?.label || newStatus}`,
@@ -421,7 +526,6 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     } catch (error) {
       console.error('Error cambiando estado:', error);
       
-      // Mostrar error con SweetAlert2
       await showSwalAlert({
         title: 'Error',
         text: error.message || 'Error cambiando estado',
@@ -435,14 +539,12 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
 
   // Configurar SweetAlert2 globalmente con z-index alto
   useEffect(() => {
-    // Configurar SweetAlert2 globalmente
     Swal.mixin({
       customClass: {
         popup: 'swal-highest-z-index'
       }
     });
     
-    // Agregar CSS global para SweetAlert2
     const style = document.createElement('style');
     style.textContent = `
       .swal2-container {
@@ -488,78 +590,26 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     }
   }, [showStatusChange]);
 
-  // Timeline de estados
-  const renderTimeline = () => {
-    if (!order?.statusHistory) return null;
-
-    return (
-      <Box sx={{ pl: 2 }}>
-        {order.statusHistory.map((entry, index) => {
-          const StatusIcon = getStatusIcon(entry.status);
-          const isLast = index === order.statusHistory.length - 1;
-          
-          return (
-            <Box key={index} sx={{ display: 'flex', mb: 3 }}>
-              {/* Línea vertical y círculo */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2 }}>
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    backgroundColor: isLast ? '#1F64BF' : alpha('#1F64BF', 0.3),
-                    color: isLast ? 'white' : '#1F64BF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <StatusIcon size={16} />
-                </Box>
-                {!isLast && (
-                  <Box
-                    sx={{
-                      width: 2,
-                      height: 40,
-                      backgroundColor: alpha('#1F64BF', 0.2),
-                      mt: 1
-                    }}
-                  />
-                )}
-              </Box>
-              
-              {/* Contenido */}
-              <Box sx={{ flex: 1, pt: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                  {entry.statusLabel || entry.status}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {formatDate(entry.timestamp)}
-                </Typography>
-                {entry.notes && (
-                  <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic' }}>
-                    {entry.notes}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
-    );
-  };
-
-  // Renderizar información de la orden (contenido por defecto)
+  // Renderizar información de la orden
   const renderOrderInformation = () => {
     return (
-      <Grid container spacing={1} sx={{ height: '100%', width: '100%' }}>
-        {/* Columna 1: Detalles del Pedido - 2 columnas */}
-        <Grid item xs={12} lg={6}>
-          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
-              <Typography variant="h6" sx={{ mb: 1.5, fontFamily: "'Mona Sans'", fontWeight: 600, fontSize: '1rem' }}>
-                Detalles del Pedido
-              </Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 3,
+        width: '100%',
+        maxWidth: '1200px',
+        mx: 'auto'
+      }}>
+        {/* Primera fila: Información básica */}
+        <Grid container spacing={3} justifyContent="center">
+          {/* Detalles del Pedido */}
+          <Grid item xs={12} md={6}>
+            <InfoCard sx={{ height: 'auto' }}>
+              <SectionHeader>
+                <Receipt size={24} color="#1F64BF" weight="duotone" />
+                <SectionTitle>Detalles del Pedido</SectionTitle>
+              </SectionHeader>
               
               <InfoRow>
                 <InfoLabel>Número de orden:</InfoLabel>
@@ -582,7 +632,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
               
               <InfoRow>
                 <InfoLabel>Total:</InfoLabel>
-                <InfoValue sx={{ color: '#1F64BF', fontWeight: 700 }}>
+                <InfoValue sx={{ color: '#1F64BF', fontWeight: 700, fontSize: '1.1rem' }}>
                   {order?.formattedTotal}
                 </InfoValue>
               </InfoRow>
@@ -600,21 +650,24 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
                     color="secondary" 
                     size="small"
                     variant="outlined"
+                    sx={{ 
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                      borderWidth: '2px'
+                    }}
                   />
                 </InfoRow>
               )}
-            </CardContent>
-          </ModernCard>
-        </Grid>
+            </InfoCard>
+          </Grid>
 
-        {/* Columna 2: Información del Cliente */}
-        <Grid item xs={12} md={3}>
-          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                <User size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                Información del Cliente
-              </Typography>
+          {/* Información del Cliente */}
+          <Grid item xs={12} md={6}>
+            <InfoCard sx={{ height: 'auto' }}>
+              <SectionHeader>
+                <User size={24} color="#1F64BF" weight="duotone" />
+                <SectionTitle>Información del Cliente</SectionTitle>
+              </SectionHeader>
               
               <InfoRow>
                 <InfoLabel>Nombre:</InfoLabel>
@@ -623,7 +676,12 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
               
               <InfoRow>
                 <InfoLabel>Email:</InfoLabel>
-                <InfoValue>{order?.user?.email || 'N/A'}</InfoValue>
+                <InfoValue sx={{ 
+                  fontSize: '0.8rem',
+                  wordBreak: 'break-word'
+                }}>
+                  {order?.user?.email || 'N/A'}
+                </InfoValue>
               </InfoRow>
               
               <InfoRow>
@@ -634,114 +692,179 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
               {order?.user?.totalOrders && (
                 <InfoRow>
                   <InfoLabel>Total de pedidos:</InfoLabel>
-                  <InfoValue>{order.user.totalOrders}</InfoValue>
+                  <Chip 
+                    label={`${order.user.totalOrders} pedidos`}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      color: 'white',
+                      fontWeight: 600,
+                      borderRadius: '10px'
+                    }}
+                  />
                 </InfoRow>
               )}
-            </CardContent>
-          </ModernCard>
+            </InfoCard>
+          </Grid>
         </Grid>
 
-        {/* Columna 3: Información de Entrega */}
-        <Grid item xs={12} md={3}>
-          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                <Truck size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                Información de Entrega
-              </Typography>
+        {/* Segunda fila: Información de entrega y productos */}
+        <Grid container spacing={3} justifyContent="center">
+          {/* Información de Entrega */}
+          <Grid item xs={12} md={6}>
+            <InfoCard sx={{ height: 'auto' }}>
+              <SectionHeader>
+                <Truck size={24} color="#1F64BF" weight="duotone" />
+                <SectionTitle>Información de Entrega</SectionTitle>
+              </SectionHeader>
               
               <InfoRow>
                 <InfoLabel>Tipo de entrega:</InfoLabel>
-                <InfoValue>{order?.deliveryLabel}</InfoValue>
+                <Chip
+                  label={order?.deliveryLabel}
+                  size="small"
+                  sx={{
+                    background: order?.deliveryType === 'delivery' 
+                      ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                      : 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
+                    color: 'white',
+                    fontWeight: 600,
+                    borderRadius: '10px'
+                  }}
+                />
               </InfoRow>
               
               {order?.deliveryType === 'delivery' && order?.deliveryAddress && (
                 <InfoRow>
                   <InfoLabel>Dirección:</InfoLabel>
-                  <InfoValue>
+                  <InfoValue sx={{ 
+                    textAlign: 'right',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.4
+                  }}>
                     {order.deliveryAddress.street}, {order.deliveryAddress.city}
-                    {order.deliveryAddress.phone && ` • Tel: ${order.deliveryAddress.phone}`}
+                    {order.deliveryAddress.phone && (
+                      <Box component="span" sx={{ display: 'block', color: '#6B7280', mt: 0.5 }}>
+                        📞 {order.deliveryAddress.phone}
+                      </Box>
+                    )}
                   </InfoValue>
                 </InfoRow>
               )}
-            </CardContent>
-          </ModernCard>
-        </Grid>
+            </InfoCard>
+          </Grid>
 
-        {/* Columna 4: Productos del Pedido */}
-        <Grid item xs={12} md={3}>
-          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                <Package size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                Productos del Pedido
-              </Typography>
+          {/* Productos del Pedido */}
+          <Grid item xs={12} md={6}>
+            <InfoCard sx={{ height: 'auto' }}>
+              <SectionHeader>
+                <Package size={24} color="#1F64BF" weight="duotone" />
+                <SectionTitle>Productos del Pedido</SectionTitle>
+              </SectionHeader>
               
-              {order?.items?.map((item, index) => (
-                <Box key={index} sx={{ 
-                  p: 2, 
-                  border: `1px solid ${alpha('#1F64BF', 0.1)}`, 
-                  borderRadius: '8px',
-                  mb: index < order.items.length - 1 ? 2 : 0
-                }}>
-                  <Grid container spacing={2} alignItems="center">
-                    {item.product?.images?.[0] && (
-                      <Grid item xs="auto">
-                        <Box
-                          component="img"
-                          src={item.product.images[0]}
-                          alt={item.product.name}
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            objectFit: 'cover',
-                            borderRadius: '8px'
-                          }}
-                        />
-                      </Grid>
-                    )}
-                    <Grid item xs>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontFamily: "'Mona Sans'" }}>
-                        {item.product?.name || 'Producto personalizado'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Cantidad: {item.quantity} • Precio: ${item.price || 0}
-                      </Typography>
-                      {item.design && (
-                        <Typography variant="body2" color="text.secondary">
-                          Diseño: {item.design.name}
-                        </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {order?.items?.map((item, index) => (
+                  <ProductItem key={index}>
+                    <Grid container spacing={2} alignItems="center">
+                      {item.product?.images?.[0] && (
+                        <Grid item xs="auto">
+                          <Box
+                            component="img"
+                            src={item.product.images[0]}
+                            alt={item.product.name}
+                            sx={{
+                              width: 60,
+                              height: 60,
+                              objectFit: 'cover',
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }}
+                          />
+                        </Grid>
                       )}
+                      <Grid item xs>
+                        <Typography variant="subtitle1" sx={{ 
+                          fontWeight: 700, 
+                          fontFamily: "'Mona Sans'",
+                          color: '#010326',
+                          mb: 0.5,
+                          fontSize: '0.9rem'
+                        }}>
+                          {item.product?.name || 'Producto personalizado'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                          <Chip 
+                            label={`Cantidad: ${item.quantity}`}
+                            size="small"
+                            sx={{
+                              backgroundColor: alpha('#1F64BF', 0.1),
+                              color: '#1F64BF',
+                              fontWeight: 600,
+                              borderRadius: '8px',
+                              fontSize: '0.75rem'
+                            }}
+                          />
+                          <Chip 
+                            label={`${item.price || 0}`}
+                            size="small"
+                            sx={{
+                              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                              color: 'white',
+                              fontWeight: 600,
+                              borderRadius: '8px',
+                              fontSize: '0.75rem'
+                            }}
+                          />
+                        </Box>
+                        {item.design && (
+                          <Typography variant="body2" sx={{ 
+                            color: '#6B7280',
+                            fontFamily: "'Mona Sans'",
+                            fontSize: '0.8rem'
+                          }}>
+                            🎨 Diseño: {item.design.name}
+                          </Typography>
+                        )}
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </Box>
-              ))}
-            </CardContent>
-          </ModernCard>
+                  </ProductItem>
+                ))}
+              </Box>
+            </InfoCard>
+          </Grid>
         </Grid>
 
-        {/* Notas */}
+
+        {/* Notas del Cliente - Full Width */}
         {order?.clientNotes && (
-          <Grid item xs={12}>
-            <ModernCard>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                  Notas del Cliente
-                </Typography>
-                <Typography variant="body1" sx={{ 
-                  fontFamily: "'Mona Sans'",
-                  p: 2,
-                  backgroundColor: alpha('#1F64BF', 0.05),
-                  borderRadius: '8px',
-                  fontStyle: 'italic'
+          <Grid container justifyContent="center">
+            <Grid item xs={12}>
+              <ModernCard sx={{ p: 3 }}>
+                <SectionHeader>
+                  <Receipt size={24} color="#1F64BF" weight="duotone" />
+                  <SectionTitle>Notas del Cliente</SectionTitle>
+                </SectionHeader>
+                <Box sx={{ 
+                  p: 3,
+                  backgroundColor: alpha('#1F64BF', 0.04),
+                  borderRadius: '16px',
+                  borderLeft: '4px solid #1F64BF'
                 }}>
-                  "{order.clientNotes}"
-                </Typography>
-              </CardContent>
-            </ModernCard>
+                  <Typography variant="body1" sx={{ 
+                    fontFamily: "'Mona Sans'",
+                    fontStyle: 'italic',
+                    color: '#374151',
+                    lineHeight: 1.8,
+                    fontSize: '0.95rem'
+                  }}>
+                    "{order.clientNotes}"
+                  </Typography>
+                </Box>
+              </ModernCard>
+            </Grid>
           </Grid>
         )}
-      </Grid>
+      </Box>
     );
   };
 
@@ -751,17 +874,43 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     <StyledDialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitleStyled>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Package size={24} color="#1F64BF" />
+          <Box sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '14px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <Package size={24} weight="duotone" />
+          </Box>
           <Box>
-            <Typography variant="h5" component="div" sx={{ fontFamily: "'Mona Sans'", fontWeight: 700 }}>
+            <Typography variant="h5" component="div" sx={{ 
+              fontFamily: "'Mona Sans'", 
+              fontWeight: 700,
+              letterSpacing: '-0.02em'
+            }}>
               Orden #{order.orderNumber}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
               {formatDate(order.createdAt)}
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={onClose} sx={{ color: '#032CA6' }}>
+        <IconButton 
+          onClick={onClose} 
+          sx={{ 
+            color: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              transform: 'rotate(90deg)'
+            },
+            transition: 'all 0.3s ease'
+          }}
+        >
           <X size={24} />
         </IconButton>
       </DialogTitleStyled>
@@ -771,216 +920,132 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        flex: 1
+        flex: 1,
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
       }}>
-        {/* Contenido principal - Información de la orden por defecto */}
+        {/* Botones de Acciones Rápidas */}
+        <ActionButtonsContainer>
+          <ModernButton
+            onClick={() => setShowPaymentDetails(true)}
+            variant="success"
+            size="small"
+            startIcon={<CurrencyCircleDollar size={18} weight="duotone" />}
+          >
+            Ver Pagos
+          </ModernButton>
 
-        {/* Botones de Acciones Rápidas - ARRIBA */}
-        <Box sx={{ p: 2, borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}` }}>
-          <Typography variant="subtitle2" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600, color: '#032CA6' }}>
-            🚀 Acciones Rápidas
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              onClick={() => {
-                console.log('🔍 [OrderDetailModal] Abriendo detalles de pago para orden:', order?._id);
-                setShowPaymentDetails(true);
-              }}
-              variant="contained"
-              size="small"
-              startIcon={<CurrencyCircleDollar size={16} />}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontFamily: "'Mona Sans'",
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transition: 'background 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                },
-                '&:active': {
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                }
-              }}
+          <ModernButton
+            onClick={() => setShowTimeline(true)}
+            variant="info"
+            size="small"
+            startIcon={<ChartLineUp size={18} weight="duotone" />}
+          >
+            Timeline
+          </ModernButton>
+
+          <ModernButton
+            onClick={() => setShowQualityControl(true)}
+            variant="success"
+            size="small"
+            startIcon={<CheckCircle size={18} weight="duotone" />}
+          >
+            Control de Calidad
+          </ModernButton>
+
+          <ModernButton
+            onClick={() => setShowStatusChange(true)}
+            variant="outlined"
+            size="small"
+            startIcon={<ArrowClockwise size={18} weight="duotone" />}
+          >
+            Cambiar Estado
+          </ModernButton>
+
+          {canUploadPhotos && (
+            <Tooltip 
+              title={!hasPhoneNumber ? "Se necesita número de teléfono para enviar por WhatsApp" : ""}
+              placement="top"
             >
-              Ver Pagos
-            </Button>
+              <span>
+                <ModernButton
+                  onClick={() => setShowPhotoUpload(true)}
+                  variant="warning"
+                  size="small"
+                  disabled={!canUploadPhotos}
+                  startIcon={<Camera size={18} weight="duotone" />}
+                >
+                  📸 Subir Foto
+                </ModernButton>
+              </span>
+            </Tooltip>
+          )}
+        </ActionButtonsContainer>
 
-            <Button
-              onClick={() => {
-                console.log('📅 [OrderDetailModal] Abriendo timeline para orden:', order?._id);
-                setShowTimeline(true);
-              }}
-              variant="contained"
-              size="small"
-              startIcon={<ChartLineUp size={16} />}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontFamily: "'Mona Sans'",
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transition: 'background 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                  boxShadow: '0 6px 20px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                },
-                '&:active': {
-                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Timeline
-            </Button>
-
-            {/* Botón de Control de Calidad */}
-            <Button
-              onClick={() => {
-                console.log('🔍 [OrderDetailModal] Abriendo panel de control de calidad para orden:', order?._id);
-                setShowQualityControl(true);
-              }}
-              variant="contained"
-              size="small"
-              startIcon={<CheckCircle size={16} />}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontFamily: "'Mona Sans'",
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transition: 'background 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                },
-                '&:active': {
-                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Control de Calidad
-            </Button>
-
-            {/* Botón de Cambio de Estado */}
-            <Button
-              onClick={() => setShowStatusChange(true)}
-              variant="outlined"
-              size="small"
-              startIcon={<ArrowClockwise size={16} />}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontFamily: "'Mona Sans'",
-                fontWeight: 600,
-                borderColor: '#6366f1',
-                color: '#6366f1',
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.1) 100%)',
-                boxShadow: '0 4px 16px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                transition: 'background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
-                '&:hover': {
-                  borderColor: '#4f46e5',
-                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.15) 100%)',
-                  boxShadow: '0 6px 20px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                },
-                '&:active': {
-                  boxShadow: '0 2px 8px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Cambiar Estado
-            </Button>
-
-            {/* Botón de Subir Foto - Solo si está en etapa válida */}
-            {canUploadPhotos && (
-              <Tooltip 
-                title={!hasPhoneNumber ? "Se necesita número de teléfono para enviar por WhatsApp" : ""}
-                placement="top"
-              >
-                <span>
-                  <Button
-                    onClick={() => {
-                      console.log('📸 [OrderDetailModal] Abriendo subida de foto para orden:', order?._id);
-                      setShowPhotoUpload(true);
-                    }}
-                    variant="contained"
-                    size="small"
-                    startIcon={<Camera size={16} />}
-                    disabled={!canUploadPhotos}
-                    sx={{
-                      borderRadius: '12px',
-                      textTransform: 'none',
-                      fontFamily: "'Mona Sans'",
-                      fontWeight: 600,
-                      background: hasPhoneNumber 
-                        ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' 
-                        : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
-                      boxShadow: hasPhoneNumber 
-                        ? '0 4px 16px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                        : '0 4px 16px rgba(156, 163, 175, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      transition: 'background 0.2s ease, box-shadow 0.2s ease',
-                      '&:hover': {
-                        background: hasPhoneNumber 
-                          ? 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)'
-                          : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
-                        boxShadow: hasPhoneNumber 
-                          ? '0 6px 20px rgba(249, 115, 22, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                          : '0 4px 16px rgba(156, 163, 175, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                      },
-                      '&:active': {
-                        boxShadow: hasPhoneNumber 
-                          ? '0 2px 8px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                          : '0 2px 8px rgba(156, 163, 175, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                      }
-                    }}
-                  >
-                    📸 Subir Foto
-                  </Button>
-                </span>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
-
-        {/* Contenido principal - Información de la orden */}
+        {/* Contenido principal */}
         <Box sx={{ 
-          p: 3, 
+          p: 4, 
           flex: 1,
-          overflow: 'hidden',
+          overflow: 'auto',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          '&::-webkit-scrollbar': {
+            width: '8px'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: alpha('#1F64BF', 0.05),
+            borderRadius: '4px'
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: alpha('#1F64BF', 0.3),
+            borderRadius: '4px',
+            '&:hover': {
+              background: alpha('#1F64BF', 0.5)
+            }
+          }
         }}>
-          {renderOrderInformation()}
+          {loading ? (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flex: 1,
+              gap: 3
+            }}>
+              <CircularProgress 
+                size={60} 
+                sx={{ 
+                  color: '#1F64BF'
+                }} 
+              />
+              <Typography variant="h6" sx={{ 
+                fontFamily: "'Mona Sans'",
+                fontWeight: 600,
+                color: '#6B7280'
+              }}>
+                Cargando detalles...
+              </Typography>
+            </Box>
+          ) : (
+            renderOrderInformation()
+          )}
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha('#1F64BF', 0.08)}`, justifyContent: 'flex-end' }}>
-        <Button
+      <DialogActions sx={{ 
+        p: 3, 
+        borderTop: `1px solid ${alpha('#1F64BF', 0.08)}`,
+        background: 'white',
+        justifyContent: 'flex-end' 
+      }}>
+        <ModernButton
           onClick={onClose}
           variant="outlined"
-          sx={{
-            borderRadius: '12px',
-            textTransform: 'none',
-            fontFamily: "'Mona Sans'",
-            fontWeight: 600,
-            borderColor: '#6b7280',
-            color: '#6b7280',
-            '&:hover': {
-              borderColor: '#4b5563',
-              backgroundColor: alpha('#6b7280', 0.04)
-            }
-          }}
         >
           Cerrar
-        </Button>
+        </ModernButton>
       </DialogActions>
 
       {/* Modal de Cambio de Estado */}
@@ -992,32 +1057,12 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
           fullWidth
           PaperProps={{
             sx: {
-              borderRadius: '16px',
-              boxShadow: '0 24px 64px rgba(1, 3, 38, 0.12)',
-              zIndex: 2000,
-              '& .MuiSelect-select': {
-                zIndex: '99999 !important'
-              },
-              '& .MuiPopover-root': {
-                zIndex: '99999 !important'
-              },
-              '& .MuiMenu-root': {
-                zIndex: '99999 !important'
-              }
+              borderRadius: '20px',
+              boxShadow: '0 24px 64px rgba(31, 100, 191, 0.15)',
+              zIndex: 2000
             }
           }}
-          sx={{ 
-            zIndex: 2000,
-            '& .MuiSelect-select': {
-              zIndex: '99999 !important'
-            },
-            '& .MuiPopover-root': {
-              zIndex: '99999 !important'
-            },
-            '& .MuiMenu-root': {
-              zIndex: '99999 !important'
-            }
-          }}
+          sx={{ zIndex: 2000 }}
           slotProps={{
             backdrop: {
               sx: { zIndex: 2000 }
@@ -1029,10 +1074,10 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
             justifyContent: 'space-between', 
             alignItems: 'center',
             pb: 2,
-            borderBottom: '1px solid #e5e7eb'
+            borderBottom: `1px solid ${alpha('#1F64BF', 0.1)}`
           }}>
             <Box>
-              <Typography variant="h6" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
+              <Typography variant="h6" sx={{ fontFamily: "'Mona Sans'", fontWeight: 700 }}>
                 Cambiar Estado del Pedido
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -1044,9 +1089,16 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ px: 3, py: 2 }}>
-            <Alert severity="info" sx={{ mb: 3, borderRadius: '8px' }}>
-              <Typography variant="body2">
+          <DialogContent sx={{ px: 3, py: 3 }}>
+            <Alert 
+              severity="info" 
+              sx={{ 
+                mb: 3, 
+                borderRadius: '12px',
+                border: `1px solid ${alpha('#3B82F6', 0.2)}`
+              }}
+            >
+              <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'" }}>
                 <strong>Estado actual:</strong> {availableStatuses.find(s => s.value === order?.status)?.label || order?.status}
               </Typography>
             </Alert>
@@ -1057,15 +1109,18 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
                 label="Nuevo Estado"
+                sx={{
+                  borderRadius: '12px',
+                  fontFamily: "'Mona Sans'"
+                }}
                 MenuProps={{
                   container: () => document.body,
                   PaperProps: {
                     sx: {
                       zIndex: 99999,
                       position: 'fixed',
-                      '& *': {
-                        zIndex: '99999 !important'
-                      }
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 32px rgba(31, 100, 191, 0.15)'
                     }
                   },
                   anchorOrigin: {
@@ -1078,16 +1133,19 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
                   },
                   disablePortal: false,
                   disableScrollLock: true
-                }}              >
+                }}
+              >
                 {availableStatuses
                   .filter(status => status.value !== order?.status)
                   .map((status) => {
                     const StatusIcon = status.icon;
                     return (
                       <MenuItem key={status.value} value={status.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <StatusIcon size={16} />
-                          {status.label}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <StatusIcon size={18} weight="duotone" />
+                          <Typography sx={{ fontFamily: "'Mona Sans'", fontWeight: 500 }}>
+                            {status.label}
+                          </Typography>
                         </Box>
                       </MenuItem>
                     );
@@ -1097,31 +1155,21 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
           </DialogContent>
 
           <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button 
+            <ModernButton 
               onClick={() => setShowStatusChange(false)} 
               variant="outlined"
               disabled={statusChangeLoading}
             >
               Cancelar
-            </Button>
-            <Button 
+            </ModernButton>
+            <ModernButton 
               onClick={handleStatusChange}
-              variant="contained"
+              variant="primary"
               disabled={!newStatus || statusChangeLoading}
               startIcon={statusChangeLoading ? <CircularProgress size={16} /> : <ArrowClockwise size={16} />}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-                fontFamily: "'Mona Sans'",
-                fontWeight: 600,
-                bgcolor: '#6366f1',
-                '&:hover': {
-                  bgcolor: '#4f46e5'
-                }
-              }}
             >
               {statusChangeLoading ? 'Cambiando...' : 'Cambiar Estado'}
-            </Button>
+            </ModernButton>
           </DialogActions>
         </Dialog>
       </Portal>
@@ -1154,7 +1202,6 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
         orderId={order?._id}
         orderNumber={order?.orderNumber}
         onPhotoUploaded={() => {
-          // Opcional: recargar datos si es necesario
           console.log('Foto subida exitosamente');
         }}
       />
@@ -1163,15 +1210,3 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
 };
 
 export default OrderDetailsModal;
-
-// Inyectar CSS para z-index alto de SweetAlert2
-const style = document.createElement('style');
-style.textContent = `
-  .swal-highest-z-index {
-    z-index: 99999 !important;
-  }
-  .swal-highest-z-index .swal2-container {
-    z-index: 99999 !important;
-  }
-`;
-document.head.appendChild(style);

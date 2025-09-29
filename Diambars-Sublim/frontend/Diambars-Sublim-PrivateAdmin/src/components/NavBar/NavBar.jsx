@@ -937,12 +937,6 @@ const DROPDOWN_MENUS = {
         description: "Gestión de productos y servicios"
       },
       {
-        to: "/orders",
-        label: "Pedidos",
-        icon: <ShoppingCart size={18} weight="duotone" />,
-        description: "Control de pedidos y órdenes"
-      },
-      {
         to: "/category-management",
         label: "Categorías",
         icon: <Folders size={18} weight="duotone" />,
@@ -973,16 +967,10 @@ const DROPDOWN_MENUS = {
         description: "Herramientas de diseño"
       },
       {
-        to: "/quotes",
-        label: "Cotización",
-        icon: <Calculator size={18} weight="duotone" />,
-        description: "Gestión de presupuestos"
-      },
-      {
-        to: "/manual-orders",
-        label: "Pedido Manual",
-        icon: <Plus size={18} weight="duotone" />,
-        description: "Crear pedidos manualmente"
+        to: "/orders",
+        label: "Pedidos",
+        icon: <ShoppingCart size={18} weight="duotone" />,
+        description: "Control de pedidos y órdenes"
       },
     ]
   },

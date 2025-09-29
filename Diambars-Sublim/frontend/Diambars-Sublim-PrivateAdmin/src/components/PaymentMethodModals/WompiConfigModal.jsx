@@ -28,11 +28,11 @@ import {
   ExternalLink
 } from '@phosphor-icons/react';
 import { alpha } from '@mui/material/styles';
-import { usePaymentConfigActions } from '../../hooks/usePaymentConfig';
+import paymentConfigService from '../../api/PaymentConfigService';
 import toast from 'react-hot-toast';
 
 const WompiConfigModal = ({ open, onClose, selectedMethod, mode }) => {
-  const { updateConfig, loading } = usePaymentConfigActions();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     publicKey: '',
     privateKey: '',
@@ -49,6 +49,23 @@ const WompiConfigModal = ({ open, onClose, selectedMethod, mode }) => {
     privateKey: null,
     webhookSecret: null
   });
+
+  // Función para actualizar configuración
+  const updateConfig = async (configData) => {
+    try {
+      setLoading(true);
+      const response = await paymentConfigService.updatePaymentConfig('wompi', configData);
+      if (response.success) {
+        return response.config;
+      }
+      throw new Error(response.message);
+    } catch (error) {
+      console.error('Error actualizando configuración:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Cargar datos existentes
   useEffect(() => {

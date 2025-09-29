@@ -25,15 +25,16 @@ import {
   CreditCard,
   X
 } from '@phosphor-icons/react';
-import { usePaymentConfigStats } from '../../hooks/usePaymentConfig';
+import paymentConfigService from '../../api/PaymentConfigService';
 
-const PaymentStatsModal = ({ open, onClose }) => {
+const PaymentStatsModal = ({ open, onClose, stats }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isExtraSmall = useMediaQuery(theme.breakpoints.down(480));
 
-  // Hooks
-  const { stats, loading, error } = usePaymentConfigStats();
+  // Estados locales
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Formatear moneda
   const formatCurrency = (amount) => {
@@ -129,18 +130,7 @@ const PaymentStatsModal = ({ open, onClose }) => {
       </DialogTitle>
 
       <DialogContent sx={{ p: { xs: 3, md: 4 }, maxHeight: 'calc(90vh - 180px)', overflowY: 'auto' }}>
-        {loading ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              py: 8
-            }}
-          >
-            <CircularProgress size={48} thickness={3.6} />
-          </Box>
-        ) : error ? (
+        {!stats ? (
           <Box
             sx={{
               textAlign: 'center',
@@ -150,12 +140,12 @@ const PaymentStatsModal = ({ open, onClose }) => {
             <Typography
               variant="h6"
               sx={{
-                color: '#EF4444',
+                color: '#64748B',
                 fontFamily: "'Mona Sans'",
                 mb: 2
               }}
             >
-              Error cargando estadísticas
+              No hay estadísticas disponibles
             </Typography>
             <Typography
               variant="body2"
@@ -164,10 +154,10 @@ const PaymentStatsModal = ({ open, onClose }) => {
                 fontFamily: "'Mona Sans'"
               }}
             >
-              {error}
+              Las estadísticas se generarán cuando tengas métodos de pago configurados
             </Typography>
           </Box>
-        ) : stats ? (
+        ) : (
           <Stack spacing={4}>
             {/* Resumen general */}
             <Paper
@@ -474,39 +464,12 @@ const PaymentStatsModal = ({ open, onClose }) => {
                       fontFamily: "'Mona Sans'"
                     }}
                   >
-                    {(stats.totalMethods || 0) - (stats.activeMethods || 0)}
+                    {stats.inactiveMethods || 0}
                   </Typography>
                 </Box>
               </Stack>
             </Paper>
           </Stack>
-        ) : (
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: 8
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                color: '#64748B',
-                fontFamily: "'Mona Sans'",
-                mb: 2
-              }}
-            >
-              No hay estadísticas disponibles
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#64748B',
-                fontFamily: "'Mona Sans'"
-              }}
-            >
-              Las estadísticas se generarán cuando tengas métodos de pago configurados
-            </Typography>
-          </Box>
         )}
       </DialogContent>
 

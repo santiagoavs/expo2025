@@ -82,7 +82,10 @@ const designElementSchema = new mongoose.Schema({
       type: String, 
       default: 'Arial',
       enum: ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 
-             'Verdana', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Tahoma']
+             'Verdana', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Tahoma',
+             'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Source Sans Pro',
+             'Nunito', 'Raleway', 'Ubuntu', 'Playfair Display', 'Merriweather',
+             'Oswald', 'PT Sans', 'Droid Sans', 'Crimson Text', 'Fira Sans']
     },
     fontSize: { 
       type: Number, 

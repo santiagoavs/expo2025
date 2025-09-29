@@ -250,28 +250,31 @@ paymentConfigController.getPaymentConfigStats = async (req, res) => {
   try {
     console.log('📊 [PaymentConfig] Obteniendo estadísticas');
 
-    const totalConfigs = await PaymentConfig.countDocuments();
-    const enabledConfigs = await PaymentConfig.countDocuments({ enabled: true });
-    const disabledConfigs = await PaymentConfig.countDocuments({ enabled: false });
-
-    const configsByType = await PaymentConfig.aggregate([
-      {
-        $group: {
-          _id: '$type',
-          count: { $sum: 1 },
-          enabled: { $sum: { $cond: ['$enabled', 1, 0] } }
-        }
-      }
-    ]);
+    // Obtener todas las configuraciones
+    const configs = await PaymentConfig.find().sort({ createdAt: -1 });
+    
+    const totalMethods = configs.length;
+    const activeMethods = configs.filter(config => config.enabled).length;
+    
+    // Mapear configuraciones al formato esperado por el frontend
+    const methods = configs.map(config => ({
+      name: config.name || config.type,
+      type: config.type,
+      enabled: config.enabled,
+      hasConfig: !!(config.config && Object.keys(config.config).length > 0),
+      message: config.message,
+      createdAt: config.createdAt,
+      updatedAt: config.updatedAt
+    }));
 
     const stats = {
-      total: totalConfigs,
-      enabled: enabledConfigs,
-      disabled: disabledConfigs,
-      byType: configsByType
+      totalMethods,
+      activeMethods,
+      inactiveMethods: totalMethods - activeMethods,
+      methods
     };
 
-    console.log(`✅ [PaymentConfig] Estadísticas obtenidas: ${totalConfigs} total`);
+    console.log(`✅ [PaymentConfig] Estadísticas obtenidas: ${totalMethods} total, ${activeMethods} activos`);
 
     res.json({
       success: true,

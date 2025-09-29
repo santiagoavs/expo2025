@@ -26,7 +26,7 @@ reportController.getSalesReport = async (req, res) => {
     if (endDate) dateFilter.$lte = new Date(endDate);
 
     const matchFilter = {
-      'payment.status': 'paid',
+      'payment.status': { $in: ['paid', 'completed'] },
       ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
     };
 
@@ -174,7 +174,7 @@ reportController.getTopProductsReport = async (req, res) => {
     if (endDate) dateFilter.$lte = new Date(endDate);
 
     const matchFilter = {
-      'payment.status': 'paid',
+      'payment.status': { $in: ['paid', 'completed'] },
       ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
     };
 
@@ -342,7 +342,7 @@ reportController.getTopCustomersReport = async (req, res) => {
     if (endDate) dateFilter.$lte = new Date(endDate);
 
     const matchFilter = {
-      'payment.status': 'paid',
+      'payment.status': { $in: ['paid', 'completed'] },
       ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
     };
 

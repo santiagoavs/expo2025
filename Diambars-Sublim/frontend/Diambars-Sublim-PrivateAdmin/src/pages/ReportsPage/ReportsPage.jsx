@@ -45,6 +45,7 @@ import {
   useProductionReport,
   useReportExport
 } from '../../hooks/useReports';
+import ChartErrorBoundary from '../../components/ChartErrorBoundary/ChartErrorBoundary';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -614,15 +615,142 @@ const ReportsPage = () => {
 
   // Calcular estadísticas
   const stats = useMemo(() => {
+    console.log('📊 [ReportsPage] Dashboard Stats:', dashboardStats);
+    console.log('📊 [ReportsPage] Customers Data:', customersData);
+    console.log('📊 [ReportsPage] Products Data:', productsData);
+    
     if (!dashboardStats) return { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0 };
     
-    return {
-      totalRevenue: dashboardStats.totalRevenue || 0,
-      totalOrders: dashboardStats.totalOrders || 0,
-      totalCustomers: dashboardStats.totalCustomers || 0,
-      totalProducts: dashboardStats.totalProducts || 0
+    // El backend devuelve datos anidados, necesitamos extraerlos correctamente
+    const todayData = dashboardStats.today || {};
+    const monthData = dashboardStats.thisMonth || {};
+    const productionData = dashboardStats.production || {};
+    
+    // Calcular total de clientes únicos desde los datos de clientes
+    const totalCustomers = customersData?.customerStatistics?.totalCustomers || 0;
+    
+    // Calcular total de productos desde los datos de productos
+    const totalProducts = productsData?.topProductsByQuantity?.length || 0;
+    
+    const calculatedStats = {
+      totalRevenue: monthData.totalRevenue || todayData.totalRevenue || 0,
+      totalOrders: monthData.totalOrders || todayData.totalOrders || 0,
+      totalCustomers: totalCustomers,
+      totalProducts: totalProducts
     };
-  }, [dashboardStats]);
+    
+    console.log('📊 [ReportsPage] Calculated Stats:', calculatedStats);
+    return calculatedStats;
+  }, [dashboardStats, customersData, productsData]);
+
+  // Función para validar y formatear datos de gráficos
+  const getValidChartData = (data, type = 'bar') => {
+    console.log(`📊 [getValidChartData] Processing data for type ${type}:`, data);
+    
+    // Si los datos ya están formateados para gráficos, usarlos directamente
+    if (data && data.datasets && Array.isArray(data.datasets)) {
+      console.log('📊 [getValidChartData] Using pre-formatted chart data');
+      return data;
+    }
+    
+    // Si los datos son del backend (datos originales), formatearlos
+    if (data && (data.topProductsByQuantity || data.topCustomers || data.salesByPeriod)) {
+      if (type === 'pie' || type === 'doughnut') {
+        // Formatear para gráfico de pastel
+        if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
+          return {
+            labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
+            datasets: [{
+              data: data.topProductsByQuantity.map(item => item.totalQuantity || 0),
+              backgroundColor: data.topProductsByQuantity.map((_, index) => 
+                `hsl(${(index * 137.5) % 360}, 70%, 50%)`
+              ),
+              borderColor: data.topProductsByQuantity.map((_, index) => 
+                `hsl(${(index * 137.5) % 360}, 70%, 30%)`
+              ),
+              borderWidth: 1
+            }]
+          };
+        }
+      } else {
+        // Formatear para gráfico de barras
+        if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
+          return {
+            labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
+            datasets: [{
+              label: 'Cantidad Vendida',
+              data: data.topProductsByQuantity.map(item => item.totalQuantity || 0),
+              backgroundColor: 'rgba(31, 100, 191, 0.1)',
+              borderColor: '#1F64BF',
+              borderWidth: 2
+            }]
+          };
+        }
+        
+        if (data.topCustomers && Array.isArray(data.topCustomers)) {
+          return {
+            labels: data.topCustomers.map(item => item.userName || 'Cliente'),
+            datasets: [{
+              label: 'Total Gastado',
+              data: data.topCustomers.map(item => item.totalSpent || 0),
+              backgroundColor: 'rgba(31, 100, 191, 0.1)',
+              borderColor: '#1F64BF',
+              borderWidth: 2
+            }]
+          };
+        }
+        
+        if (data.salesByPeriod && Array.isArray(data.salesByPeriod)) {
+          return {
+            labels: data.salesByPeriod.map(item => {
+              const date = new Date(item._id);
+              return date.toLocaleDateString('es-CO', { 
+                month: 'short', 
+                day: 'numeric' 
+              });
+            }),
+            datasets: [
+              {
+                label: 'Ventas',
+                data: data.salesByPeriod.map(item => item.totalRevenue || 0),
+                backgroundColor: 'rgba(31, 100, 191, 0.1)',
+                borderColor: '#1F64BF',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+              }
+            ]
+          };
+        }
+      }
+    }
+    
+    // Retornar datos por defecto si no hay datos válidos
+    const defaultData = {
+      labels: ['Sin datos'],
+      datasets: [{
+        label: 'Sin datos',
+        data: [0],
+        backgroundColor: 'rgba(128, 128, 128, 0.2)',
+        borderColor: 'rgba(128, 128, 128, 1)',
+        borderWidth: 1
+      }]
+    };
+    
+    if (type === 'pie' || type === 'doughnut') {
+      return {
+        labels: ['Sin datos'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['rgba(128, 128, 128, 0.2)'],
+          borderColor: ['rgba(128, 128, 128, 1)'],
+          borderWidth: 1
+        }]
+      };
+    }
+    
+    return defaultData;
+  };
 
   if (dashboardLoading) {
     return (
@@ -780,7 +908,9 @@ const ReportsPage = () => {
                       Ventas por Mes
                     </Typography>
                     {salesData ? (
-                      <Bar data={salesData} options={{ responsive: true }} />
+                      <ChartErrorBoundary>
+                        <Bar data={getValidChartData(salesData, 'bar')} options={{ responsive: true }} />
+                      </ChartErrorBoundary>
                     ) : (
                       <CircularProgress />
                     )}
@@ -792,7 +922,9 @@ const ReportsPage = () => {
                       Distribución de Productos
                     </Typography>
                     {productsData ? (
-                      <Pie data={productsData} options={{ responsive: true }} />
+                      <ChartErrorBoundary>
+                        <Pie data={getValidChartData(productsData, 'pie')} options={{ responsive: true }} />
+                      </ChartErrorBoundary>
                     ) : (
                       <CircularProgress />
                     )}
@@ -815,7 +947,9 @@ const ReportsPage = () => {
                   Tendencias de Ventas
                 </Typography>
                 {salesData ? (
-                  <Line data={salesData} options={{ responsive: true }} />
+                  <ChartErrorBoundary>
+                    <Line data={getValidChartData(salesData, 'line')} options={{ responsive: true }} />
+                  </ChartErrorBoundary>
                 ) : (
                   <CircularProgress />
                 )}
@@ -836,7 +970,9 @@ const ReportsPage = () => {
                   Top 10 Productos
                 </Typography>
                 {productsData ? (
-                  <Bar data={productsData} options={{ responsive: true }} />
+                  <ChartErrorBoundary>
+                    <Bar data={getValidChartData(productsData, 'bar')} options={{ responsive: true }} />
+                  </ChartErrorBoundary>
                 ) : (
                   <CircularProgress />
                 )}
@@ -857,7 +993,9 @@ const ReportsPage = () => {
                   Top 10 Clientes
                 </Typography>
                 {customersData ? (
-                  <Bar data={customersData} options={{ responsive: true }} />
+                  <ChartErrorBoundary>
+                    <Bar data={getValidChartData(customersData, 'bar')} options={{ responsive: true }} />
+                  </ChartErrorBoundary>
                 ) : (
                   <CircularProgress />
                 )}

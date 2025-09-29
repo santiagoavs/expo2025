@@ -18,11 +18,16 @@ export const useDashboardStats = (initialFilters = {}) => {
       setError(null);
       
       const currentFilters = customFilters || filters;
+      console.log('📊 [useDashboardStats] Fetching dashboard stats with filters:', currentFilters);
+      
       const response = await reportService.getDashboardStats(currentFilters);
+      console.log('📊 [useDashboardStats] Response received:', response);
       
       if (response.success) {
+        console.log('📊 [useDashboardStats] Setting data:', response.data);
         setData(response.data);
       } else {
+        console.error('📊 [useDashboardStats] Response not successful:', response);
         throw new Error(response.message);
       }
     } catch (error) {
@@ -70,6 +75,7 @@ export const useSalesReport = (initialFilters = {}) => {
       setError(null);
       
       const currentFilters = customFilters || filters;
+      console.log('📊 [useSalesReport] Fetching sales report with filters:', currentFilters);
       
       // Validar filtros
       const validation = reportService.validateReportFilters(currentFilters);
@@ -78,8 +84,10 @@ export const useSalesReport = (initialFilters = {}) => {
       }
       
       const response = await reportService.getSalesReport(currentFilters);
+      console.log('📊 [useSalesReport] Response received:', response);
       
       if (response.success) {
+        console.log('📊 [useSalesReport] Setting data:', response.data);
         setData(response.data);
       } else {
         throw new Error(response.message);
@@ -91,6 +99,10 @@ export const useSalesReport = (initialFilters = {}) => {
       setLoading(false);
     }
   }, [filters]);
+
+  useEffect(() => {
+    fetchSalesReport();
+  }, []); // Solo ejecutar una vez al montar
 
   const exportSalesReport = useCallback(async (format = 'excel') => {
     try {
@@ -141,11 +153,16 @@ export const useTopProductsReport = (initialFilters = { limit: 10 }) => {
       setError(null);
       
       const currentFilters = customFilters || filters;
+      console.log('📊 [useTopProductsReport] Fetching top products with filters:', currentFilters);
+      
       const response = await reportService.getTopProductsReport(currentFilters);
+      console.log('📊 [useTopProductsReport] Response received:', response);
       
       if (response.success) {
+        console.log('📊 [useTopProductsReport] Setting data:', response.data);
         setData(response.data);
       } else {
+        console.error('📊 [useTopProductsReport] Response not successful:', response);
         throw new Error(response.message);
       }
     } catch (error) {
@@ -185,11 +202,16 @@ export const useTopCustomersReport = (initialFilters = { limit: 10, sortBy: 'tot
       setError(null);
       
       const currentFilters = customFilters || filters;
+      console.log('📊 [useTopCustomersReport] Fetching top customers with filters:', currentFilters);
+      
       const response = await reportService.getTopCustomersReport(currentFilters);
+      console.log('📊 [useTopCustomersReport] Response received:', response);
       
       if (response.success) {
+        console.log('📊 [useTopCustomersReport] Setting data:', response.data);
         setData(response.data);
       } else {
+        console.error('📊 [useTopCustomersReport] Response not successful:', response);
         throw new Error(response.message);
       }
     } catch (error) {

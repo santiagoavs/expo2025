@@ -12,6 +12,7 @@ export const usePaymentModals = () => {
 
   // Abrir modal de configuración
   const openConfigModal = useCallback((method = null, mode = 'create') => {
+    console.log('🔍 [usePaymentModals] openConfigModal:', { method, mode });
     setSelectedConfigMethod(method);
     setModalMode(mode);
     setConfigModalOpen(true);
@@ -19,6 +20,7 @@ export const usePaymentModals = () => {
 
   // Cerrar modal de configuración
   const closeConfigModal = useCallback(() => {
+    console.log('🔍 [usePaymentModals] closeConfigModal');
     setConfigModalOpen(false);
     setSelectedConfigMethod(null);
     setModalMode('create');

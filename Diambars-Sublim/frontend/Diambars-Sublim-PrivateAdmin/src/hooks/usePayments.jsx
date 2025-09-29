@@ -251,7 +251,7 @@ export const usePayments = (initialFilters = {}) => {
   // Cargar pagos cuando cambien filtros o paginación
   useEffect(() => {
     fetchPayments();
-  }, [fetchPayments]);
+  }, [filters, pagination.page, pagination.limit]); // Usar dependencias específicas en lugar de fetchPayments
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -319,7 +319,7 @@ export const useOrderPaymentStatus = (orderId) => {
 
   useEffect(() => {
     fetchPaymentStatus();
-  }, [fetchPaymentStatus]);
+  }, []); // Remover fetchPaymentStatus de las dependencias para evitar bucle infinito
 
   return {
     paymentStatus,
@@ -420,7 +420,7 @@ export const usePendingTransfers = () => {
 
   useEffect(() => {
     fetchPendingTransfers();
-  }, [fetchPendingTransfers]);
+  }, []); // Remover fetchPendingTransfers de las dependencias para evitar bucle infinito
 
   return {
     transfers,
@@ -469,7 +469,7 @@ export const useCustomerPaymentHistory = (userId) => {
 
   useEffect(() => {
     fetchHistory();
-  }, [fetchHistory]);
+  }, []); // Remover fetchHistory de las dependencias para evitar bucle infinito
 
   return {
     history,

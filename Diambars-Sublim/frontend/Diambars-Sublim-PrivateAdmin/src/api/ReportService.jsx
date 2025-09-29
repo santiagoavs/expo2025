@@ -68,6 +68,11 @@ const reportService = {
         }
       });
       
+      // No formatear automáticamente - se formateará cuando se necesite para gráficos
+      // if (response.success && response.data) {
+      //   response.data = this.formatProductsDataForCharts(response.data);
+      // }
+      
       return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo productos top:', error);
@@ -91,6 +96,11 @@ const reportService = {
           ...filters
         }
       });
+      
+      // No formatear automáticamente - se formateará cuando se necesite para gráficos
+      // if (response.success && response.data) {
+      //   response.data = this.formatCustomersDataForCharts(response.data);
+      // }
       
       return response;
     } catch (error) {
@@ -289,7 +299,19 @@ const reportService = {
    * Formatear datos de ventas para gráficos
    */
   formatSalesDataForCharts(salesData) {
-    if (!salesData || !salesData.salesByPeriod) return salesData;
+    if (!salesData || !salesData.salesByPeriod || !Array.isArray(salesData.salesByPeriod)) {
+      // Retornar datos por defecto si no hay datos válidos
+      return {
+        labels: ['Sin datos'],
+        datasets: [{
+          label: 'Sin datos',
+          data: [0],
+          backgroundColor: 'rgba(128, 128, 128, 0.2)',
+          borderColor: 'rgba(128, 128, 128, 1)',
+          borderWidth: 1
+        }]
+      };
+    }
 
     // Formatear para Chart.js
     const chartData = {
@@ -303,7 +325,7 @@ const reportService = {
       datasets: [
         {
           label: 'Ventas',
-          data: salesData.salesByPeriod.map(item => item.totalRevenue),
+          data: salesData.salesByPeriod.map(item => item.totalRevenue || 0),
           backgroundColor: 'rgba(31, 100, 191, 0.1)',
           borderColor: '#1F64BF',
           borderWidth: 2,
@@ -312,7 +334,7 @@ const reportService = {
         },
         {
           label: 'Órdenes',
-          data: salesData.salesByPeriod.map(item => item.totalOrders),
+          data: salesData.salesByPeriod.map(item => item.totalOrders || 0),
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
           borderColor: '#10B981',
           borderWidth: 2,
@@ -331,9 +353,70 @@ const reportService = {
         formattedRevenue: new Intl.NumberFormat('es-CO', {
           style: 'currency',
           currency: 'USD'
-        }).format(item.totalRevenue),
+        }).format(item.totalRevenue || 0),
         formattedDate: new Date(item._id).toLocaleDateString('es-CO')
       }))
+    };
+  },
+
+  /**
+   * Formatear datos de productos para gráficos
+   */
+  formatProductsDataForCharts(productsData) {
+    if (!productsData || !Array.isArray(productsData)) {
+      return {
+        labels: ['Sin datos'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['rgba(128, 128, 128, 0.2)'],
+          borderColor: ['rgba(128, 128, 128, 1)'],
+          borderWidth: 1
+        }]
+      };
+    }
+
+    return {
+      labels: productsData.map(item => item.productName || 'Producto sin nombre'),
+      datasets: [{
+        label: 'Cantidad Vendida',
+        data: productsData.map(item => item.quantity || 0),
+        backgroundColor: productsData.map((_, index) => 
+          `hsl(${(index * 137.5) % 360}, 70%, 50%)`
+        ),
+        borderColor: productsData.map((_, index) => 
+          `hsl(${(index * 137.5) % 360}, 70%, 30%)`
+        ),
+        borderWidth: 1
+      }]
+    };
+  },
+
+  /**
+   * Formatear datos de clientes para gráficos
+   */
+  formatCustomersDataForCharts(customersData) {
+    if (!customersData || !Array.isArray(customersData)) {
+      return {
+        labels: ['Sin datos'],
+        datasets: [{
+          label: 'Sin datos',
+          data: [0],
+          backgroundColor: 'rgba(128, 128, 128, 0.2)',
+          borderColor: 'rgba(128, 128, 128, 1)',
+          borderWidth: 1
+        }]
+      };
+    }
+
+    return {
+      labels: customersData.map(item => item.customerName || 'Cliente sin nombre'),
+      datasets: [{
+        label: 'Total Gastado',
+        data: customersData.map(item => item.totalSpent || 0),
+        backgroundColor: 'rgba(31, 100, 191, 0.1)',
+        borderColor: '#1F64BF',
+        borderWidth: 2
+      }]
     };
   },
 
