@@ -1,5 +1,16 @@
 // components/UnifiedPanel/UnifiedPanel.jsx - PROPERTIES PANEL (CSS VERSION)
 import React, { useState } from 'react';
+import { 
+  PiGear, 
+  PiStack, 
+  PiTarget, 
+  PiMapPin, 
+  PiPalette, 
+  PiTextT, 
+  PiEye, 
+  PiEyeSlash,
+  PiCaretDown
+} from 'react-icons/pi';
 import './UnifiedPanel.css';
 
 const UnifiedPanel = ({
@@ -40,9 +51,9 @@ const UnifiedPanel = ({
   const isMultiSelection = selectedElements.length > 1;
 
   const tabs = [
-    { id: 'properties', label: 'Propiedades', icon: '⚙️' },
-    { id: 'layers', label: 'Capas', icon: '📋' },
-    { id: 'areas', label: 'Áreas', icon: '🎯' }
+    { id: 'properties', label: 'Propiedades', icon: <PiGear /> },
+    { id: 'layers', label: 'Capas', icon: <PiStack /> },
+    { id: 'areas', label: 'Áreas', icon: <PiTarget /> }
   ];
 
   return (
@@ -67,7 +78,7 @@ const UnifiedPanel = ({
           <div className="properties-tab">
             {!hasSelection ? (
               <div className="no-selection">
-                <div className="no-selection-icon">🎨</div>
+                <div className="no-selection-icon"><PiPalette /></div>
                 <p>Selecciona un elemento para ver sus propiedades</p>
               </div>
             ) : (
@@ -87,9 +98,9 @@ const UnifiedPanel = ({
                     className="section-header"
                     onClick={() => toggleSection('position')}
                   >
-                    <span>📍 Posición y Tamaño</span>
+                    <span><PiMapPin /> Posición y Tamaño</span>
                     <span className={`expand-icon ${expandedSections.position ? 'expanded' : ''}`}>
-                      ▼
+                      <PiCaretDown />
                     </span>
                   </button>
                   {expandedSections.position && (
@@ -153,9 +164,9 @@ const UnifiedPanel = ({
                     className="section-header"
                     onClick={() => toggleSection('appearance')}
                   >
-                    <span>🎨 Apariencia</span>
+                    <span><PiPalette /> Apariencia</span>
                     <span className={`expand-icon ${expandedSections.appearance ? 'expanded' : ''}`}>
-                      ▼
+                      <PiCaretDown />
                     </span>
                   </button>
                   {expandedSections.appearance && (
@@ -217,9 +228,9 @@ const UnifiedPanel = ({
                       className="section-header"
                       onClick={() => toggleSection('text')}
                     >
-                      <span>📝 Texto</span>
+                      <span><PiTextT /> Texto</span>
                       <span className={`expand-icon ${expandedSections.text ? 'expanded' : ''}`}>
-                        ▼
+                        <PiCaretDown />
                       </span>
                     </button>
                     {expandedSections.text && (
@@ -313,7 +324,7 @@ const UnifiedPanel = ({
                         className="layer-visibility"
                         title={element.visible !== false ? 'Ocultar' : 'Mostrar'}
                       >
-                        {element.visible !== false ? '👁️' : '🙈'}
+                        {element.visible !== false ? <PiEye /> : <PiEyeSlash />}
                       </button>
                     </div>
                   </div>

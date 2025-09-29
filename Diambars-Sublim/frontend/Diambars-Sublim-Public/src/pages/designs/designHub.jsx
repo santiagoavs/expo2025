@@ -319,7 +319,7 @@ const DesignHub = ({ initialProductId = null }) => {
         {design.canEdit && (
           <button 
             onClick={() => handleEditDesign(design.id)}
-            className="btn btn-edit"
+            className="btn btn-edit-hub"
           >
             Editar
           </button>
@@ -444,7 +444,11 @@ const DesignHub = ({ initialProductId = null }) => {
         {/* Alertas */}
         {needsResponseDesigns.length > 0 && (
           <div className="alert alert-info">
-            <span className="alert-icon">📢</span>
+            <span className="alert-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/>
+              </svg>
+            </span>
             <div className="alert-content">
               <strong>Tienes {needsResponseDesigns.length} cotización(es) esperando tu respuesta</strong>
               <p>Revisa las cotizaciones y decide si deseas continuar con la producción.</p>
@@ -453,7 +457,7 @@ const DesignHub = ({ initialProductId = null }) => {
               onClick={() => setActiveTab('quoted')}
               className="alert-action"
             >
-              Ver Cotizaciones
+              Ver cotizaciones
             </button>
           </div>
         )}
@@ -571,7 +575,7 @@ const DesignHub = ({ initialProductId = null }) => {
         onClose={() => setEditorModal({ isOpen: false, design: null })}
         design={editorModal.design}
         onSave={handleSaveDesign}
-        product={editorModal.design?.product}
+        product={editorModal.design?.design?.product || editorModal.design?.product}
         onDesignUpdate={handleDesignUpdate}
       />
 

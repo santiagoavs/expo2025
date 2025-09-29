@@ -5,6 +5,7 @@ import UserInfo from '../../components/profile/userInfo';
 import PaymentMethods from '../../components/profile/paymentMethods';
 import ShippingAddresses from '../../components/profile/shippingAddresses';
 import ContactButton from '../../components/UI/contactButton/contactButton';
+import Notifications from '../../components/UI/notifications/notifications';
 import Footer from '../../components/UI/footer/footer';
 import './profile.css';
 
@@ -14,7 +15,7 @@ const Profile = () => {
   // Refrescar datos del usuario cuando se carga la página de perfil
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('🔄 [Profile] Refrescando datos del usuario al cargar perfil');
+      console.log('[Profile] Refrescando datos del usuario al cargar perfil');
       refreshUser();
     }
   }, [isAuthenticated, refreshUser]);
@@ -44,6 +45,7 @@ const Profile = () => {
         </div>
       </section>
       <ContactButton />
+      <Notifications />
       <Footer />
     </main>
   );

@@ -1,5 +1,20 @@
 // components/EditorToolbar/EditorToolbar.jsx - EDITOR TOOLBAR (CSS VERSION)
 import React from 'react';
+import { 
+  PiTextT, 
+  PiImage, 
+  PiShapes, 
+  PiArrowCounterClockwise, 
+  PiArrowClockwise,
+  PiMagnifyingGlassPlus,
+  PiMagnifyingGlassMinus,
+  PiFrameCorners,
+  PiTarget,
+  PiTrash,
+  PiCopy,
+  PiArrowUp,
+  PiArrowDown
+} from 'react-icons/pi';
 import './EditorToolbar.css';
 
 const EditorToolbar = ({
@@ -27,21 +42,21 @@ const EditorToolbar = ({
       tools: [
         {
           id: 'add-text',
-          icon: '📝',
+          icon: <PiTextT />,
           label: 'Texto',
           onClick: onAddText,
           shortcut: 'T'
         },
         {
           id: 'add-image',
-          icon: '🖼️',
+          icon: <PiImage />,
           label: 'Imagen',
           onClick: onAddImage,
           shortcut: 'I'
         },
         {
           id: 'add-shape',
-          icon: '⬜',
+          icon: <PiShapes />,
           label: 'Forma',
           onClick: onAddShape,
           shortcut: 'S'
@@ -53,7 +68,7 @@ const EditorToolbar = ({
       tools: [
         {
           id: 'undo',
-          icon: '↶',
+          icon: <PiArrowCounterClockwise />,
           label: 'Deshacer',
           onClick: onUndo,
           disabled: !canUndo,
@@ -61,7 +76,7 @@ const EditorToolbar = ({
         },
         {
           id: 'redo',
-          icon: '↷',
+          icon: <PiArrowClockwise />,
           label: 'Rehacer',
           onClick: onRedo,
           disabled: !canRedo,
@@ -74,28 +89,28 @@ const EditorToolbar = ({
       tools: [
         {
           id: 'zoom-in',
-          icon: '🔍+',
+          icon: <PiMagnifyingGlassPlus />,
           label: 'Acercar',
           onClick: onZoomIn,
           shortcut: '+'
         },
         {
           id: 'zoom-out',
-          icon: '🔍-',
+          icon: <PiMagnifyingGlassMinus />,
           label: 'Alejar',
           onClick: onZoomOut,
           shortcut: '-'
         },
         {
           id: 'zoom-fit',
-          icon: '⊞',
+          icon: <PiFrameCorners />,
           label: 'Ajustar',
           onClick: onZoomToFit,
           shortcut: '0'
         },
         {
           id: 'zoom-reset',
-          icon: '🎯',
+          icon: <PiTarget />,
           label: 'Restablecer',
           onClick: onResetZoom,
           shortcut: '1'
@@ -107,7 +122,7 @@ const EditorToolbar = ({
       tools: [
         {
           id: 'delete',
-          icon: '🗑️',
+          icon: <PiTrash />,
           label: 'Eliminar',
           onClick: onDeleteSelected,
           disabled: !hasSelection,
@@ -116,7 +131,7 @@ const EditorToolbar = ({
         },
         {
           id: 'duplicate',
-          icon: '📋',
+          icon: <PiCopy />,
           label: 'Duplicar',
           onClick: onDuplicateSelected,
           disabled: !hasSelection,
@@ -124,7 +139,7 @@ const EditorToolbar = ({
         },
         {
           id: 'bring-front',
-          icon: '⬆️',
+          icon: <PiArrowUp />,
           label: 'Al frente',
           onClick: onBringToFront,
           disabled: !hasSelection,
@@ -132,7 +147,7 @@ const EditorToolbar = ({
         },
         {
           id: 'send-back',
-          icon: '⬇️',
+          icon: <PiArrowDown />,
           label: 'Atrás',
           onClick: onSendToBack,
           disabled: !hasSelection,

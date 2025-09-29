@@ -1272,6 +1272,8 @@
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  margin: 0 auto;
+  display: inline-block;
   border-top: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   animation: spin 1s linear infinite;
