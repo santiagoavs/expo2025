@@ -62,6 +62,30 @@ export class CashProvider {
       notes,
       deliveredAt 
     } = confirmationData;
+
+    // ✅ VALIDACIÓN DE SEGURIDAD: Verificar que el admin tenga permisos
+    if (!adminContext?.adminId) {
+      throw new Error('Se requiere autenticación de administrador para confirmar pagos en efectivo');
+    }
+
+    // ✅ VALIDACIÓN FLEXIBLE: Permitir confirmación en más estados
+    const Order = (await import('../../models/order.js')).default;
+    const order = await Order.findById(payment.orderId);
+    
+    if (!order) {
+      throw new Error('Orden no encontrada');
+    }
+
+    // Estados permitidos para confirmar pago en efectivo
+    const allowedCashConfirmationStates = [
+      'out_for_delivery',    // En camino (estado ideal)
+      'ready_for_delivery', // Listo para entrega (flexibilidad)
+      'delivered'           // Entregado (confirmación tardía)
+    ];
+
+    if (!allowedCashConfirmationStates.includes(order.status)) {
+      throw new Error(`No se puede confirmar pago en efectivo. La orden debe estar en uno de estos estados: ${allowedCashConfirmationStates.join(', ')}. Estado actual: ${order.status}`);
+    }
     
     try {
       // Validar datos recibidos

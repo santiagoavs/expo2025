@@ -120,3 +120,52 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* ==================== SWEETALERT Z-INDEX FIX ==================== */
+/* Asegurar que SweetAlert2 esté por encima de todos los elementos */
+.swal-highest-z-index {
+  z-index: 1000000 !important;
+}
+
+/* Asegurar que el backdrop de SweetAlert2 también tenga z-index alto */
+.swal2-container {
+  z-index: 1000000 !important;
+}
+
+/* Asegurar que el modal de SweetAlert2 tenga z-index más alto */
+.swal2-popup {
+  z-index: 1000001 !important;
+}
+
+/* Asegurar que el backdrop tenga z-index alto */
+.swal2-backdrop-show {
+  z-index: 999999 !important;
+}
+
+/* Asegurar que SweetAlert2 esté por encima de MUI Dialog */
+.MuiDialog-root + .swal2-container {
+  z-index: 1000000 !important;
+}
+
+/* Asegurar que SweetAlert2 esté por encima de MUI Modal */
+.MuiModal-root + .swal2-container {
+  z-index: 1000000 !important;
+}
+
+/* Forzar SweetAlert2 a renderizarse en el body */
+body .swal2-container {
+  z-index: 1000000 !important;
+  position: fixed !important;
+}
+
+/* Asegurar que SweetAlert2 esté por encima de cualquier MUI Dialog */
+.MuiDialog-root ~ .swal2-container,
+.MuiDialog-root .swal2-container {
+  z-index: 1000000 !important;
+}
+
+/* Asegurar que SweetAlert2 esté por encima de cualquier MUI Modal */
+.MuiModal-root ~ .swal2-container,
+.MuiModal-root .swal2-container {
+  z-index: 1000000 !important;
+}

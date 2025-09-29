@@ -29,6 +29,7 @@ import {
   Warning
 } from '@phosphor-icons/react';
 import { useOrderDetails } from '../../hooks/useOrderDetails';
+import PaymentStatusPanel from '../../pages/Orders/Components/PaymentStatusPanel';
 
 const PaymentDetailsModal = ({ 
   isOpen, 
@@ -371,6 +372,16 @@ const PaymentDetailsModal = ({
             </Typography>
           </Alert>
         )}
+
+        {/* Panel de gestión de pagos */}
+        <Box sx={{ mt: 3 }}>
+          <PaymentStatusPanel 
+            orderId={orderId}
+            paymentStatus={paymentDetails}
+            onRefresh={() => loadPaymentDetails(orderId)}
+            compact={false}
+          />
+        </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3 }}>

@@ -292,6 +292,15 @@ paymentSchema.methods.addError = function(message, context = {}) {
 };
 
 paymentSchema.methods.canBeProcessed = function() {
+  // ✅ LÓGICA FLEXIBLE: Permitir procesamiento en más estados
+  const processableStates = ['pending', 'processing'];
+  
+  // Para pagos en efectivo, permitir procesamiento en estado 'processing'
+  if (this.method === 'cash') {
+    return processableStates.includes(this.status) && !this.isExpired;
+  }
+  
+  // Para otros métodos, solo en estado 'pending'
   return this.status === 'pending' && !this.isExpired;
 };
 

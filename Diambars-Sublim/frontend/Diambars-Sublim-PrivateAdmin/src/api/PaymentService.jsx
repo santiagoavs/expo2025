@@ -11,7 +11,11 @@ const paymentService = {
     try {
       console.log('💳 [paymentService] Procesando pago para orden:', orderId, paymentData);
       
-      const response = await apiClient.post(`/payments/create`, { orderId, ...paymentData });
+      const response = await apiClient.post(`/payments/create`, { 
+        orderId, 
+        paymentMethod: paymentData.method,
+        paymentData: paymentData
+      });
       
       return response;
     } catch (error) {

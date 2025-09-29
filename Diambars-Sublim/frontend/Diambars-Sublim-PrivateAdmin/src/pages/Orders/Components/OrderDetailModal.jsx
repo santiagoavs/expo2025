@@ -62,8 +62,15 @@ import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import apiClient from '../../../api/ApiClient';
 
+// Configurar SweetAlert2 con z-index alto
+const swalConfig = {
+  customClass: {
+    popup: 'swal-highest-z-index'
+  }
+};
+
 // import { useOrderPaymentStatus } from '../../../hooks/usePayments';
-import PaymentStatusPanel from './PaymentStatusPanel';
+import PaymentStatusPanel, { getPaymentStatusMessage, getPaymentRestrictions, getPaymentValidationInfo } from './PaymentStatusPanel';
 import PaymentDetailsModal from '../../../components/OrderDetails/PaymentDetailsModal';
 import OrderTimelineModal from '../../../components/OrderDetails/OrderTimelineModal';
 import ProductionPhotoUpload from '../../../components/OrderDetails/ProductionPhotoUpload';
@@ -195,7 +202,6 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     return null;
   }
 
-  const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
   
@@ -220,10 +226,6 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
   const paymentLoading = false;
   const refetchPayments = () => {};
 
-  // Manejar cambio de tab
-  const handleTabChange = (event, newValue) => {
-    setCurrentTab(newValue);
-  };
 
   // Formatear fecha
   const formatDate = (date) => {
@@ -319,17 +321,59 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     }
   }, [open, order]);
 
+  // Función helper para SweetAlert2 con configuración robusta
+  const showSwalAlert = async (config) => {
+    // Forzar renderizado fuera del contexto del MUI Dialog
+    const swalConfig = {
+      ...config,
+      customClass: 'swal-highest-z-index',
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+      focusConfirm: false,
+      didOpen: () => {
+        // Forzar z-index después de abrir
+        const swalContainer = document.querySelector('.swal2-container');
+        if (swalContainer) {
+          swalContainer.style.zIndex = '1000000';
+          // Mover al body si está dentro del modal
+          if (swalContainer.parentElement !== document.body) {
+            document.body.appendChild(swalContainer);
+          }
+        }
+      }
+    };
+    
+    return await Swal.fire(swalConfig);
+  };
+
   // Manejar cambio de estado
   const handleStatusChange = async () => {
     if (!newStatus || newStatus === order?.status) return;
     
+    // ✅ OBTENER INFORMACIÓN DE VALIDACIÓN DE PAGO
+    const paymentMethod = order?.payment?.method;
+    const paymentStatus = order?.payment?.status;
+    const validationInfo = getPaymentValidationInfo(paymentMethod, order?.status);
+    const restrictions = getPaymentRestrictions(paymentMethod, newStatus);
+    
     // Mostrar confirmación con SweetAlert2
-    const result = await Swal.fire({
+    const result = await showSwalAlert({
       title: '¿Confirmar cambio de estado?',
       html: `
         <div style="text-align: left;">
           <p><strong>Estado actual:</strong> ${availableStatuses.find(s => s.value === order?.status)?.label || order?.status}</p>
           <p><strong>Nuevo estado:</strong> ${availableStatuses.find(s => s.value === newStatus)?.label || newStatus}</p>
+          
+          ${paymentMethod ? `
+            <div style="margin: 15px 0; padding: 10px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0; font-weight: 600; color: #1e40af;">💳 Información de Pago</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Método:</strong> ${validationInfo.title}</p>
+              <p style="margin: 5px 0; font-size: 14px;"><strong>Estado:</strong> ${getPaymentStatusMessage(order?.payment, order?.status)}</p>
+              <p style="margin: 5px 0; font-size: 14px; color: #059669;"><strong>Descripción:</strong> ${validationInfo.description}</p>
+              ${restrictions ? `<p style="margin: 5px 0; font-size: 14px; color: #dc2626;"><strong>Restricción:</strong> ${restrictions}</p>` : ''}
+            </div>
+          ` : ''}
+          
           <p style="color: #f59e0b; font-weight: 600;">⚠️ Esta acción no se puede deshacer</p>
         </div>
       `,
@@ -338,9 +382,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
       confirmButtonColor: '#6366f1',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Sí, cambiar estado',
-      cancelButtonText: 'Cancelar',
-      customClass: 'swal-highest-z-index',
-      zIndex: 100000
+      cancelButtonText: 'Cancelar'
     });
     
     if (!result.isConfirmed) {
@@ -367,13 +409,11 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
         setNewStatus('');
         
         // Mostrar mensaje de éxito con SweetAlert2
-        await Swal.fire({
+        await showSwalAlert({
           title: '¡Estado cambiado!',
           text: `El estado se cambió exitosamente a ${availableStatuses.find(s => s.value === newStatus)?.label || newStatus}`,
           icon: 'success',
-          confirmButtonColor: '#10b981',
-          customClass: 'swal-highest-z-index',
-          zIndex: 100000
+          confirmButtonColor: '#10b981'
         });
       } else {
         throw new Error(response.message);
@@ -382,13 +422,11 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
       console.error('Error cambiando estado:', error);
       
       // Mostrar error con SweetAlert2
-      await Swal.fire({
+      await showSwalAlert({
         title: 'Error',
         text: error.message || 'Error cambiando estado',
         icon: 'error',
-        confirmButtonColor: '#ef4444',
-        customClass: 'swal-highest-z-index',
-        zIndex: 100000
+        confirmButtonColor: '#ef4444'
       });
     } finally {
       setStatusChangeLoading(false);
@@ -401,18 +439,20 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     Swal.mixin({
       customClass: {
         popup: 'swal-highest-z-index'
-      },
-      zIndex: 100000
+      }
     });
     
     // Agregar CSS global para SweetAlert2
     const style = document.createElement('style');
     style.textContent = `
       .swal2-container {
-        z-index: 100000 !important;
+        z-index: 1000000 !important;
       }
       .swal-highest-z-index {
-        z-index: 100000 !important;
+        z-index: 1000000 !important;
+      }
+      .swal2-backdrop {
+        z-index: 999999 !important;
       }
     `;
     document.head.appendChild(style);
@@ -509,236 +549,200 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     );
   };
 
-  // Renderizar contenido por tab
-  const renderTabContent = () => {
-    switch (currentTab) {
-      case 0: // Información general
-        return (
-          <Grid container spacing={1} sx={{ height: '100%', width: '100%' }}>
-            {/* Columna 1: Detalles del Pedido - 2 columnas */}
-            <Grid item xs={12} lg={6}>
-              <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
-                  <Typography variant="h6" sx={{ mb: 1.5, fontFamily: "'Mona Sans'", fontWeight: 600, fontSize: '1rem' }}>
-                    Detalles del Pedido
-                  </Typography>
-                  
-                  <InfoRow>
-                    <InfoLabel>Número de orden:</InfoLabel>
-                    <InfoValue>#{order?.orderNumber}</InfoValue>
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Estado actual:</InfoLabel>
-                    <StatusChip 
-                      label={order?.statusLabel}
-                      status={order?.status}
-                      size="small"
-                    />
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Fecha de creación:</InfoLabel>
-                    <InfoValue>{formatDate(order?.createdAt)}</InfoValue>
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Total:</InfoLabel>
-                    <InfoValue sx={{ color: '#1F64BF', fontWeight: 700 }}>
-                      {order?.formattedTotal}
-                    </InfoValue>
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Cantidad:</InfoLabel>
-                    <InfoValue>{order?.quantity} unidad(es)</InfoValue>
-                  </InfoRow>
-                  
-                  {order?.isManualOrder && (
-                    <InfoRow>
-                      <InfoLabel>Tipo:</InfoLabel>
-                      <Chip 
-                        label="Pedido Manual" 
-                        color="secondary" 
-                        size="small"
-                        variant="outlined"
-                      />
-                    </InfoRow>
-                  )}
-                </CardContent>
-              </ModernCard>
-            </Grid>
-
-            {/* Columna 2: Información del Cliente */}
-            <Grid item xs={12} md={3}>
-              <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                    <User size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                    Información del Cliente
-                  </Typography>
-                  
-                  <InfoRow>
-                    <InfoLabel>Nombre:</InfoLabel>
-                    <InfoValue>{order?.user?.name || 'N/A'}</InfoValue>
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Email:</InfoLabel>
-                    <InfoValue>{order?.user?.email || 'N/A'}</InfoValue>
-                  </InfoRow>
-                  
-                  <InfoRow>
-                    <InfoLabel>Teléfono:</InfoLabel>
-                    <InfoValue>{getUserPhone() || 'N/A'}</InfoValue>
-                  </InfoRow>
-                  
-                  {order?.user?.totalOrders && (
-                    <InfoRow>
-                      <InfoLabel>Total de pedidos:</InfoLabel>
-                      <InfoValue>{order.user.totalOrders}</InfoValue>
-                    </InfoRow>
-                  )}
-                </CardContent>
-              </ModernCard>
-            </Grid>
-
-            {/* Columna 3: Información de Entrega */}
-            <Grid item xs={12} md={3}>
-              <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                    <Truck size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                    Información de Entrega
-                  </Typography>
-                  
-                  <InfoRow>
-                    <InfoLabel>Tipo de entrega:</InfoLabel>
-                    <InfoValue>{order?.deliveryLabel}</InfoValue>
-                  </InfoRow>
-                  
-                  {order?.deliveryType === 'delivery' && order?.deliveryAddress && (
-                    <InfoRow>
-                      <InfoLabel>Dirección:</InfoLabel>
-                      <InfoValue>
-                        {order.deliveryAddress.street}, {order.deliveryAddress.city}
-                        {order.deliveryAddress.phone && ` • Tel: ${order.deliveryAddress.phone}`}
-                      </InfoValue>
-                    </InfoRow>
-                  )}
-                </CardContent>
-              </ModernCard>
-            </Grid>
-
-            {/* Columna 4: Productos del Pedido */}
-            <Grid item xs={12} md={3}>
-              <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                    <Package size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                    Productos del Pedido
-                  </Typography>
-                  
-                  {order?.items?.map((item, index) => (
-                    <Box key={index} sx={{ 
-                      p: 2, 
-                      border: `1px solid ${alpha('#1F64BF', 0.1)}`, 
-                      borderRadius: '8px',
-                      mb: index < order.items.length - 1 ? 2 : 0
-                    }}>
-                      <Grid container spacing={2} alignItems="center">
-                        {item.product?.images?.[0] && (
-                          <Grid item xs="auto">
-                            <Box
-                              component="img"
-                              src={item.product.images[0]}
-                              alt={item.product.name}
-                              sx={{
-                                width: 60,
-                                height: 60,
-                                objectFit: 'cover',
-                                borderRadius: '8px'
-                              }}
-                            />
-                          </Grid>
-                        )}
-                        <Grid item xs>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, fontFamily: "'Mona Sans'" }}>
-                            {item.product?.name || 'Producto personalizado'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Cantidad: {item.quantity} • Precio: ${item.price || 0}
-                          </Typography>
-                          {item.design && (
-                            <Typography variant="body2" color="text.secondary">
-                              Diseño: {item.design.name}
-                            </Typography>
-                          )}
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  ))}
-                </CardContent>
-              </ModernCard>
-            </Grid>
-
-            {/* Notas */}
-            {order?.clientNotes && (
-              <Grid item xs={12}>
-                <ModernCard>
-                  <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                      Notas del Cliente
-                    </Typography>
-                    <Typography variant="body1" sx={{ 
-                      fontFamily: "'Mona Sans'",
-                      p: 2,
-                      backgroundColor: alpha('#1F64BF', 0.05),
-                      borderRadius: '8px',
-                      fontStyle: 'italic'
-                    }}>
-                      "{order.clientNotes}"
-                    </Typography>
-                  </CardContent>
-                </ModernCard>
-              </Grid>
-            )}
-          </Grid>
-        );
-
-      case 1: // Historial
-        return (
-          <ModernCard>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
-                Historial de Estados
+  // Renderizar información de la orden (contenido por defecto)
+  const renderOrderInformation = () => {
+    return (
+      <Grid container spacing={1} sx={{ height: '100%', width: '100%' }}>
+        {/* Columna 1: Detalles del Pedido - 2 columnas */}
+        <Grid item xs={12} lg={6}>
+          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 1.5, fontFamily: "'Mona Sans'", fontWeight: 600, fontSize: '1rem' }}>
+                Detalles del Pedido
               </Typography>
-              {renderTimeline()}
+              
+              <InfoRow>
+                <InfoLabel>Número de orden:</InfoLabel>
+                <InfoValue>#{order?.orderNumber}</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Estado actual:</InfoLabel>
+                <StatusChip 
+                  label={order?.statusLabel}
+                  status={order?.status}
+                  size="small"
+                />
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Fecha de creación:</InfoLabel>
+                <InfoValue>{formatDate(order?.createdAt)}</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Total:</InfoLabel>
+                <InfoValue sx={{ color: '#1F64BF', fontWeight: 700 }}>
+                  {order?.formattedTotal}
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Cantidad:</InfoLabel>
+                <InfoValue>{order?.quantity} unidad(es)</InfoValue>
+              </InfoRow>
+              
+              {order?.isManualOrder && (
+                <InfoRow>
+                  <InfoLabel>Tipo:</InfoLabel>
+                  <Chip 
+                    label="Pedido Manual" 
+                    color="secondary" 
+                    size="small"
+                    variant="outlined"
+                  />
+                </InfoRow>
+              )}
             </CardContent>
           </ModernCard>
-        );
+        </Grid>
 
-      case 2: // Pagos
-        return (
-          <Box>
-            {paymentLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <PaymentStatusPanel 
-                orderId={order?._id}
-                paymentStatus={paymentStatus}
-                onRefresh={refetchPayments}
-                compact={false}
-              />
-            )}
-          </Box>
-        );
+        {/* Columna 2: Información del Cliente */}
+        <Grid item xs={12} md={3}>
+          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
+            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
+                <User size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Información del Cliente
+              </Typography>
+              
+              <InfoRow>
+                <InfoLabel>Nombre:</InfoLabel>
+                <InfoValue>{order?.user?.name || 'N/A'}</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Email:</InfoLabel>
+                <InfoValue>{order?.user?.email || 'N/A'}</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Teléfono:</InfoLabel>
+                <InfoValue>{getUserPhone() || 'N/A'}</InfoValue>
+              </InfoRow>
+              
+              {order?.user?.totalOrders && (
+                <InfoRow>
+                  <InfoLabel>Total de pedidos:</InfoLabel>
+                  <InfoValue>{order.user.totalOrders}</InfoValue>
+                </InfoRow>
+              )}
+            </CardContent>
+          </ModernCard>
+        </Grid>
 
-      default:
-        return null;
-    }
+        {/* Columna 3: Información de Entrega */}
+        <Grid item xs={12} md={3}>
+          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
+            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
+                <Truck size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Información de Entrega
+              </Typography>
+              
+              <InfoRow>
+                <InfoLabel>Tipo de entrega:</InfoLabel>
+                <InfoValue>{order?.deliveryLabel}</InfoValue>
+              </InfoRow>
+              
+              {order?.deliveryType === 'delivery' && order?.deliveryAddress && (
+                <InfoRow>
+                  <InfoLabel>Dirección:</InfoLabel>
+                  <InfoValue>
+                    {order.deliveryAddress.street}, {order.deliveryAddress.city}
+                    {order.deliveryAddress.phone && ` • Tel: ${order.deliveryAddress.phone}`}
+                  </InfoValue>
+                </InfoRow>
+              )}
+            </CardContent>
+          </ModernCard>
+        </Grid>
+
+        {/* Columna 4: Productos del Pedido */}
+        <Grid item xs={12} md={3}>
+          <ModernCard sx={{ height: '100%', display: 'flex', flexDirection: 'column', m: 0, borderRadius: 0 }}>
+            <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
+                <Package size={20} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                Productos del Pedido
+              </Typography>
+              
+              {order?.items?.map((item, index) => (
+                <Box key={index} sx={{ 
+                  p: 2, 
+                  border: `1px solid ${alpha('#1F64BF', 0.1)}`, 
+                  borderRadius: '8px',
+                  mb: index < order.items.length - 1 ? 2 : 0
+                }}>
+                  <Grid container spacing={2} alignItems="center">
+                    {item.product?.images?.[0] && (
+                      <Grid item xs="auto">
+                        <Box
+                          component="img"
+                          src={item.product.images[0]}
+                          alt={item.product.name}
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      </Grid>
+                    )}
+                    <Grid item xs>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, fontFamily: "'Mona Sans'" }}>
+                        {item.product?.name || 'Producto personalizado'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Cantidad: {item.quantity} • Precio: ${item.price || 0}
+                      </Typography>
+                      {item.design && (
+                        <Typography variant="body2" color="text.secondary">
+                          Diseño: {item.design.name}
+                        </Typography>
+                      )}
+                    </Grid>
+                  </Grid>
+                </Box>
+              ))}
+            </CardContent>
+          </ModernCard>
+        </Grid>
+
+        {/* Notas */}
+        {order?.clientNotes && (
+          <Grid item xs={12}>
+            <ModernCard>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Mona Sans'", fontWeight: 600 }}>
+                  Notas del Cliente
+                </Typography>
+                <Typography variant="body1" sx={{ 
+                  fontFamily: "'Mona Sans'",
+                  p: 2,
+                  backgroundColor: alpha('#1F64BF', 0.05),
+                  borderRadius: '8px',
+                  fontStyle: 'italic'
+                }}>
+                  "{order.clientNotes}"
+                </Typography>
+              </CardContent>
+            </ModernCard>
+          </Grid>
+        )}
+      </Grid>
+    );
   };
 
   if (!order) return null;
@@ -769,30 +773,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
         flexDirection: 'column',
         flex: 1
       }}>
-        {/* Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs 
-            value={currentTab} 
-            onChange={handleTabChange}
-            sx={{ px: 3 }}
-          >
-            <Tab 
-              icon={<Eye size={18} />} 
-              label="Información" 
-              sx={{ fontFamily: "'Mona Sans'" }}
-            />
-            <Tab 
-              icon={<Clock size={18} />} 
-              label="Historial" 
-              sx={{ fontFamily: "'Mona Sans'" }}
-            />
-            <Tab 
-              icon={<Receipt size={18} />} 
-              label="Pagos" 
-              sx={{ fontFamily: "'Mona Sans'" }}
-            />
-          </Tabs>
-        </Box>
+        {/* Contenido principal - Información de la orden por defecto */}
 
         {/* Botones de Acciones Rápidas - ARRIBA */}
         <Box sx={{ p: 2, borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}` }}>
@@ -969,7 +950,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
           </Box>
         </Box>
 
-        {/* Contenido */}
+        {/* Contenido principal - Información de la orden */}
         <Box sx={{ 
           p: 3, 
           flex: 1,
@@ -977,7 +958,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
           display: 'flex',
           flexDirection: 'column'
         }}>
-          {renderTabContent()}
+          {renderOrderInformation()}
         </Box>
       </DialogContent>
 
@@ -1182,3 +1163,15 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
 };
 
 export default OrderDetailsModal;
+
+// Inyectar CSS para z-index alto de SweetAlert2
+const style = document.createElement('style');
+style.textContent = `
+  .swal-highest-z-index {
+    z-index: 99999 !important;
+  }
+  .swal-highest-z-index .swal2-container {
+    z-index: 99999 !important;
+  }
+`;
+document.head.appendChild(style);

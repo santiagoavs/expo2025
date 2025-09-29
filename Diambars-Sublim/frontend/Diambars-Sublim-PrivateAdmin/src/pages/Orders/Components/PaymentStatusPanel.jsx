@@ -117,6 +117,21 @@ const ActionButton = styled(Button)(({ theme, variant }) => {
 
 // ================ COMPONENTE PRINCIPAL ================
 const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true }) => {
+  // ✅ DEBUG: Log para ver qué datos está recibiendo
+  console.log('🔍 [PaymentStatusPanel] Props recibidas:', {
+    orderId,
+    paymentStatus,
+    compact
+  });
+  
+  // ✅ DEBUG: Log detallado de la estructura de paymentStatus
+  console.log('🔍 [PaymentStatusPanel] Estructura de paymentStatus:', {
+    hasPayments: paymentStatus?.payments,
+    paymentsLength: paymentStatus?.payments?.length,
+    paymentKeys: paymentStatus ? Object.keys(paymentStatus) : 'null',
+    fullPaymentStatus: paymentStatus
+  });
+
   const [showProcessDialog, setShowProcessDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -159,6 +174,37 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
   // Manejar procesamiento de nuevo pago
   const handleProcessPayment = async () => {
     try {
+      // ✅ VALIDACIÓN DE NEGOCIO: Verificar restricciones antes de procesar
+      if (newPaymentData.method === 'cash' && !paymentStatus?.payment?.businessRules?.cashPaymentAllowed) {
+        await Swal.fire({
+          title: 'Pago en efectivo no permitido',
+          text: 'Los pagos en efectivo solo se pueden procesar cuando la orden está "Listo para entrega", "En Camino" o "Entregado"',
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+
+      if (newPaymentData.method === 'bank_transfer' && !paymentStatus?.payment?.businessRules?.bankTransferAllowed) {
+        await Swal.fire({
+          title: 'Transferencia bancaria no permitida',
+          text: 'Las transferencias bancarias solo se pueden procesar en estados iniciales o cuando esté "Listo para entrega"',
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+
+      if (newPaymentData.method === 'wompi' && !paymentStatus?.payment?.businessRules?.wompiPaymentAllowed) {
+        await Swal.fire({
+          title: 'Pago con tarjeta no permitido',
+          text: 'Los pagos con tarjeta solo se pueden procesar en estados iniciales o cuando esté "Listo para entrega"',
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+
       await processPayment(orderId, newPaymentData);
       setShowProcessDialog(false);
       setNewPaymentData({
@@ -228,6 +274,14 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
 
   // Renderizar pago individual
   const renderPayment = (payment, index) => {
+    // ✅ DEBUG: Log para ver los datos de cada pago
+    console.log('🔍 [PaymentStatusPanel] Renderizando pago:', {
+      payment,
+      canBeProcessed: payment.canBeProcessed,
+      method: payment.method,
+      status: payment.status
+    });
+
     const PaymentIcon = getPaymentMethodIcon(payment.method);
     
     return (
@@ -480,6 +534,72 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
                   </Alert>
                 </Grid>
               )}
+              
+              {/* ✅ NUEVA SECCIÓN: Restricciones de negocio */}
+              {paymentStatus.payment?.statusInfo && (
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="subtitle2" sx={{ fontFamily: "'Mona Sans'", fontWeight: 600, mb: 2 }}>
+                    Restricciones de Pago por Estado
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Box sx={{ 
+                        p: 2, 
+                        borderRadius: '8px', 
+                        backgroundColor: paymentStatus.payment.businessRules?.cashPaymentAllowed ? '#dcfce7' : '#fee2e2',
+                        border: `1px solid ${paymentStatus.payment.businessRules?.cashPaymentAllowed ? '#22c55e' : '#ef4444'}`
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <Money size={16} color={paymentStatus.payment.businessRules?.cashPaymentAllowed ? '#22c55e' : '#ef4444'} />
+                          <Typography variant="body2" sx={{ ml: 1, fontWeight: 600, fontFamily: "'Mona Sans'" }}>
+                            Efectivo
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {paymentStatus.payment.statusInfo.paymentMethodRestrictions.cash}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Box sx={{ 
+                        p: 2, 
+                        borderRadius: '8px', 
+                        backgroundColor: paymentStatus.payment.businessRules?.bankTransferAllowed ? '#dcfce7' : '#fee2e2',
+                        border: `1px solid ${paymentStatus.payment.businessRules?.bankTransferAllowed ? '#22c55e' : '#ef4444'}`
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <Bank size={16} color={paymentStatus.payment.businessRules?.bankTransferAllowed ? '#22c55e' : '#ef4444'} />
+                          <Typography variant="body2" sx={{ ml: 1, fontWeight: 600, fontFamily: "'Mona Sans'" }}>
+                            Transferencia
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {paymentStatus.payment.statusInfo.paymentMethodRestrictions.bank_transfer}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Box sx={{ 
+                        p: 2, 
+                        borderRadius: '8px', 
+                        backgroundColor: paymentStatus.payment.businessRules?.wompiPaymentAllowed ? '#dcfce7' : '#fee2e2',
+                        border: `1px solid ${paymentStatus.payment.businessRules?.wompiPaymentAllowed ? '#22c55e' : '#ef4444'}`
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <CreditCard size={16} color={paymentStatus.payment.businessRules?.wompiPaymentAllowed ? '#22c55e' : '#ef4444'} />
+                          <Typography variant="body2" sx={{ ml: 1, fontWeight: 600, fontFamily: "'Mona Sans'" }}>
+                            Tarjeta
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          {paymentStatus.payment.statusInfo.paymentMethodRestrictions.wompi}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              )}
             </Grid>
           </CardContent>
         </ModernCard>
@@ -489,11 +609,34 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
       {paymentStatus?.payments?.map((payment, index) => renderPayment(payment, index))}
 
       {/* Modal para procesar nuevo pago */}
-      <Dialog open={showProcessDialog} onClose={() => setShowProcessDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={showProcessDialog} 
+        onClose={() => setShowProcessDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          zIndex: 9994,
+          '& .MuiDialog-paper': {
+            zIndex: 9994
+          }
+        }}
+      >
         <DialogTitle sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
           Procesar Nuevo Pago
         </DialogTitle>
         <DialogContent>
+          {/* ✅ ALERTAS DE RESTRICCIONES */}
+          {paymentStatus?.payment?.statusInfo && (
+            <Alert severity="info" sx={{ mb: 3, borderRadius: '8px' }}>
+              <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'" }}>
+                <strong>Estado actual:</strong> {paymentStatus.payment.statusInfo.statusLabel}
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: "'Mona Sans'", mt: 1 }}>
+                <strong>Restricciones:</strong> Solo se pueden procesar pagos según el estado de la orden
+              </Typography>
+            </Alert>
+          )}
+          
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
@@ -503,9 +646,24 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
                   label="Método de pago"
                   onChange={(e) => setNewPaymentData(prev => ({ ...prev, method: e.target.value }))}
                 >
-                  <MenuItem value="cash">Efectivo</MenuItem>
-                  <MenuItem value="bank_transfer">Transferencia</MenuItem>
-                  <MenuItem value="wompi">Tarjeta (Wompi)</MenuItem>
+                  <MenuItem 
+                    value="cash" 
+                    disabled={!paymentStatus?.payment?.businessRules?.cashPaymentAllowed}
+                  >
+                    Efectivo {!paymentStatus?.payment?.businessRules?.cashPaymentAllowed && '(No permitido)'}
+                  </MenuItem>
+                  <MenuItem 
+                    value="bank_transfer" 
+                    disabled={!paymentStatus?.payment?.businessRules?.bankTransferAllowed}
+                  >
+                    Transferencia {!paymentStatus?.payment?.businessRules?.bankTransferAllowed && '(No permitido)'}
+                  </MenuItem>
+                  <MenuItem 
+                    value="wompi" 
+                    disabled={!paymentStatus?.payment?.businessRules?.wompiPaymentAllowed}
+                  >
+                    Tarjeta (Wompi) {!paymentStatus?.payment?.businessRules?.wompiPaymentAllowed && '(No permitido)'}
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -560,7 +718,18 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
       </Dialog>
 
       {/* Modal para confirmar pago en efectivo */}
-      <Dialog open={showConfirmDialog} onClose={() => setShowConfirmDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={showConfirmDialog} 
+        onClose={() => setShowConfirmDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          zIndex: 10000,
+          '& .MuiDialog-paper': {
+            zIndex: 10000
+          }
+        }}
+      >
         <DialogTitle sx={{ fontFamily: "'Mona Sans'", fontWeight: 600 }}>
           Confirmar Pago en Efectivo
         </DialogTitle>
@@ -611,6 +780,106 @@ const PaymentStatusPanel = ({ orderId, paymentStatus, onRefresh, compact = true 
       </Dialog>
     </Box>
   );
+};
+
+// ==================== FUNCIONES DE VALIDACIÓN DE PAGO ====================
+
+// Función para obtener el mensaje de estado de pago con validaciones claras
+export const getPaymentStatusMessage = (payment, orderStatus) => {
+  if (!payment) return 'Sin información de pago';
+  
+  const statusMessages = {
+    'pending': 'Pago pendiente',
+    'processing': 'Procesando pago',
+    'completed': 'Pago completado',
+    'failed': 'Pago fallido',
+    'cancelled': 'Pago cancelado',
+    'refunded': 'Pago reembolsado'
+  };
+  
+  const baseMessage = statusMessages[payment.status] || 'Estado desconocido';
+  
+  // ✅ AGREGAR INFORMACIÓN SOBRE RESTRICCIONES DE PAGO
+  if (payment.status !== 'completed') {
+    const restrictions = getPaymentRestrictions(payment.method, orderStatus);
+    if (restrictions) {
+      return `${baseMessage} - ${restrictions}`;
+    }
+  }
+  
+  return baseMessage;
+};
+
+// Función para obtener restricciones de pago por método
+export const getPaymentRestrictions = (paymentMethod, orderStatus) => {
+  const restrictions = {
+    'cash': {
+      'pending_approval': 'Se puede cambiar a cualquier estado',
+      'approved': 'Se puede cambiar a cualquier estado',
+      'quoted': 'Se puede cambiar a cualquier estado',
+      'in_production': 'Se puede cambiar a cualquier estado',
+      'quality_check': 'Se puede cambiar a cualquier estado',
+      'packaging': 'Se puede cambiar a cualquier estado',
+      'ready_for_delivery': 'Se puede cambiar a cualquier estado',
+      'out_for_delivery': 'Se puede cambiar a cualquier estado',
+      'delivered': 'Requiere pago confirmado para marcar como entregado'
+    },
+    'bank_transfer': {
+      'pending_approval': 'Se puede cambiar a cualquier estado',
+      'approved': 'Se puede cambiar a cualquier estado',
+      'quoted': 'Se puede cambiar a cualquier estado',
+      'in_production': 'Se puede cambiar a cualquier estado',
+      'quality_check': 'Se puede cambiar a cualquier estado',
+      'packaging': 'Se puede cambiar a cualquier estado',
+      'ready_for_delivery': 'Se puede cambiar a cualquier estado',
+      'out_for_delivery': 'Se puede cambiar a cualquier estado',
+      'delivered': 'Requiere pago confirmado para marcar como entregado'
+    },
+    'wompi': {
+      'pending_approval': 'Se puede cambiar a cualquier estado',
+      'approved': 'Se puede cambiar a cualquier estado',
+      'quoted': 'Se puede cambiar a cualquier estado',
+      'in_production': 'Requiere pago completado para iniciar producción',
+      'quality_check': 'Requiere pago completado para iniciar producción',
+      'packaging': 'Requiere pago completado para iniciar producción',
+      'ready_for_delivery': 'Se puede cambiar a cualquier estado',
+      'out_for_delivery': 'Se puede cambiar a cualquier estado',
+      'delivered': 'Se puede cambiar a cualquier estado'
+    }
+  };
+  
+  return restrictions[paymentMethod]?.[orderStatus] || null;
+};
+
+// Función para obtener información detallada sobre validaciones de pago
+export const getPaymentValidationInfo = (paymentMethod, orderStatus) => {
+  const validationInfo = {
+    'cash': {
+      title: 'Pago en Efectivo',
+      description: 'Máxima flexibilidad - Solo requiere pago confirmado para entrega final',
+      allowedStates: ['Cualquier estado'],
+      restrictions: 'Solo para estado "Entregado"'
+    },
+    'bank_transfer': {
+      title: 'Transferencia Bancaria',
+      description: 'Flexibilidad media - Permite cambios sin pago completo',
+      allowedStates: ['Cualquier estado'],
+      restrictions: 'Solo para estado "Entregado"'
+    },
+    'wompi': {
+      title: 'Pago con Tarjeta (Wompi)',
+      description: 'Validación estricta - Requiere pago completo para producción',
+      allowedStates: ['Estados de entrega'],
+      restrictions: 'Para estados de producción (En Producción, Control de Calidad, Empaque)'
+    }
+  };
+  
+  return validationInfo[paymentMethod] || {
+    title: 'Método de Pago',
+    description: 'Validación básica',
+    allowedStates: ['Estados permitidos'],
+    restrictions: 'Según método de pago'
+  };
 };
 
 export default PaymentStatusPanel;

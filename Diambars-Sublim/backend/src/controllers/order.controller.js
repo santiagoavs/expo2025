@@ -293,6 +293,17 @@ orderController.registerCashPayment = async (req, res) => {
       });
     }
 
+    // ✅ VALIDACIÓN DE NEGOCIO: Solo permitir pago en efectivo cuando esté en "en camino"
+    if (order.status !== 'out_for_delivery') {
+      return res.status(400).json({
+        success: false,
+        message: "Los pagos en efectivo solo se pueden registrar cuando la orden está 'En Camino' (out_for_delivery)",
+        error: 'INVALID_ORDER_STATUS_FOR_CASH',
+        currentStatus: order.status,
+        requiredStatus: 'out_for_delivery'
+      });
+    }
+
     // Validar que la orden tenga un total válido
     if (!order.total || order.total <= 0) {
       return res.status(400).json({
@@ -722,7 +733,12 @@ orderController.getOrderPaymentDetails = async (req, res) => {
       });
     }
 
-    // Preparar respuesta con información de pago
+    // ✅ VALIDACIONES DE NEGOCIO PARA PAGOS
+    const canProcessCashPayment = order.status === 'out_for_delivery' && order.payment?.method === 'cash';
+    const canProcessBankTransfer = ['pending_approval', 'approved', 'quoted'].includes(order.status);
+    const canProcessWompiPayment = ['pending_approval', 'approved', 'quoted'].includes(order.status);
+
+    // Preparar respuesta con información de pago MEJORADA
     const paymentDetails = {
       orderNumber: order.orderNumber,
       status: order.status,
@@ -733,7 +749,29 @@ orderController.getOrderPaymentDetails = async (req, res) => {
         balance: order.payment?.balance || order.total,
         lastPaidAt: order.payment?.lastPaidAt,
         requiresAdvancePayment: order.requiresAdvancePayment(),
-        paymentProgress: Math.round(((order.payment?.totalPaid || 0) / order.total) * 100)
+        paymentProgress: Math.round(((order.payment?.totalPaid || 0) / order.total) * 100),
+        // ✅ NUEVAS VALIDACIONES DE NEGOCIO FLEXIBLES
+        businessRules: {
+          canProcessCashPayment,
+          canProcessBankTransfer,
+          canProcessWompiPayment,
+          // ✅ FLEXIBILIDAD: Permitir efectivo en más estados
+          cashPaymentAllowed: ['ready_for_delivery', 'out_for_delivery', 'delivered'].includes(order.status),
+          // ✅ FLEXIBILIDAD: Permitir transferencias en más estados
+          bankTransferAllowed: ['pending_approval', 'approved', 'quoted', 'ready_for_delivery'].includes(order.status),
+          // ✅ FLEXIBILIDAD: Permitir Wompi en más estados
+          wompiPaymentAllowed: ['pending_approval', 'approved', 'quoted', 'ready_for_delivery'].includes(order.status)
+        },
+        // Información de estado para el admin
+        statusInfo: {
+          currentStatus: order.status,
+          statusLabel: orderController.getStatusLabel(order.status),
+          paymentMethodRestrictions: {
+            cash: ['ready_for_delivery', 'out_for_delivery', 'delivered'].includes(order.status) ? 'Permitido' : 'Solo cuando esté listo para entrega o en camino',
+            bank_transfer: ['pending_approval', 'approved', 'quoted', 'ready_for_delivery'].includes(order.status) ? 'Permitido' : 'Solo en estados iniciales o listo para entrega',
+            wompi: ['pending_approval', 'approved', 'quoted', 'ready_for_delivery'].includes(order.status) ? 'Permitido' : 'Solo en estados iniciales o listo para entrega'
+          }
+        }
       },
       financial: {
         subtotal: order.subtotal,
@@ -749,6 +787,41 @@ orderController.getOrderPaymentDetails = async (req, res) => {
       createdAt: order.createdAt
     };
 
+    // ✅ AGREGAR PAGOS INDIVIDUALES PARA EL FRONTEND
+    try {
+      const Payment = (await import('../models/payment.js')).default;
+      const individualPayments = await Payment.findByOrderId(order._id);
+      
+      // Formatear pagos para el frontend
+      paymentDetails.payments = individualPayments.map(payment => ({
+        _id: payment._id,
+        orderId: payment.orderId,
+        amount: payment.amount,
+        formattedAmount: payment.formattedAmount,
+        currency: payment.currency,
+        method: payment.method,
+        status: payment.status,
+        statusLabel: payment.status === 'pending' ? 'Pendiente' : 
+                    payment.status === 'processing' ? 'Procesando' :
+                    payment.status === 'completed' ? 'Completado' :
+                    payment.status === 'failed' ? 'Fallido' :
+                    payment.status === 'cancelled' ? 'Cancelado' : payment.status,
+        timing: payment.timing,
+        paymentType: payment.paymentType,
+        percentage: payment.percentage,
+        createdAt: payment.createdAt,
+        processedAt: payment.processedAt,
+        completedAt: payment.completedAt,
+        isExpired: payment.isExpired,
+        canBeProcessed: payment.canBeProcessed(),
+        canBeCompleted: payment.canBeCompleted(),
+        providerInfo: payment.toPublicObject().providerInfo
+      }));
+    } catch (paymentError) {
+      console.error('❌ Error obteniendo pagos individuales:', paymentError);
+      paymentDetails.payments = [];
+    }
+
     // Si es admin, agregar información adicional
     if (isAdmin) {
       paymentDetails.payment.metadata = order.payment?.metadata;
@@ -757,6 +830,11 @@ orderController.getOrderPaymentDetails = async (req, res) => {
         name: order.user.name,
         email: order.user.email,
         phoneNumber: order.user.phoneNumber
+      };
+      // ✅ INFORMACIÓN ADICIONAL PARA ADMIN
+      paymentDetails.adminInfo = {
+        canChangeStatus: orderController.canChangeStatus(order.status),
+        recommendedActions: orderController.getRecommendedActions(order.status, order.payment?.status)
       };
     }
 
@@ -1489,28 +1567,80 @@ orderController.registerReturn = async (req, res) => {
 async function validateStatusChange(order, newStatus) {
   const warnings = [];
   
-  // Validar que el pago esté completo para ciertos estados
-  const paymentRequiredStates = ['in_production', 'quality_check', 'packaging', 'ready_for_delivery', 'out_for_delivery', 'delivered'];
+  // ==================== VALIDACIONES DE PAGO FLEXIBLES ====================
   
-  // Para pagos en efectivo, solo validar pago hasta 'ready_for_delivery'
+  // Estados que requieren pago completo (solo para métodos que no sean efectivo)
+  const paymentRequiredStates = ['in_production', 'quality_check', 'packaging'];
+  
+  // Estados que permiten cambio sin pago completo
+  const flexiblePaymentStates = ['ready_for_delivery', 'out_for_delivery'];
+  
+  console.log('🔍 [validateStatusChange] Validando pagos:', {
+    newStatus,
+    paymentMethod: order.payment.method,
+    paymentStatus: order.payment.status,
+    orderStatus: order.status
+  });
+  
+  // ✅ VALIDACIÓN FLEXIBLE POR MÉTODO DE PAGO
   if (order.payment.method === 'cash') {
-    const cashPaymentRequiredStates = ['ready_for_delivery', 'out_for_delivery', 'delivered'];
+    // Para pagos en efectivo: MÁXIMA FLEXIBILIDAD
+    // Solo validar pago para estados de entrega final (delivered)
+    const cashPaymentRequiredStates = ['delivered'];
+    
     if (cashPaymentRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      console.log('❌ [validateStatusChange] Pago en efectivo requerido para entrega final');
       return {
         isValid: false,
-        message: "Para pagos en efectivo, el pago se registra al momento de la entrega",
+        message: "Para pagos en efectivo, el pago se registra al momento de la entrega final",
         warnings: []
       };
     }
-  } else {
-    // Para otros métodos de pago, validar pago desde 'in_production'
+    
+    console.log('✅ [validateStatusChange] Pago en efectivo - cambio permitido:', newStatus);
+    
+  } else if (order.payment.method === 'bank_transfer') {
+    // Para transferencias bancarias: FLEXIBILIDAD MEDIA
+    // Permitir cambio a ready_for_delivery y out_for_delivery sin pago completo
+    const bankTransferRequiredStates = ['delivered'];
+    
+    if (bankTransferRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      console.log('❌ [validateStatusChange] Transferencia bancaria requerida para entrega final');
+      return {
+        isValid: false,
+        message: "Para transferencias bancarias, el pago debe estar confirmado antes de marcar como entregado",
+        warnings: []
+      };
+    }
+    
+    console.log('✅ [validateStatusChange] Transferencia bancaria - cambio permitido:', newStatus);
+    
+  } else if (order.payment.method === 'wompi') {
+    // Para Wompi: VALIDACIÓN ESTRICTA
+    // Requerir pago completo para estados de producción
     if (paymentRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      console.log('❌ [validateStatusChange] Pago Wompi requerido para producción');
       return {
         isValid: false,
-        message: "No se puede avanzar a este estado sin pago completo",
+        message: "Para pagos con tarjeta (Wompi), el pago debe estar completado antes de iniciar producción",
         warnings: []
       };
     }
+    
+    console.log('✅ [validateStatusChange] Pago Wompi - cambio permitido:', newStatus);
+    
+  } else {
+    // Para otros métodos o sin método definido: VALIDACIÓN BÁSICA
+    if (paymentRequiredStates.includes(newStatus) && order.payment.status !== 'completed') {
+      console.log('❌ [validateStatusChange] Pago requerido para producción');
+      return {
+        isValid: false,
+        message: "El pago debe estar completado antes de iniciar la producción",
+        warnings: []
+      };
+    }
+    
+    console.log('✅ [validateStatusChange] Método de pago - cambio permitido:', newStatus);
   }
 
   // Validar saltos de etapas
@@ -1664,6 +1794,91 @@ orderController.uploadProductionPhoto = async (req, res) => {
       error: error.message
     });
   }
+};
+
+// ==================== MÉTODOS AUXILIARES ====================
+
+/**
+ * Obtener etiqueta de estado legible
+ */
+orderController.getStatusLabel = (status) => {
+  const statusLabels = {
+    'pending_approval': 'Pendiente de Aprobación',
+    'approved': 'Aprobado',
+    'quoted': 'Cotizado',
+    'in_production': 'En Producción',
+    'quality_check': 'Control de Calidad',
+    'quality_approved': 'Calidad Aprobada',
+    'packaging': 'Empaquetando',
+    'out_for_delivery': 'En Camino',
+    'completed': 'Completado',
+    'cancelled': 'Cancelado',
+    'returned': 'Devuelto',
+    'refunded': 'Reembolsado'
+  };
+  return statusLabels[status] || status;
+};
+
+/**
+ * Verificar si se puede cambiar el estado de una orden
+ */
+orderController.canChangeStatus = (currentStatus) => {
+  const allowedChanges = {
+    'pending_approval': ['approved', 'cancelled'],
+    'approved': ['in_production', 'cancelled'],
+    'quoted': ['approved', 'cancelled'],
+    'in_production': ['quality_check', 'cancelled'],
+    'quality_check': ['quality_approved', 'in_production'],
+    'quality_approved': ['packaging'],
+    'packaging': ['out_for_delivery'],
+    'out_for_delivery': ['completed', 'returned'],
+    'completed': ['returned'],
+    'returned': ['refunded'],
+    'cancelled': [],
+    'refunded': []
+  };
+  
+  return allowedChanges[currentStatus] || [];
+};
+
+/**
+ * Obtener acciones recomendadas para el admin
+ */
+orderController.getRecommendedActions = (orderStatus, paymentStatus) => {
+  const actions = [];
+  
+  // Acciones basadas en estado de la orden
+  switch (orderStatus) {
+    case 'pending_approval':
+      actions.push('Revisar y aprobar la orden');
+      break;
+    case 'approved':
+      actions.push('Iniciar producción');
+      break;
+    case 'in_production':
+      actions.push('Completar producción y enviar a control de calidad');
+      break;
+    case 'quality_check':
+      actions.push('Revisar fotos de producción y aprobar calidad');
+      break;
+    case 'quality_approved':
+      actions.push('Empaquetar y preparar para envío');
+      break;
+    case 'packaging':
+      actions.push('Marcar como enviado');
+      break;
+    case 'out_for_delivery':
+      actions.push('Registrar pago en efectivo si aplica');
+      actions.push('Confirmar entrega');
+      break;
+  }
+  
+  // Acciones basadas en estado de pago
+  if (paymentStatus === 'pending' && ['pending_approval', 'approved', 'quoted'].includes(orderStatus)) {
+    actions.push('Procesar pago pendiente');
+  }
+  
+  return actions;
 };
 
 export default orderController;

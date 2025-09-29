@@ -45,6 +45,20 @@ router.get('/transfers/pending',
   paymentController.getPendingTransfers
 );
 
+// Confirmar pago (efectivo/transferencia)
+router.post('/:id/confirm',
+  authRequired,
+  validateMongoId('id'),
+  body('receivedAmount')
+    .isNumeric()
+    .withMessage('Monto recibido debe ser numérico'),
+  body('isApproved')
+    .isBoolean()
+    .withMessage('Estado de aprobación debe ser booleano'),
+  validateRequest,
+  paymentController.confirmPayment
+);
+
 // Webhook de Wompi (sin autenticación)
 router.post('/wompi/webhook',
   paymentController.handleWompiWebhook

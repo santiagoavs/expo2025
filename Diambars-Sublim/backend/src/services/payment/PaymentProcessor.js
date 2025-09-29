@@ -222,9 +222,16 @@ export class PaymentProcessor {
       throw new Error('Orden no encontrada o sin acceso');
     }
     
-    // Validar que la orden puede ser pagada
-    if (!['pending_approval', 'approved', 'quoted'].includes(order.status)) {
-      throw new Error(`La orden no puede ser pagada en estado: ${order.status}`);
+    // ✅ VALIDACIÓN FLEXIBLE: Permitir pagos en más estados
+    const allowedPaymentStates = [
+      'pending_approval', 
+      'approved', 
+      'quoted',
+      'ready_for_delivery' // ✅ NUEVO: Permitir pagos cuando esté listo para entrega
+    ];
+    
+    if (!allowedPaymentStates.includes(order.status)) {
+      throw new Error(`La orden no puede ser pagada en estado: ${order.status}. Estados permitidos: ${allowedPaymentStates.join(', ')}`);
     }
     
     return order;

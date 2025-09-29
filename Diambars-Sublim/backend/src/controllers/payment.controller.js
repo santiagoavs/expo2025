@@ -13,34 +13,60 @@ paymentController.createPayment = async (req, res) => {
   try {
     const { orderId, paymentMethod, paymentData } = req.body;
     const userId = req.user._id;
+    const userRole = req.user.role;
 
-    // Validar que la orden existe y pertenece al usuario
-    const order = await Order.findOne({
+    // ✅ VALIDACIÓN FLEXIBLE: Permitir pagos en más estados
+    const allowedPaymentStates = ['pending_approval', 'approved', 'quoted', 'ready_for_delivery'];
+    
+    // ✅ DETECTAR SI ES ADMIN: Los admins pueden acceder a cualquier orden
+    const isAdmin = ['admin', 'manager'].includes(userRole);
+    
+    // Construir query según el tipo de usuario
+    const query = {
       _id: orderId,
-      user: userId,
-      status: { $in: ['pending_approval', 'approved'] }
-    }).populate('user', 'name email phoneNumber');
+      status: { $in: allowedPaymentStates }
+    };
+    
+    // Solo usuarios normales necesitan validar que la orden les pertenece
+    if (!isAdmin) {
+      query.user = userId;
+    }
+    
+    // Validar que la orden existe y cumple los criterios
+    const order = await Order.findOne(query).populate('user', 'name email phoneNumber');
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Orden no encontrada o no disponible para pago",
+        message: `Orden no encontrada o no disponible para pago. Estados permitidos: ${allowedPaymentStates.join(', ')}`,
         error: 'ORDER_NOT_FOUND'
       });
     }
 
+    // ✅ CONTEXTO DE USUARIO: Diferente para admins y usuarios normales
+    const userContext = isAdmin ? {
+      adminId: userId,
+      adminRole: userRole,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip,
+      source: 'admin'
+    } : {
+      userId: userId,
+      userEmail: order.user.email,
+      userName: order.user.name,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip,
+      source: 'web'
+    };
+
     // Usar PaymentProcessor para procesar el pago
     const result = await paymentProcessor.processPayment(
-      order,
+      { orderId: order._id },
       {
         method: paymentMethod,
         ...paymentData
       },
-      {
-        userId: userId,
-        userEmail: order.user.email,
-        userName: order.user.name
-      }
+      userContext
     );
 
     // Actualizar orden con resultado del pago
@@ -315,6 +341,82 @@ paymentController.getPendingTransfers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error obteniendo transferencias pendientes",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+/**
+ * Confirmar pago (efectivo/transferencia)
+ */
+paymentController.confirmPayment = async (req, res) => {
+  try {
+    const { id: paymentId } = req.params;
+    const { receivedAmount, changeGiven, notes, isApproved } = req.body;
+    const adminId = req.user._id;
+
+    console.log('✅ [paymentController] Confirmando pago:', {
+      paymentId,
+      receivedAmount,
+      changeGiven,
+      isApproved,
+      adminId
+    });
+
+    // Buscar el pago
+    const Payment = (await import('../models/payment.js')).default;
+    const payment = await Payment.findById(paymentId).populate('orderId');
+    
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Pago no encontrado",
+        error: 'PAYMENT_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el pago esté en estado pendiente
+    if (payment.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: "El pago no está en estado pendiente",
+        error: 'PAYMENT_NOT_PENDING'
+      });
+    }
+
+    // Usar PaymentProcessor para confirmar el pago
+    const confirmationData = {
+      receivedAmount: parseFloat(receivedAmount),
+      changeGiven: changeGiven ? parseFloat(changeGiven) : 0,
+      notes: notes || '',
+      isApproved: isApproved !== false,
+      confirmedBy: adminId,
+      confirmedAt: new Date()
+    };
+
+    const result = await paymentProcessor.confirmPayment(
+      paymentId,
+      confirmationData,
+      { adminId, adminRole: req.user.role }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Pago confirmado exitosamente",
+      data: {
+        paymentId: payment._id,
+        status: result.status,
+        amount: payment.amount,
+        receivedAmount: confirmationData.receivedAmount,
+        changeGiven: confirmationData.changeGiven
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en confirmPayment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error confirmando pago",
       error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
     });
   }
