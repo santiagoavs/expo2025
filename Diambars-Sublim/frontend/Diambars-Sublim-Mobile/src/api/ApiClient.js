@@ -10,18 +10,17 @@
 
 import axios from 'axios'; // Importa Axios para realizar peticiones HTTP.
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Almacenamiento asíncrono seguro en RN.
+import { getApiConfig } from '../config/apiConfig'; // Configuración centralizada de API.
 
-// Configuración de la API URL (puedes usar react-native-config o hardcodearlo)
-// 🔥 CONFIGURADO PARA TU IP
-const API_URL = __DEV__ ? 'http://192.168.0.20:4000/api' : 'https://tu-api-produccion.com/api';
-// ^ Usa la variable global __DEV__ (true en desarrollo con Metro) para elegir la URL base.
-//   En dev: apunta a la red local; en prod: a tu dominio público.
+// Configuración de la API URL usando configuración centralizada
+const API_CONFIG = getApiConfig();
+const API_URL = API_CONFIG.baseURL;
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({ // Crea una instancia independiente de Axios con defaults propios.
   baseURL: API_URL,            // URL base para todas las peticiones (se concatena con el path).
   withCredentials: false,      // No enviar cookies (el panel usa Bearer token por header, no cookies).
-  timeout: 15000,              // Tiempo máximo de espera (ms) antes de abortar la petición.
+  timeout: API_CONFIG.timeout,  // Tiempo máximo de espera (ms) antes de abortar la petición.
   headers: {                   // Headers por defecto para todas las requests.
     'Content-Type': 'application/json', // Indica que enviamos/recibimos JSON por defecto.
   }
