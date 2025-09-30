@@ -24,6 +24,12 @@ import CategoryDetailScreen from './src/screens/CategoryDetailScreen';
 import EditCategoryScreen from './src/screens/EditCategoryScreen';
 import CreateCategoryScreen from './src/screens/CreateCategoryScreen';
 
+// Importar pantallas de empleados
+import EmployeesScreen from './src/screens/EmployeesScreen';
+import EmployeeDetailScreen from './src/screens/EmployeeDetailScreen';
+import CreateEmployeeScreen from './src/screens/CreateEmployeeScreen';
+import EditEmployeeScreen from './src/screens/EditEmployeeScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -210,6 +216,41 @@ export default function App() {
         headerShown: false,
       }}
     />
+
+    {/* 👥 PANTALLAS DE EMPLEADOS */}
+    <Stack.Screen
+      name="Employees"
+      component={EmployeesScreen}
+      options={{
+        title: 'Gestión de Empleados',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="EmployeeDetail"
+      component={EmployeeDetailScreen}
+      options={{
+        title: 'Detalles de Empleado',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="CreateEmployee"
+      component={CreateEmployeeScreen}
+      options={{
+        title: 'Crear Empleado',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="EditEmployee"
+      component={EditEmployeeScreen}
+      options={{
+        title: 'Editar Empleado',
+        headerShown: false,
+      }}
+    />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

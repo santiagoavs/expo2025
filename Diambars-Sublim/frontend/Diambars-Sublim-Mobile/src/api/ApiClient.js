@@ -34,9 +34,10 @@ apiClient.interceptors.request.use( // Registra interceptor que se ejecuta ANTES
     // IMPORTANTE: Panel admin usa SOLO headers, NO cookies
     try {                                           // Manejo de errores al acceder a AsyncStorage.
       const token = await AsyncStorage.getItem('token'); // Recupera token persistido (si existe).
+      console.log(`🔑 [apiClient-ADMIN-RN] Token obtenido de AsyncStorage:`, token ? `${token.substring(0, 20)}...` : 'null'); // Log del token (parcial por seguridad).
       if (token) {                                   // Si hay token en almacenamiento…
         config.headers.Authorization = `Bearer ${token}`; // Añádelo al header Authorization.
-        console.log(`🔑 [apiClient-ADMIN-RN] Token agregado en Authorization header`); // Log útil.
+        console.log(`🔑 [apiClient-ADMIN-RN] Token agregado en Authorization header: Bearer ${token.substring(0, 20)}...`); // Log útil.
       } else {                                       // Si no hay token…
         console.log(`🔑 [apiClient-ADMIN-RN] No hay token en AsyncStorage`); // Informativo para debugging.
       }

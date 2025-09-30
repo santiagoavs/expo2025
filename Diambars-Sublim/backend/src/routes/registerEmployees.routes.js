@@ -15,7 +15,7 @@ router.use((req, res, next) => {
 // Ruta para registrar un nuevo empleado (aceptar tanto "Admin" como "admin")
 router.post("/", 
   verifyToken, 
-  checkUserType("employee"),
+  checkUserType("employee", "admin"), // Permitir tanto employee como admin
   checkRole("Admin", "admin"), // Aceptar ambas formas para mayor compatibilidad
   checkAdminUniqueness,
   registerEmployeesController.registerEmployee
