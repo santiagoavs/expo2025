@@ -14,7 +14,20 @@ const paymentConfigService = {
       const response = await apiClient.get('/payment-config');
       
       console.log('🔍 [paymentConfigService] Respuesta recibida:', response);
-      return response;
+      
+      // Validar que la respuesta tenga la estructura esperada
+      if (response && response.success && Array.isArray(response.configs)) {
+        console.log(`✅ [paymentConfigService] ${response.configs.length} configuraciones obtenidas`);
+        return response;
+      } else {
+        console.warn('⚠️ [paymentConfigService] Respuesta con estructura inesperada:', response);
+        return {
+          success: true,
+          configs: [],
+          count: 0,
+          message: 'No hay configuraciones disponibles'
+        };
+      }
     } catch (error) {
       console.error('❌ [paymentConfigService] Error obteniendo configuraciones:', error);
       throw this.handleError(error);
@@ -110,7 +123,24 @@ const paymentConfigService = {
       
       const response = await apiClient.get('/payment-config/stats');
       
-      return response;
+      console.log('🔍 [paymentConfigService] Estadísticas recibidas:', response);
+      
+      // Validar que la respuesta tenga la estructura esperada
+      if (response && response.success && response.stats) {
+        console.log(`✅ [paymentConfigService] Estadísticas obtenidas: ${response.stats.totalMethods} métodos totales`);
+        return response;
+      } else {
+        console.warn('⚠️ [paymentConfigService] Respuesta de estadísticas con estructura inesperada:', response);
+        return {
+          success: true,
+          stats: {
+            totalMethods: 0,
+            activeMethods: 0,
+            inactiveMethods: 0,
+            methods: []
+          }
+        };
+      }
     } catch (error) {
       console.error('❌ [paymentConfigService] Error obteniendo estadísticas:', error);
       throw this.handleError(error);

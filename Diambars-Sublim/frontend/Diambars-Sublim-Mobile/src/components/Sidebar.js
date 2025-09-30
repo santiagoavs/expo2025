@@ -119,7 +119,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           id: 'payments',
           label: 'Métodos de Pago',
           icon: 'card-outline',
-          screen: 'Payments',
+          screen: 'PaymentMethods',
           description: 'Gestión de pagos'
         }
       ]

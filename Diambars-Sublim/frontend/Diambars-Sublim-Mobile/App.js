@@ -39,6 +39,10 @@ import EditUserScreen from './src/screens/EditUserScreen';
 // Importar pantallas de reseñas
 import ReviewsScreen from './src/screens/ReviewsScreen';
 
+// Importar pantalla de métodos de pago
+import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
+import PaymentStatsScreen from './src/screens/PaymentStatsScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -300,6 +304,24 @@ export default function App() {
       component={ReviewsScreen}
       options={{
         title: 'Gestión de Reseñas',
+        headerShown: false,
+      }}
+    />
+
+    {/* 💳 PANTALLAS DE MÉTODOS DE PAGO */}
+    <Stack.Screen
+      name="PaymentMethods"
+      component={PaymentMethodsScreen}
+      options={{
+        title: 'Métodos de Pago',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="PaymentStats"
+      component={PaymentStatsScreen}
+      options={{
+        title: 'Estadísticas de Métodos de Pago',
         headerShown: false,
       }}
     />
