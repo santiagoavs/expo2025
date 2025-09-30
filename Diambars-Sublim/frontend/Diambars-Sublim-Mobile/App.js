@@ -36,6 +36,9 @@ import UserDetailScreen from './src/screens/UserDetailScreen';
 import CreateUserScreen from './src/screens/CreateUserScreen';
 import EditUserScreen from './src/screens/EditUserScreen';
 
+// Importar pantallas de reseñas
+import ReviewsScreen from './src/screens/ReviewsScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -287,6 +290,16 @@ export default function App() {
       component={EditUserScreen}
       options={{
         title: 'Editar Usuario',
+        headerShown: false,
+      }}
+    />
+
+    {/* ⭐ PANTALLAS DE RESEÑAS */}
+    <Stack.Screen
+      name="Reviews"
+      component={ReviewsScreen}
+      options={{
+        title: 'Gestión de Reseñas',
         headerShown: false,
       }}
     />
