@@ -117,7 +117,7 @@ const paymentService = {
     try {
       console.log('📋 [paymentService] Listando pagos:', filters);
       
-      const response = await apiClient.get('/payments', {
+      const response = await apiClient.get('/api/payments', {
         params: {
           ...filters,
           page: filters.page || 1,
@@ -141,7 +141,7 @@ const paymentService = {
     try {
       console.log('⏳ [paymentService] Obteniendo transferencias pendientes');
       
-      const response = await apiClient.get('/payments/transfers/pending');
+      const response = await apiClient.get('/api/payments/transfers/pending');
       
       return response;
     } catch (error) {
@@ -157,7 +157,7 @@ const paymentService = {
     try {
       console.log('💵 [paymentService] Generando reporte de efectivo:', filters);
       
-      const response = await apiClient.get('/payments/reports/cash', {
+      const response = await apiClient.get('/api/payments/reports/cash', {
         params: filters
       });
       

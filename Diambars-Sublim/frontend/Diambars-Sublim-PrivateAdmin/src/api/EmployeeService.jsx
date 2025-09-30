@@ -1,7 +1,7 @@
 // src/api/employeeService.js
 import apiClient from './ApiClient';
 
-const BASE_URL = '/employees';
+const BASE_URL = '/api/employees';
 
 export default {
   // Obtener todos los empleados activos (requiere Admin/Manager)

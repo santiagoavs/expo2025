@@ -6,7 +6,7 @@ class ProfileService {
   // Obtener perfil del usuario actual
   async getUserProfile(userId) {
     try {
-      const data = await apiClient.get(`/employees/${userId}`);
+      const data = await apiClient.get(`/api/employees/${userId}`);
       
       return {
         success: true,
@@ -33,7 +33,7 @@ class ProfileService {
         // No enviamos password, se maneja por separado
       };
 
-      const data = await apiClient.put(`/employees/${userId}`, allowedFields);
+      const data = await apiClient.put(`/api/employees/${userId}`, allowedFields);
       
       return {
         success: true,
@@ -56,7 +56,7 @@ class ProfileService {
         newPassword: passwordData.newPassword
       };
 
-      const data = await apiClient.patch(`/employees/${userId}/password`, requestBody);
+      const data = await apiClient.patch(`/api/employees/${userId}/password`, requestBody);
       
       return {
         success: true,

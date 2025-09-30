@@ -6,7 +6,7 @@ const qualityApprovalService = {
     try {
       console.log('🔍 [QualityApprovalService] Obteniendo orden para aprobación:', orderId);
       
-      const response = await apiClient.get(`/quality-approval/${orderId}/info`);
+      const response = await apiClient.get(`/api/quality-approval/${orderId}/info`);
       
       console.log('✅ [QualityApprovalService] Orden obtenida:', response.data);
       return response.data;
@@ -24,7 +24,7 @@ const qualityApprovalService = {
         responseData
       });
       
-      const response = await apiClient.post(`/quality-approval/${orderId}/respond`, responseData);
+      const response = await apiClient.post(`/api/quality-approval/${orderId}/respond`, responseData);
       
       console.log('✅ [QualityApprovalService] Respuesta enviada:', response.data);
       return response.data;
@@ -39,7 +39,7 @@ const qualityApprovalService = {
     try {
       console.log('🔍 [QualityApprovalService] Obteniendo estado de aprobación:', orderId);
       
-      const response = await apiClient.get(`/quality-approval/${orderId}/status`);
+      const response = await apiClient.get(`/api/quality-approval/${orderId}/status`);
       
       console.log('✅ [QualityApprovalService] Estado obtenido:', response.data);
       return response.data;
@@ -54,7 +54,7 @@ const qualityApprovalService = {
     try {
       console.log('🔍 [QualityApprovalService] Obteniendo respuestas del cliente:', orderId);
       
-      const response = await apiClient.get(`/quality-approval/${orderId}/responses`);
+      const response = await apiClient.get(`/api/quality-approval/${orderId}/responses`);
       
       console.log('✅ [QualityApprovalService] Respuestas obtenidas:', response.data);
       return response.data;

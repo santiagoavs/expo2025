@@ -1,7 +1,7 @@
 // src/api/DesignService.js - SERVICIO COMPLETO PARA DISEÑOS ADMIN CORREGIDO
 import apiClient from './ApiClient';
 
-const BASE_URL = '/designs';
+const BASE_URL = '/api/designs';
 
 const DesignService = {
   // ==================== OBTENER DISEÑOS ====================

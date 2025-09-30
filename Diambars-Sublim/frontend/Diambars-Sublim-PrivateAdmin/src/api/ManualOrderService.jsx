@@ -19,7 +19,7 @@ const manualOrderService = {
         createdByAdmin: true
       };
       
-      const response = await apiClient.post('/orders', manualOrderData);
+      const response = await apiClient.post('/api/orders', manualOrderData);
       
       if (response.success && response.data) {
         response.data = orderService.formatOrderForDisplay(response.data);
@@ -39,7 +39,7 @@ const manualOrderService = {
     try {
       console.log('💰 [manualOrderService] Cotizando diseño personalizado:', designData);
       
-      const response = await apiClient.post('/orders/quote-custom-design', {
+      const response = await apiClient.post('/api/orders/quote-custom-design', {
         designData,
         pricingData
       });
@@ -76,7 +76,7 @@ const manualOrderService = {
     try {
       console.log('🔍 [manualOrderService] Buscando clientes:', searchQuery);
       
-      const response = await apiClient.get('/users/search', {
+      const response = await apiClient.get('/api/users/search', {
         params: {
           q: searchQuery,
           type: 'customer',
@@ -114,7 +114,7 @@ const manualOrderService = {
     try {
       console.log('➕ [manualOrderService] Creando cliente:', customerData);
       
-      const response = await apiClient.post('/users/register', {
+      const response = await apiClient.post('/api/users/register', {
         ...customerData,
         createdByAdmin: true,
         skipEmailVerification: true
@@ -136,7 +136,7 @@ const manualOrderService = {
     try {
       console.log('🔍 [manualOrderService] Buscando productos:', searchQuery);
       
-      const response = await apiClient.get('/products/search', {
+      const response = await apiClient.get('/api/products/search', {
         params: {
           q: searchQuery,
           isActive: true,
@@ -159,7 +159,7 @@ const manualOrderService = {
       console.log('🎨 [manualOrderService] Obteniendo diseños aprobados');
       
       // Primero intentar con filtro de estado aprobado
-      let response = await apiClient.get('/designs', {
+      let response = await apiClient.get('/api/designs', {
         params: {
           limit: 50,
           status: 'approved' // Solo diseños aprobados
@@ -171,7 +171,7 @@ const manualOrderService = {
       // Si no hay diseños aprobados, obtener todos para diagnosticar
       if (!response.data || response.data.length === 0) {
         console.log('🔍 [manualOrderService] No hay diseños aprobados, obteniendo todos para diagnosticar');
-        response = await apiClient.get('/designs', {
+        response = await apiClient.get('/api/designs', {
           params: {
             limit: 50
             // Sin filtro de estado
@@ -195,7 +195,7 @@ const manualOrderService = {
       console.log('🔍 [manualOrderService] Buscando diseños:', searchQuery);
       
       // Usar el endpoint principal con filtros de búsqueda
-      const response = await apiClient.get('/designs', {
+      const response = await apiClient.get('/api/designs', {
         params: {
           search: searchQuery, // Usar 'search' en lugar de 'q'
           limit: 20,
@@ -236,7 +236,7 @@ const manualOrderService = {
     try {
       console.log('✨ [manualOrderService] Creando diseño personalizado:', designData);
       
-      const response = await apiClient.post('/designs/custom', {
+      const response = await apiClient.post('/api/designs/custom', {
         ...designData,
         isCustomDesign: true,
         createdByAdmin: true
@@ -258,7 +258,7 @@ const manualOrderService = {
     try {
       console.log('💱 [manualOrderService] Calculando precio:', orderData);
       
-      const response = await apiClient.post('/orders/calculate-price', orderData);
+      const response = await apiClient.post('/api/orders/calculate-price', orderData);
       
       return response;
     } catch (error) {

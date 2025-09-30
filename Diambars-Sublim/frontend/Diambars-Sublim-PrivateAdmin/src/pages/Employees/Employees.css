@@ -162,8 +162,7 @@
   align-items: center;
   gap: 16px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
   border: 1px solid rgba(4, 13, 191, 0.1);
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(4, 13, 191, 0.08);

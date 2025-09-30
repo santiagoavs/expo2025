@@ -11,7 +11,7 @@ const orderService = {
     try {
       console.log('📦 [orderService] Obteniendo órdenes con filtros:', filters);
       
-      const response = await apiClient.get('/orders', {
+      const response = await apiClient.get('/api/orders', {
         params: {
           ...filters,
           page: filters.page || 1,
@@ -58,7 +58,7 @@ const orderService = {
     try {
       console.log('📝 [orderService] Creando orden:', orderData);
       
-      const response = await apiClient.post('/orders', orderData);
+      const response = await apiClient.post('/api/orders', orderData);
       
       if (response.success && response.data) {
         response.data = this.formatOrderForDisplay(response.data);
@@ -137,7 +137,7 @@ const orderService = {
     try {
       console.log('🔍 [orderService] Buscando órdenes:', searchParams);
       
-      const response = await apiClient.get('/orders/search', {
+      const response = await apiClient.get('/api/orders/search', {
         params: searchParams
       });
       
@@ -159,7 +159,7 @@ const orderService = {
     try {
       console.log('📊 [orderService] Obteniendo estadísticas:', filters);
       
-      const response = await apiClient.get('/orders/stats', {
+      const response = await apiClient.get('/api/orders/stats', {
         params: filters
       });
       
@@ -179,7 +179,7 @@ const orderService = {
     try {
       console.log('📊 [orderService] Obteniendo stats del dashboard:', filters);
       
-      const response = await apiClient.get('/orders/reports/dashboard', {
+      const response = await apiClient.get('/api/orders/reports/dashboard', {
         params: filters
       });
       
@@ -197,7 +197,7 @@ const orderService = {
     try {
       console.log('💰 [orderService] Obteniendo reporte de ventas:', filters);
       
-      const response = await apiClient.get('/orders/reports/sales', {
+      const response = await apiClient.get('/api/orders/reports/sales', {
         params: {
           startDate: filters.startDate,
           endDate: filters.endDate,
@@ -220,7 +220,7 @@ const orderService = {
     try {
       console.log('🏆 [orderService] Obteniendo productos top:', filters);
       
-      const response = await apiClient.get('/orders/reports/top-products', {
+      const response = await apiClient.get('/api/orders/reports/top-products', {
         params: {
           limit: filters.limit || 10,
           startDate: filters.startDate,
@@ -243,7 +243,7 @@ const orderService = {
     try {
       console.log('👑 [orderService] Obteniendo clientes top:', filters);
       
-      const response = await apiClient.get('/orders/reports/top-customers', {
+      const response = await apiClient.get('/api/orders/reports/top-customers', {
         params: {
           limit: filters.limit || 10,
           sortBy: filters.sortBy || 'totalSpent',
@@ -265,7 +265,7 @@ const orderService = {
     try {
       console.log('⏱️ [orderService] Obteniendo reporte de producción:', filters);
       
-      const response = await apiClient.get('/orders/reports/production', {
+      const response = await apiClient.get('/api/orders/reports/production', {
         params: filters
       });
       

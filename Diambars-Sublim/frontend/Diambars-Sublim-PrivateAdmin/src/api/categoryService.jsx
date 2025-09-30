@@ -1,7 +1,7 @@
 // src/api/categoryService.js
 import apiClient from './ApiClient';
 
-const BASE_URL = '/categories';
+const BASE_URL = '/api/categories';
 
 export default {
   getAll: async () => {
