@@ -1,7 +1,7 @@
 // src/api/userService.js
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/users';
+const BASE_URL = '/users';
 
 export default {
   // Obtener todos los usuarios

@@ -1,7 +1,7 @@
 // src/api/addressService.js
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/addresses';
+const BASE_URL = '/addresses';
 
 export default {
   // ==================== CRUD Básico ====================
@@ -168,7 +168,7 @@ export default {
    * Obtener datos de ubicaciones (departamentos y municipios)
    */
   getLocationData: async () => {
-    const response = await apiClient.get('/api/locations/data');
+    const response = await apiClient.get('/locations/data');
     return response;
   },
 

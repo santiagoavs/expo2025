@@ -1,7 +1,7 @@
 // src/api/ProductService.js - VERSIÓN SIMPLIFICADA Y CORREGIDA
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/products';
+const BASE_URL = '/products';
 
 const ProductService = {
   // ==================== OBTENER PRODUCTOS ====================

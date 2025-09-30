@@ -44,7 +44,7 @@ class GeocodingService {
           console.log(`🗺️ [GeocodingService] Geocoding attempt ${i + 1}:`, { query, address, department, municipality });
           
           // Usar el proxy del backend para evitar CORS
-          const proxyUrl = `/api/addresses/geocoding/search?q=${encodeURIComponent(query)}&limit=3`;
+          const proxyUrl = `/addresses/geocoding/search?q=${encodeURIComponent(query)}&limit=3`;
           
           const response = await fetch(proxyUrl, {
             headers: {
@@ -157,7 +157,7 @@ class GeocodingService {
         console.log('🗺️ [GeocodingService] Reverse geocoding request:', { lat, lng });
         
         // Usar el proxy del backend para evitar CORS
-        const proxyUrl = `/api/addresses/geocoding/reverse?lat=${lat}&lng=${lng}`;
+        const proxyUrl = `/addresses/geocoding/reverse?lat=${lat}&lng=${lng}`;
         
         const response = await fetch(proxyUrl, {
           headers: {

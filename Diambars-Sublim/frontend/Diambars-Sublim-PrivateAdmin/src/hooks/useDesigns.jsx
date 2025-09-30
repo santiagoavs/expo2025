@@ -85,6 +85,7 @@ const useDesigns = () => {
       setError(null);
       
       console.log('🎨 [useDesigns] Obteniendo diseños:', params);
+      console.log('⏳ [useDesigns] Iniciando consulta...');
       
       // Combinar parámetros con filtros actuales
       const queryParams = {
@@ -92,15 +93,28 @@ const useDesigns = () => {
         ...params
       };
       
+      const apiStartTime = Date.now();
       const response = await DesignService.getAll(queryParams);
+      const apiTime = Date.now() - apiStartTime;
+      console.log(`🌐 [useDesigns] Tiempo de API: ${apiTime}ms`);
       
       if (!response.success || !Array.isArray(response.data?.designs)) {
         throw new Error("Formato de respuesta inválido");
       }
 
-      // Formatear diseños
+      // Formatear diseños de manera optimizada
+      console.log('🔄 [useDesigns] Procesando diseños:', response.data.designs.length);
+      const startTime = Date.now();
+      
       const formattedDesigns = response.data.designs
-        .map(formatDesign)
+        .map(design => {
+          try {
+            return formatDesign(design);
+          } catch (error) {
+            console.warn('⚠️ [useDesigns] Error formateando diseño:', design._id, error);
+            return null;
+          }
+        })
         .filter(design => design !== null)
         // Excluir diseños cancelados por defecto, a menos que se esté filtrando específicamente por "cancelled"
         .filter(design => {
@@ -110,6 +124,9 @@ const useDesigns = () => {
           // Si no se está filtrando por "cancelled", excluir los cancelados
           return design.status !== 'cancelled';
         });
+      
+      const processingTime = Date.now() - startTime;
+      console.log(`⏱️ [useDesigns] Tiempo de procesamiento: ${processingTime}ms`);
       
       setDesigns(formattedDesigns);
       

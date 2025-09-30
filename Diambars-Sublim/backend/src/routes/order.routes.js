@@ -37,19 +37,15 @@ const router = Router();
 // ==================== WEBHOOKS (SIN AUTENTICACIÓN) ====================
 router.post('/webhook/wompi', paymentController.handleWompiWebhook);
 
-// ==================== RUTAS DE PEDIDOS ====================
+// ==================== RUTAS DE USUARIO (AL PRINCIPIO PARA EVITAR CONFLICTOS) ====================
 
-// ✅ Obtener las órdenes del usuario actual
-router.get('/user/me',
+// ✅ Obtener las órdenes del usuario actual - PRIMERA RUTA PARA EVITAR CONFLICTOS
+router.get('/me',
   authRequired,
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 100 }),
-  query('status').optional().isString(),
-  query('sort').optional().isString(),
-  query('order').optional().isIn(['asc', 'desc']),
-  validateRequest,
   orderController.getMyOrders
 );
+
+// ==================== RUTAS DE PEDIDOS ====================
 
 // ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación) - Solo admin
 router.get('/',
@@ -76,12 +72,7 @@ router.get('/',
   orderController.getAllOrders
 );
 
-// Obtener orden específica por ID
-router.get('/:id',
-  authRequired,
-  validateMongoId('id'),
-  orderController.getOrderById
-);
+// Esta ruta se moverá al final para evitar conflictos
 
 // Crear nuevo pedido
 router.post('/',
@@ -93,15 +84,7 @@ router.post('/',
   orderController.createOrder
 );
 
-// Responder a cotización (aceptar/rechazar)
-router.post('/:id/respond-quote',
-  authRequired,
-  validateMongoId('id'),
-  body('accept').isBoolean(),
-  body('clientNotes').optional().isLength({ max: 500 }),
-  validateRequest,
-  orderController.respondToQuote
-);
+// Esta ruta se moverá al final para evitar conflictos
 
 // ==================== RUTAS SOLO ADMIN ====================
 
@@ -153,19 +136,9 @@ router.post('/:id/cash-payment',
 
 // ==================== NUEVOS ENDPOINTS ====================
 
-// Obtener detalles de pago de una orden
-router.get('/:id/payment-details',
-  authRequired,
-  validateMongoId('id'),
-  orderController.getOrderPaymentDetails
-);
+// Esta ruta se moverá al final para evitar conflictos
 
-// Obtener línea de tiempo de una orden (para usuarios)
-router.get('/:id/timeline',
-  authRequired,
-  validateMongoId('id'),
-  orderController.getOrderTimeline
-);
+// Esta ruta se moverá al final para evitar conflictos
 
 // ==================== RUTAS DE PAGOS ====================
 
@@ -178,13 +151,6 @@ router.post('/:id/upload-photo',
   validateMongoId('id'),
   upload.single('photo'),
   orderController.uploadProductionPhoto
-);
-
-// Obtener datos de control de calidad
-router.get('/:id/quality-control',
-  authRequired,
-  validateMongoId('id'),
-  orderController.getQualityControlData
 );
 
 // ==================== RUTAS DE REPORTES ====================
@@ -282,6 +248,20 @@ router.post('/:id/return',
     .withMessage('Monto de reembolso debe ser numérico'),
   validateRequest,
   orderController.registerReturn
+);
+
+// Obtener datos de control de calidad
+router.get('/:id/quality-control',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getQualityControlData
+);
+
+// Obtener orden específica por ID (DEBE ir al final para evitar conflictos con rutas específicas)
+router.get('/:id',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderById
 );
 
 export default router;

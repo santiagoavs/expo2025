@@ -14,7 +14,286 @@ import {
   Crown,
   Pause
 } from '@phosphor-icons/react';
-import './EmployeeCard.css';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+  Chip,
+  styled,
+  useTheme,
+  alpha,
+  Paper,
+  Divider
+} from '@mui/material';
+
+// ================ ESTILOS MODERNOS RESPONSIVE - EMPLOYEE CARD ================
+const EmployeeCardContainer = styled(Card)(({ theme }) => ({
+  position: 'relative',
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(15px)',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '20px',
+  overflow: 'hidden',
+  boxShadow: '0 8px 25px rgba(4, 13, 191, 0.08)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.1)',
+    transform: 'translateY(-2px)',
+    borderColor: alpha('#040DBF', 0.15),
+  }
+}));
+
+const EmployeeCardHeader = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  padding: '24px 24px 0 24px',
+  position: 'relative',
+});
+
+const EmployeeCardAvatar = styled(Avatar)(({ theme }) => ({
+  position: 'relative',
+  width: '64px',
+  height: '64px',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  boxShadow: '0 6px 20px rgba(4, 13, 191, 0.3)',
+  transition: 'all 0.3s ease',
+  fontSize: '24px',
+  fontWeight: '700',
+  '&:hover': {
+    transform: 'scale(1.02)',
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.25)',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '56px',
+    height: '56px',
+    fontSize: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '48px',
+    height: '48px',
+    fontSize: '18px',
+  }
+}));
+
+const EmployeeCardStatusDot = styled(Box)(({ status, theme }) => ({
+  position: 'absolute',
+  bottom: '4px',
+  right: '4px',
+  width: '16px',
+  height: '16px',
+  border: '3px solid #ffffff',
+  borderRadius: '50%',
+  transition: 'all 0.3s ease',
+  ...(status === 'active' ? {
+    background: '#10b981',
+    animation: 'employeeCardPulse 2s ease-in-out infinite',
+  } : status === 'pending' ? {
+    background: '#f59e0b',
+    animation: 'employeeCardPulse 2s ease-in-out infinite',
+  } : {
+    background: '#64748b',
+  }),
+  [theme.breakpoints.down('sm')]: {
+    width: '12px',
+    height: '12px',
+    borderWidth: '2px',
+  }
+}));
+
+const EmployeeCardActions = styled(Box)({
+  position: 'relative',
+});
+
+const EmployeeCardActionBtn = styled(IconButton)(({ theme }) => ({
+  width: '40px',
+  height: '40px',
+  background: alpha('#040DBF', 0.15),
+  border: `2px solid ${alpha('#040DBF', 0.3)}`,
+  borderRadius: '12px',
+  color: '#040DBF',
+  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+  position: 'relative',
+  boxShadow: '0 2px 8px rgba(4, 13, 191, 0.1)',
+  overflow: 'hidden',
+  '&:hover': {
+    background: alpha('#040DBF', 0.2),
+    borderColor: alpha('#040DBF', 0.4),
+    color: '#040DBF',
+    transform: 'translateY(-1px) scale(1.02)',
+    boxShadow: '0 4px 12px rgba(4, 13, 191, 0.2)',
+  },
+  '&:active': {
+    transform: 'translateY(0) scale(0.95)',
+  },
+  '&:focus': {
+    outline: `3px solid ${alpha('#040DBF', 0.3)}`,
+    outlineOffset: '2px',
+  }
+}));
+
+const EmployeeCardDropdown = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  top: '100%',
+  right: 0,
+  marginTop: '8px',
+  background: '#ffffff',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '12px',
+  boxShadow: '0 8px 25px rgba(4, 13, 191, 0.15)',
+  zIndex: 10,
+  minWidth: '140px',
+  overflow: 'hidden',
+  animation: 'employeeCardDropdownEnter 0.2s ease-out',
+}));
+
+const EmployeeCardDropdownItem = styled(MenuItem)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '12px 16px',
+  fontSize: '13px',
+  fontWeight: '500',
+  color: '#334155',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    background: alpha('#040DBF', 0.05),
+    color: '#040DBF',
+  },
+  '&.danger:hover': {
+    background: alpha('#ef4444', 0.05),
+    color: '#dc2626',
+  }
+}));
+
+const EmployeeCardBody = styled(Box)({
+  padding: '16px 24px 24px 24px',
+});
+
+const EmployeeCardInfo = styled(Box)({
+  marginBottom: '20px',
+});
+
+const EmployeeCardName = styled(Typography)(({ theme }) => ({
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: '0 0 8px 0',
+  lineHeight: 1.3,
+  [theme.breakpoints.down('md')]: {
+    fontSize: '16px',
+  }
+}));
+
+const EmployeeCardRole = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  marginBottom: '8px',
+  fontSize: '13px',
+  fontWeight: '600',
+  color: '#040DBF',
+});
+
+const EmployeeCardStatus = styled(Box)(({ status }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '12px',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  ...(status === 'active' ? {
+    color: '#059669',
+  } : status === 'pending' ? {
+    color: '#d97706',
+  } : {
+    color: '#64748b',
+  })
+}));
+
+const EmployeeCardStatusIndicator = styled(Box)(({ status }) => ({
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  ...(status === 'active' ? {
+    background: '#10b981',
+  } : status === 'pending' ? {
+    background: '#f59e0b',
+  } : {
+    background: '#64748b',
+  })
+}));
+
+const EmployeeCardContact = styled(Box)({
+  marginBottom: '16px',
+});
+
+const EmployeeCardContactItem = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '8px 0',
+  fontSize: '13px',
+  '& svg': {
+    color: '#64748b',
+    minWidth: '14px',
+  }
+});
+
+const EmployeeCardContactText = styled(Typography)({
+  color: '#334155',
+  fontWeight: '500',
+  wordBreak: 'break-all',
+  fontSize: '13px',
+});
+
+const EmployeeCardMeta = styled(Box)({
+  marginBottom: '16px',
+  padding: '12px',
+  background: 'rgba(248, 250, 252, 0.6)',
+  borderRadius: '10px',
+  border: `1px solid ${alpha('#040DBF', 0.05)}`,
+});
+
+const EmployeeCardMetaItem = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '11px',
+  marginBottom: '4px',
+  '&:last-child': {
+    marginBottom: 0,
+  },
+  '& svg': {
+    color: '#64748b',
+  }
+});
+
+const EmployeeCardMetaLabel = styled(Typography)({
+  color: '#64748b',
+  fontWeight: '600',
+  minWidth: '60px',
+  fontSize: '11px',
+});
+
+const EmployeeCardMetaValue = styled(Typography)({
+  color: '#334155',
+  fontWeight: '500',
+  fontSize: '11px',
+});
+
+const EmployeeCardOverlay = styled(Box)({
+  position: 'fixed',
+  inset: 0,
+  zIndex: 5,
+});
 
 const EmployeeCard = ({ 
   employee, 
@@ -99,30 +378,28 @@ const EmployeeCard = ({
   };
 
   return (
-    <div className="employee-card">
+    <EmployeeCardContainer>
       {/* Card Header */}
-      <div className="employee-card-header">
-        <div className="employee-card-avatar">
-          <span className="employee-card-avatar-text">
+      <EmployeeCardHeader>
+        <Box sx={{ position: 'relative' }}>
+          <EmployeeCardAvatar>
             {employee.name.charAt(0).toUpperCase()}
-          </span>
-          <div className={`employee-card-status-dot ${getStatusColor(employee.status)}`}></div>
-        </div>
+          </EmployeeCardAvatar>
+          <EmployeeCardStatusDot status={employee.status} />
+        </Box>
 
-        <div className="employee-card-actions">
-          <button 
-            className="employee-card-action-btn"
+        <EmployeeCardActions>
+          <EmployeeCardActionBtn
             onClick={() => setShowActions(!showActions)}
             aria-label="Menú de acciones"
             title="Opciones"
           >
             <DotsThreeVertical size={20} weight="bold" />
-          </button>
+          </EmployeeCardActionBtn>
 
           {showActions && (
-            <div className="employee-card-dropdown">
-              <button 
-                className="employee-card-dropdown-item"
+            <EmployeeCardDropdown>
+              <EmployeeCardDropdownItem
                 onClick={() => {
                   onEdit(employee.id, employee);
                   setShowActions(false);
@@ -130,11 +407,10 @@ const EmployeeCard = ({
               >
                 <PencilSimple size={14} weight="duotone" />
                 Editar
-              </button>
+              </EmployeeCardDropdownItem>
               
               {employee.status === 'active' ? (
-                <button 
-                  className="employee-card-dropdown-item"
+                <EmployeeCardDropdownItem
                   onClick={() => {
                     onStatusChange(employee.id, 'inactive');
                     setShowActions(false);
@@ -142,10 +418,9 @@ const EmployeeCard = ({
                 >
                   <Pause size={14} weight="duotone" />
                   Desactivar
-                </button>
+                </EmployeeCardDropdownItem>
               ) : (
-                <button 
-                  className="employee-card-dropdown-item"
+                <EmployeeCardDropdownItem
                   onClick={() => {
                     onStatusChange(employee.id, 'active');
                     setShowActions(false);
@@ -153,11 +428,11 @@ const EmployeeCard = ({
                 >
                   <Check size={14} weight="duotone" />
                   Activar
-                </button>
+                </EmployeeCardDropdownItem>
               )}
 
-              <button 
-                className="employee-card-dropdown-item employee-card-dropdown-item--danger"
+              <EmployeeCardDropdownItem
+                className="danger"
                 onClick={() => {
                   onDelete(employee.id);
                   setShowActions(false);
@@ -165,82 +440,96 @@ const EmployeeCard = ({
               >
                 <Trash size={14} weight="duotone" />
                 Eliminar
-              </button>
-            </div>
+              </EmployeeCardDropdownItem>
+            </EmployeeCardDropdown>
           )}
-        </div>
-      </div>
+        </EmployeeCardActions>
+      </EmployeeCardHeader>
 
       {/* Card Body */}
-      <div className="employee-card-body">
+      <EmployeeCardBody>
         {/* Employee Info */}
-        <div className="employee-card-info">
-          <h3 className="employee-card-name">{employee.name}</h3>
+        <EmployeeCardInfo>
+          <EmployeeCardName>{employee.name}</EmployeeCardName>
           
-          <div className="employee-card-role">
+          <EmployeeCardRole>
             {getRoleIcon(employee.role)}
             <span>{getRoleLabel(employee.role)}</span>
-          </div>
+          </EmployeeCardRole>
 
-          <div className={`employee-card-status ${getStatusColor(employee.status)}`}>
-            <span className="employee-card-status-indicator"></span>
+          <EmployeeCardStatus status={employee.status}>
+            <EmployeeCardStatusIndicator status={employee.status} />
             {getStatusLabel(employee.status)}
-          </div>
-        </div>
+          </EmployeeCardStatus>
+        </EmployeeCardInfo>
 
         {/* Contact Info */}
-        <div className="employee-card-contact">
-          <div className="employee-card-contact-item">
+        <EmployeeCardContact>
+          <EmployeeCardContactItem>
             <Envelope size={14} weight="duotone" />
-            <span className="employee-card-contact-text">{employee.email}</span>
-          </div>
+            <EmployeeCardContactText>{employee.email}</EmployeeCardContactText>
+          </EmployeeCardContactItem>
           
           {(employee.phoneNumber || employee.phone) && (
-            <div className="employee-card-contact-item">
+            <EmployeeCardContactItem>
               <Phone size={14} weight="duotone" />
-              <span className="employee-card-contact-text">{employee.phoneNumber || employee.phone}</span>
-            </div>
+              <EmployeeCardContactText>{employee.phoneNumber || employee.phone}</EmployeeCardContactText>
+            </EmployeeCardContactItem>
           )}
-        </div>
+        </EmployeeCardContact>
 
         {/* Meta Info */}
-        <div className="employee-card-meta">
-          <div className="employee-card-meta-item">
+        <EmployeeCardMeta>
+          <EmployeeCardMetaItem>
             <Calendar size={12} weight="duotone" />
-            <span className="employee-card-meta-label">Creado:</span>
-            <span className="employee-card-meta-value">{formatDate(employee.createdAt)}</span>
-          </div>
+            <EmployeeCardMetaLabel>Creado:</EmployeeCardMetaLabel>
+            <EmployeeCardMetaValue>{formatDate(employee.createdAt)}</EmployeeCardMetaValue>
+          </EmployeeCardMetaItem>
           
-          <div className="employee-card-meta-item">
+          <EmployeeCardMetaItem>
             <Clock size={12} weight="duotone" />
-            <span className="employee-card-meta-label">Último acceso:</span>
-            <span className="employee-card-meta-value">{formatLastLogin(employee.lastLogin)}</span>
-          </div>
-        </div>
+            <EmployeeCardMetaLabel>Último acceso:</EmployeeCardMetaLabel>
+            <EmployeeCardMetaValue>{formatLastLogin(employee.lastLogin)}</EmployeeCardMetaValue>
+          </EmployeeCardMetaItem>
+        </EmployeeCardMeta>
 
         {/* Permissions */}
         {employee.permissions && employee.permissions.length > 0 && (
-          <div className="employee-card-permissions">
-            <span className="employee-card-permissions-label">Permisos:</span>
-            <div className="employee-card-permissions-list">
+          <Box sx={{ marginTop: '12px' }}>
+            <Typography sx={{ fontSize: '11px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              Permisos:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {employee.permissions.map((permission, index) => (
-                <span key={index} className="employee-card-permission-tag">
-                  {permission}
-                </span>
+                <Chip
+                  key={index}
+                  label={permission}
+                  size="small"
+                  sx={{
+                    fontSize: '10px',
+                    height: '24px',
+                    background: alpha('#040DBF', 0.1),
+                    color: '#040DBF',
+                    border: `1px solid ${alpha('#040DBF', 0.2)}`,
+                    '& .MuiChip-label': {
+                      padding: '0 8px',
+                      fontSize: '10px',
+                    }
+                  }}
+                />
               ))}
-            </div>
-          </div>
+            </Box>
+          </Box>
         )}
-      </div>
+      </EmployeeCardBody>
 
       {/* Click overlay to close dropdown */}
       {showActions && (
-        <div 
-          className="employee-card-overlay"
+        <EmployeeCardOverlay
           onClick={() => setShowActions(false)}
-        ></div>
+        />
       )}
-    </div>
+    </EmployeeCardContainer>
   );
 };
 

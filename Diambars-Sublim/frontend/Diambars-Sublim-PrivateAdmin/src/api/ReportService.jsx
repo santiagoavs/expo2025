@@ -11,7 +11,7 @@ const reportService = {
     try {
       console.log('📊 [reportService] Obteniendo stats del dashboard:', filters);
       
-      const response = await apiClient.get('/api/orders/reports/dashboard', {
+      const response = await apiClient.get('/orders/reports/dashboard', {
         params: filters
       });
       
@@ -31,7 +31,7 @@ const reportService = {
     try {
       console.log('💰 [reportService] Obteniendo reporte de ventas:', filters);
       
-      const response = await apiClient.get('/api/orders/reports/sales', {
+      const response = await apiClient.get('/orders/reports/sales', {
         params: {
           startDate: filters.startDate,
           endDate: filters.endDate,
@@ -59,7 +59,7 @@ const reportService = {
     try {
       console.log('🏆 [reportService] Obteniendo productos top:', filters);
       
-      const response = await apiClient.get('/api/orders/reports/top-products', {
+      const response = await apiClient.get('/orders/reports/top-products', {
         params: {
           limit: filters.limit || 10,
           startDate: filters.startDate,
@@ -87,7 +87,7 @@ const reportService = {
     try {
       console.log('👑 [reportService] Obteniendo clientes top:', filters);
       
-      const response = await apiClient.get('/api/orders/reports/top-customers', {
+      const response = await apiClient.get('/orders/reports/top-customers', {
         params: {
           limit: filters.limit || 10,
           sortBy: filters.sortBy || 'totalSpent',
@@ -116,7 +116,7 @@ const reportService = {
     try {
       console.log('⏱️ [reportService] Obteniendo reporte de producción:', filters);
       
-      const response = await apiClient.get('/api/orders/reports/production', {
+      const response = await apiClient.get('/orders/reports/production', {
         params: filters
       });
       
@@ -136,7 +136,7 @@ const reportService = {
     try {
       console.log('💳 [reportService] Obteniendo reporte de métodos de pago:', filters);
       
-      const response = await apiClient.get('/api/payments/reports/methods', {
+      const response = await apiClient.get('/payments/reports/methods', {
         params: filters
       });
       
@@ -154,7 +154,7 @@ const reportService = {
     try {
       console.log('💵 [reportService] Obteniendo reporte de efectivo:', filters);
       
-      const response = await apiClient.get('/api/payments/reports/cash', {
+      const response = await apiClient.get('/payments/reports/cash', {
         params: filters
       });
       
@@ -172,7 +172,7 @@ const reportService = {
     try {
       console.log('🏦 [reportService] Obteniendo transferencias pendientes');
       
-      const response = await apiClient.get('/api/payments/transfers/pending');
+      const response = await apiClient.get('/payments/transfers/pending');
       
       return response;
     } catch (error) {
@@ -190,7 +190,7 @@ const reportService = {
     try {
       console.log('📈 [reportService] Generando reporte personalizado:', reportConfig);
       
-      const response = await apiClient.post('/api/reports/custom', reportConfig);
+      const response = await apiClient.post('/reports/custom', reportConfig);
       
       return response;
     } catch (error) {

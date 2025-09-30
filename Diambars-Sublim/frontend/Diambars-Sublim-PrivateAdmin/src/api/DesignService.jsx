@@ -1,7 +1,7 @@
 // src/api/DesignService.js - SERVICIO COMPLETO PARA DISEÑOS ADMIN CORREGIDO
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/designs';
+const BASE_URL = '/designs';
 
 const DesignService = {
   // ==================== OBTENER DISEÑOS ====================
@@ -40,7 +40,7 @@ const DesignService = {
       const url = `${BASE_URL}?${queryParams.toString()}`;
 
       const response = await apiClient.get(url, {
-        timeout: 120000 // 2 minutos específicamente para diseños
+        timeout: 30000 // 30 segundos - debería ser suficiente con las optimizaciones
       });
       
       console.log('✅ [DesignService] Diseños obtenidos:', {
@@ -444,49 +444,53 @@ updateProductColor: async (id, color) => {
       return null;
     }
 
+    // Optimización: Calcular solo lo esencial para evitar procesamiento pesado
+    const elementsCount = Array.isArray(design.elements) ? design.elements.length : 0;
+    const status = design.status || 'draft';
+    
     const safeDesign = {
       ...design,
       id: design._id || design.id,
       name: design.name || 'Diseño sin nombre',
-      status: design.status || 'draft',
+      status,
       price: design.price || 0,
       productionDays: design.productionDays || 0,
-      elementsCount: Array.isArray(design.elements) ? design.elements.length : 0,
+      elementsCount,
       hasPreview: !!design.previewImage,
-      canEdit: ['draft', 'pending'].includes(design.status),
-      canQuote: design.status === 'pending',
-      canApprove: design.status === 'quoted',
+      canEdit: ['draft', 'pending'].includes(status),
+      canQuote: status === 'pending',
+      canApprove: status === 'quoted',
       
-      // Información del cliente
+      // Información del cliente (optimizado)
       clientName: design.user?.name || 'Cliente desconocido',
       clientEmail: design.user?.email || '',
       
-      // Información del producto
+      // Información del producto (optimizado)
       productName: design.product?.name || 'Producto desconocido',
       productImage: design.product?.images?.main || null,
       basePrice: design.product?.basePrice || 0,
       
-      // Fechas formateadas
+      // Fechas formateadas (optimizado - solo si es necesario)
       createdDate: design.createdAt ? new Date(design.createdAt).toLocaleDateString() : null,
       updatedDate: design.updatedAt ? new Date(design.updatedAt).toLocaleDateString() : null,
       quotedDate: design.quotedAt ? new Date(design.quotedAt).toLocaleDateString() : null,
       approvedDate: design.approvedAt ? new Date(design.approvedAt).toLocaleDateString() : null,
       
-      // Estado formateado
-      statusText: DesignService.getStatusText(design.status),
-      statusColor: DesignService.getStatusColor(design.status),
+      // Estado formateado (optimizado)
+      statusText: DesignService.getStatusText(status),
+      statusColor: DesignService.getStatusColor(status),
       
-      // Precio formateado
+      // Precio formateado (optimizado)
       formattedPrice: design.price ? new Intl.NumberFormat('es-ES', {
         style: 'currency',
         currency: 'USD'
       }).format(design.price) : '$0.00',
       
-      // Tiempo desde creación
+      // Tiempo desde creación (optimizado)
       daysAgo: design.createdAt ? DesignService.calculateDaysAgo(design.createdAt) : 0,
       
-      // Complejidad del diseño
-      complexity: DesignService.calculateComplexity(design.elements || [])
+      // Complejidad del diseño (optimizado - solo si hay elementos)
+      complexity: elementsCount > 0 ? DesignService.calculateComplexity(design.elements || []) : 'low'
     };
 
     return safeDesign;
@@ -560,27 +564,30 @@ updateProductColor: async (id, color) => {
       return 'low';
     }
     
+    // Optimización: Cálculo más eficiente sin múltiples iteraciones
     const totalElements = elements.length;
-    const imageElements = elements.filter(el => el.type === 'image').length;
-    const textElements = elements.filter(el => el.type === 'text').length;
+    let imageElements = 0;
+    let textElements = 0;
+    let hasEffects = false;
     
-    // Lógica de complejidad
-    let score = 0;
-    score += totalElements * 1;
-    score += imageElements * 2; // Las imágenes son más complejas
-    score += textElements * 1;
+    // Una sola iteración para contar todo
+    for (const el of elements) {
+      if (el.type === 'image') imageElements++;
+      if (el.type === 'text') textElements++;
+      
+      // Verificar efectos especiales solo si no se ha encontrado ninguno
+      if (!hasEffects && el.konvaAttrs) {
+        hasEffects = (
+          el.konvaAttrs.rotation !== 0 ||
+          el.konvaAttrs.opacity < 1 ||
+          el.konvaAttrs.shadowEnabled ||
+          el.konvaAttrs.filters?.length > 0
+        );
+      }
+    }
     
-    // Verificar efectos especiales
-    const hasEffects = elements.some(el => 
-      el.konvaAttrs && (
-        el.konvaAttrs.rotation !== 0 ||
-        el.konvaAttrs.opacity < 1 ||
-        el.konvaAttrs.shadowEnabled ||
-        el.konvaAttrs.filters?.length > 0
-      )
-    );
-    
-    if (hasEffects) score += 2;
+    // Cálculo simplificado de score
+    let score = totalElements + imageElements + (hasEffects ? 2 : 0);
     
     if (score <= 3) return 'low';
     if (score <= 8) return 'medium';

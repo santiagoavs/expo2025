@@ -11,7 +11,7 @@ export const login = async (credentials) => {
     // Limpiar cualquier token previo antes de intentar login
     localStorage.removeItem('token');
     
-    const response = await apiClient.post('/api/auth/login', {
+    const response = await apiClient.post('/auth/login', {
       email: credentials.email.toLowerCase().trim(),
       password: credentials.password
     });
@@ -95,7 +95,7 @@ export const login = async (credentials) => {
 export const logout = async () => {
   try {
     console.log("[authService-ADMIN] Cerrando sesión...");
-    await apiClient.post('/api/auth/logout');
+    await apiClient.post('/auth/logout');
     console.log("[authService-ADMIN] Sesión cerrada exitosamente en servidor");
   } catch (error) {
     console.warn("[authService-ADMIN] Error al cerrar sesión en servidor:", error);
@@ -118,7 +118,7 @@ export const getCurrentUser = async () => {
     }
 
     console.log("[authService-ADMIN] Token encontrado, verificando con servidor...");
-    const response = await apiClient.get('/api/auth/check');
+    const response = await apiClient.get('/auth/check');
     
     console.log("[authService-ADMIN] Respuesta de verificación:", response);
 
@@ -167,7 +167,7 @@ export const requestRecoveryCode = async (email) => {
       throw new Error('Email inválido');
     }
 
-    const response = await apiClient.post('/api/password-recovery/request-code', { 
+    const response = await apiClient.post('/password-recovery/request-code', { 
       email: email.trim().toLowerCase() 
     });
     
@@ -191,7 +191,7 @@ export const verifyRecoveryCode = async (email, code) => {
       throw new Error('El código debe tener 6 dígitos');
     }
 
-    const response = await apiClient.post('/api/password-recovery/verify-code', { 
+    const response = await apiClient.post('/password-recovery/verify-code', { 
       email: email.trim().toLowerCase(), 
       code: code.trim() 
     });
@@ -216,7 +216,7 @@ export const resetPassword = async (data) => {
       throw new Error('La contraseña debe tener al menos 6 caracteres');
     }
 
-    const response = await apiClient.post('/api/password-recovery/reset-password', {
+    const response = await apiClient.post('/password-recovery/reset-password', {
       newPassword: data.newPassword,
       token: data.token
     });

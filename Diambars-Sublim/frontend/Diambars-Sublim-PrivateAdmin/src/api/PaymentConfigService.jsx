@@ -11,7 +11,7 @@ const paymentConfigService = {
     try {
       console.log('⚙️ [paymentConfigService] Obteniendo configuraciones de métodos de pago');
       
-      const response = await apiClient.get('/api/payment-config');
+      const response = await apiClient.get('/payment-config');
       
       console.log('🔍 [paymentConfigService] Respuesta recibida:', response);
       
@@ -41,7 +41,7 @@ const paymentConfigService = {
     try {
       console.log('🌐 [paymentConfigService] Obteniendo configuración pública');
       
-      const response = await apiClient.get('/api/payment-config/public');
+      const response = await apiClient.get('/payment-config/public');
       
       return response;
     } catch (error) {
@@ -57,7 +57,7 @@ const paymentConfigService = {
     try {
       console.log('➕ [paymentConfigService] Creando nueva configuración:', configData.type);
       
-      const response = await apiClient.post('/api/payment-config', configData);
+      const response = await apiClient.post('/payment-config', configData);
       
       return response;
     } catch (error) {
@@ -73,7 +73,7 @@ const paymentConfigService = {
     try {
       console.log('➕ [paymentConfigService] Creando/actualizando configuración:', configData.type);
       
-      const response = await apiClient.post('/api/payment-config', configData);
+      const response = await apiClient.post('/payment-config', configData);
       
       return response;
     } catch (error) {
@@ -121,7 +121,7 @@ const paymentConfigService = {
     try {
       console.log('📊 [paymentConfigService] Obteniendo estadísticas de pagos');
       
-      const response = await apiClient.get('/api/payment-config/stats');
+      const response = await apiClient.get('/payment-config/stats');
       
       console.log('🔍 [paymentConfigService] Estadísticas recibidas:', response);
       
@@ -154,7 +154,7 @@ const paymentConfigService = {
     try {
       console.log('📋 [paymentConfigService] Obteniendo tipos soportados');
       
-      const response = await apiClient.get('/api/payment-config/supported-types');
+      const response = await apiClient.get('/payment-config/supported-types');
       
       return response;
     } catch (error) {

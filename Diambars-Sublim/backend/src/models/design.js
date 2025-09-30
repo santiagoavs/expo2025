@@ -501,13 +501,38 @@ const designSchema = new mongoose.Schema({
 // Agregar plugin de paginación
 designSchema.plugin(mongoosePaginate);
 
-// Índices para búsquedas eficientes
+// Índices optimizados para búsquedas eficientes
 designSchema.index({ user: 1, createdAt: -1 });
 designSchema.index({ product: 1, status: 1 });
 designSchema.index({ status: 1, createdAt: -1 });
 designSchema.index({ 'metadata.complexity': 1 });
 designSchema.index({ price: 1 });
 designSchema.index({ quotedAt: 1 });
+
+// Índices compuestos para consultas complejas
+designSchema.index({ status: 1, product: 1, createdAt: -1 });
+designSchema.index({ user: 1, status: 1, createdAt: -1 });
+
+// Índice de texto para búsquedas rápidas
+designSchema.index({ 
+  name: 'text', 
+  clientNotes: 'text' 
+}, {
+  weights: {
+    name: 10,
+    clientNotes: 5
+  },
+  name: 'design_text_search'
+});
+
+// Índice para consultas de admin
+designSchema.index({ 
+  status: 1, 
+  createdAt: -1, 
+  product: 1 
+}, { 
+  name: 'admin_designs_query' 
+});
 
 // Virtuals
 designSchema.virtual('order', {

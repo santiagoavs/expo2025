@@ -9,7 +9,8 @@ export default defineConfig({
       '/api': {
         target: 'https://expo2025-8bjn.onrender.com',
         changeOrigin: true,
-        secure: true
+        secure: true,
+        // No necesitamos rewrite porque queremos mantener /api en el backend
       }
     }
   },

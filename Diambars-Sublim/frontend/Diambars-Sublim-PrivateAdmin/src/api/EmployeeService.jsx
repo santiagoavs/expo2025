@@ -1,7 +1,7 @@
 // src/api/employeeService.js
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/employees';
+const BASE_URL = '/employees';
 
 export default {
   // Obtener todos los empleados activos (requiere Admin/Manager)
@@ -19,7 +19,7 @@ export default {
   // Crear nuevo empleado (registro - requiere Admin)
   // Usa el endpoint de registro de empleados
   createEmployee: async (employeeData) => {
-    const response = await apiClient.post('/api/employees/register', employeeData);
+    const response = await apiClient.post('/employees/register', employeeData);
     return response;
   },
 

@@ -16,7 +16,432 @@ import {
   Pause,
   List
 } from '@phosphor-icons/react';
-import './UserCard.css';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  TextField,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
+  Avatar,
+  styled,
+  useTheme,
+  alpha,
+  Paper,
+  Divider
+} from '@mui/material';
+
+// ================ ESTILOS MODERNOS RESPONSIVE - USER CARD ================
+const UserCardContainer = styled(Card)(({ theme }) => ({
+  position: 'relative',
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(15px)',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '20px',
+  overflow: 'hidden',
+  boxShadow: '0 8px 25px rgba(4, 13, 191, 0.08)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.1)',
+    transform: 'translateY(-2px)',
+    borderColor: alpha('#040DBF', 0.15),
+  }
+}));
+
+const UserCardHeader = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  padding: '24px 24px 0 24px',
+  position: 'relative',
+});
+
+const UserCardAvatar = styled(Avatar)(({ theme }) => ({
+  position: 'relative',
+  width: '64px',
+  height: '64px',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  boxShadow: '0 6px 20px rgba(4, 13, 191, 0.3)',
+  transition: 'all 0.3s ease',
+  fontSize: '24px',
+  fontWeight: '700',
+  '&:hover': {
+    transform: 'scale(1.02)',
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.25)',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '56px',
+    height: '56px',
+    fontSize: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '48px',
+    height: '48px',
+    fontSize: '18px',
+  }
+}));
+
+const UserCardStatusDot = styled(Box)(({ status, theme }) => ({
+  position: 'absolute',
+  bottom: '4px',
+  right: '4px',
+  width: '16px',
+  height: '16px',
+  border: '3px solid #ffffff',
+  borderRadius: '50%',
+  transition: 'all 0.3s ease',
+  ...(status === 'active' ? {
+    background: '#10b981',
+    animation: 'userCardPulse 2s ease-in-out infinite',
+  } : status === 'pending' ? {
+    background: '#f59e0b',
+    animation: 'userCardPulse 2s ease-in-out infinite',
+  } : {
+    background: '#64748b',
+  }),
+  [theme.breakpoints.down('sm')]: {
+    width: '12px',
+    height: '12px',
+    borderWidth: '2px',
+  }
+}));
+
+const UserCardActions = styled(Box)({
+  position: 'relative',
+});
+
+const UserCardActionBtn = styled(IconButton)(({ theme }) => ({
+  width: '40px',
+  height: '40px',
+  background: alpha('#040DBF', 0.15),
+  border: `2px solid ${alpha('#040DBF', 0.3)}`,
+  borderRadius: '12px',
+  color: '#040DBF',
+  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+  position: 'relative',
+  boxShadow: '0 2px 8px rgba(4, 13, 191, 0.1)',
+  overflow: 'hidden',
+  '&:hover': {
+    background: alpha('#040DBF', 0.2),
+    borderColor: alpha('#040DBF', 0.4),
+    color: '#040DBF',
+    transform: 'translateY(-1px) scale(1.02)',
+    boxShadow: '0 4px 12px rgba(4, 13, 191, 0.2)',
+  },
+  '&:active': {
+    transform: 'translateY(0) scale(0.95)',
+  },
+  '&:focus': {
+    outline: `3px solid ${alpha('#040DBF', 0.3)}`,
+    outlineOffset: '2px',
+  }
+}));
+
+const UserCardDropdown = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  top: '100%',
+  right: 0,
+  marginTop: '8px',
+  background: '#ffffff',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '12px',
+  boxShadow: '0 8px 25px rgba(4, 13, 191, 0.15)',
+  zIndex: 10,
+  minWidth: '140px',
+  overflow: 'hidden',
+  animation: 'userCardDropdownEnter 0.2s ease-out',
+}));
+
+const UserCardDropdownItem = styled(MenuItem)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '12px 16px',
+  fontSize: '13px',
+  fontWeight: '500',
+  color: '#334155',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    background: alpha('#040DBF', 0.05),
+    color: '#040DBF',
+  },
+  '&.danger:hover': {
+    background: alpha('#ef4444', 0.05),
+    color: '#dc2626',
+  }
+}));
+
+const UserCardBody = styled(Box)({
+  padding: '16px 24px 24px 24px',
+});
+
+const UserCardInfo = styled(Box)({
+  marginBottom: '20px',
+});
+
+const UserCardName = styled(Typography)(({ theme }) => ({
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: '0 0 8px 0',
+  lineHeight: 1.3,
+  [theme.breakpoints.down('md')]: {
+    fontSize: '16px',
+  }
+}));
+
+const UserCardRole = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  marginBottom: '8px',
+  fontSize: '13px',
+  fontWeight: '600',
+  color: '#040DBF',
+});
+
+const UserCardStatus = styled(Box)(({ status }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '12px',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  ...(status === 'active' ? {
+    color: '#059669',
+  } : status === 'pending' ? {
+    color: '#d97706',
+  } : {
+    color: '#64748b',
+  })
+}));
+
+const UserCardStatusIndicator = styled(Box)(({ status }) => ({
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  ...(status === 'active' ? {
+    background: '#10b981',
+  } : status === 'pending' ? {
+    background: '#f59e0b',
+  } : {
+    background: '#64748b',
+  })
+}));
+
+const UserCardContact = styled(Box)({
+  marginBottom: '16px',
+});
+
+const UserCardContactItem = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '8px 0',
+  fontSize: '13px',
+  '& svg': {
+    color: '#64748b',
+    minWidth: '14px',
+  }
+});
+
+const UserCardContactText = styled(Typography)({
+  color: '#334155',
+  fontWeight: '500',
+  wordBreak: 'break-all',
+  fontSize: '13px',
+});
+
+const UserCardMeta = styled(Box)({
+  marginBottom: '16px',
+  padding: '12px',
+  background: 'rgba(248, 250, 252, 0.6)',
+  borderRadius: '10px',
+  border: `1px solid ${alpha('#040DBF', 0.05)}`,
+});
+
+const UserCardMetaItem = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '11px',
+  marginBottom: '4px',
+  '&:last-child': {
+    marginBottom: 0,
+  },
+  '& svg': {
+    color: '#64748b',
+  }
+});
+
+const UserCardMetaLabel = styled(Typography)({
+  color: '#64748b',
+  fontWeight: '600',
+  minWidth: '60px',
+  fontSize: '11px',
+});
+
+const UserCardMetaValue = styled(Typography)({
+  color: '#334155',
+  fontWeight: '500',
+  fontSize: '11px',
+});
+
+const UserCardPermissions = styled(Box)({
+  marginTop: '12px',
+});
+
+const UserCardPermissionsLabel = styled(Typography)({
+  display: 'block',
+  fontSize: '11px',
+  color: '#64748b',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  marginBottom: '8px',
+});
+
+const UserCardPermissionsList = styled(Box)({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '6px',
+});
+
+const UserCardPermissionTag = styled(Chip)({
+  padding: '4px 8px',
+  background: alpha('#040DBF', 0.1),
+  color: '#040DBF',
+  fontSize: '10px',
+  fontWeight: '600',
+  borderRadius: '6px',
+  textTransform: 'capitalize',
+  border: `1px solid ${alpha('#040DBF', 0.2)}`,
+  height: 'auto',
+  '& .MuiChip-label': {
+    padding: '0',
+    fontSize: '10px',
+  }
+});
+
+const UserCardEditForm = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+});
+
+const UserCardField = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+});
+
+const UserCardLabel = styled(Typography)({
+  fontSize: '12px',
+  fontWeight: '600',
+  color: '#334155',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+});
+
+const UserCardInput = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    padding: '10px 12px',
+    background: '#ffffff',
+    borderRadius: '8px',
+    fontSize: '14px',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+      borderWidth: '2px',
+    },
+    '&:hover fieldset': {
+      borderColor: '#040DBF',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#040DBF',
+      boxShadow: '0 0 0 3px rgba(4, 13, 191, 0.1)',
+    },
+  },
+  '& .MuiInputBase-input': {
+    color: '#010326',
+    padding: 0,
+  }
+}));
+
+const UserCardSelect = styled(Select)(({ theme }) => ({
+  padding: '10px 12px',
+  background: '#ffffff',
+  borderRadius: '8px',
+  fontSize: '14px',
+  '& fieldset': {
+    borderColor: '#e2e8f0',
+    borderWidth: '2px',
+  },
+  '&:hover fieldset': {
+    borderColor: '#040DBF',
+  },
+  '&.Mui-focused fieldset': {
+    borderColor: '#040DBF',
+    boxShadow: '0 0 0 3px rgba(4, 13, 191, 0.1)',
+  },
+  '& .MuiSelect-select': {
+    color: '#010326',
+  }
+}));
+
+const UserCardEditActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '8px',
+  marginTop: '8px',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+  }
+}));
+
+const UserCardBtn = styled(Button)(({ variant }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '8px 14px',
+  borderRadius: '8px',
+  fontSize: '12px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s ease',
+  border: '2px solid transparent',
+  flex: 1,
+  justifyContent: 'center',
+  ...(variant === 'primary' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+    color: '#ffffff',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #1F64BF, #040DBF)',
+      transform: 'translateY(-1px)',
+    }
+  } : {
+    background: '#ffffff',
+    color: '#64748b',
+    borderColor: '#e2e8f0',
+    '&:hover': {
+      background: '#f8fafc',
+      color: '#334155',
+      borderColor: '#cbd5e1',
+    }
+  })
+}));
+
+const UserCardOverlay = styled(Box)({
+  position: 'fixed',
+  inset: 0,
+  zIndex: 5,
+});
 
 const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
   const [showActions, setShowActions] = useState(false);
@@ -123,30 +548,28 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
   };
 
   return (
-    <div className="user-card">
+    <UserCardContainer>
       {/* Card Header */}
-      <div className="user-card-header">
-        <div className="user-card-avatar">
-          <span className="user-card-avatar-text">
+      <UserCardHeader>
+        <Box sx={{ position: 'relative' }}>
+          <UserCardAvatar>
             {user.name.charAt(0).toUpperCase()}
-          </span>
-          <div className={`user-card-status-dot ${getStatusColor(user.status)}`}></div>
-        </div>
+          </UserCardAvatar>
+          <UserCardStatusDot status={user.status} />
+        </Box>
 
-        <div className="user-card-actions">
-          <button 
-            className="user-card-action-btn"
+        <UserCardActions>
+          <UserCardActionBtn
             onClick={() => setShowActions(!showActions)}
             aria-label="Menú de acciones"
             title="Opciones"
           >
             <DotsThreeVertical size={20} weight="bold" />
-          </button>
+          </UserCardActionBtn>
 
           {showActions && (
-            <div className="user-card-dropdown">
-              <button 
-                className="user-card-dropdown-item"
+            <UserCardDropdown>
+              <UserCardDropdownItem
                 onClick={() => {
                   setIsEditing(true);
                   setShowActions(false);
@@ -154,11 +577,10 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
               >
                 <PencilSimple size={14} weight="duotone" />
                 Editar
-              </button>
+              </UserCardDropdownItem>
               
               {user.status === 'active' ? (
-                <button 
-                  className="user-card-dropdown-item"
+                <UserCardDropdownItem
                   onClick={() => {
                     onStatusChange(user.id, 'inactive');
                     setShowActions(false);
@@ -166,10 +588,9 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
                 >
                   <Pause size={14} weight="duotone" />
                   Desactivar
-                </button>
+                </UserCardDropdownItem>
               ) : (
-                <button 
-                  className="user-card-dropdown-item"
+                <UserCardDropdownItem
                   onClick={() => {
                     onStatusChange(user.id, 'active');
                     setShowActions(false);
@@ -177,11 +598,11 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
                 >
                   <Check size={14} weight="duotone" />
                   Activar
-                </button>
+                </UserCardDropdownItem>
               )}
 
-              <button 
-                className="user-card-dropdown-item user-card-dropdown-item--danger"
+              <UserCardDropdownItem
+                className="danger"
                 onClick={() => {
                   onDelete(user.id);
                   setShowActions(false);
@@ -189,150 +610,149 @@ const UserCard = ({ user, onEdit, onDelete, onStatusChange }) => {
               >
                 <Trash size={14} weight="duotone" />
                 Eliminar
-              </button>
-            </div>
+              </UserCardDropdownItem>
+            </UserCardDropdown>
           )}
-        </div>
-      </div>
+        </UserCardActions>
+      </UserCardHeader>
 
       {/* Card Body */}
-      <div className="user-card-body">
+      <UserCardBody>
         {isEditing ? (
-          <div className="user-card-edit-form">
-            <div className="user-card-field">
-              <label className="user-card-label">Nombre</label>
-              <input
+          <UserCardEditForm>
+            <UserCardField>
+              <UserCardLabel>Nombre</UserCardLabel>
+              <UserCardInput
                 type="text"
-                className="user-card-input"
                 value={editData.name}
                 onChange={(e) => setEditData({...editData, name: e.target.value})}
               />
-            </div>
+            </UserCardField>
 
-            <div className="user-card-field">
-              <label className="user-card-label">Email</label>
-              <input
+            <UserCardField>
+              <UserCardLabel>Email</UserCardLabel>
+              <UserCardInput
                 type="email"
-                className="user-card-input"
                 value={editData.email}
                 onChange={(e) => setEditData({...editData, email: e.target.value})}
               />
-            </div>
+            </UserCardField>
 
-            <div className="user-card-field">
-              <label className="user-card-label">Teléfono</label>
-              <input
+            <UserCardField>
+              <UserCardLabel>Teléfono</UserCardLabel>
+              <UserCardInput
                 type="tel"
-                className="user-card-input"
                 value={editData.phoneNumber}
                 onChange={(e) => setEditData({...editData, phoneNumber: e.target.value})}
                 placeholder="12345678"
-                maxLength="8"
+                inputProps={{ maxLength: 8 }}
               />
-            </div>
+            </UserCardField>
 
-            <div className="user-card-field">
-              <label className="user-card-label">Rol</label>
-              <select
-                className="user-card-select"
-                value={editData.role}
-                onChange={(e) => setEditData({...editData, role: e.target.value})}
-              >
-                <option value="customer">Cliente</option>
-                <option value="premium">Premium</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
+            <UserCardField>
+              <UserCardLabel>Rol</UserCardLabel>
+              <FormControl fullWidth>
+                <UserCardSelect
+                  value={editData.role}
+                  onChange={(e) => setEditData({...editData, role: e.target.value})}
+                >
+                  <MenuItem value="customer">Cliente</MenuItem>
+                  <MenuItem value="premium">Premium</MenuItem>
+                  <MenuItem value="admin">Administrador</MenuItem>
+                </UserCardSelect>
+              </FormControl>
+            </UserCardField>
 
-            <div className="user-card-edit-actions">
-              <button 
-                className="user-card-btn user-card-btn--primary"
+            <UserCardEditActions>
+              <UserCardBtn 
+                variant="primary"
                 onClick={handleEditSubmit}
               >
                 <Check size={14} weight="duotone" />
                 Guardar
-              </button>
-              <button 
-                className="user-card-btn user-card-btn--secondary"
+              </UserCardBtn>
+              <UserCardBtn 
+                variant="secondary"
                 onClick={handleEditCancel}
               >
                 <X size={14} weight="duotone" />
                 Cancelar
-              </button>
-            </div>
-          </div>
+              </UserCardBtn>
+            </UserCardEditActions>
+          </UserCardEditForm>
         ) : (
           <>
             {/* User Info */}
-            <div className="user-card-info">
-              <h3 className="user-card-name">{user.name}</h3>
+            <UserCardInfo>
+              <UserCardName>{user.name}</UserCardName>
               
-              <div className="user-card-role">
+              <UserCardRole>
                 {getRoleIcon(user.role)}
                 <span>{getRoleLabel(user.role)}</span>
-              </div>
+              </UserCardRole>
 
-              <div className={`user-card-status ${getStatusColor(user.status)}`}>
-                <span className="user-card-status-indicator"></span>
+              <UserCardStatus status={user.status}>
+                <UserCardStatusIndicator status={user.status} />
                 {getStatusLabel(user.status)}
-              </div>
-            </div>
+              </UserCardStatus>
+            </UserCardInfo>
 
             {/* Contact Info */}
-            <div className="user-card-contact">
-              <div className="user-card-contact-item">
+            <UserCardContact>
+              <UserCardContactItem>
                 <EnvelopeSimple size={14} weight="duotone" />
-                <span className="user-card-contact-text">{user.email}</span>
-              </div>
+                <UserCardContactText>{user.email}</UserCardContactText>
+              </UserCardContactItem>
               
               {(user.phoneNumber || user.phone) && (
-                <div className="user-card-contact-item">
+                <UserCardContactItem>
                   <Phone size={14} weight="duotone" />
-                  <span className="user-card-contact-text">{user.phoneNumber || user.phone}</span>
-                </div>
+                  <UserCardContactText>{user.phoneNumber || user.phone}</UserCardContactText>
+                </UserCardContactItem>
               )}
-            </div>
+            </UserCardContact>
 
             {/* Meta Info */}
-            <div className="user-card-meta">
-              <div className="user-card-meta-item">
+            <UserCardMeta>
+              <UserCardMetaItem>
                 <Calendar size={12} weight="duotone" />
-                <span className="user-card-meta-label">Creado:</span>
-                <span className="user-card-meta-value">{formatDate(user.createdAt)}</span>
-              </div>
+                <UserCardMetaLabel>Creado:</UserCardMetaLabel>
+                <UserCardMetaValue>{formatDate(user.createdAt)}</UserCardMetaValue>
+              </UserCardMetaItem>
               
-              <div className="user-card-meta-item">
+              <UserCardMetaItem>
                 <Clock size={12} weight="duotone" />
-                <span className="user-card-meta-label">Último acceso:</span>
-                <span className="user-card-meta-value">{formatLastLogin(user.lastLogin)}</span>
-              </div>
-            </div>
+                <UserCardMetaLabel>Último acceso:</UserCardMetaLabel>
+                <UserCardMetaValue>{formatLastLogin(user.lastLogin)}</UserCardMetaValue>
+              </UserCardMetaItem>
+            </UserCardMeta>
 
             {/* Permissions */}
             {user.permissions && user.permissions.length > 0 && (
-              <div className="user-card-permissions">
-                <span className="user-card-permissions-label">Permisos:</span>
-                <div className="user-card-permissions-list">
+              <UserCardPermissions>
+                <UserCardPermissionsLabel>Permisos:</UserCardPermissionsLabel>
+                <UserCardPermissionsList>
                   {user.permissions.map((permission, index) => (
-                    <span key={index} className="user-card-permission-tag">
-                      {permission}
-                    </span>
+                    <UserCardPermissionTag
+                      key={index}
+                      label={permission}
+                      size="small"
+                    />
                   ))}
-                </div>
-              </div>
+                </UserCardPermissionsList>
+              </UserCardPermissions>
             )}
           </>
         )}
-      </div>
+      </UserCardBody>
 
       {/* Click overlay to close dropdown */}
       {showActions && (
-        <div 
-          className="user-card-overlay"
+        <UserCardOverlay
           onClick={() => setShowActions(false)}
-        ></div>
+        />
       )}
-    </div>
+    </UserCardContainer>
   );
 };
 

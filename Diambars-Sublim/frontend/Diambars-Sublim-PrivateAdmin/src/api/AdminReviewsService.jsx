@@ -1,7 +1,7 @@
 // src/api/AdminReviewsService.jsx - SERVICIO PARA ADMINISTRACIÓN DE RESEÑAS
 import apiClient from './ApiClient';
 
-const BASE_URL = '/api/reviews';
+const BASE_URL = '/reviews';
 
 const AdminReviewsService = {
   // ==================== OBTENER TODAS LAS RESEÑAS ====================

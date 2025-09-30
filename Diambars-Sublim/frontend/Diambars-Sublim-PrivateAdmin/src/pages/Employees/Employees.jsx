@@ -15,12 +15,405 @@ import {
   UserMinus,
   Trash
 } from '@phosphor-icons/react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+  InputAdornment,
+  Grid,
+  IconButton,
+  CircularProgress,
+  Chip,
+  Paper,
+  styled,
+  useTheme,
+  alpha,
+  Avatar,
+  InputLabel,
+  FormControl,
+  OutlinedInput
+} from '@mui/material';
 import EmployeeCard from '../../components/EmployeeCard/EmployeeCard';
 import EmployeeModal from '../../components/EmployeeModal/EmployeeModal';
 import EmployeeFilters from '../../components/EmployeeFilters/EmployeeFilters';
 import useEmployees from '../../hooks/useEmployees';
 import Swal from 'sweetalert2';
-import './Employees.css';
+
+// ================ ESTILOS MODERNOS RESPONSIVE - EMPLOYEES ================
+const EmployeesPageContainer = styled(Box)({
+  minHeight: '100vh',
+  fontFamily: "'Mona Sans'",
+  background: 'white',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+});
+
+const EmployeesContentWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '1400px',
+  margin: '0 auto',
+  paddingTop: '120px',
+  paddingBottom: '40px',
+  paddingLeft: '32px',
+  paddingRight: '32px',
+  minHeight: 'calc(100vh - 120px)',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1200px',
+    paddingLeft: '28px',
+    paddingRight: '28px',
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '1000px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    paddingTop: '110px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: '100px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+  }
+}));
+
+const EmployeesModernCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '16px',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  boxShadow: '0 4px 15px rgba(4, 13, 191, 0.08)',
+  transition: 'all 0.3s ease',
+  fontFamily: "'Mona Sans'",
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 25px rgba(4, 13, 191, 0.15)',
+    borderColor: alpha('#040DBF', 0.2),
+  }
+}));
+
+const EmployeesHeaderSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '24px',
+  padding: '20px 0',
+  [theme.breakpoints.down('lg')]: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '20px',
+  }
+}));
+
+const EmployeesTitleSection = styled(Box)({
+  flex: 1,
+});
+
+const EmployeesMainTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  fontSize: '28px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: '0 0 8px 0',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '22px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '8px',
+  }
+}));
+
+const EmployeesSubtitle = styled(Typography)(({ theme }) => ({
+  fontSize: '16px',
+  color: '#64748b',
+  margin: 0,
+  fontWeight: '500',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '14px',
+  }
+}));
+
+const EmployeesActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '12px',
+  alignItems: 'center',
+  [theme.breakpoints.down('lg')]: {
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '8px',
+  }
+}));
+
+const EmployeesBtn = styled(Button)(({ variant }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '12px 20px',
+  borderRadius: '12px',
+  fontSize: '14px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  ...(variant === 'primary' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+    color: '#ffffff',
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.3)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #1F64BF, #040DBF)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(4, 13, 191, 0.4)',
+    }
+  } : {
+    background: '#ffffff',
+    color: '#040DBF',
+    border: '2px solid #e2e8f0',
+    boxShadow: '0 2px 8px rgba(4, 13, 191, 0.1)',
+    '&:hover': {
+      background: alpha('#040DBF', 0.05),
+      borderColor: '#040DBF',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(4, 13, 191, 0.15)',
+    }
+  })
+}));
+
+const EmployeesStatsGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+  gap: '20px',
+  marginBottom: '8px',
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    gap: '12px',
+  }
+}));
+
+const EmployeesStatCard = styled(EmployeesModernCard)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '24px',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9))',
+  [theme.breakpoints.down('md')]: {
+    padding: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px',
+  }
+}));
+
+const EmployeesStatIcon = styled(Box)(({ variant, theme }) => ({
+  width: '52px',
+  height: '52px',
+  borderRadius: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#ffffff',
+  transition: 'all 0.3s ease',
+  ...(variant === 'total' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  } : variant === 'active' ? {
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+  } : variant === 'admin' ? {
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+  } : {
+    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+  }),
+  [theme.breakpoints.down('sm')]: {
+    width: '44px',
+    height: '44px',
+  }
+}));
+
+const EmployeesStatContent = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const EmployeesStatNumber = styled(Typography)(({ theme }) => ({
+  fontSize: '28px',
+  fontWeight: '700',
+  color: '#010326',
+  lineHeight: 1,
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '20px',
+  }
+}));
+
+const EmployeesStatLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '14px',
+  color: '#64748b',
+  fontWeight: '600',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '13px',
+  }
+}));
+
+const EmployeesControls = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+});
+
+const EmployeesSearch = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  maxWidth: '500px',
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: '100%',
+  }
+}));
+
+const EmployeesSearchIcon = styled(Box)({
+  position: 'absolute',
+  left: '16px',
+  color: '#64748b',
+  transition: 'color 0.3s ease',
+  zIndex: 2,
+});
+
+const EmployeesSearchInput = styled(TextField)(({ theme }) => ({
+  width: '100%',
+  '& .MuiOutlinedInput-root': {
+    paddingLeft: '48px',
+    borderRadius: '16px',
+    fontSize: '14px',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+      borderWidth: '2px',
+    },
+    '&:hover fieldset': {
+      borderColor: '#040DBF',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#040DBF',
+      boxShadow: '0 0 0 4px rgba(4, 13, 191, 0.1)',
+    },
+  },
+  '& .MuiInputBase-input': {
+    padding: '14px 16px',
+    color: '#010326',
+  }
+}));
+
+const EmployeesResults = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '0 4px',
+});
+
+const EmployeesResultsText = styled(Typography)({
+  fontSize: '14px',
+  color: '#64748b',
+  fontWeight: '500',
+});
+
+const EmployeesGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+  gap: '24px',
+  marginTop: '8px',
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '20px',
+  },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    gap: '16px',
+  }
+}));
+
+const EmployeesEmpty = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '80px 20px',
+  textAlign: 'center',
+  color: '#64748b',
+  [theme.breakpoints.down('sm')]: {
+    padding: '60px 20px',
+  }
+}));
+
+const EmployeesEmptyTitle = styled(Typography)({
+  fontSize: '20px',
+  fontWeight: '600',
+  margin: '16px 0 8px 0',
+  color: '#334155',
+});
+
+const EmployeesEmptyText = styled(Typography)({
+  fontSize: '14px',
+  margin: 0,
+});
+
+const EmployeesLoading = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '400px',
+  gap: '16px',
+  color: '#64748b',
+  fontWeight: '500',
+});
+
+const EmployeesError = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '400px',
+  gap: '16px',
+  color: '#64748b',
+  textAlign: 'center',
+});
+
+const EmployeesErrorTitle = styled(Typography)({
+  fontSize: '20px',
+  fontWeight: '600',
+  color: '#dc2626',
+  margin: 0,
+});
+
+const EmployeesErrorText = styled(Typography)({
+  fontSize: '14px',
+  margin: 0,
+});
 
 const Employees = () => {
   const {
@@ -256,131 +649,136 @@ const Employees = () => {
   // Mostrar error si hay problemas con la API
   if (error && !loading) {
     return (
-      <div className="employees-admin-page">
-        <div className="employees-admin-error">
-          <h3>Error al cargar empleados</h3>
-          <p>{error}</p>
-          <button 
-            className="employees-admin-btn employees-admin-btn--primary"
+      <EmployeesPageContainer>
+        <EmployeesContentWrapper>
+          <EmployeesError>
+            <EmployeesErrorTitle>Error al cargar empleados</EmployeesErrorTitle>
+            <EmployeesErrorText>{error}</EmployeesErrorText>
+            <EmployeesBtn 
+              variant="primary"
             onClick={() => window.location.reload()}
           >
             Reintentar
-          </button>
-        </div>
-      </div>
+            </EmployeesBtn>
+          </EmployeesError>
+        </EmployeesContentWrapper>
+      </EmployeesPageContainer>
     );
   }
 
   if (loading) {
     return (
-      <div className="employees-admin-page">
-        <div className="employees-admin-loading">
-          <div className="employees-admin-spinner"></div>
+      <EmployeesPageContainer>
+        <EmployeesContentWrapper>
+          <EmployeesLoading>
+            <CircularProgress size={40} sx={{ color: '#040DBF' }} />
           <span>Cargando empleados...</span>
-        </div>
-      </div>
+          </EmployeesLoading>
+        </EmployeesContentWrapper>
+      </EmployeesPageContainer>
     );
   }
 
   return (
-    <div className="employees-admin-page">
-      <div className="employees-admin-container">
+    <EmployeesPageContainer>
+      <EmployeesContentWrapper>
         
         {/* Header */}
-        <div className="employees-admin-header">
-          <div className="employees-admin-title-section">
-            <h1 className="employees-admin-title">
+        <EmployeesHeaderSection>
+          <EmployeesTitleSection>
+            <EmployeesMainTitle>
               <UserList size={32} weight="duotone" />
               Gestión de Empleados
-            </h1>
-            <p className="employees-admin-subtitle">
+            </EmployeesMainTitle>
+            <EmployeesSubtitle>
               Administra empleados, departamentos y posiciones de la empresa
-            </p>
-          </div>
+            </EmployeesSubtitle>
+          </EmployeesTitleSection>
 
-          <div className="employees-admin-actions">
-            <button 
-              className="employees-admin-btn employees-admin-btn--secondary"
+          <EmployeesActions>
+            <EmployeesBtn 
+              variant="secondary"
               onClick={() => setShowFilters(!showFilters)}
             >
               <FunnelSimple size={16} weight="duotone" />
               Filtros
-            </button>
+            </EmployeesBtn>
 
-            <button 
-              className="employees-admin-btn employees-admin-btn--secondary"
+            <EmployeesBtn 
+              variant="secondary"
               onClick={handleExportEmployees}
               disabled={filteredEmployees.length === 0}
             >
               <Export size={16} weight="duotone" />
               Exportar
-            </button>
+            </EmployeesBtn>
 
-            <button 
-              className="employees-admin-btn employees-admin-btn--primary"
+            <EmployeesBtn 
+              variant="primary"
               onClick={handleCreateEmployee}
             >
               <UserPlus size={16} weight="duotone" />
               Nuevo Empleado
-            </button>
-          </div>
-        </div>
+            </EmployeesBtn>
+          </EmployeesActions>
+        </EmployeesHeaderSection>
 
         {/* Stats Cards */}
-        <div className="employees-admin-stats">
-          <div className="employees-admin-stat-card">
-            <div className="employees-admin-stat-icon employees-admin-stat-icon--total">
+        <EmployeesStatsGrid>
+          <EmployeesStatCard>
+            <EmployeesStatIcon variant="total">
               <UserList size={24} weight="duotone" />
-            </div>
-            <div className="employees-admin-stat-content">
-              <span className="employees-admin-stat-number">{stats.total}</span>
-              <span className="employees-admin-stat-label">Total Empleados</span>
-            </div>
-          </div>
+            </EmployeesStatIcon>
+            <EmployeesStatContent>
+              <EmployeesStatNumber>{stats.total}</EmployeesStatNumber>
+              <EmployeesStatLabel>Total Empleados</EmployeesStatLabel>
+            </EmployeesStatContent>
+          </EmployeesStatCard>
 
-          <div className="employees-admin-stat-card">
-            <div className="employees-admin-stat-icon employees-admin-stat-icon--active">
+          <EmployeesStatCard>
+            <EmployeesStatIcon variant="active">
               <CheckCircle size={24} weight="duotone" />
-            </div>
-            <div className="employees-admin-stat-content">
-              <span className="employees-admin-stat-number">{stats.active}</span>
-              <span className="employees-admin-stat-label">Activos</span>
-            </div>
-          </div>
+            </EmployeesStatIcon>
+            <EmployeesStatContent>
+              <EmployeesStatNumber>{stats.active}</EmployeesStatNumber>
+              <EmployeesStatLabel>Activos</EmployeesStatLabel>
+            </EmployeesStatContent>
+          </EmployeesStatCard>
 
-          <div className="employees-admin-stat-card">
-            <div className="employees-admin-stat-icon employees-admin-stat-icon--departments">
+          <EmployeesStatCard>
+            <EmployeesStatIcon variant="departments">
               <Buildings size={24} weight="duotone" />
-            </div>
-            <div className="employees-admin-stat-content">
-              <span className="employees-admin-stat-number">{stats.departments || 0}</span>
-              <span className="employees-admin-stat-label">Departamentos</span>
-            </div>
-          </div>
+            </EmployeesStatIcon>
+            <EmployeesStatContent>
+              <EmployeesStatNumber>{stats.departments || 0}</EmployeesStatNumber>
+              <EmployeesStatLabel>Departamentos</EmployeesStatLabel>
+            </EmployeesStatContent>
+          </EmployeesStatCard>
 
-          <div className="employees-admin-stat-card">
-            <div className="employees-admin-stat-icon employees-admin-stat-icon--managers">
+          <EmployeesStatCard>
+            <EmployeesStatIcon variant="managers">
               <Shield size={24} weight="duotone" />
-            </div>
-            <div className="employees-admin-stat-content">
-              <span className="employees-admin-stat-number">{stats.managers || 0}</span>
-              <span className="employees-admin-stat-label">Supervisores</span>
-            </div>
-          </div>
-        </div>
+            </EmployeesStatIcon>
+            <EmployeesStatContent>
+              <EmployeesStatNumber>{stats.managers || 0}</EmployeesStatNumber>
+              <EmployeesStatLabel>Supervisores</EmployeesStatLabel>
+            </EmployeesStatContent>
+          </EmployeesStatCard>
+        </EmployeesStatsGrid>
 
         {/* Search and Filters */}
-        <div className="employees-admin-controls">
-          <div className="employees-admin-search">
-            <MagnifyingGlass className="employees-admin-search-icon" size={18} weight="duotone" />
-            <input
+        <EmployeesControls>
+          <EmployeesSearch>
+            <EmployeesSearchIcon>
+              <MagnifyingGlass size={18} weight="duotone" />
+            </EmployeesSearchIcon>
+            <EmployeesSearchInput
               type="text"
               placeholder="Buscar por nombre, email o teléfono..."
-              className="employees-admin-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </EmployeesSearch>
 
           {showFilters && (
             <EmployeeFilters 
@@ -388,29 +786,29 @@ const Employees = () => {
               onFiltersChange={setFilters}
             />
           )}
-        </div>
+        </EmployeesControls>
 
         {/* Results Info */}
-        <div className="employees-admin-results">
-          <span className="employees-admin-results-text">
+        <EmployeesResults>
+          <EmployeesResultsText>
             {filteredEmployees.length} empleado{filteredEmployees.length !== 1 ? 's' : ''} encontrado{filteredEmployees.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+          </EmployeesResultsText>
+        </EmployeesResults>
 
         {/* Employees Grid */}
         {filteredEmployees.length === 0 ? (
-          <div className="employees-admin-empty">
+          <EmployeesEmpty>
             <UserList size={64} weight="duotone" />
-            <h3>No se encontraron empleados</h3>
-            <p>
+            <EmployeesEmptyTitle>No se encontraron empleados</EmployeesEmptyTitle>
+            <EmployeesEmptyText>
               {searchQuery || filters.role !== 'all' || filters.status !== 'all'
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'No hay empleados registrados en el sistema'
               }
-            </p>
-          </div>
+            </EmployeesEmptyText>
+          </EmployeesEmpty>
         ) : (
-          <div className="employees-admin-grid">
+          <EmployeesGrid>
             {filteredEmployees.map(employee => (
               <EmployeeCard
                 key={employee.id}
@@ -420,7 +818,7 @@ const Employees = () => {
                 onStatusChange={handleStatusChange}
               />
             ))}
-          </div>
+          </EmployeesGrid>
         )}
 
         {/* Employee Modal */}
@@ -432,8 +830,8 @@ const Employees = () => {
           onSuccess={handleModalSuccess}
         />
 
-      </div>
-    </div>
+      </EmployeesContentWrapper>
+    </EmployeesPageContainer>
   );
 };
 
