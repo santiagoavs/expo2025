@@ -5,7 +5,7 @@ import axios from 'axios';
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: false, // IMPORTANTE: Panel admin NO usa cookies
-  timeout: 15000,
+  timeout: 60000, // 60 segundos para manejar respuestas grandes
   headers: {
     'Content-Type': 'application/json',
   }

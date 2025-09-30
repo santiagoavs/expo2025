@@ -707,10 +707,10 @@ const updateProductColor = useCallback(async (id, color) => {
 
   // ==================== EFECTOS ====================
 
-  // Cargar diseños cuando cambien los filtros
+  // Cargar diseños solo cuando cambien los filtros específicos
   useEffect(() => {
     fetchDesigns();
-  }, [fetchDesigns]);
+  }, [filters.search, filters.status, filters.product, filters.user, filters.sort, filters.order]);
 
   // Limpiar error después de un tiempo
   useEffect(() => {

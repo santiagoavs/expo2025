@@ -38,9 +38,10 @@ const DesignService = {
       if (search && search.trim() !== '') queryParams.append('search', search.trim());
 
       const url = `${BASE_URL}?${queryParams.toString()}`;
-      console.log('📡 [DesignService] URL final:', url);
 
-      const response = await apiClient.get(url);
+      const response = await apiClient.get(url, {
+        timeout: 120000 // 2 minutos específicamente para diseños
+      });
       
       console.log('✅ [DesignService] Diseños obtenidos:', {
         total: response.data?.designs?.length || 0,
