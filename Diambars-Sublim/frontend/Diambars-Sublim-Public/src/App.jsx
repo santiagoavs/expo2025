@@ -17,6 +17,7 @@ import NotFoundPage from './pages/notFound/notFound';
 import ComingSoonPage from './pages/comingSoon/comingSoon';
 import DesignHub from '../src/pages/designs/designHub';
 import ProtectedRoute from '../src/components/auth/protectedRoute';
+import OrdersHub from './pages/orders/ordersHub';
 
 // Componente para manejar productos desde URL
 const DesignHubWithProduct = () => {
@@ -47,6 +48,16 @@ function App() {
           <Route path="/verifyRecoveryCode" element={<VerifyRecoveryCode />} />
           <Route path="/passwordReset" element={<PasswordReset />} />
           <Route path="/notFound404" element={<NotFoundPage />} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute>
+                <OrdersHub />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Redirección para rutas obsoletas o mal escritas */}
           <Route path="/notFound404" element={<Navigate to="*" />} />

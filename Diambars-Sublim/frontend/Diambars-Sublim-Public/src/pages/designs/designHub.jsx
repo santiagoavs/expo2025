@@ -8,6 +8,7 @@ import CreateDesignModal from '../../components/designs/createDesignModal';
 // import DesignEditorModal from '../../components/designs/designEditorModal'; // Replaced with enhanced version
 import EnhancedDesignEditorModal from '../../components/designs/EnhancedDesignEditorModal';
 import DesignViewerModal from '../../components/designs/designViewerModal';
+import QuoteResponseModal from '../../components/designs/quoteResponseModal';
 import './designHub.css';
 
 const DesignHub = ({ initialProductId = null }) => {
@@ -23,7 +24,9 @@ const DesignHub = ({ initialProductId = null }) => {
     getDesignById,
     getDesignStats,
     needsResponseDesigns,
-    hasDesigns
+    hasDesigns,
+    respondToQuote,
+    fetchUserDesigns
   } = useDesigns();
   
   const { 
@@ -116,6 +119,14 @@ const DesignHub = ({ initialProductId = null }) => {
     setSelectedProduct(null);
   }, []);
 
+  // ==================== ESTADOS DE COTIZACIÓN ====================
+  const [quoteResponse, setQuoteResponse] = useState({
+    isOpen: false,
+    design: null,
+    loading: false,
+    error: null
+  });
+
   // ==================== MANEJADORES DE ACCIONES ====================
 
   const handleCreateDesign = useCallback(async (productId) => {
@@ -161,8 +172,59 @@ const DesignHub = ({ initialProductId = null }) => {
   }, [getDesignById]);
 
   const handleQuoteResponse = useCallback((design) => {
-    // For now, show a simple alert - can be enhanced later
-    alert('Funcionalidad de respuesta a cotización será implementada próximamente');
+    setQuoteResponse({
+      isOpen: true,
+      design,
+      loading: false,
+      error: null
+    });
+  }, []);
+
+  const handleSubmitQuoteResponse = useCallback(async (designId, accept, clientNotes = '') => {
+    try {
+      // Find the design in your state
+      const design = designs.find(d => d._id === designId || d.id === designId);
+      
+      // Check if design exists and is in 'quoted' state
+      if (!design) {
+        throw new Error('Diseño no encontrado');
+      }
+      
+      if (design.status !== 'quoted') {
+        throw new Error('No puedes responder a una cotización que no esté en estado "cotizada"');
+      }
+      
+      setQuoteResponse(prev => ({ ...prev, loading: true, error: null }));
+      
+      // Call the respondToQuote function from useDesigns hook
+      await respondToQuote(designId, accept, clientNotes);
+      
+      // Close the modal
+      setQuoteResponse(prev => ({ ...prev, isOpen: false }));
+      
+      // Show success message
+      const action = accept ? 'aceptada' : 'rechazada';
+      alert(`Cotización ${action} exitosamente`);
+      
+      // Refresh the designs list
+      await fetchUserDesigns();
+      
+    } catch (error) {
+      console.error('Error al responder a la cotización:', error);
+      setQuoteResponse(prev => ({
+        ...prev, 
+        loading: false, 
+        error: error.message || 'Error al procesar la respuesta. Por favor, inténtalo de nuevo.'
+      }));
+    }
+  }, [designs, respondToQuote, fetchUserDesigns]);
+  
+  const closeQuoteResponseModal = useCallback(() => {
+    setQuoteResponse(prev => ({
+      ...prev,
+      isOpen: false,
+      error: null
+    }));
   }, []);
 
   const handleCloneDesign = useCallback(async (designId, designName) => {
@@ -579,7 +641,14 @@ const DesignHub = ({ initialProductId = null }) => {
         onDesignUpdate={handleDesignUpdate}
       />
 
-      {/* Quote response functionality will be implemented in future updates */}
+      <QuoteResponseModal
+        isOpen={quoteResponse.isOpen}
+        onClose={closeQuoteResponseModal}
+        design={quoteResponse.design}
+        onSubmit={handleSubmitQuoteResponse}
+        loading={quoteResponse.loading}
+        error={quoteResponse.error}
+      />
 
       <Footer />
     </div>

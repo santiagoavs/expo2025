@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import './home.css';
 import ContactButton from '../../components/UI/contactButton/contactButton';
+import Notifications from '../../components/UI/notifications/notifications';
 import Footer from '../../components/UI/footer/footer';
 import { useNavigate } from 'react-router-dom';
 
@@ -575,7 +576,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+      <Notifications />
       <ContactButton />
       <Footer />
     </div>

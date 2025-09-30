@@ -14,6 +14,59 @@ const orderController = {};
 // ==================== MÉTODOS CLIENTE + ADMIN ====================
 
 /**
+ * Obtener las órdenes del usuario actual
+ */
+orderController.getMyOrders = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      sort = 'createdAt', 
+      order = 'desc' 
+    } = req.query;
+
+    const query = { user: req.user._id };
+    
+    // Filtrar por estado si se especifica
+    if (status) {
+      query.status = status;
+    }
+
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      sort: { [sort]: order === 'asc' ? 1 : -1 },
+      populate: [
+        { path: 'design', select: 'name previewImage' },
+        { path: 'product', select: 'name images' }
+      ]
+    };
+
+    const orders = await Order.paginate(query, options);
+
+    return res.json({
+      success: true,
+      data: {
+        orders: orders.docs,
+        total: orders.totalDocs,
+        pages: orders.totalPages,
+        page: orders.page,
+        limit: orders.limit
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error al obtener las órdenes del usuario:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener las órdenes',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Crear nuevo pedido (normal + manual para clientes mayores)
  */
 orderController.createOrder = async (req, res) => {
