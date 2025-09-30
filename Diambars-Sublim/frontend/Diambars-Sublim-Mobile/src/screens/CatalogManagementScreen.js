@@ -8,14 +8,13 @@ import {
   TouchableOpacity, // Botones táctiles
   StyleSheet,       // Para estilos
   ScrollView,       // Scrollable content
-  StatusBar,        // Control de la barra de estado
   Dimensions,       // Para obtener dimensiones de pantalla
   Alert             // Para mostrar alertas nativas
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context'; // Asegura que el contenido no se superponga a barras del sistema
 import { Ionicons } from '@expo/vector-icons'; // Iconos de Ionicons
 import { useNavigation } from '@react-navigation/native'; // Para navegar entre pantallas
+import AuthenticatedWrapper from '../components/AuthenticatedWrapper'; // Wrapper con navbar
 import Animated, { 
   useSharedValue,      // Valor compartido para animaciones
   useAnimatedStyle,    // Estilos animados
@@ -49,9 +48,18 @@ const CatalogManagementScreen = () => {
 
   // Estilo animado del logo usando reanimated
   const logoAnimatedStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(logoAnimation.value, [0, 1], [0, -5]); // Mueve hacia arriba
-    const rotate = interpolate(logoAnimation.value, [0, 1], [0, 2]);       // Rota levemente
-    
+    const translateY = interpolate(
+      logoAnimation.value,
+      [0, 1],
+      [0, -8] // Se mueve 8 píxeles hacia arriba y abajo
+    );
+
+    const rotate = interpolate(
+      logoAnimation.value,
+      [0, 1],
+      [0, 360] // Rotación completa de 360 grados
+    );
+
     return {
       transform: [
         { translateY },
@@ -61,67 +69,33 @@ const CatalogManagementScreen = () => {
   });
 
   // -----------------------------
-  // Función para cerrar sesión
+  // Funciones de manejo
   // -----------------------------
   const handleLogoutPress = () => {
     Alert.alert(
       'Cerrar Sesión',
-      '¿Estás seguro que quieres salir?',
+      '¿Estás seguro de que quieres salir?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Salir', 
-          onPress: () => {
-            // Resetea la navegación y regresa a Login
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
-          }
-        },
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: () => navigation.navigate('Login')
+        }
       ]
     );
   };
 
-  // -----------------------------
-  // Función de acciones rápidas (placeholders)
-  // -----------------------------
   const handleActionPress = (actionName) => {
-    Alert.alert('Funcionalidad', `${actionName} será implementado próximamente`);
+    if (actionName === 'Catálogo') {
+      navigation.navigate('Products');
+    } else {
+      Alert.alert('Funcionalidad', `${actionName} será implementado próximamente`);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      {/* -----------------------------
-          Header con logo, título y logout
-      ----------------------------- */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          {/* Logo animado */}
-          <Animated.View style={[styles.logoWrapper, logoAnimatedStyle]}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="diamond" size={24} color="#040DBF" />
-            </View>
-          </Animated.View>
-          
-          {/* Texto del header */}
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>DIAMBARS</Text>
-            <Text style={styles.headerSubtitle}>Panel Administrativo</Text>
-          </View>
-          
-          {/* Botón de logout */}
-          <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogoutPress}
-          >
-            <Ionicons name="log-out-outline" size={24} color="#dc2626" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <AuthenticatedWrapper title="DIAMBARS" subtitle="Panel Administrativo">
       {/* -----------------------------
           Contenido principal (scrollable)
       ----------------------------- */}
@@ -145,103 +119,97 @@ const CatalogManagementScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
           <View style={styles.actionsGrid}>
-            
-            {/* Tarjeta de Catálogo */}
             <TouchableOpacity 
               style={styles.actionCard}
-              onPress={() => navigation.navigate('Products')}
+              onPress={() => handleActionPress('Catálogo')}
             >
               <View style={styles.actionIcon}>
-                <Ionicons name="library-outline" size={32} color="#040DBF" />
+                <Ionicons name="cube-outline" size={24} color="#040DBF" />
               </View>
               <Text style={styles.actionTitle}>Catálogo</Text>
               <Text style={styles.actionSubtitle}>Gestionar productos</Text>
             </TouchableOpacity>
 
-            {/* Tarjeta de Usuarios */}
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => handleActionPress('Pedidos')}
+            >
+              <View style={styles.actionIcon}>
+                <Ionicons name="cart-outline" size={24} color="#040DBF" />
+              </View>
+              <Text style={styles.actionTitle}>Pedidos</Text>
+              <Text style={styles.actionSubtitle}>Ver órdenes</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity 
               style={styles.actionCard}
               onPress={() => handleActionPress('Usuarios')}
             >
               <View style={styles.actionIcon}>
-                <Ionicons name="people-outline" size={32} color="#1F64BF" />
+                <Ionicons name="people-outline" size={24} color="#040DBF" />
               </View>
               <Text style={styles.actionTitle}>Usuarios</Text>
-              <Text style={styles.actionSubtitle}>Administrar clientes</Text>
+              <Text style={styles.actionSubtitle}>Administrar usuarios</Text>
             </TouchableOpacity>
 
-            {/* Tarjeta de Reportes */}
             <TouchableOpacity 
               style={styles.actionCard}
               onPress={() => handleActionPress('Reportes')}
             >
               <View style={styles.actionIcon}>
-                <Ionicons name="bar-chart-outline" size={32} color="#10b981" />
+                <Ionicons name="analytics-outline" size={24} color="#040DBF" />
               </View>
               <Text style={styles.actionTitle}>Reportes</Text>
               <Text style={styles.actionSubtitle}>Ver estadísticas</Text>
             </TouchableOpacity>
-
-            {/* Tarjeta de Configuración */}
-            <TouchableOpacity 
-              style={styles.actionCard}
-              onPress={() => handleActionPress('Configuración')}
-            >
-              <View style={styles.actionIcon}>
-                <Ionicons name="settings-outline" size={32} color="#f59e0b" />
-              </View>
-              <Text style={styles.actionTitle}>Configuración</Text>
-              <Text style={styles.actionSubtitle}>Ajustes del sistema</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Sección Estado del Sistema */}
+        {/* Sección de Estado del Sistema */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Estado del Sistema</Text>
           <View style={styles.statusGrid}>
-            {/* Estado del Sistema */}
             <View style={styles.statusCard}>
               <View style={styles.statusHeader}>
-                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                <Ionicons name="checkmark-circle" size={16} color="#10b981" />
                 <Text style={styles.statusTitle}>Sistema</Text>
               </View>
-              <Text style={styles.statusValue}>Online</Text>
-              <Text style={styles.statusDescription}>Funcionando correctamente</Text>
+              <Text style={styles.statusValue}>Activo</Text>
+              <Text style={styles.statusDescription}>Todo funcionando correctamente</Text>
             </View>
 
-            {/* Estado de Base de Datos */}
             <View style={styles.statusCard}>
               <View style={styles.statusHeader}>
-                <Ionicons name="server-outline" size={24} color="#040DBF" />
-                <Text style={styles.statusTitle}>Base de Datos</Text>
+                <Ionicons name="server" size={16} color="#10b981" />
+                <Text style={styles.statusTitle}>Servidor</Text>
               </View>
-              <Text style={styles.statusValue}>Conectada</Text>
-              <Text style={styles.statusDescription}>Respuesta óptima</Text>
+              <Text style={styles.statusValue}>Online</Text>
+              <Text style={styles.statusDescription}>Conexión estable</Text>
             </View>
           </View>
         </View>
 
-        {/* Tarjeta de Información */}
+        {/* Información del Sistema */}
         <View style={styles.infoCard}>
           <View style={styles.infoHeader}>
-            <Ionicons name="information-circle" size={24} color="#040DBF" />
-            <Text style={styles.infoTitle}>Información</Text>
+            <Ionicons name="information-circle" size={20} color="#040DBF" />
+            <Text style={styles.infoTitle}>Información del Sistema</Text>
           </View>
           <Text style={styles.infoText}>
-            Esta es la pantalla principal del panel administrativo. 
-            Aquí se agregarán más funcionalidades en futuras actualizaciones.
+            Esta es la aplicación móvil del panel administrativo de DIAMBARS. 
+            Desde aquí puedes gestionar productos, usuarios, pedidos y más.
           </Text>
         </View>
 
-        {/* Tarjeta de prueba de navegación */}
+        {/* Tarjeta de Prueba de Conexión */}
         <View style={styles.testCard}>
           <View style={styles.testHeader}>
-            <Ionicons name="rocket" size={24} color="#040DBF" />
-            <Text style={styles.testTitle}>Navegación Funcionando</Text>
+            <Ionicons name="wifi" size={20} color="#10b981" />
+            <Text style={styles.testTitle}>Conexión Verificada</Text>
           </View>
           <Text style={styles.testText}>
-            ¡Excelente! La navegación entre pantallas está funcionando correctamente.
+            La conexión con el servidor backend está funcionando correctamente. 
+            Puedes proceder a usar todas las funcionalidades disponibles.
           </Text>
           <TouchableOpacity 
             style={styles.backButton}
@@ -253,7 +221,7 @@ const CatalogManagementScreen = () => {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </AuthenticatedWrapper>
   );
 };
 
@@ -261,24 +229,6 @@ const CatalogManagementScreen = () => {
 // Estilos de la pantalla
 // -----------------------------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' }, // Contenedor principal
-  header: {
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  headerContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
-  logoWrapper: { marginRight: 12 },
-  logoIcon: { width: 40, height: 40, backgroundColor: 'rgba(4, 13, 191, 0.1)', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  headerText: { flex: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#040DBF', letterSpacing: 0.5 },
-  headerSubtitle: { fontSize: 14, color: '#64748b', fontWeight: '500' },
-  logoutButton: { padding: 8, borderRadius: 8, backgroundColor: 'rgba(220, 38, 38, 0.1)' },
   content: { flex: 1, padding: 20 },
   welcomeCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 24, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
   welcomeContent: { flexDirection: 'row', alignItems: 'center' },

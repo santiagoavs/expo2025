@@ -432,6 +432,11 @@ productController.createProduct = async (req, res) => {
       hasMainImage: !!req.files?.mainImage,
       hasAdditionalImages: !!req.files?.additionalImages 
     });
+    
+    console.log('🔍 [Backend] req.files completo:', req.files);
+    console.log('🔍 [Backend] req.files.mainImage:', req.files?.mainImage);
+    console.log('🔍 [Backend] req.files.additionalImages:', req.files?.additionalImages);
+    console.log('🔍 [Backend] req.body:', req.body);
 
     // 1. VALIDACIÓN BÁSICA
     if (!name?.trim()) {

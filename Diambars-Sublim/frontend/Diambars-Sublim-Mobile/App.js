@@ -18,6 +18,12 @@ import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import EditProductScreen from './src/screens/EditProductScreen';
 import CreateProductScreen from './src/screens/CreateProductScreen';
 
+// Importar pantallas de categorías
+import CategoriesScreen from './src/screens/CategoriesScreen';
+import CategoryDetailScreen from './src/screens/CategoryDetailScreen';
+import EditCategoryScreen from './src/screens/EditCategoryScreen';
+import CreateCategoryScreen from './src/screens/CreateCategoryScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -162,14 +168,48 @@ export default function App() {
             headerShown: false,
           }}
         />
-        <Stack.Screen 
-          name="CreateProduct" 
-          component={CreateProductScreen}
-          options={{
-            title: 'Crear Producto',
-            headerShown: false,
-          }}
-        />
+    <Stack.Screen
+      name="CreateProduct"
+      component={CreateProductScreen}
+      options={{
+        title: 'Crear Producto',
+        headerShown: false,
+      }}
+    />
+
+    {/* 📁 PANTALLAS DE CATEGORÍAS */}
+    <Stack.Screen
+      name="Categories"
+      component={CategoriesScreen}
+      options={{
+        title: 'Gestión de Categorías',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="CategoryDetail"
+      component={CategoryDetailScreen}
+      options={{
+        title: 'Detalles de Categoría',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="EditCategory"
+      component={EditCategoryScreen}
+      options={{
+        title: 'Editar Categoría',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="CreateCategory"
+      component={CreateCategoryScreen}
+      options={{
+        title: 'Crear Categoría',
+        headerShown: false,
+      }}
+    />
       </Stack.Navigator>
     </NavigationContainer>
   );

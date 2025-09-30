@@ -13,9 +13,9 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import useProducts from '../hooks/useProducts';
+import AuthenticatedWrapper from '../components/AuthenticatedWrapper';
 
 const { width } = Dimensions.get('window');
 
@@ -217,17 +217,17 @@ const ProductsScreen = ({ navigation }) => {
   // ==================== RENDER ====================
   if (loading && !hasProducts) {
     return (
-      <SafeAreaView style={styles.container}>
+      <AuthenticatedWrapper title="Productos" subtitle="Gestión de Productos">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#1F64BF" />
           <Text style={styles.loadingText}>Cargando productos...</Text>
         </View>
-      </SafeAreaView>
+      </AuthenticatedWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <AuthenticatedWrapper title="Productos" subtitle="Gestión de Productos">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Gestión de Productos</Text>
@@ -379,7 +379,7 @@ const ProductsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       )}
-    </SafeAreaView>
+    </AuthenticatedWrapper>
   );
 };
 

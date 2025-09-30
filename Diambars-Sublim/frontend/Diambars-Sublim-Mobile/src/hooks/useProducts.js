@@ -168,14 +168,71 @@ const useProducts = () => {
       
       // Sanitizar datos
       const sanitizedData = productService.sanitizeProductData(productData);
+      console.log('🔍 [useProducts-Mobile] Datos sanitizados:', sanitizedData);
+      console.log('🔍 [useProducts-Mobile] categoryId sanitizado:', sanitizedData.categoryId);
+      console.log('🔍 [useProducts-Mobile] mainImage sanitizada:', sanitizedData.mainImage);
+      console.log('🔍 [useProducts-Mobile] mainImage.uri:', sanitizedData.mainImage?.uri);
       
       // Validar datos
       const validation = productService.validateProductData(sanitizedData);
+      console.log('🔍 [useProducts-Mobile] Resultado de validación:', validation);
       if (!validation.isValid) {
+        console.error('❌ [useProducts-Mobile] Errores de validación:', validation.errors);
         throw new Error(`Errores de validación:\n• ${validation.errors.join('\n• ')}`);
       }
 
-      const response = await productService.create(sanitizedData);
+      // Crear FormData para envío con archivos
+      const formDataToSend = new FormData();
+      
+      // Agregar campos de texto
+      Object.keys(sanitizedData).forEach(key => {
+        if (key !== 'mainImage' && key !== 'additionalImages') {
+          if (Array.isArray(sanitizedData[key])) {
+            formDataToSend.append(key, JSON.stringify(sanitizedData[key]));
+          } else if (typeof sanitizedData[key] === 'object') {
+            formDataToSend.append(key, JSON.stringify(sanitizedData[key]));
+          } else {
+            formDataToSend.append(key, sanitizedData[key]);
+          }
+        }
+      });
+      
+        // Agregar imagen principal si existe
+        if (sanitizedData.mainImage && sanitizedData.mainImage.uri) {
+          console.log('📤 [useProducts-Mobile] Agregando imagen principal:', sanitizedData.mainImage);
+          
+          // Para React Native, necesitamos crear un objeto que simule un File
+          // pero usando la estructura que espera el backend
+          const imageFile = {
+            uri: sanitizedData.mainImage.uri,
+            type: sanitizedData.mainImage.mimeType || 'image/jpeg',
+            name: sanitizedData.mainImage.fileName || 'main-image.jpg'
+          };
+          
+          // En React Native, append directamente el objeto con uri, type, name
+          formDataToSend.append('mainImage', imageFile);
+          console.log('📤 [useProducts-Mobile] Imagen principal agregada al FormData:', imageFile);
+        } else {
+          console.log('❌ [useProducts-Mobile] No hay imagen principal para agregar');
+          console.log('❌ [useProducts-Mobile] mainImage:', sanitizedData.mainImage);
+        }
+      
+      // Agregar imágenes adicionales si existen
+      if (sanitizedData.additionalImages && sanitizedData.additionalImages.length > 0) {
+        console.log('📤 [useProducts-Mobile] Agregando imágenes adicionales:', sanitizedData.additionalImages.length);
+        sanitizedData.additionalImages.forEach((image, index) => {
+          const additionalImageFile = {
+            uri: image.uri,
+            type: image.mimeType || 'image/jpeg',
+            name: image.fileName || `additional-${index}.jpg`
+          };
+          formDataToSend.append('additionalImages', additionalImageFile);
+        });
+        console.log('📤 [useProducts-Mobile] Imágenes adicionales agregadas al FormData');
+      }
+
+      console.log('📤 [useProducts-Mobile] FormData preparado para envío');
+      const response = await productService.create(formDataToSend);
       
       if (!response.success) {
         throw new Error(response.message || 'Error al crear producto');

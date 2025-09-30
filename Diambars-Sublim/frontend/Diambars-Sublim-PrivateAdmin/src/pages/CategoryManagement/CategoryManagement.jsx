@@ -29,9 +29,16 @@ const CategoryManagement = () => {
     flatCategories,
     loading,
     error,
+    retryCount,
+    hasError,
+    canRetry,
+    isEmpty,
     removeCategory,
     createCategory,
-    updateCategory
+    updateCategory,
+    retryFetch,
+    clearError,
+    validateCategoryData
   } = useCategories();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -208,10 +215,26 @@ const CategoryManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validar datos antes de enviar
+    const validationErrors = validateCategoryData(formData);
+    if (validationErrors.length > 0) {
+      await Swal.fire({
+        title: 'Datos inválidos',
+        text: validationErrors.join(', '),
+        icon: 'warning',
+        confirmButtonText: 'Corregir',
+        confirmButtonColor: '#F59E0B',
+        background: '#ffffff',
+        color: '#010326'
+      });
+      return;
+    }
+    
     const submitData = new FormData();
-    submitData.append('name', formData.name);
-    submitData.append('description', formData.description);
-    submitData.append('parent', formData.parent);
+    submitData.append('name', formData.name.trim());
+    submitData.append('description', formData.description.trim());
+    // ✅ SOLUCIÓN: Enviar null en lugar de cadena vacía para parent
+    submitData.append('parent', formData.parent || null);
     submitData.append('isActive', formData.isActive);
     submitData.append('showOnHomepage', formData.showOnHomepage);
     submitData.append('order', formData.order);
@@ -227,29 +250,20 @@ const CategoryManagement = () => {
         await createCategory(submitData);
       }
       
-      await Swal.fire({
-        title: '¡Éxito!',
-        text: `Categoría ${selectedCategory ? 'actualizada' : 'creada'} correctamente`,
-        icon: 'success',
-        confirmButtonText: 'Continuar',
-        confirmButtonColor: '#1F64BF',
-        background: '#ffffff',
-        color: '#010326',
-        timer: 2000,
-        showConfirmButton: false,
-        position: 'top-end',
-        toast: true
-      });
-      
+      // El toast de éxito ya se muestra en el hook
       handleCloseModal();
+      
     } catch (error) {
       console.error('Error al guardar categoría:', error);
       
+      // El error ya se maneja en el hook, pero podemos mostrar un modal adicional si es necesario
+      const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+      
       await Swal.fire({
-        title: 'Error',
-        text: 'Ocurrió un error al guardar la categoría',
+        title: 'Error al guardar',
+        text: errorMessage,
         icon: 'error',
-        confirmButtonText: 'Intentar de nuevo',
+        confirmButtonText: 'Entendido',
         confirmButtonColor: '#EF4444',
         background: '#ffffff',
         color: '#010326'
@@ -260,7 +274,7 @@ const CategoryManagement = () => {
   const handleDelete = async (categoryId) => {
     const result = await Swal.fire({
       title: '¿Eliminar categoría?',
-      text: 'Esta acción no se puede deshacer. Todas las subcategorías también serán eliminadas.',
+      text: 'Esta acción no se puede deshacer. La categoría y sus subcategorías serán eliminadas.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#EF4444',
@@ -275,25 +289,17 @@ const CategoryManagement = () => {
     if (result.isConfirmed) {
       try {
         await removeCategory(categoryId);
+        // El toast de éxito ya se muestra en el hook
         
-        await Swal.fire({
-          title: '¡Eliminada!',
-          text: 'La categoría ha sido eliminada exitosamente',
-          icon: 'success',
-          confirmButtonColor: '#10B981',
-          background: '#ffffff',
-          color: '#010326',
-          timer: 2000,
-          showConfirmButton: false,
-          position: 'top-end',
-          toast: true
-        });
       } catch (error) {
         console.error('Error al eliminar categoría:', error);
         
+        // El error ya se maneja en el hook, pero podemos mostrar información adicional
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+        
         await Swal.fire({
-          title: 'Error',
-          text: 'No se pudo eliminar la categoría. Puede tener productos asociados.',
+          title: 'No se pudo eliminar',
+          text: errorMessage,
           icon: 'error',
           confirmButtonText: 'Entendido',
           confirmButtonColor: '#EF4444',
@@ -513,28 +519,54 @@ const CategoryManagement = () => {
   if (loading) {
     return (
       <div className="category-page">
-
-        <div className="category-loading">
-          <div className="category-spinner"></div>
-          <p>Cargando categorías...</p>
+        <Navbar />
+        <div className="category-container">
+          <div className="category-loading">
+            <div className="category-spinner"></div>
+            <p>Cargando categorías...</p>
+            {retryCount > 0 && (
+              <p className="category-loading__retry">
+                Reintentando... (intento {retryCount + 1}/3)
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="category-page">
-        <div className="category-error">
-          <div className="category-error__icon">❌</div>
-          <h2>Error al cargar categorías</h2>
-          <p>{error}</p>
-          <button 
-            className="category-retry-btn"
-            onClick={() => window.location.reload()}
-          >
-            Reintentar
-          </button>
+        <Navbar />
+        <div className="category-container">
+          <div className="category-error">
+            <div className="category-error__icon">❌</div>
+            <h2>Error al cargar categorías</h2>
+            <p>{error}</p>
+            <div className="category-error__actions">
+              {canRetry && (
+                <button 
+                  className="category-retry-btn"
+                  onClick={retryFetch}
+                >
+                  🔄 Reintentar ({3 - retryCount} intentos restantes)
+                </button>
+              )}
+              <button 
+                className="category-clear-btn"
+                onClick={clearError}
+              >
+                ✖️ Limpiar error
+              </button>
+              <button 
+                className="category-refresh-btn"
+                onClick={() => window.location.reload()}
+              >
+                🔄 Recargar página
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

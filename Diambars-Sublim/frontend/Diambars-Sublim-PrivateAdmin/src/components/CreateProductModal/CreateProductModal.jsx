@@ -242,6 +242,10 @@ const StyledSelect = styled(Select)(({ theme }) => ({
       fontSize: '13px',
     }
   },
+  // ✅ SOLUCIÓN SIMPLE: Solo z-index alto para el menú
+  '& .MuiSelect-menu': {
+    zIndex: 1500,
+  },
 }));
 
 const ErrorText = styled(Typography)(({ theme }) => ({
@@ -1063,6 +1067,13 @@ const CreateProductModal = ({
                           value={formData.categoryId}
                           onChange={handleInputChange}
                           disabled={loadingCategories}
+                          MenuProps={{
+                            PaperProps: {
+                              style: {
+                                zIndex: 1500, // Z-index mayor que el modal (1400)
+                              },
+                            },
+                          }}
                         >
                           <MenuItem value="">
                             {loadingCategories ? 'Cargando...' : 'Seleccionar...'}

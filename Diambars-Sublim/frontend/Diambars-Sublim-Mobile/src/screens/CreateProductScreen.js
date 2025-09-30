@@ -15,10 +15,11 @@ import {
   Image,
   Dimensions
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import useProducts from '../hooks/useProducts';
+import AuthenticatedWrapper from '../components/AuthenticatedWrapper';
+import CategorySelector from '../components/CategorySelector';
 
 const { width } = Dimensions.get('window');
 
@@ -60,6 +61,9 @@ const CreateProductScreen = ({ navigation }) => {
 
   // Estados de errores
   const [errors, setErrors] = useState({});
+  
+  // Estado para categoría seleccionada
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // ==================== EFECTOS ====================
   useEffect(() => {
@@ -97,31 +101,75 @@ const CreateProductScreen = ({ navigation }) => {
 
   // ==================== MANEJADORES DE IMÁGENES ====================
   const pickMainImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+    try {
+      // Solicitar permisos primero
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          'Permisos requeridos',
+          'Se necesita acceso a la galería para seleccionar imágenes.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
 
-    if (!result.canceled) {
-      const image = result.assets[0];
-      setMainImage(image);
-      setImagePreview(image.uri);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const image = result.assets[0];
+        setMainImage(image);
+        setImagePreview(image.uri);
+        console.log('✅ Imagen principal seleccionada:', image.uri);
+      }
+    } catch (error) {
+      console.error('❌ Error seleccionando imagen principal:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo seleccionar la imagen. Inténtalo de nuevo.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const pickAdditionalImages = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 0.8,
-    });
+    try {
+      // Solicitar permisos primero
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          'Permisos requeridos',
+          'Se necesita acceso a la galería para seleccionar imágenes.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
 
-    if (!result.canceled) {
-      const newImages = result.assets.slice(0, 5); // Máximo 5 imágenes
-      setAdditionalImages(newImages);
-      setAdditionalPreviews(newImages.map(img => img.uri));
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newImages = result.assets.slice(0, 5); // Máximo 5 imágenes
+        setAdditionalImages(newImages);
+        setAdditionalPreviews(newImages.map(img => img.uri));
+        console.log('✅ Imágenes adicionales seleccionadas:', newImages.length);
+      }
+    } catch (error) {
+      console.error('❌ Error seleccionando imágenes adicionales:', error);
+      Alert.alert(
+        'Error',
+        'No se pudieron seleccionar las imágenes. Inténtalo de nuevo.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -257,14 +305,33 @@ const CreateProductScreen = ({ navigation }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.name.trim()) newErrors.name = 'Nombre requerido';
+    console.log('🔍 [CreateProductScreen] Validando formulario...');
+    console.log('🔍 [CreateProductScreen] formData:', formData);
+    console.log('🔍 [CreateProductScreen] selectedCategory:', selectedCategory);
+    console.log('🔍 [CreateProductScreen] imagePreview:', imagePreview);
+    console.log('🔍 [CreateProductScreen] customizationAreas:', customizationAreas);
+    
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = 'Nombre requerido';
+    }
+    
     if (!formData.basePrice || isNaN(formData.basePrice) || parseFloat(formData.basePrice) <= 0) {
       newErrors.basePrice = 'Precio inválido';
     }
-    if (!formData.categoryId) newErrors.categoryId = 'Selecciona categoría';
-    if (!imagePreview) newErrors.mainImage = 'Imagen principal requerida';
-    if (customizationAreas.length === 0) newErrors.areas = 'Debe tener al menos un área';
     
+    if (!selectedCategory || (!selectedCategory.id && !selectedCategory._id)) {
+      newErrors.categoryId = 'Selecciona categoría';
+    }
+    
+    if (!imagePreview) {
+      newErrors.mainImage = 'Imagen principal requerida';
+    }
+    
+    if (customizationAreas.length === 0) {
+      newErrors.areas = 'Debe tener al menos un área';
+    }
+    
+    console.log('🔍 [CreateProductScreen] Errores encontrados:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -278,17 +345,87 @@ const CreateProductScreen = ({ navigation }) => {
     try {
       setSaving(true);
 
+      // Preparar datos para envío (sin objetos complejos)
       const productData = {
         ...formData,
         basePrice: parseFloat(formData.basePrice),
         productionTime: parseInt(formData.productionTime),
-        customizationAreas,
-        options: productOptions,
-        mainImage,
-        additionalImages,
+        categoryId: selectedCategory?.id || selectedCategory?._id,
+        // Incluir imágenes para validación
+        mainImage: mainImage,
+        additionalImages: additionalImages,
+        // Simplificar customizationAreas para envío
+        customizationAreas: customizationAreas.map(area => ({
+          name: area.name,
+          displayName: area.displayName,
+          position: area.position,
+          accepts: area.accepts,
+          maxElements: area.maxElements,
+          konvaConfig: area.konvaConfig
+        })),
+        // Simplificar options para envío
+        options: productOptions.map(option => ({
+          name: option.name,
+          label: option.label,
+          type: option.type,
+          required: option.required,
+          values: option.values,
+          metadata: option.metadata
+        })),
         searchTags: formData.searchTags
       };
 
+      console.log('🔍 [CreateProductScreen] formData original:', formData);
+      console.log('🔍 [CreateProductScreen] basePrice del formData:', formData.basePrice);
+      console.log('🔍 [CreateProductScreen] name del formData:', formData.name);
+      console.log('🔍 [CreateProductScreen] Datos del producto a enviar:', productData);
+      console.log('🔍 [CreateProductScreen] Categoría seleccionada:', selectedCategory);
+      console.log('🔍 [CreateProductScreen] Categoría ID (id):', selectedCategory?.id);
+      console.log('🔍 [CreateProductScreen] Categoría ID (_id):', selectedCategory?._id);
+      console.log('🔍 [CreateProductScreen] categoryId final:', selectedCategory?.id || selectedCategory?._id);
+      console.log('🔍 [CreateProductScreen] Imagen principal:', mainImage);
+      console.log('🔍 [CreateProductScreen] Áreas de personalización:', customizationAreas);
+
+      // Crear FormData para envío con archivos
+      const formDataToSend = new FormData();
+      
+      // Agregar campos de texto
+      Object.keys(productData).forEach(key => {
+        if (key !== 'mainImage' && key !== 'additionalImages') {
+          if (Array.isArray(productData[key])) {
+            formDataToSend.append(key, JSON.stringify(productData[key]));
+          } else if (typeof productData[key] === 'object') {
+            formDataToSend.append(key, JSON.stringify(productData[key]));
+          } else {
+            formDataToSend.append(key, productData[key]);
+          }
+        }
+      });
+      
+      // Agregar imagen principal
+      if (mainImage) {
+        formDataToSend.append('mainImage', {
+          uri: mainImage.uri,
+          type: mainImage.mimeType || 'image/jpeg',
+          name: mainImage.fileName || 'main-image.jpg'
+        });
+      }
+      
+      // Agregar imágenes adicionales
+      if (additionalImages && additionalImages.length > 0) {
+        additionalImages.forEach((image, index) => {
+          formDataToSend.append('additionalImages', {
+            uri: image.uri,
+            type: image.mimeType || 'image/jpeg',
+            name: image.fileName || `additional-${index}.jpg`
+          });
+        });
+      }
+
+      console.log('📤 [CreateProductScreen] FormData preparado para envío');
+      console.log('📤 [CreateProductScreen] Datos del producto antes de enviar:', productData);
+      
+      // Enviar los datos del producto (no FormData) al hook
       await createProduct(productData);
       
       Alert.alert(
@@ -302,8 +439,15 @@ const CreateProductScreen = ({ navigation }) => {
         ]
       );
     } catch (error) {
-      console.error('Error creating product:', error);
-      Alert.alert('Error', 'No se pudo crear el producto');
+      console.error('❌ [CreateProductScreen] Error creating product:', error);
+      
+      // Mostrar error específico si está disponible
+      const errorMessage = error.message || 'No se pudo crear el producto';
+      Alert.alert(
+        'Error al crear producto', 
+        errorMessage,
+        [{ text: 'OK' }]
+      );
     } finally {
       setSaving(false);
     }
@@ -398,10 +542,12 @@ const CreateProductScreen = ({ navigation }) => {
 
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Categoría *</Text>
-        <TouchableOpacity style={[styles.textInput, errors.categoryId && styles.inputError]}>
-          <Text style={styles.placeholderText}>Selecciona una categoría</Text>
-          <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
-        </TouchableOpacity>
+        <CategorySelector
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          placeholder="Seleccionar categoría"
+          style={errors.categoryId && styles.inputError}
+        />
         {errors.categoryId && <Text style={styles.errorText}>{errors.categoryId}</Text>}
       </View>
 
@@ -671,7 +817,7 @@ const CreateProductScreen = ({ navigation }) => {
 
   // ==================== RENDER ====================
   return (
-    <SafeAreaView style={styles.container}>
+    <AuthenticatedWrapper title="Crear Producto" subtitle="Nuevo Producto">
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -719,7 +865,7 @@ const CreateProductScreen = ({ navigation }) => {
           {activeTab === 'tags' && renderTags()}
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </AuthenticatedWrapper>
   );
 };
 

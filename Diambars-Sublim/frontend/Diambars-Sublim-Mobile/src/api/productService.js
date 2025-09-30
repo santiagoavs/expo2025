@@ -87,17 +87,43 @@ const ProductService = {
   create: async (productData) => {
     try {
       console.log('🆕 [ProductService-Mobile] Creando producto:', productData);
+      console.log('🔍 [ProductService-Mobile] Tipo de productData:', typeof productData);
+      console.log('🔍 [ProductService-Mobile] Es FormData:', productData instanceof FormData);
+      console.log('🔍 [ProductService-Mobile] name recibido:', productData.name);
+      console.log('🔍 [ProductService-Mobile] Tipo de name:', typeof productData.name);
+      console.log('🔍 [ProductService-Mobile] name es string válido:', typeof productData.name === 'string' && productData.name.trim().length > 0);
+      console.log('🔍 [ProductService-Mobile] categoryId recibido:', productData.categoryId);
+      console.log('🔍 [ProductService-Mobile] Tipo de categoryId:', typeof productData.categoryId);
+      console.log('🔍 [ProductService-Mobile] categoryId es string válido:', typeof productData.categoryId === 'string' && productData.categoryId.trim().length > 0);
 
-      // Validaciones básicas
-      if (!productData.name || !productData.name.trim()) {
-        throw new Error('El nombre del producto es obligatorio');
-      }
-      
-      if (!productData.basePrice || isNaN(productData.basePrice) || parseFloat(productData.basePrice) <= 0) {
-        throw new Error('El precio base debe ser un número mayor que 0');
+      // Si es FormData, no validar aquí (se validó en el hook)
+      if (productData instanceof FormData) {
+        console.log('📡 [ProductService-Mobile] Enviando FormData al backend');
+      } else {
+        // Validaciones básicas solo para objetos JavaScript
+        if (!productData.name || !productData.name.trim()) {
+          throw new Error('El nombre del producto es obligatorio');
+        }
+        
+        if (!productData.basePrice || isNaN(productData.basePrice) || parseFloat(productData.basePrice) <= 0) {
+          throw new Error('El precio base debe ser un número mayor que 0');
+        }
+
+        if (!productData.categoryId || typeof productData.categoryId !== 'string' || !productData.categoryId.trim()) {
+          throw new Error('La categoría es obligatoria');
+        }
       }
 
-      const response = await apiClient.post(BASE_URL, productData);
+      console.log('📡 [ProductService-Mobile] Enviando FormData al backend');
+      console.log('📡 [ProductService-Mobile] Tipo de datos:', productData instanceof FormData ? 'FormData' : typeof productData);
+
+      // Enviar con headers explícitos como en la web
+      const response = await apiClient.post(BASE_URL, productData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 segundos como en la web
+      });
       console.log('✅ [ProductService-Mobile] Producto creado exitosamente:', response);
       return response;
     } catch (error) {
@@ -135,7 +161,8 @@ const ProductService = {
         throw new Error('ID de producto requerido');
       }
 
-      const response = await apiClient.patch(`${BASE_URL}/${id}/status`, { isActive });
+      // Usar la ruta PUT /products/:id que sí existe en el backend
+      const response = await apiClient.put(`${BASE_URL}/${id}`, { isActive });
       console.log('✅ [ProductService-Mobile] Estado actualizado:', response);
       return response;
     } catch (error) {
@@ -236,6 +263,10 @@ const ProductService = {
       errors.push('Debe seleccionar una categoría válida');
     }
 
+    if (!productData.mainImage || !productData.mainImage.uri) {
+      errors.push('La imagen principal es obligatoria');
+    }
+
     if (productData.productionTime && 
         (isNaN(productData.productionTime) || 
          parseInt(productData.productionTime) < 1 || 
@@ -255,6 +286,9 @@ const ProductService = {
 
   // Limpiar datos del producto antes de enviar
   sanitizeProductData: (productData) => {
+    console.log('🔍 [ProductService-Mobile] Datos originales para sanitizar:', productData);
+    console.log('🔍 [ProductService-Mobile] categoryId original:', productData.categoryId);
+    
     const sanitized = { ...productData };
 
     // Limpiar strings
@@ -273,6 +307,9 @@ const ProductService = {
         .slice(0, 10);
     }
 
+    console.log('🔍 [ProductService-Mobile] Datos sanitizados:', sanitized);
+    console.log('🔍 [ProductService-Mobile] categoryId sanitizado:', sanitized.categoryId);
+    
     return sanitized;
   }
 };
