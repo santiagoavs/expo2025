@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
 import SidebarFilters from '../../components/filters/sidebarFilters';
 import ProductCard from '../../components/products/productCard';
+import Notifications from '../../components/UI/notifications/notifications';
+import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
 import './categoryView.css';
 
@@ -199,6 +201,8 @@ export default function CategoryView() {
           </div>
         </div>
       </div>
+      <Notifications />
+      <ContactButton />
       <Footer />
     </div>
   );

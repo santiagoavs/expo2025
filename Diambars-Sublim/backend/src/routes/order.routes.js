@@ -39,7 +39,19 @@ router.post('/webhook/wompi', paymentController.handleWompiWebhook);
 
 // ==================== RUTAS DE PEDIDOS ====================
 
-// ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación)
+// ✅ Obtener las órdenes del usuario actual
+router.get('/user/me',
+  authRequired,
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('status').optional().isString(),
+  query('sort').optional().isString(),
+  query('order').optional().isIn(['asc', 'desc']),
+  validateRequest,
+  orderController.getMyOrders
+);
+
+// ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación) - Solo admin
 router.get('/',
   authRequired,
   roleRequired(['admin', 'manager']), // Solo admins pueden ver todas las órdenes

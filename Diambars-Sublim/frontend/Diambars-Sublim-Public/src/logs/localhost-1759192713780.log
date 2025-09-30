@@ -1,0 +1,271 @@
+chunk-TWZIM7X7.js?v=d4031bce:21150 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+apiClient.js:35 🔧 [apiClient] Configuración inicial: Object
+react-konva.js?v=d4031bce:27244 Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot
+console.error @ react-konva.js?v=d4031bce:27244
+authContext.jsx:21 🔍 [AuthContext] Verificando estado de autenticación...
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/auth/checkAuth
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+apiClient.js:99 ✅ [apiClient] === RESPONSE SUCCESS START ===
+apiClient.js:100 🎯 [apiClient] URL: /auth/checkAuth
+apiClient.js:101 📊 [apiClient] Status: 200
+apiClient.js:102 📋 [apiClient] Headers recibidos: AxiosHeaders
+apiClient.js:103 🍪 [apiClient] Set-Cookie header: undefined
+apiClient.js:104 📥 [apiClient] Datos recibidos: Object
+apiClient.js:105 ✅ [apiClient] === RESPONSE SUCCESS END ===
+authContext.jsx:27 ✅ [AuthContext] Usuario autenticado via cookies: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+useDesign.js:59 🎨 [useDesigns] Obteniendo diseños del usuario: Object
+designService.js:130 📋 [DesignService] Obteniendo diseños del usuario: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+react-konva.js?v=d4031bce:27244 ❌ [apiClient] === RESPONSE ERROR START ===
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 🎯 [apiClient] URL que falló: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 🔧 [apiClient] Método: GET
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 📊 [apiClient] Status: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 📋 [apiClient] Status Text: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 📋 [apiClient] Response Headers: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 📥 [apiClient] Error Data: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 💬 [apiClient] Error Message: timeout of 30000ms exceeded
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 🔗 [apiClient] Error Code: ECONNABORTED
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 🌐 [apiClient] No response received: XMLHttpRequest
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 ❌ [apiClient] === RESPONSE ERROR END ===
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 ❌ [DesignService] Error obteniendo diseños del usuario: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at apiClient.js:194:23
+    at async Axios.request (axios.js?v=d4031bce:2139:14)
+    at async DesignService.getUserDesigns (designService.js:140:24)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+react-konva.js?v=d4031bce:27244 ❌ [useDesigns] Error: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at DesignService.handleError (designService.js:489:28)
+    at DesignService.getUserDesigns (designService.js:149:18)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+useDesign.js:59 🎨 [useDesigns] Obteniendo diseños del usuario: Object
+designService.js:130 📋 [DesignService] Obteniendo diseños del usuario: Object
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+sidebarFilters.jsx:85 Cargando categorías...
+useDesign.js:59 🎨 [useDesigns] Obteniendo diseños del usuario: Object
+designService.js:130 📋 [DesignService] Obteniendo diseños del usuario: Object
+categoryView.jsx:36 Cargando productos... Object
+categoryView.jsx:63 Fetching desde: /api/products?page=1&limit=12&category=ropa&isActive=true&sort=newest
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+categoryView.jsx:78 Respuesta de productos: Object
+categoryView.jsx:83 ✅ Productos cargados: 4
+sidebarFilters.jsx:100 Respuesta completa de categorías: Object
+sidebarFilters.jsx:105 ✅ Categorías cargadas: 8
+categoryView.jsx:108 Personalizar producto: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+useDesign.js:59 🎨 [useDesigns] Obteniendo diseños del usuario: Object
+designService.js:130 📋 [DesignService] Obteniendo diseños del usuario: Object
+useProducts.js:112 🔍 [useProducts] Obteniendo producto por ID: 68c6774f7e935ee0d426946b
+productService.js:56 🔍 [ProductService] Obteniendo producto por ID: 68c6774f7e935ee0d426946b
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+apiClient.js:44 🚀 [apiClient] === REQUEST START ===
+apiClient.js:47 🎯 [apiClient] URL completa: https://expo2025-8bjn.onrender.com/products/68c6774f7e935ee0d426946b
+apiClient.js:51 🔧 [apiClient] Método: GET
+apiClient.js:52 📋 [apiClient] Headers enviados: AxiosHeaders
+apiClient.js:53 🍪 [apiClient] WithCredentials: true
+apiClient.js:72 🍪 [apiClient] App pública - usando solo cookies
+apiClient.js:87 🚀 [apiClient] === REQUEST END ===
+apiClient.js:99 ✅ [apiClient] === RESPONSE SUCCESS START ===
+apiClient.js:100 🎯 [apiClient] URL: /products/68c6774f7e935ee0d426946b
+apiClient.js:101 📊 [apiClient] Status: 200
+apiClient.js:102 📋 [apiClient] Headers recibidos: AxiosHeaders
+apiClient.js:103 🍪 [apiClient] Set-Cookie header: undefined
+apiClient.js:104 📥 [apiClient] Datos recibidos: Object
+apiClient.js:105 ✅ [apiClient] === RESPONSE SUCCESS END ===
+productService.js:61 ✅ [ProductService] Producto obtenido exitosamente
+useProducts.js:125 ✅ [useProducts] Producto obtenido: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: Object
+apiClient.js:111 ❌ [apiClient] === RESPONSE ERROR START ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:111
+apiClient.js:114 🎯 [apiClient] URL que falló: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:114
+apiClient.js:118 🔧 [apiClient] Método: GET
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:118
+apiClient.js:119 📊 [apiClient] Status: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:119
+apiClient.js:120 📋 [apiClient] Status Text: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:120
+apiClient.js:121 📋 [apiClient] Response Headers: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:121
+apiClient.js:122 📥 [apiClient] Error Data: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:122
+apiClient.js:123 💬 [apiClient] Error Message: timeout of 30000ms exceeded
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:123
+apiClient.js:124 🔗 [apiClient] Error Code: ECONNABORTED
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:124
+apiClient.js:193 🌐 [apiClient] No response received: XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 30000, withCredentials: true, upload: XMLHttpRequestUpload, …}
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:193
+apiClient.js:202 ❌ [apiClient] === RESPONSE ERROR END ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:202
+designService.js:148 ❌ [DesignService] Error obteniendo diseños del usuario: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at apiClient.js:194:23
+    at async Axios.request (axios.js?v=d4031bce:2139:14)
+    at async DesignService.getUserDesigns (designService.js:140:24)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+getUserDesigns @ designService.js:148
+useDesign.js:17 ❌ [useDesigns] Error: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at DesignService.handleError (designService.js:489:28)
+    at DesignService.getUserDesigns (designService.js:149:18)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ useDesign.js:17
+(anonymous) @ useDesign.js:81
+apiClient.js:111 ❌ [apiClient] === RESPONSE ERROR START ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:111
+apiClient.js:114 🎯 [apiClient] URL que falló: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:114
+apiClient.js:118 🔧 [apiClient] Método: GET
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:118
+apiClient.js:119 📊 [apiClient] Status: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:119
+apiClient.js:120 📋 [apiClient] Status Text: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:120
+apiClient.js:121 📋 [apiClient] Response Headers: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:121
+apiClient.js:122 📥 [apiClient] Error Data: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:122
+apiClient.js:123 💬 [apiClient] Error Message: timeout of 30000ms exceeded
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:123
+apiClient.js:124 🔗 [apiClient] Error Code: ECONNABORTED
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:124
+apiClient.js:193 🌐 [apiClient] No response received: XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 30000, withCredentials: true, upload: XMLHttpRequestUpload, …}
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:193
+apiClient.js:202 ❌ [apiClient] === RESPONSE ERROR END ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:202
+designService.js:148 ❌ [DesignService] Error obteniendo diseños del usuario: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at apiClient.js:194:23
+    at async Axios.request (axios.js?v=d4031bce:2139:14)
+    at async DesignService.getUserDesigns (designService.js:140:24)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+getUserDesigns @ designService.js:148
+useDesign.js:17 ❌ [useDesigns] Error: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at DesignService.handleError (designService.js:489:28)
+    at DesignService.getUserDesigns (designService.js:149:18)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ useDesign.js:17
+(anonymous) @ useDesign.js:81
+apiClient.js:111 ❌ [apiClient] === RESPONSE ERROR START ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:111
+apiClient.js:114 🎯 [apiClient] URL que falló: https://expo2025-8bjn.onrender.com/designs/my-designs?includeDetails=true&limit=50
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:114
+apiClient.js:118 🔧 [apiClient] Método: GET
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:118
+apiClient.js:119 📊 [apiClient] Status: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:119
+apiClient.js:120 📋 [apiClient] Status Text: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:120
+apiClient.js:121 📋 [apiClient] Response Headers: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:121
+apiClient.js:122 📥 [apiClient] Error Data: undefined
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:122
+apiClient.js:123 💬 [apiClient] Error Message: timeout of 30000ms exceeded
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:123
+apiClient.js:124 🔗 [apiClient] Error Code: ECONNABORTED
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:124
+apiClient.js:193 🌐 [apiClient] No response received: XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 30000, withCredentials: true, upload: XMLHttpRequestUpload, …}
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:193
+apiClient.js:202 ❌ [apiClient] === RESPONSE ERROR END ===
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ apiClient.js:202
+designService.js:148 ❌ [DesignService] Error obteniendo diseños del usuario: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at apiClient.js:194:23
+    at async Axios.request (axios.js?v=d4031bce:2139:14)
+    at async DesignService.getUserDesigns (designService.js:140:24)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+getUserDesigns @ designService.js:148
+useDesign.js:17 ❌ [useDesigns] Error: Error: Sin respuesta del servidor - Verifica que el backend esté corriendo en https://expo2025-8bjn.onrender.com
+    at DesignService.handleError (designService.js:489:28)
+    at DesignService.getUserDesigns (designService.js:149:18)
+    at async useDesign.js:61:24
+console.error @ react-konva.js?v=d4031bce:27244
+(anonymous) @ useDesign.js:17
+(anonymous) @ useDesign.js:81
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: {design: null, product: undefined}
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: {design: null, product: undefined}
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: {design: null, product: undefined}
+EnhancedDesignEditorModal.jsx:14 EnhancedDesignEditorModal props: {design: null, product: undefined}

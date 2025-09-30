@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import './contact.css';
 import ContactButton from '../../components/UI/contactButton/contactButton';
 import Footer from '../../components/UI/footer/footer';
+import Notifications from '../../components/UI/notifications/notifications';
 
 // Iconos SVG simples
 const LocationIcon = () => (
@@ -412,7 +413,7 @@ const Contact = () => {
             </div>
         </div>
       </main>
-
+      <Notifications />
       <ContactButton />
       <Footer />
     </>

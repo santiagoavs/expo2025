@@ -6,7 +6,7 @@ export const paymentMethodsService = {
     try {
       console.log('🔍 [paymentMethodsService] Obteniendo métodos de pago del usuario');
       
-      const response = await apiClient.get('/payment-methods');
+      const response = await apiClient.get('/payment-config');
       
       console.log('✅ [paymentMethodsService] Métodos obtenidos:', response);
       return response.paymentMethods || response.data || response;
@@ -25,7 +25,7 @@ export const paymentMethodsService = {
         cvc: '***'
       });
       
-      const response = await apiClient.post('/payment-methods', paymentData);
+      const response = await apiClient.post('/payment-config', paymentData);
       
       console.log('✅ [paymentMethodsService] Método creado:', response);
       return response.paymentMethod || response.data || response;
@@ -44,7 +44,7 @@ export const paymentMethodsService = {
         cvc: '***'
       });
       
-      const response = await apiClient.put(`/payment-methods/${methodId}`, paymentData);
+      const response = await apiClient.put(`/payment-config/${methodId}`, paymentData);
       
       console.log('✅ [paymentMethodsService] Método actualizado:', response);
       return response.paymentMethod || response.data || response;
@@ -59,7 +59,7 @@ export const paymentMethodsService = {
     try {
       console.log('🗑️ [paymentMethodsService] Eliminando método:', methodId);
       
-      const response = await apiClient.delete(`/payment-methods/${methodId}`);
+      const response = await apiClient.delete(`/payment-config/${methodId}`);
       
       console.log('✅ [paymentMethodsService] Método eliminado');
       return response;
@@ -74,7 +74,7 @@ export const paymentMethodsService = {
     try {
       console.log('🔄 [paymentMethodsService] Cambiando estado del método:', methodId, 'activo:', isActive);
       
-      const response = await apiClient.patch(`/payment-methods/${methodId}/toggle`, {
+      const response = await apiClient.patch(`/payment-config/${methodId}/toggle`, {
         active: isActive
       });
       

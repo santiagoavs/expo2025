@@ -5,6 +5,7 @@ import './reviews.css';
 import Footer from '../../components/UI/footer/footer';
 import ContactButton from '../../components/UI/contactButton/contactButton';
 import useDataReviews from '../../hooks/useDataReviews';
+import Notifications from '../../components/UI/notifications/notifications';
 
 const ReviewPage = () => {
   const {
@@ -57,6 +58,7 @@ const ReviewPage = () => {
           error={error}
         />
       </div>
+      <Notifications />
       <ContactButton />
       <Footer />
     </main>
