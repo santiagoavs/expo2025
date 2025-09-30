@@ -1480,8 +1480,8 @@ designController.getAllDesigns = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Error en getAllDesigns:", error);
-    res.status(500).json({ 
+    console.error("Error al obtener los diseños:", error);
+    res.status(500).json({
       success: false,
       message: "Error al obtener los diseños",
       error: process.env.NODE_ENV === 'development' ? error.message : "Error interno"

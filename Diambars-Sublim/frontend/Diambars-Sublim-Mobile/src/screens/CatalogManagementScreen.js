@@ -149,7 +149,7 @@ const CatalogManagementScreen = () => {
             {/* Tarjeta de Catálogo */}
             <TouchableOpacity 
               style={styles.actionCard}
-              onPress={() => handleActionPress('Catálogo')}
+              onPress={() => navigation.navigate('Products')}
             >
               <View style={styles.actionIcon}>
                 <Ionicons name="library-outline" size={32} color="#040DBF" />

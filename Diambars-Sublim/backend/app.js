@@ -30,7 +30,6 @@ import qualityApprovalRoutes from "./src/routes/quality-approval.routes.js";
 // Importación de utilidades centralizadas
 import { getLocationData, DELIVERY_CONFIG } from "./src/utils/locationUtils.js";
 import { paymentProcessor } from "./src/services/payment/PaymentProcessor.js";
-import { debugEmailValidation } from "./src/middlewares/debugEmailValidaton.js";
 import Review from './src/models/reviews.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -195,8 +194,8 @@ app.get("/api/health", async (req, res) => {
 app.use("/api/auth", jsonMiddleware, authRoutes);
 
 // ========== RUTAS DE REGISTRO ==========
-app.use("/api/employees/register", jsonMiddleware, debugEmailValidation, registerEmployeesRoutes);
-app.use("/api/users/register", jsonMiddleware, debugEmailValidation, registerUsersRoutes);
+app.use("/api/employees/register", jsonMiddleware, registerEmployeesRoutes);
+app.use("/api/users/register", jsonMiddleware, registerUsersRoutes);
 
 // ========== RUTAS DE VERIFICACIÓN Y RECUPERACIÓN ==========
 app.use("/api/verify-email", jsonMiddleware, verifyEmailRoutes);
@@ -225,6 +224,7 @@ app.use("/api/reviews", jsonMiddleware, reviewsRoutes);
 
 // ========== RUTAS DE DISEÑOS ==========
 app.use("/api/designs", jsonMiddleware, designRoutes);
+
 
 // ========== RUTAS DE PRODUCCIÓN ==========
 import productionRoutes from './src/routes/production.routes.js';
@@ -372,6 +372,7 @@ app.get("/api/locations/data", (req, res) => {
     });
   }
 });
+
 
 // Endpoint para verificar estado del servicio Wompi
 app.get("/api/config/payment-status", async (req, res) => {

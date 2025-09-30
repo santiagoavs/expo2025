@@ -12,6 +12,12 @@ import CodeConfirmationScreen from './src/screens/CodeConfirmationScreen';
 import NewPasswordScreen from './src/screens/NewPasswordScreen';
 import CatalogManagementScreen from './src/screens/CatalogManagementScreen';
 
+// Importar pantallas de productos
+import ProductsScreen from './src/screens/ProductsScreen';
+import ProductDetailScreen from './src/screens/ProductDetailScreen';
+import EditProductScreen from './src/screens/EditProductScreen';
+import CreateProductScreen from './src/screens/CreateProductScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -128,6 +134,40 @@ export default function App() {
                 opacity: current.progress,
               },
             }),
+          }}
+        />
+
+        {/* 📱 PANTALLAS DE PRODUCTOS */}
+        <Stack.Screen 
+          name="Products" 
+          component={ProductsScreen}
+          options={{
+            title: 'Gestión de Productos',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="ProductDetail" 
+          component={ProductDetailScreen}
+          options={{
+            title: 'Detalles del Producto',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="EditProduct" 
+          component={EditProductScreen}
+          options={{
+            title: 'Editar Producto',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="CreateProduct" 
+          component={CreateProductScreen}
+          options={{
+            title: 'Crear Producto',
+            headerShown: false,
           }}
         />
       </Stack.Navigator>
