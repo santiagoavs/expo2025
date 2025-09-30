@@ -30,6 +30,12 @@ import EmployeeDetailScreen from './src/screens/EmployeeDetailScreen';
 import CreateEmployeeScreen from './src/screens/CreateEmployeeScreen';
 import EditEmployeeScreen from './src/screens/EditEmployeeScreen';
 
+// Importar pantallas de usuarios
+import UsersScreen from './src/screens/UsersScreen';
+import UserDetailScreen from './src/screens/UserDetailScreen';
+import CreateUserScreen from './src/screens/CreateUserScreen';
+import EditUserScreen from './src/screens/EditUserScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -247,6 +253,40 @@ export default function App() {
       component={EditEmployeeScreen}
       options={{
         title: 'Editar Empleado',
+        headerShown: false,
+      }}
+    />
+
+    {/* 👤 PANTALLAS DE USUARIOS */}
+    <Stack.Screen
+      name="Users"
+      component={UsersScreen}
+      options={{
+        title: 'Gestión de Usuarios',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="UserDetail"
+      component={UserDetailScreen}
+      options={{
+        title: 'Detalles de Usuario',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="CreateUser"
+      component={CreateUserScreen}
+      options={{
+        title: 'Crear Usuario',
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="EditUser"
+      component={EditUserScreen}
+      options={{
+        title: 'Editar Usuario',
         headerShown: false,
       }}
     />
