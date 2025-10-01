@@ -1,6 +1,6 @@
 // src/utils/networkDiagnostic.js - Herramientas de diagnóstico de red
 
-import { getApiUrl, testApiConnection } from '../config/apiConfig';
+import { getApiUrl, testApiConnection, isUsingLocalBackend, getConfigInfo } from '../config/apiConfig';
 
 /**
  * Diagnóstica problemas de conectividad de red
@@ -9,9 +9,14 @@ import { getApiUrl, testApiConnection } from '../config/apiConfig';
 export const runNetworkDiagnostic = async () => {
   console.log('🔍 Iniciando diagnóstico de red...');
   
+  const configInfo = getConfigInfo();
+  console.log('📋 Configuración actual:', configInfo);
+  
   const results = {
     timestamp: new Date().toISOString(),
+    config: configInfo,
     apiUrl: getApiUrl(),
+    isUsingLocalBackend: isUsingLocalBackend(),
     tests: {}
   };
 

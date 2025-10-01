@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Alert
+  Alert,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -205,7 +206,11 @@ const Sidebar = ({ isOpen, onClose }) => {
         <View style={styles.sidebarHeader}>
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
-              <Ionicons name="diamond" size={24} color="#1F64BF" />
+              <Image 
+                source={require('../assets/logo.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.logoText}>
               <Text style={styles.logoTitle}>DIAMBARS</Text>
@@ -250,8 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   sidebar: {
-    width: width * 0.85,
-    maxWidth: 320,
+    width: width,
     backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: -2, height: 0 },
@@ -283,6 +287,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  logoImage: {
+    width: 32,
+    height: 32,
   },
   logoText: {
     flex: 1,

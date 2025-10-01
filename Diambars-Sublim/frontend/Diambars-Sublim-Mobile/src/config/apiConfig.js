@@ -2,7 +2,8 @@
 
 /**
  * Configuración centralizada de URLs de API para la app móvil
- * - Detecta automáticamente el entorno (desarrollo vs producción)
+ * - Configurado para usar backend local (172.20.10.4:4000) en lugar de Render
+ * - Tanto desarrollo como producción usan el backend local
  * - Permite configuración manual de IP para desarrollo
  */
 
@@ -10,7 +11,7 @@
 const isDevelopment = __DEV__;
 
 // IP local de tu computadora (cambia esta por tu IP real)
-const LOCAL_IP = '192.168.1.5';
+const LOCAL_IP = '10.31.24.123';
 
 // Configuración de URLs
 const API_CONFIG = {
@@ -32,7 +33,7 @@ const API_CONFIG = {
 export const getApiConfig = () => {
   return isDevelopment ? API_CONFIG.development : API_CONFIG.production;
 };
-
+326
 // Función para obtener solo la URL base
 export const getApiUrl = () => {
   return getApiConfig().baseURL;
