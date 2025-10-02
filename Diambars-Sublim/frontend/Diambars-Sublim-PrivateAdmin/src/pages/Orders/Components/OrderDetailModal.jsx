@@ -417,7 +417,7 @@ const OrderDetailsModal = ({ open, onClose, order, onStatusChange }) => {
     if (open && order && order._id) {
       setLoading(true);
       
-      fetch(`http://localhost:4000/api/orders/${order._id}`, {
+      fetch(`/api/orders/${order._id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

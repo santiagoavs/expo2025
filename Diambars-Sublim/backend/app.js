@@ -43,8 +43,8 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:5173",  // React dev privado
       "http://localhost:5174",  // React dev publico
-      "http://192.168.1.5:5173",  // React dev privado (IP local)
-      "http://192.168.1.5:5174",  // React dev publico (IP local)
+      "http://172.20.10.4::5173",  // React dev privado (IP local)
+      "http://10.31.24.123:5174",  // React dev publico (IP local)
       "https://diambars-sublim.vercel.app", // Vercel publica
       "https://diambars-panel-administrativo.vercel.app", // Vercel Panel administrativo
       process.env.FRONTEND_URL,

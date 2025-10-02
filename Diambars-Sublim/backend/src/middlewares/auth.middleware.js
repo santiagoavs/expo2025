@@ -149,10 +149,18 @@ export const authRequired = async (req, res, next) => {
       }
 
       // Verificar que el tipo de usuario coincida con el contexto
-      const isEmployeeRoute = req.originalUrl.includes('/employees') || 
+      // Configurar rutas públicas de usuarios
+      const isPublicUserRoute = req.originalUrl.includes('/orders/me') || 
+                               req.originalUrl.includes('/orders/user/') ||
+                               req.originalUrl.includes('/user/orders');
+      
+      // Solo las rutas específicas de empleados requieren verificación de empleado
+      const isEmployeeRoute = !isPublicUserRoute && (
+                             req.originalUrl.includes('/employees') || 
                              req.originalUrl.includes('/admin') ||
                              req.originalUrl.includes('/dashboard') ||
-                             isAdminPanel;
+                             isAdminPanel);
+      
       
       const isEmployee = userType === 'employee' || 
                         ['admin', 'manager', 'employee', 'warehouse'].includes(user.role?.toLowerCase());

@@ -10,13 +10,406 @@ import {
   User,
   Export
 } from '@phosphor-icons/react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+  InputAdornment,
+  Grid,
+  IconButton,
+  CircularProgress,
+  Chip,
+  Paper,
+  styled,
+  useTheme,
+  alpha,
+  Avatar,
+  InputLabel,
+  FormControl,
+  OutlinedInput
+} from '@mui/material';
 import UserCard from '../../components/UserCard/UserCard';
 import Modal from '../../components/Modal/Modal';
 import CreateUserModal from '../../components/CreateUserModal/CreateUserModal';
 import UserFilters from '../../components/UserFilters/UserFilters';
 import useUsers from '../../hooks/useUsers';
 import Swal from 'sweetalert2';
-import './Users.css';
+
+// ================ ESTILOS MODERNOS RESPONSIVE - USERS ================
+const UsersPageContainer = styled(Box)({
+  minHeight: '100vh',
+  fontFamily: "'Mona Sans'",
+  background: 'white',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+});
+
+const UsersContentWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '1400px',
+  margin: '0 auto',
+  paddingTop: '120px',
+  paddingBottom: '40px',
+  paddingLeft: '32px',
+  paddingRight: '32px',
+  minHeight: 'calc(100vh - 120px)',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1200px',
+    paddingLeft: '28px',
+    paddingRight: '28px',
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '1000px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    paddingTop: '110px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: '100px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+  }
+}));
+
+const UsersModernCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '16px',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  boxShadow: '0 4px 15px rgba(4, 13, 191, 0.08)',
+  transition: 'all 0.3s ease',
+  fontFamily: "'Mona Sans'",
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 25px rgba(4, 13, 191, 0.15)',
+    borderColor: alpha('#040DBF', 0.2),
+  }
+}));
+
+const UsersHeaderSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '24px',
+  padding: '20px 0',
+  [theme.breakpoints.down('lg')]: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '20px',
+  }
+}));
+
+const UsersTitleSection = styled(Box)({
+  flex: 1,
+});
+
+const UsersMainTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  fontSize: '28px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: '0 0 8px 0',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '22px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '8px',
+  }
+}));
+
+const UsersSubtitle = styled(Typography)(({ theme }) => ({
+  fontSize: '16px',
+  color: '#64748b',
+  margin: 0,
+  fontWeight: '500',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '14px',
+  }
+}));
+
+const UsersActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '12px',
+  alignItems: 'center',
+  [theme.breakpoints.down('lg')]: {
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '8px',
+  }
+}));
+
+const UsersBtn = styled(Button)(({ variant }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '12px 20px',
+  borderRadius: '12px',
+  fontSize: '14px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  ...(variant === 'primary' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+    color: '#ffffff',
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.3)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #1F64BF, #040DBF)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(4, 13, 191, 0.4)',
+    }
+  } : {
+    background: '#ffffff',
+    color: '#040DBF',
+    border: '2px solid #e2e8f0',
+    boxShadow: '0 2px 8px rgba(4, 13, 191, 0.1)',
+    '&:hover': {
+      background: alpha('#040DBF', 0.05),
+      borderColor: '#040DBF',
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(4, 13, 191, 0.15)',
+    }
+  })
+}));
+
+const UsersStatsGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+  gap: '20px',
+  marginBottom: '8px',
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+  },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    gap: '12px',
+  }
+}));
+
+const UsersStatCard = styled(UsersModernCard)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '24px',
+  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9))',
+  [theme.breakpoints.down('md')]: {
+    padding: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px',
+  }
+}));
+
+const UsersStatIcon = styled(Box)(({ variant, theme }) => ({
+  width: '52px',
+  height: '52px',
+  borderRadius: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: '#ffffff',
+  transition: 'all 0.3s ease',
+  ...(variant === 'total' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  } : variant === 'active' ? {
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+  } : variant === 'admin' ? {
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+  } : {
+    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+  }),
+  [theme.breakpoints.down('sm')]: {
+    width: '44px',
+    height: '44px',
+  }
+}));
+
+const UsersStatContent = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const UsersStatNumber = styled(Typography)(({ theme }) => ({
+  fontSize: '28px',
+  fontWeight: '700',
+  color: '#010326',
+  lineHeight: 1,
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '20px',
+  }
+}));
+
+const UsersStatLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '14px',
+  color: '#64748b',
+  fontWeight: '600',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '13px',
+  }
+}));
+
+const UsersControls = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+});
+
+const UsersSearch = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  maxWidth: '500px',
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: '100%',
+  }
+}));
+
+const UsersSearchIcon = styled(Box)({
+  position: 'absolute',
+  left: '16px',
+  color: '#64748b',
+  transition: 'color 0.3s ease',
+  zIndex: 2,
+});
+
+const UsersSearchInput = styled(TextField)(({ theme }) => ({
+  width: '100%',
+  '& .MuiOutlinedInput-root': {
+    paddingLeft: '48px',
+    borderRadius: '16px',
+    fontSize: '14px',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+      borderWidth: '2px',
+    },
+    '&:hover fieldset': {
+      borderColor: '#040DBF',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#040DBF',
+      boxShadow: '0 0 0 4px rgba(4, 13, 191, 0.1)',
+    },
+  },
+  '& .MuiInputBase-input': {
+    padding: '14px 16px',
+    color: '#010326',
+  }
+}));
+
+const UsersResults = styled(Box)({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '0 4px',
+});
+
+const UsersResultsText = styled(Typography)({
+  fontSize: '14px',
+  color: '#64748b',
+  fontWeight: '500',
+});
+
+const UsersGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+  gap: '24px',
+  marginTop: '8px',
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '20px',
+  },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    gap: '16px',
+  }
+}));
+
+const UsersEmpty = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '80px 20px',
+  textAlign: 'center',
+  color: '#64748b',
+  [theme.breakpoints.down('sm')]: {
+    padding: '60px 20px',
+  }
+}));
+
+const UsersEmptyTitle = styled(Typography)({
+  fontSize: '20px',
+  fontWeight: '600',
+  margin: '16px 0 8px 0',
+  color: '#334155',
+});
+
+const UsersEmptyText = styled(Typography)({
+  fontSize: '14px',
+  margin: 0,
+});
+
+const UsersLoading = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '400px',
+  gap: '16px',
+  color: '#64748b',
+  fontWeight: '500',
+});
+
+const UsersError = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '400px',
+  gap: '16px',
+  color: '#64748b',
+  textAlign: 'center',
+});
+
+const UsersErrorTitle = styled(Typography)({
+  fontSize: '20px',
+  fontWeight: '600',
+  color: '#dc2626',
+  margin: 0,
+});
+
+const UsersErrorText = styled(Typography)({
+  fontSize: '14px',
+  margin: 0,
+});
 
 const Users = () => {
   const {
@@ -254,131 +647,136 @@ const Users = () => {
   // Mostrar error si hay problemas con la API
   if (error && !loading) {
     return (
-      <div className="users-admin-page">
-        <div className="users-admin-error">
-          <h3>Error al cargar usuarios</h3>
-          <p>{error}</p>
-          <button 
-            className="users-admin-btn users-admin-btn--primary"
-            onClick={() => window.location.reload()}
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
+      <UsersPageContainer>
+        <UsersContentWrapper>
+          <UsersError>
+            <UsersErrorTitle>Error al cargar usuarios</UsersErrorTitle>
+            <UsersErrorText>{error}</UsersErrorText>
+            <UsersBtn 
+              variant="primary"
+              onClick={() => window.location.reload()}
+            >
+              Reintentar
+            </UsersBtn>
+          </UsersError>
+        </UsersContentWrapper>
+      </UsersPageContainer>
     );
   }
 
   if (loading) {
     return (
-      <div className="users-admin-page">
-        <div className="users-admin-loading">
-          <div className="users-admin-spinner"></div>
-          <span>Cargando usuarios...</span>
-        </div>
-      </div>
+      <UsersPageContainer>
+        <UsersContentWrapper>
+          <UsersLoading>
+            <CircularProgress size={40} sx={{ color: '#040DBF' }} />
+            <span>Cargando usuarios...</span>
+          </UsersLoading>
+        </UsersContentWrapper>
+      </UsersPageContainer>
     );
   }
 
   return (
-    <div className="users-admin-page">
-      <div className="users-admin-container">
+    <UsersPageContainer>
+      <UsersContentWrapper>
         
         {/* Header */}
-        <div className="users-admin-header">
-          <div className="users-admin-title-section">
-            <h1 className="users-admin-title">
+        <UsersHeaderSection>
+          <UsersTitleSection>
+            <UsersMainTitle>
               <UsersIcon size={32} weight="duotone" />
               Gestión de Usuarios
-            </h1>
-            <p className="users-admin-subtitle">
+            </UsersMainTitle>
+            <UsersSubtitle>
               Administra usuarios, roles y permisos del sistema
-            </p>
-          </div>
+            </UsersSubtitle>
+          </UsersTitleSection>
 
-          <div className="users-admin-actions">
-            <button 
-              className="users-admin-btn users-admin-btn--secondary"
+          <UsersActions>
+            <UsersBtn 
+              variant="secondary"
               onClick={() => setShowFilters(!showFilters)}
             >
               <FunnelSimple size={16} weight="duotone" />
               Filtros
-            </button>
+            </UsersBtn>
 
-            <button 
-              className="users-admin-btn users-admin-btn--secondary"
+            <UsersBtn 
+              variant="secondary"
               onClick={handleExportUsers}
               disabled={filteredUsers.length === 0}
             >
               <Export size={16} weight="duotone" />
               Exportar
-            </button>
+            </UsersBtn>
 
-            <button 
-              className="users-admin-btn users-admin-btn--primary"
+            <UsersBtn 
+              variant="primary"
               onClick={() => setShowCreateModal(true)}
             >
               <UserPlus size={16} weight="duotone" />
               Nuevo Usuario
-            </button>
-          </div>
-        </div>
+            </UsersBtn>
+          </UsersActions>
+        </UsersHeaderSection>
 
         {/* Stats Cards */}
-        <div className="users-admin-stats">
-          <div className="users-admin-stat-card">
-            <div className="users-admin-stat-icon users-admin-stat-icon--total">
+        <UsersStatsGrid>
+          <UsersStatCard>
+            <UsersStatIcon variant="total">
               <UsersIcon size={24} weight="duotone" />
-            </div>
-            <div className="users-admin-stat-content">
-              <span className="users-admin-stat-number">{stats.total}</span>
-              <span className="users-admin-stat-label">Total Usuarios</span>
-            </div>
-          </div>
+            </UsersStatIcon>
+            <UsersStatContent>
+              <UsersStatNumber>{stats.total}</UsersStatNumber>
+              <UsersStatLabel>Total Usuarios</UsersStatLabel>
+            </UsersStatContent>
+          </UsersStatCard>
 
-          <div className="users-admin-stat-card">
-            <div className="users-admin-stat-icon users-admin-stat-icon--active">
+          <UsersStatCard>
+            <UsersStatIcon variant="active">
               <User size={24} weight="duotone" />
-            </div>
-            <div className="users-admin-stat-content">
-              <span className="users-admin-stat-number">{stats.active}</span>
-              <span className="users-admin-stat-label">Activos</span>
-            </div>
-          </div>
+            </UsersStatIcon>
+            <UsersStatContent>
+              <UsersStatNumber>{stats.active}</UsersStatNumber>
+              <UsersStatLabel>Activos</UsersStatLabel>
+            </UsersStatContent>
+          </UsersStatCard>
 
-          <div className="users-admin-stat-card">
-            <div className="users-admin-stat-icon users-admin-stat-icon--admin">
+          <UsersStatCard>
+            <UsersStatIcon variant="admin">
               <Shield size={24} weight="duotone" />
-            </div>
-            <div className="users-admin-stat-content">
-              <span className="users-admin-stat-number">{stats.admins}</span>
-              <span className="users-admin-stat-label">Administradores</span>
-            </div>
-          </div>
+            </UsersStatIcon>
+            <UsersStatContent>
+              <UsersStatNumber>{stats.admins}</UsersStatNumber>
+              <UsersStatLabel>Administradores</UsersStatLabel>
+            </UsersStatContent>
+          </UsersStatCard>
 
-          <div className="users-admin-stat-card">
-            <div className="users-admin-stat-icon users-admin-stat-icon--premium">
+          <UsersStatCard>
+            <UsersStatIcon variant="premium">
               <Shield size={24} weight="duotone" />
-            </div>
-            <div className="users-admin-stat-content">
-              <span className="users-admin-stat-number">{stats.premium}</span>
-              <span className="users-admin-stat-label">Premium</span>
-            </div>
-          </div>
-        </div>
+            </UsersStatIcon>
+            <UsersStatContent>
+              <UsersStatNumber>{stats.premium}</UsersStatNumber>
+              <UsersStatLabel>Premium</UsersStatLabel>
+            </UsersStatContent>
+          </UsersStatCard>
+        </UsersStatsGrid>
 
         {/* Search and Filters */}
-        <div className="users-admin-controls">
-          <div className="users-admin-search">
-            <MagnifyingGlass className="users-admin-search-icon" size={18} weight="duotone" />
-            <input
+        <UsersControls>
+          <UsersSearch>
+            <UsersSearchIcon>
+              <MagnifyingGlass size={18} weight="duotone" />
+            </UsersSearchIcon>
+            <UsersSearchInput
               type="text"
               placeholder="Buscar por nombre, email o teléfono..."
-              className="users-admin-search-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </UsersSearch>
 
           {showFilters && (
             <UserFilters 
@@ -386,29 +784,29 @@ const Users = () => {
               onFiltersChange={setFilters}
             />
           )}
-        </div>
+        </UsersControls>
 
         {/* Results Info */}
-        <div className="users-admin-results">
-          <span className="users-admin-results-text">
+        <UsersResults>
+          <UsersResultsText>
             {filteredUsers.length} usuario{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+          </UsersResultsText>
+        </UsersResults>
 
         {/* Users Grid */}
         {filteredUsers.length === 0 ? (
-          <div className="users-admin-empty">
+          <UsersEmpty>
             <UsersIcon size={64} weight="duotone" />
-            <h3>No se encontraron usuarios</h3>
-            <p>
+            <UsersEmptyTitle>No se encontraron usuarios</UsersEmptyTitle>
+            <UsersEmptyText>
               {searchQuery || filters.role !== 'all' || filters.status !== 'all'
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'No hay usuarios registrados en el sistema'
               }
-            </p>
-          </div>
+            </UsersEmptyText>
+          </UsersEmpty>
         ) : (
-          <div className="users-admin-grid">
+          <UsersGrid>
             {filteredUsers.map(user => (
               <UserCard
                 key={user.id}
@@ -418,7 +816,7 @@ const Users = () => {
                 onStatusChange={handleStatusChange}
               />
             ))}
-          </div>
+          </UsersGrid>
         )}
 
         {/* Create User Modal */}
@@ -433,8 +831,8 @@ const Users = () => {
           />
         </Modal>
 
-      </div>
-    </div>
+      </UsersContentWrapper>
+    </UsersPageContainer>
   );
 };
 

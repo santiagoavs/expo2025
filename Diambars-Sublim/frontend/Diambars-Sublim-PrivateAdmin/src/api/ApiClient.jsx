@@ -1,11 +1,24 @@
 // src/api/ApiClient.js - PANEL ADMIN CORREGIDO
 import axios from 'axios';
+import { getApiUrl, getConfig } from '../../config.js';
 
 // Crear instancia de axios con configuración base
+// CONFIGURACIÓN CENTRALIZADA: Usa config.js para manejar URLs de manera segura
+const getBaseURL = () => {
+  const config = getConfig();
+  console.log('🔧 [ApiClient] Configuración:', {
+    environment: config.isDevelopment ? 'development' : 'production',
+    apiUrl: config.apiUrl
+  });
+  return config.apiUrl;
+};
+
+const config = getConfig();
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getBaseURL(),
   withCredentials: false, // IMPORTANTE: Panel admin NO usa cookies
-  timeout: 60000, // 60 segundos para manejar respuestas grandes
+  timeout: config.app.timeout, // Timeout configurado centralmente
   headers: {
     'Content-Type': 'application/json',
   }

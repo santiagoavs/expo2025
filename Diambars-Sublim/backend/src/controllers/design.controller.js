@@ -1372,6 +1372,7 @@ designController.respondToQuote = async (req, res) => {
  * Lista todos los diseños con filtros (admin)
  */
 designController.getAllDesigns = async (req, res) => {
+  const startTime = Date.now();
   try {
     const { 
       page = 1, 
@@ -1383,6 +1384,8 @@ designController.getAllDesigns = async (req, res) => {
       sort = 'createdAt',
       order = 'desc'
     } = req.query;
+    
+    console.log('🎨 [getAllDesigns] Iniciando consulta:', { page, limit, status, product, user, search, sort, order });
     
     const isAdmin = req.user.roles?.some(role => ['admin', 'manager'].includes(role));
     
@@ -1438,24 +1441,72 @@ designController.getAllDesigns = async (req, res) => {
     if (queryValidation.cleaned.product) filter.product = queryValidation.cleaned.product;
     if (queryValidation.cleaned.user && isAdmin) filter.user = queryValidation.cleaned.user;
     if (queryValidation.cleaned.search) {
-      filter.$or = [
-        { name: { $regex: queryValidation.cleaned.search, $options: 'i' } },
-        { clientNotes: { $regex: queryValidation.cleaned.search, $options: 'i' } }
-      ];
+      // Usar búsqueda de texto en lugar de regex para mejor rendimiento
+      filter.$text = { $search: queryValidation.cleaned.search };
     }
     
-    const result = await Design.paginate(filter, {
-      page: queryValidation.cleaned.page,
-      limit: queryValidation.cleaned.limit,
-      sort: { [sort]: order === 'asc' ? 1 : -1 },
-      populate: [
-        { path: 'product', select: 'name images' },
-        { path: 'user', select: 'name email' }
-      ],
-      lean: true
+    // Optimización: Usar agregación en lugar de populate para mejor rendimiento
+    const pipeline = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'product',
+          foreignField: '_id',
+          as: 'product',
+          pipeline: [
+            { $project: { name: 1, images: 1 } }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
+          pipeline: [
+            { $project: { name: 1, email: 1 } }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          product: { $arrayElemAt: ['$product', 0] },
+          user: { $arrayElemAt: ['$user', 0] }
+        }
+      }
+    ];
+
+    // Si hay búsqueda de texto, ordenar por score primero, luego por el campo especificado
+    if (queryValidation.cleaned.search) {
+      pipeline.push({ $sort: { score: { $meta: 'textScore' }, [sort]: order === 'asc' ? 1 : -1 } });
+    } else {
+      pipeline.push({ $sort: { [sort]: order === 'asc' ? 1 : -1 } });
+    }
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: (queryValidation.cleaned.page - 1) * queryValidation.cleaned.limit },
+          { $limit: queryValidation.cleaned.limit }
+        ],
+        count: [{ $count: 'total' }]
+      }
+    });
+
+    const [result] = await Design.aggregate(pipeline);
+    const totalDocs = result.count[0]?.total || 0;
+    const totalPages = Math.ceil(totalDocs / queryValidation.cleaned.limit);
+    
+    const queryTime = Date.now() - startTime;
+    console.log('⏱️ [getAllDesigns] Consulta completada:', { 
+      queryTime: `${queryTime}ms`, 
+      totalDocs, 
+      returnedDocs: result.data?.length || 0 
     });
     
-    const designs = result.docs.map(design => ({
+    const designs = result.data.map(design => ({
       ...design,
       _links: {
         self: `/api/designs/${design._id}`,
@@ -1468,14 +1519,14 @@ designController.getAllDesigns = async (req, res) => {
       data: {
         designs,
         pagination: {
-          total: result.totalDocs,
-          pages: result.totalPages,
-          currentPage: result.page,
-          limit: result.limit,
-          hasNextPage: result.hasNextPage,
-          hasPrevPage: result.hasPrevPage,
-          nextPage: result.nextPage,
-          prevPage: result.prevPage
+          total: totalDocs,
+          pages: totalPages,
+          currentPage: queryValidation.cleaned.page,
+          limit: queryValidation.cleaned.limit,
+          hasNextPage: queryValidation.cleaned.page < totalPages,
+          hasPrevPage: queryValidation.cleaned.page > 1,
+          nextPage: queryValidation.cleaned.page < totalPages ? queryValidation.cleaned.page + 1 : null,
+          prevPage: queryValidation.cleaned.page > 1 ? queryValidation.cleaned.page - 1 : null
         }
       }
     });

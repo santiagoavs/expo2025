@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  StatusBar
+  StatusBar,
+  Image
 } from 'react-native';
 // Importa componentes básicos de React Native:
 // View → contenedor de UI
@@ -110,7 +111,11 @@ const LoginScreen = () => {
           {/* -------------------- */}
           <View style={styles.header}>
             <View style={styles.logoPlaceholder}>
-              <Ionicons name="diamond" size={60} color="#040DBF" />
+              <Image 
+                source={require('../assets/logo.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <Text style={styles.title}>DIAMBARS</Text>
             <Text style={styles.subtitle}>Acceso Administrativo</Text>
@@ -301,6 +306,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 28,

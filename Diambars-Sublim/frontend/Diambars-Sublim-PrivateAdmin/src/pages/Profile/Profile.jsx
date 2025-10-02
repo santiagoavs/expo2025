@@ -16,10 +16,599 @@ import {
   MapPin,
   Briefcase
 } from '@phosphor-icons/react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+  InputAdornment,
+  Grid,
+  IconButton,
+  CircularProgress,
+  Chip,
+  Paper,
+  styled,
+  useTheme,
+  alpha,
+  Avatar,
+  InputLabel,
+  FormControl,
+  OutlinedInput
+} from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import ProfileService from '../../api/profileService';
 import Swal from 'sweetalert2';
-import './Profile.css';
+
+// ================ ESTILOS MODERNOS RESPONSIVE - PROFILE ================
+const ProfilePageContainer = styled(Box)({
+  minHeight: '100vh',
+  fontFamily: "'Mona Sans'",
+  background: 'white',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+});
+
+const ProfileContentWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '1200px',
+  margin: '0 auto',
+  paddingTop: '120px',
+  paddingBottom: '40px',
+  paddingLeft: '32px',
+  paddingRight: '32px',
+  minHeight: 'calc(100vh - 120px)',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '1000px',
+    paddingLeft: '28px',
+    paddingRight: '28px',
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '900px',
+    paddingLeft: '24px',
+    paddingRight: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    paddingTop: '110px',
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: '100px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+  }
+}));
+
+const ProfileModernCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '20px',
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  boxShadow: '0 8px 25px rgba(4, 13, 191, 0.08)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  fontFamily: "'Mona Sans'",
+  '&:hover': {
+    boxShadow: '0 12px 35px rgba(4, 13, 191, 0.15)',
+    transform: 'translateY(-2px)',
+    borderColor: alpha('#040DBF', 0.2),
+  }
+}));
+
+const ProfileHeaderSection = styled(ProfileModernCard)(({ theme }) => ({
+  padding: '40px',
+  marginBottom: '32px',
+  background: 'linear-gradient(135deg, rgba(4, 13, 191, 0.05), rgba(31, 100, 191, 0.02))',
+  position: 'relative',
+  zIndex: 1,
+  width: '100%',
+  boxSizing: 'border-box',
+  [theme.breakpoints.down('lg')]: {
+    padding: '32px',
+  },
+  [theme.breakpoints.down('md')]: {
+    padding: '24px',
+    marginBottom: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '20px',
+    marginBottom: '20px',
+  }
+}));
+
+const ProfileHeaderContent = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '32px',
+  width: '100%',
+  [theme.breakpoints.down('lg')]: {
+    gap: '24px',
+  },
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    gap: '16px',
+  }
+}));
+
+const ProfileMainTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '2rem',
+  fontWeight: '700 !important',
+  color: '#010326',
+  marginBottom: '12px',
+  letterSpacing: '-0.025em',
+  lineHeight: 1.2,
+  textAlign: 'center',
+  fontFamily: "'Mona Sans'",
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '1.8rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.6rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.4rem',
+  }
+}));
+
+const ProfileMainDescription = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  color: '#64748b',
+  fontWeight: '500 !important',
+  lineHeight: 1.6,
+  textAlign: 'center',
+  maxWidth: '600px',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '0.95rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '0.9rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.85rem',
+  }
+}));
+
+const ProfileAvatarSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '32px',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    textAlign: 'center',
+    gap: '24px',
+  }
+}));
+
+const ProfileAvatarContainer = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '16px',
+});
+
+const ProfileAvatarCircle = styled(Avatar)(({ theme }) => ({
+  width: '120px',
+  height: '120px',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  fontSize: '48px',
+  fontWeight: '700',
+  color: '#ffffff',
+  boxShadow: '0 8px 30px rgba(4, 13, 191, 0.3)',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: '0 12px 40px rgba(4, 13, 191, 0.4)',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '100px',
+    height: '100px',
+    fontSize: '40px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '80px',
+    height: '80px',
+    fontSize: '32px',
+  }
+}));
+
+const ProfileAvatarUpload = styled(Button)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '8px 16px',
+  background: alpha('#040DBF', 0.1),
+  border: `1px solid ${alpha('#040DBF', 0.2)}`,
+  borderRadius: '20px',
+  color: '#040DBF',
+  fontSize: '13px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: alpha('#040DBF', 0.15),
+    borderColor: alpha('#040DBF', 0.3),
+    transform: 'translateY(-1px)',
+  }
+}));
+
+const ProfileMainInfo = styled(Box)(({ theme }) => ({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  [theme.breakpoints.down('md')]: {
+    alignItems: 'center',
+  }
+}));
+
+const ProfileName = styled(Typography)(({ theme }) => ({
+  fontSize: '28px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: 0,
+  [theme.breakpoints.down('md')]: {
+    fontSize: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '20px',
+  }
+}));
+
+const ProfileRole = styled(Typography)(({ theme }) => ({
+  fontSize: '16px',
+  color: '#64748b',
+  fontWeight: '500',
+  margin: 0,
+}));
+
+const ProfileBadges = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '12px',
+  marginTop: '8px',
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+  }
+}));
+
+const ProfileBadge = styled(Chip)(({ variant }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '6px 12px',
+  borderRadius: '12px',
+  fontSize: '12px',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  ...(variant === 'admin' ? {
+    background: alpha('#040DBF', 0.1),
+    color: '#040DBF',
+    border: `1px solid ${alpha('#040DBF', 0.2)}`,
+  } : {
+    background: alpha('#10b981', 0.1),
+    color: '#059669',
+    border: `1px solid ${alpha('#10b981', 0.2)}`,
+  })
+}));
+
+const ProfileGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '24px',
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: '1fr',
+    gap: '20px',
+  }
+}));
+
+const ProfileCardHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '24px 24px 0 24px',
+  marginBottom: '20px',
+  [theme.breakpoints.down('md')]: {
+    padding: '20px 20px 0 20px',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '12px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px 16px 0 16px',
+  }
+}));
+
+const ProfileCardTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  fontSize: '18px',
+  fontWeight: '700',
+  color: '#010326',
+  margin: 0,
+}));
+
+const ProfileEditBtn = styled(Button)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '8px 16px',
+  background: alpha('#040DBF', 0.1),
+  border: `1px solid ${alpha('#040DBF', 0.2)}`,
+  borderRadius: '12px',
+  color: '#040DBF',
+  fontSize: '13px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: '#040DBF',
+    color: '#ffffff',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(4, 13, 191, 0.2)',
+  }
+}));
+
+const ProfileCardBody = styled(Box)(({ theme }) => ({
+  padding: '0 24px 24px 24px',
+  [theme.breakpoints.down('md')]: {
+    padding: '0 20px 20px 20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '0 16px 16px 16px',
+  }
+}));
+
+const ProfileForm = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '20px',
+});
+
+const ProfileField = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+});
+
+const ProfileLabel = styled(Typography)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '14px',
+  fontWeight: '600',
+  color: '#334155',
+  marginBottom: '4px',
+});
+
+const ProfileTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    fontSize: '14px',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+      borderWidth: '2px',
+    },
+    '&:hover fieldset': {
+      borderColor: '#040DBF',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#040DBF',
+      boxShadow: '0 0 0 4px rgba(4, 13, 191, 0.1)',
+    },
+  },
+  '& .MuiInputBase-input': {
+    padding: '12px 16px',
+    color: '#010326',
+  }
+}));
+
+const ProfilePasswordInput = styled(Box)({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+});
+
+const ProfilePasswordToggle = styled(IconButton)({
+  position: 'absolute',
+  right: '16px',
+  background: 'none',
+  color: '#64748b',
+  padding: '4px',
+  borderRadius: '6px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    color: '#040DBF',
+    background: alpha('#040DBF', 0.1),
+  }
+});
+
+const ProfileActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '12px',
+  marginTop: '8px',
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+  }
+}));
+
+const ProfileBtn = styled(Button)(({ variant }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '12px 20px',
+  borderRadius: '12px',
+  fontSize: '14px',
+  fontWeight: '600',
+  textTransform: 'none',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  ...(variant === 'primary' ? {
+    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+    color: '#ffffff',
+    boxShadow: '0 4px 15px rgba(4, 13, 191, 0.3)',
+    '&:hover': {
+      background: 'linear-gradient(135deg, #1F64BF, #040DBF)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(4, 13, 191, 0.4)',
+    }
+  } : {
+    background: '#ffffff',
+    color: '#64748b',
+    border: '2px solid #e2e8f0',
+    '&:hover': {
+      background: '#f8fafc',
+      color: '#334155',
+      borderColor: '#cbd5e1',
+      transform: 'translateY(-1px)',
+    }
+  })
+}));
+
+const ProfileInfoDisplay = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+});
+
+const ProfileInfoItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '16px',
+  background: alpha('#f8fafc', 0.6),
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '12px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: alpha('#040DBF', 0.05),
+    borderColor: alpha('#040DBF', 0.2),
+    transform: 'translateX(4px)',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '12px',
+  }
+}));
+
+const ProfileInfoIcon = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '40px',
+  height: '40px',
+  background: alpha('#040DBF', 0.1),
+  color: '#040DBF',
+  borderRadius: '10px',
+  minWidth: '40px',
+});
+
+const ProfileInfoContent = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const ProfileInfoLabel = styled(Typography)({
+  fontSize: '12px',
+  color: '#64748b',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+});
+
+const ProfileInfoValue = styled(Typography)({
+  fontSize: '14px',
+  color: '#010326',
+  fontWeight: '600',
+});
+
+const ProfileSecurityInfo = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+});
+
+const ProfileSecurityItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+  padding: '16px',
+  background: alpha('#f8fafc', 0.6),
+  border: `1px solid ${alpha('#040DBF', 0.1)}`,
+  borderRadius: '12px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: alpha('#040DBF', 0.05),
+    borderColor: alpha('#040DBF', 0.2),
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '12px',
+  }
+}));
+
+const ProfileSecurityIcon = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '40px',
+  height: '40px',
+  background: alpha('#040DBF', 0.1),
+  color: '#040DBF',
+  borderRadius: '10px',
+  minWidth: '40px',
+});
+
+const ProfileSecurityContent = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const ProfileSecurityLabel = styled(Typography)({
+  fontSize: '12px',
+  color: '#64748b',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+});
+
+const ProfileSecurityValue = styled(Typography)({
+  fontSize: '14px',
+  color: '#010326',
+  fontWeight: '600',
+});
+
+const ProfileSecurityStatus = styled(Chip)(({ variant }) => ({
+  padding: '4px 12px',
+  borderRadius: '12px',
+  fontSize: '12px',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  ...(variant === 'good' ? {
+    background: alpha('#10b981', 0.1),
+    color: '#059669',
+    border: `1px solid ${alpha('#10b981', 0.2)}`,
+  } : {})
+}));
 
 const Profile = () => {
   const { user, refreshAuth } = useAuth();
@@ -289,9 +878,9 @@ const Profile = () => {
   // Mostrar loading mientras carga el perfil
   if (profileLoading) {
     return (
-      <div className="profile-admin-page">
-        <div className="profile-admin-container">
-          <div style={{ 
+      <ProfilePageContainer>
+        <ProfileContentWrapper>
+          <Box sx={{ 
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
@@ -300,393 +889,379 @@ const Profile = () => {
             color: '#64748b'
           }}>
             Cargando perfil...
-          </div>
-        </div>
-      </div>
+          </Box>
+        </ProfileContentWrapper>
+      </ProfilePageContainer>
     );
   }
 
   return (
-    <div className="profile-admin-page">
-      <div className="profile-admin-container">
+    <ProfilePageContainer>
+      <ProfileContentWrapper>
         
         {/* Header */}
-        <div className="profile-admin-header">
-          <div className="profile-admin-header-content">
-            <h1 className="profile-admin-title">Mi Perfil</h1>
-            <p className="profile-admin-subtitle">
+        <ProfileHeaderSection>
+          <ProfileHeaderContent>
+            <ProfileMainTitle>Mi Perfil</ProfileMainTitle>
+            <ProfileMainDescription>
               Gestiona tu información personal y configuración de cuenta
-            </p>
-          </div>
-        </div>
+            </ProfileMainDescription>
+          </ProfileHeaderContent>
+        </ProfileHeaderSection>
 
-        <div className="profile-admin-content">
-          
-          {/* Card de Avatar y Info Principal */}
-          <div className="profile-admin-card profile-admin-card--main">
-            <div className="profile-admin-avatar-section">
-              <div className="profile-admin-avatar">
-                <div className="profile-admin-avatar-circle">
-                  <span className="profile-admin-avatar-text">
-                    {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
-                  </span>
-                  <div className="profile-admin-avatar-status"></div>
-                </div>
-                <button className="profile-admin-avatar-upload">
-                  <Camera size={16} weight="duotone" />
-                  <span>Cambiar foto</span>
-                </button>
-              </div>
-              
-              <div className="profile-admin-main-info">
-                <h2 className="profile-admin-name">{profileData.name || 'Nombre del Usuario'}</h2>
-                <p className="profile-admin-role">{profileData.position}</p>
-                <div className="profile-admin-badges">
-                  <span className={`profile-admin-badge ${
-                    profileData.role === 'admin' ? 'profile-admin-badge--admin' : 'profile-admin-badge--active'
-                  }`}>
-                    <Shield size={14} weight="duotone" />
-                    {profileData.position}
-                  </span>
-                  <span className="profile-admin-badge profile-admin-badge--active">
-                    <span className="profile-admin-status-dot"></span>
-                    En línea
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-admin-grid">
+        {/* Card de Avatar y Info Principal */}
+        <ProfileHeaderSection>
+          <ProfileAvatarSection>
+            <ProfileAvatarContainer>
+              <ProfileAvatarCircle>
+                {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
+              </ProfileAvatarCircle>
+              <ProfileAvatarUpload>
+                <Camera size={16} weight="duotone" />
+                <span>Cambiar foto</span>
+              </ProfileAvatarUpload>
+            </ProfileAvatarContainer>
             
-            {/* Card de Información Personal */}
-            <div className="profile-admin-card">
-              <div className="profile-admin-card-header">
-                <h3 className="profile-admin-card-title">
-                  <User size={20} weight="duotone" />
-                  Información Personal
-                </h3>
-                {!isEditing && (
-                  <button 
-                    className="profile-admin-edit-btn"
-                    onClick={() => setIsEditing(true)}
-                    disabled={loading}
-                  >
-                    <PencilSimple size={16} weight="duotone" />
-                    Editar
-                  </button>
-                )}
-              </div>
+            <ProfileMainInfo>
+              <ProfileName>{profileData.name || 'Nombre del Usuario'}</ProfileName>
+              <ProfileRole>{profileData.position}</ProfileRole>
+              <ProfileBadges>
+                <ProfileBadge 
+                  variant={profileData.role === 'admin' ? 'admin' : 'active'}
+                  icon={<Shield size={14} weight="duotone" />}
+                  label={profileData.position}
+                />
+                <ProfileBadge 
+                  variant="active"
+                  icon={<Box sx={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%' }} />}
+                  label="En línea"
+                />
+              </ProfileBadges>
+            </ProfileMainInfo>
+          </ProfileAvatarSection>
+        </ProfileHeaderSection>
 
-              <div className="profile-admin-card-body">
-                {isEditing ? (
-                  <div className="profile-admin-form">
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
+        <ProfileGrid>
+          
+          {/* Card de Información Personal */}
+          <ProfileModernCard>
+            <ProfileCardHeader>
+              <ProfileCardTitle>
+                <User size={20} weight="duotone" />
+                Información Personal
+              </ProfileCardTitle>
+              {!isEditing && (
+                <ProfileEditBtn
+                  onClick={() => setIsEditing(true)}
+                  disabled={loading}
+                >
+                  <PencilSimple size={16} weight="duotone" />
+                  Editar
+                </ProfileEditBtn>
+              )}
+            </ProfileCardHeader>
+
+            <ProfileCardBody>
+              {isEditing ? (
+                <ProfileForm>
+                  <ProfileField>
+                    <ProfileLabel>
+                      <User size={16} weight="duotone" />
+                      Nombre completo
+                    </ProfileLabel>
+                    <ProfileTextField
+                      type="text"
+                      value={profileData.name}
+                      onChange={(e) => handleProfileChange('name', e.target.value)}
+                      placeholder="Tu nombre completo"
+                      disabled={loading}
+                      fullWidth
+                    />
+                  </ProfileField>
+
+                  <ProfileField>
+                    <ProfileLabel>
+                      <EnvelopeSimple size={16} weight="duotone" />
+                      Correo electrónico
+                    </ProfileLabel>
+                    <ProfileTextField
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => handleProfileChange('email', e.target.value)}
+                      placeholder="tu@email.com"
+                      disabled={loading}
+                      fullWidth
+                    />
+                  </ProfileField>
+
+                  <ProfileField>
+                    <ProfileLabel>
+                      <Phone size={16} weight="duotone" />
+                      Teléfono
+                    </ProfileLabel>
+                    <ProfileTextField
+                      type="tel"
+                      value={profileData.phone}
+                      onChange={(e) => handleProfileChange('phone', e.target.value)}
+                      placeholder="+503 1234-5678"
+                      disabled={loading}
+                      fullWidth
+                    />
+                  </ProfileField>
+
+                  <ProfileField>
+                    <ProfileLabel>
+                      <MapPin size={16} weight="duotone" />
+                      Dirección
+                    </ProfileLabel>
+                    <ProfileTextField
+                      type="text"
+                      value={profileData.location}
+                      onChange={(e) => handleProfileChange('location', e.target.value)}
+                      placeholder="Tu dirección"
+                      disabled={loading}
+                      fullWidth
+                    />
+                  </ProfileField>
+
+                  <ProfileActions>
+                    <ProfileBtn 
+                      variant="primary"
+                      onClick={handleSaveProfile}
+                      disabled={loading}
+                    >
+                      <Check size={16} weight="duotone" />
+                      {loading ? 'Guardando...' : 'Guardar cambios'}
+                    </ProfileBtn>
+                    <ProfileBtn 
+                      variant="secondary"
+                      onClick={handleCancelEdit}
+                      disabled={loading}
+                    >
+                      <X size={16} weight="duotone" />
+                      Cancelar
+                    </ProfileBtn>
+                  </ProfileActions>
+                </ProfileForm>
+              ) : (
+                <ProfileInfoDisplay>
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <User size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Nombre</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.name}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <EnvelopeSimple size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Email</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.email}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <Phone size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Teléfono</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.phone || 'No especificado'}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <Briefcase size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Cargo</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.position}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <MapPin size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Dirección</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.location}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  <ProfileInfoItem>
+                    <ProfileInfoIcon>
+                      <Calendar size={16} weight="duotone" />
+                    </ProfileInfoIcon>
+                    <ProfileInfoContent>
+                      <ProfileInfoLabel>Fecha de contratación</ProfileInfoLabel>
+                      <ProfileInfoValue>{profileData.hireDate}</ProfileInfoValue>
+                    </ProfileInfoContent>
+                  </ProfileInfoItem>
+
+                  {profileData.dui !== 'No especificado' && (
+                    <ProfileInfoItem>
+                      <ProfileInfoIcon>
                         <User size={16} weight="duotone" />
-                        Nombre completo
-                      </label>
-                      <input
-                        type="text"
-                        className="profile-admin-input"
-                        value={profileData.name}
-                        onChange={(e) => handleProfileChange('name', e.target.value)}
-                        placeholder="Tu nombre completo"
-                        disabled={loading}
-                      />
-                    </div>
+                      </ProfileInfoIcon>
+                      <ProfileInfoContent>
+                        <ProfileInfoLabel>DUI</ProfileInfoLabel>
+                        <ProfileInfoValue>{profileData.dui}</ProfileInfoValue>
+                      </ProfileInfoContent>
+                    </ProfileInfoItem>
+                  )}
+                </ProfileInfoDisplay>
+              )}
+            </ProfileCardBody>
+          </ProfileModernCard>
 
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <EnvelopeSimple size={16} weight="duotone" />
-                        Correo electrónico
-                      </label>
-                      <input
-                        type="email"
-                        className="profile-admin-input"
-                        value={profileData.email}
-                        onChange={(e) => handleProfileChange('email', e.target.value)}
-                        placeholder="tu@email.com"
-                        disabled={loading}
-                      />
-                    </div>
+          {/* Card de Seguridad */}
+          <ProfileModernCard>
+            <ProfileCardHeader>
+              <ProfileCardTitle>
+                <Lock size={20} weight="duotone" />
+                Seguridad
+              </ProfileCardTitle>
+              {!isChangingPassword && (
+                <ProfileEditBtn
+                  onClick={() => setIsChangingPassword(true)}
+                  disabled={loading}
+                >
+                  <PencilSimple size={16} weight="duotone" />
+                  Cambiar contraseña
+                </ProfileEditBtn>
+              )}
+            </ProfileCardHeader>
 
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <Phone size={16} weight="duotone" />
-                        Teléfono
-                      </label>
-                      <input
-                        type="tel"
-                        className="profile-admin-input"
-                        value={profileData.phone}
-                        onChange={(e) => handleProfileChange('phone', e.target.value)}
-                        placeholder="+503 1234-5678"
+            <ProfileCardBody>
+              {isChangingPassword ? (
+                <ProfileForm>
+                  <ProfileField>
+                    <ProfileLabel>
+                      <Lock size={16} weight="duotone" />
+                      Contraseña actual
+                    </ProfileLabel>
+                    <ProfilePasswordInput>
+                      <ProfileTextField
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={passwordData.currentPassword}
+                        onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                        placeholder="Tu contraseña actual"
                         disabled={loading}
+                        fullWidth
                       />
-                    </div>
-
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <MapPin size={16} weight="duotone" />
-                        Dirección
-                      </label>
-                      <input
-                        type="text"
-                        className="profile-admin-input"
-                        value={profileData.location}
-                        onChange={(e) => handleProfileChange('location', e.target.value)}
-                        placeholder="Tu dirección"
-                        disabled={loading}
-                      />
-                    </div>
-
-                    <div className="profile-admin-actions">
-                      <button 
-                        className="profile-admin-btn profile-admin-btn--primary"
-                        onClick={handleSaveProfile}
+                      <ProfilePasswordToggle
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                         disabled={loading}
                       >
-                        <Check size={16} weight="duotone" />
-                        {loading ? 'Guardando...' : 'Guardar cambios'}
-                      </button>
-                      <button 
-                        className="profile-admin-btn profile-admin-btn--secondary"
-                        onClick={handleCancelEdit}
+                        {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                      </ProfilePasswordToggle>
+                    </ProfilePasswordInput>
+                  </ProfileField>
+
+                  <ProfileField>
+                    <ProfileLabel>
+                      <Lock size={16} weight="duotone" />
+                      Nueva contraseña
+                    </ProfileLabel>
+                    <ProfilePasswordInput>
+                      <ProfileTextField
+                        type={showNewPassword ? "text" : "password"}
+                        value={passwordData.newPassword}
+                        onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                        placeholder="Nueva contraseña (min. 6 caracteres)"
+                        disabled={loading}
+                        fullWidth
+                      />
+                      <ProfilePasswordToggle
+                        onClick={() => setShowNewPassword(!showNewPassword)}
                         disabled={loading}
                       >
-                        <X size={16} weight="duotone" />
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="profile-admin-info-display">
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <User size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Nombre</span>
-                        <span className="profile-admin-info-value">{profileData.name}</span>
-                      </div>
-                    </div>
+                        {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                      </ProfilePasswordToggle>
+                    </ProfilePasswordInput>
+                  </ProfileField>
 
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <EnvelopeSimple size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Email</span>
-                        <span className="profile-admin-info-value">{profileData.email}</span>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <Phone size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Teléfono</span>
-                        <span className="profile-admin-info-value">{profileData.phone || 'No especificado'}</span>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <Briefcase size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Cargo</span>
-                        <span className="profile-admin-info-value">{profileData.position}</span>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <MapPin size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Dirección</span>
-                        <span className="profile-admin-info-value">{profileData.location}</span>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-info-item">
-                      <span className="profile-admin-info-icon">
-                        <Calendar size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-info-content">
-                        <span className="profile-admin-info-label">Fecha de contratación</span>
-                        <span className="profile-admin-info-value">{profileData.hireDate}</span>
-                      </div>
-                    </div>
-
-                    {profileData.dui !== 'No especificado' && (
-                      <div className="profile-admin-info-item">
-                        <span className="profile-admin-info-icon">
-                          <User size={16} weight="duotone" />
-                        </span>
-                        <div className="profile-admin-info-content">
-                          <span className="profile-admin-info-label">DUI</span>
-                          <span className="profile-admin-info-value">{profileData.dui}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Card de Seguridad */}
-            <div className="profile-admin-card">
-              <div className="profile-admin-card-header">
-                <h3 className="profile-admin-card-title">
-                  <Lock size={20} weight="duotone" />
-                  Seguridad
-                </h3>
-                {!isChangingPassword && (
-                  <button 
-                    className="profile-admin-edit-btn"
-                    onClick={() => setIsChangingPassword(true)}
-                    disabled={loading}
-                  >
-                    <PencilSimple size={16} weight="duotone" />
-                    Cambiar contraseña
-                  </button>
-                )}
-              </div>
-
-              <div className="profile-admin-card-body">
-                {isChangingPassword ? (
-                  <div className="profile-admin-form">
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <Lock size={16} weight="duotone" />
-                        Contraseña actual
-                      </label>
-                      <div className="profile-admin-password-input">
-                        <input
-                          type={showCurrentPassword ? "text" : "password"}
-                          className="profile-admin-input"
-                          value={passwordData.currentPassword}
-                          onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                          placeholder="Tu contraseña actual"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="profile-admin-password-toggle"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          disabled={loading}
-                        >
-                          {showCurrentPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <Lock size={16} weight="duotone" />
-                        Nueva contraseña
-                      </label>
-                      <div className="profile-admin-password-input">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          className="profile-admin-input"
-                          value={passwordData.newPassword}
-                          onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                          placeholder="Nueva contraseña (min. 6 caracteres)"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="profile-admin-password-toggle"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          disabled={loading}
-                        >
-                          {showNewPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-field">
-                      <label className="profile-admin-label">
-                        <Lock size={16} weight="duotone" />
-                        Confirmar nueva contraseña
-                      </label>
-                      <div className="profile-admin-password-input">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          className="profile-admin-input"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                          placeholder="Confirma tu nueva contraseña"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="profile-admin-password-toggle"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          disabled={loading}
-                        >
-                          {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="profile-admin-actions">
-                      <button 
-                        className="profile-admin-btn profile-admin-btn--primary"
-                        onClick={handleChangePassword}
+                  <ProfileField>
+                    <ProfileLabel>
+                      <Lock size={16} weight="duotone" />
+                      Confirmar nueva contraseña
+                    </ProfileLabel>
+                    <ProfilePasswordInput>
+                      <ProfileTextField
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                        placeholder="Confirma tu nueva contraseña"
+                        disabled={loading}
+                        fullWidth
+                      />
+                      <ProfilePasswordToggle
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={loading}
                       >
-                        <Check size={16} weight="duotone" />
-                        {loading ? 'Cambiando...' : 'Cambiar contraseña'}
-                      </button>
-                      <button 
-                        className="profile-admin-btn profile-admin-btn--secondary"
-                        onClick={handleCancelPasswordChange}
-                        disabled={loading}
-                      >
-                        <X size={16} weight="duotone" />
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="profile-admin-security-info">
-                    <div className="profile-admin-security-item">
-                      <span className="profile-admin-security-icon">
-                        <Lock size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-security-content">
-                        <span className="profile-admin-security-label">Contraseña</span>
-                        <span className="profile-admin-security-value">••••••••</span>
-                      </div>
-                      <span className="profile-admin-security-status profile-admin-security-status--good">
-                        Segura
-                      </span>
-                    </div>
+                        {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                      </ProfilePasswordToggle>
+                    </ProfilePasswordInput>
+                  </ProfileField>
 
-                    <div className="profile-admin-security-item">
-                      <span className="profile-admin-security-icon">
-                        <Shield size={16} weight="duotone" />
-                      </span>
-                      <div className="profile-admin-security-content">
-                        <span className="profile-admin-security-label">Rol</span>
-                        <span className="profile-admin-security-value">{profileData.position}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+                  <ProfileActions>
+                    <ProfileBtn 
+                      variant="primary"
+                      onClick={handleChangePassword}
+                      disabled={loading}
+                    >
+                      <Check size={16} weight="duotone" />
+                      {loading ? 'Cambiando...' : 'Cambiar contraseña'}
+                    </ProfileBtn>
+                    <ProfileBtn 
+                      variant="secondary"
+                      onClick={handleCancelPasswordChange}
+                      disabled={loading}
+                    >
+                      <X size={16} weight="duotone" />
+                      Cancelar
+                    </ProfileBtn>
+                  </ProfileActions>
+                </ProfileForm>
+              ) : (
+                <ProfileSecurityInfo>
+                  <ProfileSecurityItem>
+                    <ProfileSecurityIcon>
+                      <Lock size={16} weight="duotone" />
+                    </ProfileSecurityIcon>
+                    <ProfileSecurityContent>
+                      <ProfileSecurityLabel>Contraseña</ProfileSecurityLabel>
+                      <ProfileSecurityValue>••••••••</ProfileSecurityValue>
+                    </ProfileSecurityContent>
+                    <ProfileSecurityStatus variant="good">
+                      Segura
+                    </ProfileSecurityStatus>
+                  </ProfileSecurityItem>
 
-          </div>
-        </div>
-      </div>
-    </div>
+                  <ProfileSecurityItem>
+                    <ProfileSecurityIcon>
+                      <Shield size={16} weight="duotone" />
+                    </ProfileSecurityIcon>
+                    <ProfileSecurityContent>
+                      <ProfileSecurityLabel>Rol</ProfileSecurityLabel>
+                      <ProfileSecurityValue>{profileData.position}</ProfileSecurityValue>
+                    </ProfileSecurityContent>
+                  </ProfileSecurityItem>
+                </ProfileSecurityInfo>
+              )}
+            </ProfileCardBody>
+          </ProfileModernCard>
+
+        </ProfileGrid>
+      </ProfileContentWrapper>
+    </ProfilePageContainer>
   );
 };
 

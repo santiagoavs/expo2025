@@ -44,12 +44,51 @@ const EditProductScreen = ({ route, navigation }) => {
     searchTags: []
   });
 
+  // Estados para validación
+  const [errors, setErrors] = useState({});
+
   // ==================== EFECTOS ====================
   useEffect(() => {
     loadProduct();
   }, [productId]);
 
   // ==================== FUNCIONES ====================
+  
+  // Validar que solo se ingresen números en el precio
+  const validatePrice = (value) => {
+    // Permitir solo números, punto decimal y máximo 2 decimales
+    const priceRegex = /^\d*\.?\d{0,2}$/;
+    return priceRegex.test(value);
+  };
+
+  // Manejar cambio en el precio con validación
+  const handlePriceChange = (value) => {
+    if (value === '' || validatePrice(value)) {
+      setFormData(prev => ({ ...prev, basePrice: value }));
+      // Limpiar error si existe
+      if (errors.basePrice) {
+        setErrors(prev => ({ ...prev, basePrice: null }));
+      }
+    }
+  };
+
+  // Validar formulario antes de guardar
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre es obligatorio';
+    }
+    
+    if (!formData.basePrice.trim()) {
+      newErrors.basePrice = 'El precio es obligatorio';
+    } else if (isNaN(parseFloat(formData.basePrice)) || parseFloat(formData.basePrice) <= 0) {
+      newErrors.basePrice = 'El precio debe ser un número válido mayor a 0';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const loadProduct = async () => {
     try {
       setLoadingProduct(true);
@@ -86,19 +125,18 @@ const EditProductScreen = ({ route, navigation }) => {
   };
 
   const handleSave = async () => {
+    // Validar formulario antes de guardar
+    if (!validateForm()) {
+      Alert.alert(
+        'Error de Validación',
+        'Por favor corrige los errores antes de guardar',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     try {
       setSaving(true);
-
-      // Validaciones básicas
-      if (!formData.name.trim()) {
-        Alert.alert('Error', 'El nombre del producto es obligatorio');
-        return;
-      }
-
-      if (!formData.basePrice || isNaN(parseFloat(formData.basePrice)) || parseFloat(formData.basePrice) <= 0) {
-        Alert.alert('Error', 'El precio debe ser un número mayor que 0');
-        return;
-      }
 
       const productData = {
         ...formData,
@@ -231,13 +269,16 @@ const EditProductScreen = ({ route, navigation }) => {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <Text style={styles.inputLabel}>Precio Base *</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, errors.basePrice && styles.errorInput]}
                   value={formData.basePrice}
-                  onChangeText={(value) => handleInputChange('basePrice', value)}
+                  onChangeText={handlePriceChange}
                   placeholder="0.00"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="numeric"
                 />
+                {errors.basePrice && (
+                  <Text style={styles.errorText}>{errors.basePrice}</Text>
+                )}
               </View>
 
               <View style={[styles.inputGroup, styles.halfWidth]}>
@@ -286,6 +327,38 @@ const EditProductScreen = ({ route, navigation }) => {
                 trackColor={{ false: '#E5E7EB', true: '#F59E0B' }}
                 thumbColor={formData.featured ? '#FFFFFF' : '#FFFFFF'}
               />
+            </View>
+          </View>
+
+          {/* Imágenes del Producto (Solo Lectura) */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Imágenes del Producto</Text>
+            <View style={styles.readOnlySection}>
+              <View style={styles.readOnlyInfo}>
+                <Ionicons name="information-circle" size={20} color="#6B7280" />
+                <Text style={styles.readOnlyText}>
+                  Las imágenes del producto no se pueden editar desde esta pantalla
+                </Text>
+              </View>
+              
+              {product.images && product.images.length > 0 ? (
+                <View style={styles.imageGrid}>
+                  {product.images.map((image, index) => (
+                    <View key={index} style={styles.imageItem}>
+                      <Text style={styles.imageLabel}>Imagen {index + 1}</Text>
+                      <View style={styles.imagePlaceholder}>
+                        <Ionicons name="image" size={24} color="#9CA3AF" />
+                        <Text style={styles.imageText}>Imagen del producto</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noImagesContainer}>
+                  <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+                  <Text style={styles.noImagesText}>No hay imágenes disponibles</Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -384,6 +457,77 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Estilos para validación
+  errorInput: {
+    borderColor: '#EF4444',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  // Estilos para sección de solo lectura
+  readOnlySection: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  readOnlyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+  },
+  readOnlyText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#6B7280',
+    flex: 1,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  imageItem: {
+    width: '48%',
+    marginBottom: 12,
+  },
+  imageLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  imagePlaceholder: {
+    height: 80,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageText: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 4,
+  },
+  noImagesContainer: {
+    alignItems: 'center',
+    padding: 24,
+  },
+  noImagesText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 8,
   },
   header: {
     flexDirection: 'row',

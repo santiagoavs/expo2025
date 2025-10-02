@@ -6,7 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  Dimensions
+  Dimensions,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,12 +21,7 @@ const GlobalNavbar = ({ children, title = "DIAMBARS", subtitle = "Panel Administ
   const navigation = useNavigation();
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar();
 
-  const handleLogout = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
-  };
+  // Función de logout removida - ahora está en el sidebar
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,18 +30,14 @@ const GlobalNavbar = ({ children, title = "DIAMBARS", subtitle = "Panel Administ
       {/* Header Global */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          {/* Botón del sidebar (derecha) */}
-          <TouchableOpacity 
-            style={styles.sidebarButton}
-            onPress={openSidebar}
-          >
-            <Ionicons name="menu" size={24} color="#1F64BF" />
-          </TouchableOpacity>
-          
           {/* Logo y título */}
           <View style={styles.logoContainer}>
             <View style={styles.logoIcon}>
-              <Ionicons name="diamond" size={24} color="#1F64BF" />
+              <Image 
+                source={require('../assets/logo.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.logoText}>
               <Text style={styles.logoTitle}>{title}</Text>
@@ -53,12 +45,12 @@ const GlobalNavbar = ({ children, title = "DIAMBARS", subtitle = "Panel Administ
             </View>
           </View>
           
-          {/* Botón de logout (izquierda) */}
+          {/* Botón del sidebar (ahora en la derecha donde estaba logout) */}
           <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogout}
+            style={styles.sidebarButton}
+            onPress={openSidebar}
           >
-            <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+            <Ionicons name="menu" size={24} color="#1F64BF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -117,6 +109,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
+  logoImage: {
+    width: 32,
+    height: 32,
+  },
   logoText: {
     flex: 1,
   },
@@ -132,11 +128,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: 2,
   },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  },
+  // logoutButton removido - ya no se usa
   content: {
     flex: 1,
   },

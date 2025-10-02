@@ -3,6 +3,7 @@ import './about.css';
 import bgLogo from '/images/aboutUs/bgLogo.png';
 import Footer from '../../components/UI/footer/footer';
 import ContactButton from '../../components/UI/contactButton/contactButton';
+import Notifications from '../../components/UI/notifications/notifications'
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('about'); // 'about', 'terms', 'privacy', 'cookies'
@@ -399,7 +400,7 @@ const About = () => {
 
       {/* Contenido de las pestañas */}
       {renderTabContent()}
-      
+      <Notifications />
       <ContactButton />
       <Footer />
     </div>

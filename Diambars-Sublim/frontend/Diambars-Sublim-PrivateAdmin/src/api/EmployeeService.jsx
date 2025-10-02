@@ -19,7 +19,7 @@ export default {
   // Crear nuevo empleado (registro - requiere Admin)
   // Usa el endpoint de registro de empleados
   createEmployee: async (employeeData) => {
-    const response = await apiClient.post('/api/employees/register', employeeData);
+    const response = await apiClient.post('/employees/register', employeeData);
     return response;
   },
 
