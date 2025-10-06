@@ -17,7 +17,6 @@ import {
   PencilSimple,
   Trash,
   Lock,
-  LockOpen,
   Crown,
   Truck,
   Factory
@@ -29,433 +28,622 @@ import {
   Typography,
   IconButton,
   InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Card,
   CardContent,
-  Chip,
-  Alert,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Grid,
+  Container,
   styled,
   useTheme,
   alpha,
   Paper,
-  Avatar,
-  CircularProgress
+  CircularProgress,
+  Modal,
+  Backdrop
 } from '@mui/material';
 import useEmployees from '../../hooks/useEmployees';
 
+// Global keyframes/styles for modal animations
+const GlobalStyles = () => (
+  <style>
+    {`
+      @keyframes flowMove {
+        0% { opacity: 0.2; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(1.02); }
+        100% { opacity: 0.3; transform: scale(1); }
+      }
+
+      @keyframes shineMove {
+        0% { transform: translateX(-120%) skewX(-15deg); }
+        20% { transform: translateX(-120%) skewX(-15deg); }
+        80% { transform: translateX(160%) skewX(-15deg); }
+        100% { transform: translateX(160%) skewX(-15deg); }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; } to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+        0% { transform: translateY(20px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+    `}
+  </style>
+);
+
 // ================ ESTILOS MODERNOS RESPONSIVE - EMPLOYEE MODAL ================
-const EmployeeModalOverlay = styled(Box)({
+const ModernModalBackdrop = styled(Backdrop)({
+  background: 'rgba(1, 3, 38, 0.2)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+});
+
+const ModernModalContainer = styled(Box)(({ theme }) => ({
   position: 'fixed',
   top: 0,
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(0, 0, 0, 0.6)',
-  backdropFilter: 'blur(8px)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 9999,
-  animation: 'fadeIn 0.3s ease-out',
-});
+  padding: '20px',
+  zIndex: 1300,
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px',
+    alignItems: 'flex-start',
+    paddingTop: '20px',
+  }
+}));
 
-const EmployeeModalContainer = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(145deg, #ffffff, #f8fafc)',
-  borderRadius: '32px',
-  boxShadow: `
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1)
-  `,
-  maxWidth: '1000px',
-  width: '95vw',
-  maxHeight: '95vh',
+const ModernModalCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '20px',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+  maxWidth: '900px',
+  width: '100%',
+  maxHeight: '90vh',
   overflow: 'hidden',
   position: 'relative',
-  animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-  transform: 'perspective(1000px) rotateX(0deg)',
+  fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
-    maxWidth: '900px',
-    width: '90vw',
+    maxWidth: '800px',
   },
   [theme.breakpoints.down('md')]: {
-    width: '95vw',
+    maxWidth: '700px',
+    maxHeight: '85vh',
+  },
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: '100%',
     maxHeight: '95vh',
-    borderRadius: '24px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    width: '98vw',
-    maxHeight: '98vh',
-    borderRadius: '20px',
+    borderRadius: '16px',
   }
 }));
 
-const EmployeeModalHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '28px 36px',
-  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-  background: 'linear-gradient(135deg, #f8fafc, #ffffff)',
-  borderRadius: '32px 32px 0 0',
-  [theme.breakpoints.down('md')]: {
-    padding: '24px 28px',
-    borderRadius: '24px 24px 0 0',
-  },
-  [theme.breakpoints.down('sm')]: {
-    padding: '20px 24px',
-    borderRadius: '20px 20px 0 0',
-  }
-}));
-
-const EmployeeModalTitle = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '16px',
+// HEADER CON GLASSMORPHISM ANIMADO
+const ModernModalHeader = styled(Box)(({ theme }) => ({
+  background: 'rgba(255, 255, 255, 0.05)',
+  backdropFilter: 'blur(25px)',
+  WebkitBackdropFilter: 'blur(25px)',
   color: '#010326',
-  fontWeight: '600',
-  fontSize: '22px',
-  [theme.breakpoints.down('md')]: {
-    fontSize: '20px',
-    gap: '12px',
+  padding: '32px',
+  position: 'relative',
+  borderBottom: `2px solid rgba(31, 100, 191, 0.3)`,
+  borderRadius: '20px 20px 0 0',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: `
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1)
+  `,
+  overflow: 'hidden',
+  
+  // Efecto de borde superior brillante
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+    zIndex: 1,
   },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '18px',
-    gap: '10px',
-  }
-}));
-
-const EmployeeModalClose = styled(IconButton)(({ theme }) => ({
-  background: 'rgba(148, 163, 184, 0.1)',
-  border: 'none',
-  borderRadius: '16px',
-  width: '44px',
-  height: '44px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#64748b',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    background: 'rgba(148, 163, 184, 0.2)',
-    color: '#334155',
-    transform: 'scale(1.05)',
-    borderRadius: '20px',
+  
+  // Efecto de borde lateral izquierdo
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '1px',
+    height: '100%',
+    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3))',
+    zIndex: 1,
   },
-  [theme.breakpoints.down('sm')]: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '12px',
-  }
-}));
-
-const EmployeeModalContent = styled(Box)(({ theme }) => ({
-  padding: '36px',
-  maxHeight: 'calc(95vh - 140px)',
-  overflowY: 'auto',
-  '&::-webkit-scrollbar': {
-    width: '8px',
-  },
-  '&::-webkit-scrollbar-track': {
-    background: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: '8px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: '8px',
-  },
-  '&::-webkit-scrollbar-thumb:hover': {
-    background: 'rgba(0, 0, 0, 0.3)',
-  },
+  
   [theme.breakpoints.down('md')]: {
     padding: '28px',
-    maxHeight: 'calc(95vh - 120px)',
   },
   [theme.breakpoints.down('sm')]: {
     padding: '24px',
-    maxHeight: 'calc(98vh - 100px)',
+    borderRadius: '16px 16px 0 0',
+  }
+}));
+
+const ModernModalTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.75rem',
+  fontWeight: 700,
+  margin: 0,
+  marginBottom: '8px',
+  fontFamily: "'Mona Sans'",
+  position: 'relative',
+  zIndex: 3,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  color: '#010326',
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.5rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.3rem',
+  }
+}));
+
+const ModernModalSubtitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  opacity: 0.7,
+  margin: 0,
+  fontFamily: "'Mona Sans'",
+  position: 'relative',
+  zIndex: 3,
+  color: '#032CA6',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.9rem',
+  }
+}));
+
+const ModernModalCloseButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  right: '24px',
+  top: '24px',
+  width: '40px',
+  height: '40px',
+  background: 'linear-gradient(135deg,rgb(239, 242, 255) 0%,rgb(239, 242, 255) 100%)',
+  color: 'white',
+  borderRadius: '12px',
+  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+  boxShadow: '0 1px 4px rgba(31, 100, 191, 0.1)',
+  zIndex: 10,
+  '&:hover': {
+    background: 'linear-gradient(135deg,rgb(180, 179, 247) 0%,rgb(188, 179, 247) 100%)',
+    transform: 'translateY(-1px) scale(1.05)',
+    boxShadow: '0 2px 8px rgba(31, 100, 191, 0.2)',
+  },
+  [theme.breakpoints.down('md')]: {
+    right: '20px',
+    top: '20px',
+    width: '36px',
+    height: '36px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    right: '16px',
+    top: '16px',
+    width: '32px',
+    height: '32px',
+  }
+}));
+
+const ModernModalContent = styled(Box)(({ theme }) => ({
+  padding: 0,
+  maxHeight: 'calc(90vh - 180px)',
+  overflowY: 'auto',
+  '&::-webkit-scrollbar': {
+    width: '6px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: alpha('#1F64BF', 0.05),
+    borderRadius: '3px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: alpha('#1F64BF', 0.2),
+    borderRadius: '3px',
+    '&:hover': { background: alpha('#1F64BF', 0.3) }
+  },
+  [theme.breakpoints.down('md')]: {
+    maxHeight: 'calc(85vh - 160px)',
+  },
+  [theme.breakpoints.down('sm')]: {
+    maxHeight: 'calc(95vh - 140px)',
   }
 }));
 
 const EmployeeModalForm = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '24px',
+  fontFamily: "'Mona Sans'",
 });
 
-const EmployeeModalSection = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '20px',
-});
-
-const EmployeeModalSectionTitle = styled(Typography)({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#010326',
-  margin: 0,
-  paddingBottom: '12px',
-  borderBottom: `2px solid ${alpha('#040DBF', 0.1)}`,
-});
-
-const EmployeeModalField = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
-});
-
-const EmployeeModalLabel = styled(Typography)({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  fontSize: '13px',
-  fontWeight: '600',
-  color: '#334155',
-  marginBottom: '4px',
-});
-
-const EmployeeModalInput = styled(TextField)(({ theme, error }) => ({
-  width: '100%',
-  '& .MuiOutlinedInput-root': {
-    padding: '16px 20px',
-    background: '#ffffff',
-    borderRadius: '16px',
-    fontSize: '15px',
-    minHeight: '56px',
-    '& fieldset': {
-      borderColor: error ? '#dc2626' : '#e2e8f0',
-      borderWidth: '2px',
-      borderRadius: '16px',
-    },
-    '&:hover fieldset': {
-      borderColor: error ? '#dc2626' : '#040DBF',
-      borderRadius: '16px',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: error ? '#dc2626' : '#040DBF',
-      boxShadow: error ? '0 0 0 4px rgba(220, 38, 38, 0.1)' : '0 0 0 4px rgba(4, 13, 191, 0.1)',
-      borderRadius: '16px',
-    },
-  },
-  '& .MuiInputBase-input': {
-    color: '#010326',
-    padding: '0',
-  },
-  '& .MuiInputBase-inputMultiline': {
-    padding: '0',
-  },
-  [theme.breakpoints.down('sm')]: {
-    '& .MuiOutlinedInput-root': {
-      padding: '14px 16px',
-      borderRadius: '14px',
-      minHeight: '52px',
-      fontSize: '14px',
-    }
-  }
-}));
-
-const EmployeeModalSelect = styled(Select)(({ theme, error }) => ({
-  width: '100%',
-  padding: '12px 16px',
-  background: '#ffffff',
-  borderRadius: '12px',
-  fontSize: '14px',
-  '& fieldset': {
-    borderColor: error ? '#dc2626' : '#e2e8f0',
-    borderWidth: '2px',
-  },
-  '&:hover fieldset': {
-    borderColor: error ? '#dc2626' : '#040DBF',
-  },
-  '&.Mui-focused fieldset': {
-    borderColor: error ? '#dc2626' : '#040DBF',
-    boxShadow: error ? '0 0 0 4px rgba(220, 38, 38, 0.1)' : '0 0 0 4px rgba(4, 13, 191, 0.1)',
-  },
-  '& .MuiSelect-select': {
-    color: '#010326',
-  }
-}));
-
-const EmployeeModalError = styled(Typography)({
-  fontSize: '12px',
-  color: '#dc2626',
-  fontWeight: '500',
-  marginTop: '4px',
-});
-
-const EmployeeModalRoleCard = styled(Card)(({ selected, theme }) => ({
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  border: selected ? `3px solid #040DBF` : `2px solid ${alpha('#040DBF', 0.1)}`,
-  background: selected ? alpha('#040DBF', 0.05) : '#ffffff',
-  borderRadius: '20px',
-  boxShadow: selected ? '0 8px 25px rgba(4, 13, 191, 0.2)' : '0 4px 12px rgba(0, 0, 0, 0.1)',
-  '&:hover': {
-    borderColor: '#040DBF',
-    transform: 'translateY(-4px)',
-    boxShadow: '0 12px 30px rgba(4, 13, 191, 0.2)',
-    borderRadius: '24px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    borderRadius: '16px',
-    '&:hover': {
-      borderRadius: '20px',
-    }
-  }
-}));
-
-const EmployeeModalRoleContent = styled(CardContent)(({ theme }) => ({
+const EmployeeModalSection = styled(Box)(({ theme }) => ({
   padding: '24px',
+  background: 'rgba(255, 255, 255, 0.1)',
+  backdropFilter: 'blur(15px)',
+  WebkitBackdropFilter: 'blur(15px)',
+  borderRadius: 0,
+  border: 'none',
+  borderBottom: '1px solid rgba(31, 100, 191, 0.1)',
+  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+  position: 'relative',
+  overflow: 'hidden',
+  '& > *': {
+    position: 'relative',
+    zIndex: 1,
+  },
   [theme.breakpoints.down('sm')]: {
     padding: '20px',
   }
 }));
 
-const EmployeeModalRoleHeader = styled(Box)(({ theme }) => ({
+const EmployeeModalSectionTitle = styled(Typography)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '16px',
-  marginBottom: '12px',
-  [theme.breakpoints.down('sm')]: {
-    gap: '12px',
-    marginBottom: '8px',
-  }
-}));
-
-const EmployeeModalRoleTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '18px',
-  fontWeight: '700',
+  gap: '10px',
+  fontSize: '1.1rem',
+  fontWeight: 600,
   color: '#010326',
   margin: 0,
+  marginBottom: '20px',
+  paddingBottom: '12px',
+  borderBottom: '1px solid rgba(31, 100, 191, 0.15)',
+  fontFamily: "'Mona Sans'",
+  position: 'relative',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: '-1px',
+    left: 0,
+    width: '60px',
+    height: '2px',
+    background: 'linear-gradient(90deg, #1F64BF, #032CA6)',
+    borderRadius: '2px',
+    boxShadow: '0 0 4px rgba(31, 100, 191, 0.3)',
+  },
   [theme.breakpoints.down('sm')]: {
-    fontSize: '16px',
+    fontSize: '1rem',
   }
 }));
 
-const EmployeeModalRoleDescription = styled(Typography)({
-  fontSize: '13px',
-  color: '#64748b',
-  marginBottom: '12px',
-  lineHeight: 1.4,
+const EmployeeModalField = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  marginBottom: '20px',
 });
 
+const EmployeeModalLabel = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '0.875rem',
+  fontWeight: 500,
+  color: '#032CA6',
+  marginBottom: '4px',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.8rem',
+  }
+}));
+
+const EmployeeModalInput = styled(TextField)(({ theme, error }) => ({
+  width: '100%',
+  fontFamily: "'Mona Sans'",
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 2px rgba(1, 3, 38, 0.03)',
+    '& fieldset': {
+      border: 'none',
+    },
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.6)',
+      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 4px rgba(1, 3, 38, 0.05)',
+      transform: 'translateY(-1px)',
+      border: '1px solid rgba(31, 100, 191, 0.2)',
+    },
+    '&.Mui-focused': {
+      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+      boxShadow: error ? 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 8px rgba(239, 68, 68, 0.08)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 8px rgba(31, 100, 191, 0.08)',
+      transform: 'translateY(-1px)',
+      border: error ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(31, 100, 191, 0.3)',
+    },
+    '& input': {
+      color: '#010326',
+      fontSize: '0.9rem',
+      fontWeight: 500,
+      fontFamily: "'Mona Sans'",
+      padding: '16px 20px',
+      '&::placeholder': {
+        color: '#64748b',
+        opacity: 0.7,
+      }
+    },
+    '& textarea': {
+      color: '#010326',
+      fontSize: '0.9rem',
+      fontWeight: 500,
+      fontFamily: "'Mona Sans'",
+      '&::placeholder': {
+        color: '#64748b',
+        opacity: 0.7,
+      }
+    }
+  }
+}));
+
+const EmployeeModalError = styled(Typography)({
+  fontSize: '0.75rem',
+  color: '#EF4444',
+  fontWeight: 500,
+  marginTop: '4px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  fontFamily: "'Mona Sans'",
+});
+
+const EmployeeModalRoleCard = styled(Paper)(({ selected, theme }) => ({
+  cursor: 'pointer',
+  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+  border: selected ? `2px solid #1F64BF` : `1px solid rgba(255, 255, 255, 0.3)`,
+  background: selected ? 'rgba(31, 100, 191, 0.1)' : 'rgba(255, 255, 255, 0.4)',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  borderRadius: '12px',
+  position: 'relative',
+  overflow: 'hidden',
+  boxShadow: selected ? 'inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 12px rgba(31, 100, 191, 0.1)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 4px rgba(1, 3, 38, 0.02)',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.08), transparent)',
+    transition: 'left 0.5s ease',
+    zIndex: 1,
+  },
+  '&:hover': {
+    borderColor: '#1F64BF',
+    background: selected ? 'rgba(31, 100, 191, 0.15)' : 'rgba(255, 255, 255, 0.6)',
+    transform: 'translateY(-2px)',
+    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 16px rgba(31, 100, 191, 0.15)',
+    '&::before': {
+      left: '100%',
+    }
+  }
+}));
+
+const EmployeeModalRoleContent = styled(CardContent)(({ theme }) => ({
+  padding: '20px',
+  position: 'relative',
+  zIndex: 2,
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  [theme.breakpoints.down('sm')]: {
+    padding: '16px',
+  }
+}));
+
+const EmployeeModalRoleHeader = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  marginBottom: '8px',
+});
+
+const EmployeeModalRoleTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  fontWeight: 600,
+  color: '#010326',
+  margin: 0,
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.9rem',
+  }
+}));
+
+// FOOTER CON GLASSMORPHISM ANIMADO
 const EmployeeModalActions = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: '16px',
+  gap: '12px',
   justifyContent: 'flex-end',
-  marginTop: '32px',
-  padding: '24px 0',
+  padding: '20px 32px',
+  background: 'rgba(255, 255, 255, 0.05)',
+  position: 'relative',
+  borderTop: '2px solid rgba(31, 100, 191, 0.3)',
+  borderRadius: '0 0 20px 20px',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: `
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1)
+  `,
+  overflow: 'hidden',
+  
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '1px',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+    zIndex: 1,
+  },
+  
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '1px',
+    height: '100%',
+    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3))',
+    zIndex: 1,
+  },
+  
+  '& > *': {
+    position: 'relative',
+    zIndex: 3,
+  },
+  
   [theme.breakpoints.down('md')]: {
-    gap: '12px',
-    marginTop: '28px',
-    padding: '20px 0',
+    padding: '20px 28px',
+    borderRadius: '0 0 16px 16px',
   },
   [theme.breakpoints.down('sm')]: {
     flexDirection: 'column',
-    gap: '12px',
-    marginTop: '24px',
-    padding: '16px 0',
+    padding: '20px 24px',
+    gap: '10px',
+    borderRadius: '0 0 16px 16px',
   }
 }));
 
 const EmployeeModalBtn = styled(Button)(({ variant, theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '10px',
-  padding: '16px 32px',
-  borderRadius: '20px',
-  fontSize: '15px',
-  fontWeight: '600',
+  gap: '12px',
+  padding: '12px 24px',
+  borderRadius: '12px',
+  fontSize: '0.875rem',
+  fontWeight: 600,
   textTransform: 'none',
-  transition: 'all 0.3s ease',
-  minHeight: '56px',
-  minWidth: '140px',
+  fontFamily: "'Mona Sans'",
+  transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  minWidth: '120px',
+  
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: variant === 'primary' 
+      ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent)'
+      : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+    transition: 'left 0.5s ease',
+    zIndex: 1,
+  },
+  
+  '& > *': {
+    position: 'relative',
+    zIndex: 2,
+  },
+  
   ...(variant === 'primary' ? {
-    background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+    background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 50%, #040DBF 100%)',
     color: '#ffffff',
-    boxShadow: '0 6px 20px rgba(4, 13, 191, 0.3)',
+    boxShadow: '0 2px 8px rgba(31, 100, 191, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
     '&:hover': {
-      background: 'linear-gradient(135deg, #1F64BF, #040DBF)',
-      transform: 'translateY(-3px)',
-      boxShadow: '0 8px 25px rgba(4, 13, 191, 0.4)',
-      borderRadius: '24px',
+      background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 50%, #032CA6 100%)',
+      boxShadow: '0 3px 12px rgba(31, 100, 191, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+      transform: 'translateY(-2px)',
+      '&::before': {
+        left: '100%',
+      }
     }
   } : variant === 'danger' ? {
     background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
     color: '#ffffff',
-    boxShadow: '0 6px 20px rgba(220, 38, 38, 0.3)',
+    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.2)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
     '&:hover': {
       background: 'linear-gradient(135deg, #b91c1c, #dc2626)',
-      transform: 'translateY(-3px)',
-      boxShadow: '0 8px 25px rgba(220, 38, 38, 0.4)',
-      borderRadius: '24px',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 3px 12px rgba(220, 38, 38, 0.25)',
     }
   } : {
-    background: '#ffffff',
+    background: 'rgba(255, 255, 255, 0.15)',
+    backdropFilter: 'blur(15px)',
+    WebkitBackdropFilter: 'blur(15px)',
     color: '#64748b',
-    border: '2px solid #e2e8f0',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.4)',
+    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 4px rgba(1, 3, 38, 0.03)',
     '&:hover': {
-      background: '#f8fafc',
-      color: '#334155',
-      borderColor: '#cbd5e1',
+      background: 'rgba(31, 100, 191, 0.12)',
+      color: '#032CA6',
+      borderColor: 'rgba(31, 100, 191, 0.3)',
+      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 8px rgba(31, 100, 191, 0.1)',
       transform: 'translateY(-2px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      borderRadius: '24px',
+      '&::before': {
+        left: '100%',
+      }
     }
   }),
-  [theme.breakpoints.down('md')]: {
-    padding: '14px 28px',
-    borderRadius: '18px',
-    fontSize: '14px',
-    minHeight: '52px',
-    minWidth: '120px',
-  },
+  
   [theme.breakpoints.down('sm')]: {
-    padding: '12px 24px',
-    borderRadius: '16px',
-    fontSize: '14px',
-    minHeight: '48px',
-    minWidth: '100%',
+    minWidth: 'auto',
+    justifyContent: 'center',
     width: '100%',
   }
 }));
 
-const EmployeeModalPasswordStrength = styled(Box)({
-  marginTop: '8px',
-});
-
-const EmployeeModalPasswordStrengthBar = styled(Box)(({ strength }) => ({
-  height: '4px',
-  borderRadius: '2px',
-  background: strength === 'weak' ? '#dc2626' : strength === 'medium' ? '#f59e0b' : '#10b981',
-  width: strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%',
-  transition: 'all 0.3s ease',
-}));
-
-const EmployeeModalPasswordStrengthText = styled(Typography)(({ strength }) => ({
-  fontSize: '12px',
-  fontWeight: '600',
-  marginTop: '4px',
-  color: strength === 'weak' ? '#dc2626' : strength === 'medium' ? '#f59e0b' : '#10b981',
-}));
+// Componente del Header con efectos animados
+const AnimatedModalHeader = ({ children, ...props }) => {
+  return (
+    <ModernModalHeader {...props}>
+      <div style={{
+        position: 'absolute',
+        top: '-3px',
+        left: '-3px', 
+        right: '-3px',
+        bottom: '-3px',
+        background: 'linear-gradient(135deg, rgba(31, 100, 191, 0.3), rgba(3, 44, 166, 0.2), rgba(4, 13, 191, 0.3), rgba(1, 3, 38, 0.2))',
+        borderRadius: '23px',
+        opacity: 0.3,
+        zIndex: -1,
+        animation: 'flowMove 3s ease-in-out infinite alternate',
+        filter: 'blur(6px)',
+        pointerEvents: 'none'
+      }} />
+      
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '-100%',
+        width: '50%',
+        height: '100%',
+        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+        transform: 'skewX(-15deg)',
+        animation: 'shineMove 4s ease-in-out infinite',
+        zIndex: 1,
+        pointerEvents: 'none'
+      }} />
+      
+      {children}
+    </ModernModalHeader>
+  );
+};
 
 const EmployeeModal = ({ 
   isOpen, 
   onClose, 
-  mode = 'create', // 'create' | 'edit'
+  mode = 'create',
   employeeId = null,
   onSuccess 
 }) => {
@@ -463,7 +651,6 @@ const EmployeeModal = ({
     getEmployeeById, 
     createEmployee, 
     updateEmployee, 
-    inactivateEmployee,
     hardDeleteEmployee,
     loading 
   } = useEmployees();
@@ -498,22 +685,25 @@ const EmployeeModal = ({
   // Manejar scroll del body cuando el modal está abierto
   useEffect(() => {
     if (isOpen) {
-      // Guardar la posición actual del scroll
       const scrollY = window.scrollY;
-      
-      // Bloquear scroll en body y html
+      const prevOverflowBody = document.body.style.overflow;
+      const prevPositionBody = document.body.style.position;
+      const prevWidthBody = document.body.style.width;
+      const prevTopBody = document.body.style.top;
+      const prevOverflowHtml = document.documentElement.style.overflow;
+
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
       document.body.style.top = `-${scrollY}px`;
-      document.body.classList.add('modal-open');
-      document.documentElement.classList.add('modal-open');
-      
+
       return () => {
-        // Restaurar el scroll cuando se cierre el modal
-        document.body.classList.remove('modal-open');
-        document.documentElement.classList.remove('modal-open');
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        document.body.style.bottom = '';
+        document.documentElement.style.overflow = prevOverflowHtml;
+        document.body.style.overflow = prevOverflowBody;
+        document.body.style.position = prevPositionBody;
+        document.body.style.width = prevWidthBody;
+        document.body.style.top = prevTopBody;
         window.scrollTo(0, scrollY);
       };
     }
@@ -541,7 +731,7 @@ const EmployeeModal = ({
           address: employee.address || '',
           birthday: employee.birthday ? new Date(employee.birthday).toISOString().split('T')[0] : '',
           hireDate: employee.hireDate ? new Date(employee.hireDate).toISOString().split('T')[0] : '',
-          password: '', // No cargar contraseña por seguridad
+          password: '',
           confirmPassword: '',
           role: employee.role || 'employee'
         });
@@ -578,7 +768,6 @@ const EmployeeModal = ({
       [name]: value
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -586,7 +775,6 @@ const EmployeeModal = ({
       }));
     }
 
-    // Validación en tiempo real para campos específicos
     validateField(name, value);
   };
 
@@ -599,16 +787,12 @@ const EmployeeModal = ({
           errorMessage = 'El nombre debe tener al menos 2 caracteres';
         } else if (value.trim() && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim())) {
           errorMessage = 'El nombre solo puede contener letras y espacios';
-        } else if (value.trim() && value.trim().includes('.')) {
-          errorMessage = 'El nombre no puede contener puntos';
         }
         break;
 
       case 'email':
         if (value.trim() && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value.trim())) {
           errorMessage = 'El formato del email no es válido';
-        } else if (value.trim() && value.trim().includes('..')) {
-          errorMessage = 'El email no puede contener puntos consecutivos';
         }
         break;
 
@@ -633,8 +817,6 @@ const EmployeeModal = ({
       case 'password':
         if (value && value.length < 6) {
           errorMessage = 'La contraseña debe tener al menos 6 caracteres';
-        } else if (value && value.length > 50) {
-          errorMessage = 'La contraseña no puede exceder 50 caracteres';
         }
         break;
 
@@ -645,7 +827,6 @@ const EmployeeModal = ({
         break;
     }
 
-    // Solo actualizar el error si hay un mensaje o si se está limpiando
     if (errorMessage || !value.trim()) {
       setErrors(prev => ({
         ...prev,
@@ -657,23 +838,18 @@ const EmployeeModal = ({
   const validateForm = () => {
     const newErrors = {};
 
-    // Validaciones básicas de campos requeridos
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'El nombre debe tener al menos 2 caracteres';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.name.trim())) {
       newErrors.name = 'El nombre solo puede contener letras y espacios';
-    } else if (formData.name.trim().includes('.')) {
-      newErrors.name = 'El nombre no puede contener puntos';
     }
 
     if (!formData.email.trim()) {
       newErrors.email = 'El email es requerido';
     } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(formData.email.trim())) {
       newErrors.email = 'El formato del email no es válido';
-    } else if (formData.email.trim().includes('..')) {
-      newErrors.email = 'El email no puede contener puntos consecutivos';
     }
 
     if (!formData.phoneNumber.trim()) {
@@ -728,14 +904,11 @@ const EmployeeModal = ({
       }
     }
 
-    // Validaciones de contraseña
     if (mode === 'create') {
       if (!formData.password) {
         newErrors.password = 'La contraseña es requerida';
       } else if (formData.password.length < 6) {
         newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-      } else if (formData.password.length > 50) {
-        newErrors.password = 'La contraseña no puede exceder 50 caracteres';
       }
 
       if (!formData.confirmPassword) {
@@ -744,11 +917,8 @@ const EmployeeModal = ({
         newErrors.confirmPassword = 'Las contraseñas no coinciden';
       }
     } else if (formData.password) {
-      // Validar contraseña solo si se está cambiando en modo edición
       if (formData.password.length < 6) {
         newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-      } else if (formData.password.length > 50) {
-        newErrors.password = 'La contraseña no puede exceder 50 caracteres';
       }
 
       if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
@@ -770,7 +940,6 @@ const EmployeeModal = ({
     setIsSubmitting(true);
     
     try {
-      // Preparar datos para envío
       const employeeData = {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -783,7 +952,6 @@ const EmployeeModal = ({
         active: true
       };
 
-      // Solo incluir contraseña si se está creando o si se proporcionó una nueva
       if (mode === 'create' || formData.password) {
         employeeData.password = formData.password;
       }
@@ -798,38 +966,6 @@ const EmployeeModal = ({
       onClose();
     } catch (error) {
       console.error('Error saving employee:', error);
-      
-      // Manejar diferentes tipos de errores
-      let errorMessage = 'Error al guardar el empleado';
-      let errorTitle = 'Error';
-      
-      if (error.response?.status === 400) {
-        errorTitle = 'Error de Validación';
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else {
-          errorMessage = 'Los datos ingresados no son válidos. Por favor, revisa los campos marcados.';
-        }
-      } else if (error.response?.status === 409) {
-        errorTitle = 'Conflicto';
-        errorMessage = 'Ya existe un empleado con este email o DUI.';
-      } else if (error.response?.status === 500) {
-        errorTitle = 'Error del Servidor';
-        errorMessage = 'Error interno del servidor. Inténtalo de nuevo.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      // Mostrar alerta de error
-      Swal.fire({
-        icon: 'error',
-        title: errorTitle,
-        text: errorMessage,
-        confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Entendido'
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -846,7 +982,6 @@ const EmployeeModal = ({
   };
 
   const formatDui = (value) => {
-    // Formatear DUI mientras se escribe
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 8) {
       return numbers;
@@ -859,443 +994,514 @@ const EmployeeModal = ({
   if (!isOpen) return null;
 
   return (
-    <EmployeeModalOverlay>
-      <EmployeeModalContainer>
-        <EmployeeModalHeader>
-          <EmployeeModalTitle>
-            {mode === 'create' ? (
-              <>
-                <UserPlus size={24} weight="duotone" />
-                <Typography variant="h3" sx={{ margin: 0, fontWeight: '600', color: '#010326' }}>
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      closeAfterTransition
+      BackdropComponent={ModernModalBackdrop}
+    >
+      <ModernModalContainer>
+        <GlobalStyles />
+        <ModernModalCard>
+          <div style={{
+            position: 'absolute',
+            top: '-3px',
+            left: '-3px',
+            right: '-3px',
+            bottom: '-3px',
+            background: 'linear-gradient(135deg, rgba(31, 100, 191, 0.3), rgba(3, 44, 166, 0.2), rgba(4, 13, 191, 0.3), rgba(1, 3, 38, 0.2))',
+            borderRadius: '23px',
+            opacity: 0.3,
+            zIndex: -1,
+            animation: 'flowMove 3s ease-in-out infinite alternate',
+            filter: 'blur(6px)',
+          }} />
+          
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '-100%',
+            width: '50%',
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+            transform: 'skewX(-15deg)',
+            animation: 'shineMove 4s ease-in-out infinite',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }} />
+
+          <AnimatedModalHeader>
+            <ModernModalCloseButton
+              onClick={onClose}
+              aria-label="Cerrar modal"
+            >
+              <X size={18} weight="bold" color="#000000" />
+            </ModernModalCloseButton>
+            
+            <ModernModalTitle>
+              {mode === 'create' ? (
+                <>
+                  <UserPlus size={28} weight="duotone" />
                   Crear Nuevo Empleado
-                </Typography>
-              </>
-            ) : (
-              <>
-                <PencilSimple size={24} weight="duotone" />
-                <Typography variant="h3" sx={{ margin: 0, fontWeight: '600', color: '#010326' }}>
+                </>
+              ) : (
+                <>
+                  <PencilSimple size={28} weight="duotone" />
                   Editar Empleado
-                </Typography>
-              </>
-            )}
-          </EmployeeModalTitle>
-          <EmployeeModalClose
-            onClick={onClose}
-            type="button"
-          >
-            <X size={20} weight="bold" />
-          </EmployeeModalClose>
-        </EmployeeModalHeader>
+                </>
+              )}
+            </ModernModalTitle>
+            <ModernModalSubtitle>
+              {mode === 'create' 
+                ? 'Configura la información y rol del empleado'
+                : 'Modifica la información del empleado'
+              }
+            </ModernModalSubtitle>
+          </AnimatedModalHeader>
 
-        {isLoadingEmployee ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', gap: '16px' }}>
-            <CircularProgress size={40} />
-            <Typography sx={{ color: '#64748b', fontSize: '14px' }}>
-              Cargando datos del empleado...
-            </Typography>
-          </Box>
-        ) : (
-          <EmployeeModalContent>
-            <EmployeeModalForm component="form" onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                {/* Información Personal */}
-                <Grid item xs={12} md={6}>
-                  <EmployeeModalSection>
-                    <EmployeeModalSectionTitle>
-                      <User size={18} weight="duotone" />
-                      Información Personal
-                    </EmployeeModalSectionTitle>
-                    
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        Nombre Completo *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        error={!!errors.name}
-                        placeholder="Ej: Juan Pérez"
-                      />
-                      {errors.name && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.name}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        <Envelope size={16} weight="duotone" />
-                        Correo Electrónico *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        error={!!errors.email}
-                        placeholder="juan.perez@empresa.com"
-                      />
-                      {errors.email && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.email}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        <Phone size={16} weight="duotone" />
-                        Teléfono *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="tel"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={handleInputChange}
-                        error={!!errors.phoneNumber}
-                        placeholder="7777-7777"
-                      />
-                      {errors.phoneNumber && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.phoneNumber}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        <IdentificationCard size={16} weight="duotone" />
-                        DUI *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="text"
-                        name="dui"
-                        value={formData.dui}
-                        onChange={(e) => {
-                          const formatted = formatDui(e.target.value);
-                          setFormData(prev => ({ ...prev, dui: formatted }));
-                        }}
-                        error={!!errors.dui}
-                        placeholder="12345678-9"
-                        inputProps={{ maxLength: 10 }}
-                      />
-                      {errors.dui && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.dui}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        <MapPin size={16} weight="duotone" />
-                        Dirección *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        error={!!errors.address}
-                        placeholder="Dirección completa del empleado"
-                        multiline
-                        rows={3}
-                      />
-                      {errors.address && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.address}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-                  </EmployeeModalSection>
-                </Grid>
-
-                {/* Fechas y Contraseña */}
-                <Grid item xs={12} md={6}>
-                  <EmployeeModalSection>
-                    <EmployeeModalSectionTitle>
-                      <Calendar size={18} weight="duotone" />
-                      Fechas y Seguridad
-                    </EmployeeModalSectionTitle>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        Fecha de Nacimiento *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="date"
-                        name="birthday"
-                        value={formData.birthday}
-                        onChange={handleInputChange}
-                        error={!!errors.birthday}
-                      />
-                      {errors.birthday && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.birthday}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        Fecha de Contratación *
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type="date"
-                        name="hireDate"
-                        value={formData.hireDate}
-                        onChange={handleInputChange}
-                        error={!!errors.hireDate}
-                      />
-                      {errors.hireDate && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.hireDate}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    {/* Contraseña - Solo mostrar en creación o si se quiere cambiar */}
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        {mode === 'create' ? 'Contraseña *' : 'Nueva Contraseña (opcional)'}
-                      </EmployeeModalLabel>
-                      <EmployeeModalInput
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        error={!!errors.password}
-                        placeholder={mode === 'create' ? 'Mínimo 6 caracteres' : 'Dejar vacío para mantener la actual'}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowPassword(!showPassword)}
-                                edge="end"
-                              >
-                                {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                      {errors.password && (
-                        <EmployeeModalError>
-                          <Warning size={16} weight="fill" />
-                          {errors.password}
-                        </EmployeeModalError>
-                      )}
-                    </EmployeeModalField>
-
-                    {/* Confirmar contraseña solo si se está creando o cambiando contraseña */}
-                    {(mode === 'create' || formData.password) && (
-                      <EmployeeModalField>
-                        <EmployeeModalLabel>
-                          Confirmar Contraseña *
-                        </EmployeeModalLabel>
-                        <EmployeeModalInput
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          error={!!errors.confirmPassword}
-                          placeholder="Repite la contraseña"
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                  edge="end"
-                                >
-                                  {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          }}
-                        />
-                        {errors.confirmPassword && (
-                          <EmployeeModalError>
-                            <Warning size={16} weight="fill" />
-                            {errors.confirmPassword}
-                          </EmployeeModalError>
-                        )}
-                      </EmployeeModalField>
-                    )}
-                  </EmployeeModalSection>
-                </Grid>
-
-                {/* Rol */}
-                <Grid item xs={12}>
-                  <EmployeeModalSection>
-                    <EmployeeModalSectionTitle>
-                      <Shield size={18} weight="duotone" />
-                      Rol y Permisos
-                    </EmployeeModalSectionTitle>
-
-                    <EmployeeModalField>
-                      <EmployeeModalLabel>
-                        Selecciona el Rol *
-                      </EmployeeModalLabel>
-                      <Grid container spacing={2}>
-                        {roles.map(role => {
-                          const IconComponent = role.icon;
-                          return (
-                            <Grid item xs={12} sm={6} md={3} key={role.value}>
-                              <EmployeeModalRoleCard
-                                selected={formData.role === role.value}
-                                onClick={() => setFormData(prev => ({ ...prev, role: role.value }))}
-                              >
-                                <EmployeeModalRoleContent>
-                                  <EmployeeModalRoleHeader>
-                                    <IconComponent size={24} weight="duotone" />
-                                    <EmployeeModalRoleTitle>{role.label}</EmployeeModalRoleTitle>
-                                  </EmployeeModalRoleHeader>
-                                </EmployeeModalRoleContent>
-                              </EmployeeModalRoleCard>
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                    </EmployeeModalField>
-                  </EmployeeModalSection>
-                </Grid>
-              </Grid>
-
-              <EmployeeModalActions>
-                {/* Botón de eliminar solo en modo edición */}
-                {mode === 'edit' && (
-                  <EmployeeModalBtn
-                    type="button"
-                    variant="danger"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={isSubmitting}
-                  >
-                    <Trash size={16} weight="duotone" />
-                    Eliminar
-                  </EmployeeModalBtn>
-                )}
-
-                <Box sx={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
-                  <EmployeeModalBtn
-                    type="button"
-                    variant="secondary"
-                    onClick={onClose}
-                    disabled={isSubmitting}
-                  >
-                    Cancelar
-                  </EmployeeModalBtn>
-                  <EmployeeModalBtn
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <CircularProgress size={16} color="inherit" />
-                        {mode === 'create' ? 'Creando...' : 'Guardando...'}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle size={16} weight="duotone" />
-                        {mode === 'create' ? 'Crear Empleado' : 'Guardar Cambios'}
-                      </>
-                    )}
-                  </EmployeeModalBtn>
-                </Box>
-              </EmployeeModalActions>
-            </EmployeeModalForm>
-          </EmployeeModalContent>
-        )}
-
-        {/* Modal de confirmación de eliminación */}
-        <Dialog
-          open={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: '24px',
-              overflow: 'hidden',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            }
-          }}
-        >
-          <DialogTitle sx={{ 
-            textAlign: 'center', 
-            padding: '32px 32px 0 32px',
-            background: 'linear-gradient(135deg, #f8fafc, #ffffff)',
-          }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-              <Box sx={{ 
-                width: '80px', 
-                height: '80px', 
-                borderRadius: '50%', 
-                background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(185, 28, 28, 0.1))', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                boxShadow: '0 8px 25px rgba(220, 38, 38, 0.2)',
-              }}>
-                <Trash size={40} weight="duotone" color="#dc2626" />
-              </Box>
-              <Typography variant="h4" sx={{ 
-                fontWeight: '700', 
-                color: '#010326',
-                fontSize: '24px',
-                lineHeight: 1.2,
-              }}>
-                ¿Eliminar empleado permanentemente?
+          {isLoadingEmployee ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', gap: '16px' }}>
+              <CircularProgress size={40} />
+              <Typography sx={{ color: '#64748b', fontSize: '14px' }}>
+                Cargando datos del empleado...
               </Typography>
             </Box>
-          </DialogTitle>
-          <DialogContent sx={{ 
-            textAlign: 'center', 
-            padding: '24px 32px',
-            background: '#ffffff',
-          }}>
-            <Typography sx={{ 
-              color: '#64748b', 
-              lineHeight: 1.6,
-              fontSize: '16px',
+          ) : (
+            <ModernModalContent>
+              <EmployeeModalForm component="form" onSubmit={handleSubmit}>
+                <Container maxWidth="lg" disableGutters>
+                  <Grid container>
+                    {/* Información Personal */}
+                    <Grid item xs={12} md={6}>
+                      <EmployeeModalSection>
+                        <EmployeeModalSectionTitle>
+                          <User size={18} weight="duotone" />
+                          Información Personal
+                        </EmployeeModalSectionTitle>
+                        
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <User size={14} weight="duotone" />
+                            Nombre Completo *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            error={!!errors.name}
+                            placeholder="Ej: Juan Pérez"
+                          />
+                          {errors.name && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.name}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Envelope size={14} weight="duotone" />
+                            Correo Electrónico *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            error={!!errors.email}
+                            placeholder="juan.perez@empresa.com"
+                          />
+                          {errors.email && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.email}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Phone size={14} weight="duotone" />
+                            Teléfono *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="tel"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleInputChange}
+                            error={!!errors.phoneNumber}
+                            placeholder="7777-7777"
+                          />
+                          {errors.phoneNumber && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.phoneNumber}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <IdentificationCard size={14} weight="duotone" />
+                            DUI *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="text"
+                            name="dui"
+                            value={formData.dui}
+                            onChange={(e) => {
+                              const formatted = formatDui(e.target.value);
+                              setFormData(prev => ({ ...prev, dui: formatted }));
+                            }}
+                            error={!!errors.dui}
+                            placeholder="12345678-9"
+                            inputProps={{ maxLength: 10 }}
+                          />
+                          {errors.dui && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.dui}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <MapPin size={14} weight="duotone" />
+                            Dirección *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            error={!!errors.address}
+                            placeholder="Dirección completa del empleado"
+                            multiline
+                            rows={3}
+                          />
+                          {errors.address && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.address}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+                      </EmployeeModalSection>
+                    </Grid>
+
+                    {/* Fechas y Contraseña */}
+                    <Grid item xs={12} md={6}>
+                      <EmployeeModalSection>
+                        <EmployeeModalSectionTitle>
+                          <Calendar size={18} weight="duotone" />
+                          Fechas y Seguridad
+                        </EmployeeModalSectionTitle>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Calendar size={14} weight="duotone" />
+                            Fecha de Nacimiento *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="date"
+                            name="birthday"
+                            value={formData.birthday}
+                            onChange={handleInputChange}
+                            error={!!errors.birthday}
+                          />
+                          {errors.birthday && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.birthday}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Calendar size={14} weight="duotone" />
+                            Fecha de Contratación *
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type="date"
+                            name="hireDate"
+                            value={formData.hireDate}
+                            onChange={handleInputChange}
+                            error={!!errors.hireDate}
+                          />
+                          {errors.hireDate && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.hireDate}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Lock size={14} weight="duotone" />
+                            {mode === 'create' ? 'Contraseña *' : 'Nueva Contraseña (opcional)'}
+                          </EmployeeModalLabel>
+                          <EmployeeModalInput
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            error={!!errors.password}
+                            placeholder={mode === 'create' ? 'Mínimo 6 caracteres' : 'Dejar vacío para mantener la actual'}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    edge="end"
+                                    sx={{ color: '#64748b' }}
+                                  >
+                                    {showPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                          {errors.password && (
+                            <EmployeeModalError>
+                              <Warning size={12} weight="fill" />
+                              {errors.password}
+                            </EmployeeModalError>
+                          )}
+                        </EmployeeModalField>
+
+                        {(mode === 'create' || formData.password) && (
+                          <EmployeeModalField>
+                            <EmployeeModalLabel>
+                              <Lock size={14} weight="duotone" />
+                              Confirmar Contraseña *
+                            </EmployeeModalLabel>
+                            <EmployeeModalInput
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              name="confirmPassword"
+                              value={formData.confirmPassword}
+                              onChange={handleInputChange}
+                              error={!!errors.confirmPassword}
+                              placeholder="Repite la contraseña"
+                              InputProps={{
+                                endAdornment: (
+                                  <InputAdornment position="end">
+                                    <IconButton
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                      edge="end"
+                                      sx={{ color: '#64748b' }}
+                                    >
+                                      {showConfirmPassword ? <EyeSlash size={16} /> : <Eye size={16} />}
+                                    </IconButton>
+                                  </InputAdornment>
+                                ),
+                              }}
+                            />
+                            {errors.confirmPassword && (
+                              <EmployeeModalError>
+                                <Warning size={12} weight="fill" />
+                                {errors.confirmPassword}
+                              </EmployeeModalError>
+                            )}
+                          </EmployeeModalField>
+                        )}
+                      </EmployeeModalSection>
+                    </Grid>
+
+                    {/* Rol */}
+                    <Grid item xs={12}>
+                      <EmployeeModalSection>
+                        <EmployeeModalSectionTitle>
+                          <Shield size={18} weight="duotone" />
+                          Rol y Permisos
+                        </EmployeeModalSectionTitle>
+
+                        <EmployeeModalField>
+                          <EmployeeModalLabel>
+                            <Shield size={14} weight="duotone" />
+                            Selecciona el Rol *
+                          </EmployeeModalLabel>
+                          <Grid container spacing={2}>
+                            {roles.map(role => {
+                              const IconComponent = role.icon;
+                              return (
+                                <Grid item xs={12} sm={6} md={3} key={role.value}>
+                                  <EmployeeModalRoleCard
+                                    selected={formData.role === role.value}
+                                    onClick={() => setFormData(prev => ({ ...prev, role: role.value }))}
+                                  >
+                                    <EmployeeModalRoleContent>
+                                      <EmployeeModalRoleHeader>
+                                        <IconComponent size={24} weight="duotone" />
+                                        <EmployeeModalRoleTitle>{role.label}</EmployeeModalRoleTitle>
+                                      </EmployeeModalRoleHeader>
+                                    </EmployeeModalRoleContent>
+                                  </EmployeeModalRoleCard>
+                                </Grid>
+                              );
+                            })}
+                          </Grid>
+                        </EmployeeModalField>
+                      </EmployeeModalSection>
+                    </Grid>
+                  </Grid>
+                </Container>
+
+                <EmployeeModalActions>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-3px',
+                    left: '-3px',
+                    right: '-3px',
+                    bottom: '-3px',
+                    background: 'linear-gradient(135deg, rgba(31, 100, 191, 0.3), rgba(3, 44, 166, 0.2), rgba(4, 13, 191, 0.3), rgba(1, 3, 38, 0.2))',
+                    borderRadius: '0 0 23px 23px',
+                    opacity: 0.3,
+                    zIndex: -1,
+                    animation: 'flowMove 3s ease-in-out infinite alternate',
+                    filter: 'blur(6px)',
+                  }} />
+                  
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '50%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+                    transform: 'skewX(-15deg)',
+                    animation: 'shineMove 4s ease-in-out infinite',
+                    zIndex: 1,
+                  }} />
+
+                  {mode === 'edit' && (
+                    <EmployeeModalBtn
+                      type="button"
+                      variant="danger"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={isSubmitting}
+                    >
+                      <Trash size={16} weight="duotone" />
+                      Eliminar
+                    </EmployeeModalBtn>
+                  )}
+
+                  <Box sx={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
+                    <EmployeeModalBtn
+                      type="button"
+                      variant="secondary"
+                      onClick={onClose}
+                      disabled={isSubmitting}
+                    >
+                      <X size={16} weight="duotone" />
+                      Cancelar
+                    </EmployeeModalBtn>
+                    <EmployeeModalBtn
+                      type="submit"
+                      variant="primary"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <CircularProgress size={16} color="inherit" />
+                          {mode === 'create' ? 'Creando...' : 'Guardando...'}
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={16} weight="duotone" />
+                          {mode === 'create' ? 'Crear Empleado' : 'Guardar Cambios'}
+                        </>
+                      )}
+                    </EmployeeModalBtn>
+                  </Box>
+                </EmployeeModalActions>
+              </EmployeeModalForm>
+            </ModernModalContent>
+          )}
+
+          <Dialog
+            open={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 12px 25px -6px rgba(0, 0, 0, 0.15)',
+              }
+            }}
+          >
+            <DialogTitle sx={{ 
+              textAlign: 'center', 
+              padding: '32px 32px 0 32px',
+              background: 'linear-gradient(135deg, #f8fafc, #ffffff)',
             }}>
-              Esta acción no se puede deshacer. El empleado será eliminado completamente del sistema.
-            </Typography>
-          </DialogContent>
-          <DialogActions sx={{ 
-            padding: '24px 32px 32px 32px', 
-            justifyContent: 'center', 
-            gap: '16px',
-            background: 'linear-gradient(135deg, #f8fafc, #ffffff)',
-          }}>
-            <EmployeeModalBtn
-              variant="secondary"
-              onClick={() => setShowDeleteConfirm(false)}
-              sx={{ minWidth: '160px' }}
-            >
-              Cancelar
-            </EmployeeModalBtn>
-            <EmployeeModalBtn
-              variant="danger"
-              onClick={handleDelete}
-              sx={{ minWidth: '200px' }}
-            >
-              <Trash size={16} weight="duotone" />
-              Eliminar Permanentemente
-            </EmployeeModalBtn>
-          </DialogActions>
-        </Dialog>
-      </EmployeeModalContainer>
-    </EmployeeModalOverlay>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+                <Box sx={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(185, 28, 28, 0.1))', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)',
+                }}>
+                  <Trash size={40} weight="duotone" color="#dc2626" />
+                </Box>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: '700', 
+                  color: '#010326',
+                  fontSize: '24px',
+                  lineHeight: 1.2,
+                }}>
+                  ¿Eliminar empleado permanentemente?
+                </Typography>
+              </Box>
+            </DialogTitle>
+            <DialogContent sx={{ 
+              textAlign: 'center', 
+              padding: '24px 32px',
+              background: '#ffffff',
+            }}>
+              <Typography sx={{ 
+                color: '#64748b', 
+                lineHeight: 1.6,
+                fontSize: '16px',
+              }}>
+                Esta acción no se puede deshacer. El empleado será eliminado completamente del sistema.
+              </Typography>
+            </DialogContent>
+            <DialogActions sx={{ 
+              padding: '24px 32px 32px 32px', 
+              justifyContent: 'center', 
+              gap: '16px',
+              background: 'linear-gradient(135deg, #f8fafc, #ffffff)',
+            }}>
+              <EmployeeModalBtn
+                variant="secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                sx={{ minWidth: '160px' }}
+              >
+                Cancelar
+              </EmployeeModalBtn>
+              <EmployeeModalBtn
+                variant="danger"
+                onClick={handleDelete}
+                sx={{ minWidth: '200px' }}
+              >
+                <Trash size={16} weight="duotone" />
+                Eliminar Permanentemente
+              </EmployeeModalBtn>
+            </DialogActions>
+          </Dialog>
+        </ModernModalCard>
+      </ModernModalContainer>
+    </Modal>
   );
 };
 
