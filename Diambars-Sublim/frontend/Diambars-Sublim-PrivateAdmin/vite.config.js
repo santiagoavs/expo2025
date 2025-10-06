@@ -7,10 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://expo2025-8bjn.onrender.com',
+        target: 'http://localhost:4000', // cambiar a https://expo2025-8bjn.onrender.com para producción
         changeOrigin: true,
-        secure: true,
-        // No necesitamos rewrite porque queremos mantener /api en el backend
+        secure: false, // cambiar a true para producción
       }
     }
   },

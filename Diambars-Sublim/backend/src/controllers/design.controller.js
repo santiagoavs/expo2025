@@ -6,7 +6,6 @@ import mongoose from "mongoose";
 import cloudinary from "../utils/cloudinary.js";
 import { notificationService } from "../services/email/notification.service.js";
 import { validators, validateFields } from "../utils/validators.utils.js";
-import { createCanvas, loadImage, registerFont } from 'canvas';
 
 const designController = {};
 
@@ -615,6 +614,179 @@ async function validateProductOptions(productOptions, availableOptions) {
 }
 
 // ==================== FUNCIONES PRINCIPALES ====================
+
+/**
+ * Regenera la vista previa de un diseño específico
+ */
+designController.regeneratePreview = async (req, res) => {
+  try {
+    const { designId } = req.params;
+    
+    console.log('🔄 [regeneratePreview] Regenerando vista previa para diseño:', designId);
+    
+    if (!designId || !mongoose.Types.ObjectId.isValid(designId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de diseño inválido',
+        error: 'INVALID_DESIGN_ID'
+      });
+    }
+
+    // Buscar el diseño
+    const design = await Design.findById(designId).populate('product user');
+    if (!design) {
+      return res.status(404).json({
+        success: false,
+        message: 'Diseño no encontrado',
+        error: 'DESIGN_NOT_FOUND'
+      });
+    }
+
+    // Buscar el producto
+    const product = await Product.findById(design.product);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Producto no encontrado',
+        error: 'PRODUCT_NOT_FOUND'
+      });
+    }
+
+    // Eliminar vista previa anterior si existe
+    if (design.previewImage) {
+      try {
+        await cloudinary.deleteImage(design.previewImage, 'designs/previews');
+        console.log('🗑️ [regeneratePreview] Vista previa anterior eliminada');
+      } catch (deleteError) {
+        console.warn('⚠️ [regeneratePreview] Error eliminando vista previa anterior:', deleteError.message);
+      }
+    }
+
+    // Generar nueva vista previa
+    const previewUrl = await generateDesignPreview(design, product);
+    
+    if (previewUrl) {
+      console.log('✅ [regeneratePreview] Vista previa regenerada exitosamente:', previewUrl);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Vista previa regenerada exitosamente',
+        data: {
+          designId: design._id,
+          previewImage: previewUrl,
+          productName: product.name
+        }
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'No se pudo generar la vista previa',
+        error: 'PREVIEW_GENERATION_FAILED'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ [regeneratePreview] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error regenerando vista previa',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
+  }
+};
+
+/**
+ * Regenera vistas previas de múltiples diseños
+ */
+designController.regenerateMultiplePreviews = async (req, res) => {
+  try {
+    const { designIds } = req.body;
+    
+    console.log('🔄 [regenerateMultiplePreviews] Regenerando vistas previas para:', designIds?.length || 0, 'diseños');
+    
+    if (!Array.isArray(designIds) || designIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Lista de IDs de diseños requerida',
+        error: 'INVALID_DESIGN_IDS'
+      });
+    }
+
+    const results = {
+      success: [],
+      failed: [],
+      total: designIds.length
+    };
+
+    // Procesar cada diseño
+    for (const designId of designIds) {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(designId)) {
+          results.failed.push({ designId, error: 'ID inválido' });
+          continue;
+        }
+
+        const design = await Design.findById(designId).populate('product user');
+        if (!design) {
+          results.failed.push({ designId, error: 'Diseño no encontrado' });
+          continue;
+        }
+
+        const product = await Product.findById(design.product);
+        if (!product) {
+          results.failed.push({ designId, error: 'Producto no encontrado' });
+          continue;
+        }
+
+        // Eliminar vista previa anterior si existe
+        if (design.previewImage) {
+          try {
+            await cloudinary.deleteImage(design.previewImage, 'designs/previews');
+          } catch (deleteError) {
+            console.warn('⚠️ Error eliminando vista previa anterior:', deleteError.message);
+          }
+        }
+
+        // Generar nueva vista previa
+        const previewUrl = await generateDesignPreview(design, product);
+        
+        if (previewUrl) {
+          results.success.push({ 
+            designId, 
+            previewImage: previewUrl,
+            productName: product.name 
+          });
+        } else {
+          results.failed.push({ designId, error: 'No se pudo generar vista previa' });
+        }
+
+      } catch (error) {
+        console.error('❌ Error procesando diseño', designId, ':', error);
+        results.failed.push({ designId, error: error.message });
+      }
+    }
+
+    console.log('✅ [regenerateMultiplePreviews] Procesamiento completado:', {
+      success: results.success.length,
+      failed: results.failed.length,
+      total: results.total
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Vistas previas procesadas: ${results.success.length} exitosas, ${results.failed.length} fallidas`,
+      data: results
+    });
+
+  } catch (error) {
+    console.error('❌ [regenerateMultiplePreviews] Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error regenerando vistas previas',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
+  }
+};
 
 /**
  * Crea un nuevo diseño personalizado
@@ -2422,10 +2594,38 @@ function calculateDesignComplexity(elements) {
  */
 async function generatePreviewAndNotify(design, product, userId) {
   try {
-    console.log('Generando preview y notificando...');
+    console.log('🎨 [generatePreviewAndNotify] Iniciando generación de preview y notificación...');
+    
+    // Generar vista previa del diseño
+    const previewUrl = await generateDesignPreview(design, product);
+    
+    if (previewUrl) {
+      console.log('✅ [generatePreviewAndNotify] Vista previa generada:', previewUrl);
+      
+      // Enviar notificación por email al usuario
+      try {
+        await notificationService.sendDesignCreatedNotification({
+          userEmail: design.user.email,
+          userName: design.user.name,
+          designName: design.name,
+          productName: product.name,
+          designId: design._id,
+          previewImage: previewUrl,
+          status: design.status
+        });
+        
+        console.log('📧 [generatePreviewAndNotify] Notificación enviada al usuario');
+      } catch (emailError) {
+        console.error('❌ [generatePreviewAndNotify] Error enviando notificación:', emailError);
+        // No fallar por error de email
+      }
+    } else {
+      console.warn('⚠️ [generatePreviewAndNotify] No se pudo generar vista previa');
+    }
+    
     return true;
   } catch (error) {
-    console.error('Error en generatePreviewAndNotify:', error);
+    console.error('❌ [generatePreviewAndNotify] Error:', error);
     return false;
   }
 }
@@ -2435,24 +2635,249 @@ async function generatePreviewAndNotify(design, product, userId) {
  */
 async function generatePreviewAndNotifyAdmin(design, product, clientId, adminId) {
   try {
-    console.log('Generando preview admin y notificando...');
+    console.log('🎨 [generatePreviewAndNotifyAdmin] Iniciando generación de preview admin...');
+    
+    // Generar vista previa del diseño
+    const previewUrl = await generateDesignPreview(design, product);
+    
+    if (previewUrl) {
+      console.log('✅ [generatePreviewAndNotifyAdmin] Vista previa generada:', previewUrl);
+      
+      // Enviar notificación por email al cliente
+      try {
+        await notificationService.sendDesignCreatedForClientNotification({
+          clientEmail: design.user.email,
+          clientName: design.user.name,
+          designName: design.name,
+          productName: product.name,
+          designId: design._id,
+          previewImage: previewUrl,
+          status: design.status,
+          adminName: req.user.name // Necesitaríamos pasar el admin desde el contexto
+        });
+        
+        console.log('📧 [generatePreviewAndNotifyAdmin] Notificación enviada al cliente');
+      } catch (emailError) {
+        console.error('❌ [generatePreviewAndNotifyAdmin] Error enviando notificación:', emailError);
+        // No fallar por error de email
+      }
+    } else {
+      console.warn('⚠️ [generatePreviewAndNotifyAdmin] No se pudo generar vista previa');
+    }
+    
     return true;
   } catch (error) {
-    console.error('Error en generatePreviewAndNotifyAdmin:', error);
+    console.error('❌ [generatePreviewAndNotifyAdmin] Error:', error);
     return false;
   }
 }
 
 /**
- * Genera una vista previa del diseño
+ * Genera una vista previa del diseño usando Cloudinary
  */
 async function generateDesignPreview(design, product) {
   try {
-    console.log('Generando vista previa del diseño...');
-    return null;
+    console.log('🎨 [generateDesignPreview] Iniciando generación de vista previa...');
+    console.log('🎨 [generateDesignPreview] Diseño ID:', design._id);
+    console.log('🎨 [generateDesignPreview] Producto:', product.name);
+    
+    // Verificar si ya existe una vista previa
+    if (design.previewImage) {
+      console.log('✅ [generateDesignPreview] Ya existe vista previa:', design.previewImage);
+      return design.previewImage;
+    }
+
+    // Crear un canvas temporal para renderizar el diseño
+    const canvas = await renderDesignToCanvas(design, product);
+    
+    if (!canvas) {
+      console.warn('⚠️ [generateDesignPreview] No se pudo crear canvas del diseño');
+      return null;
+    }
+
+    // Convertir canvas a buffer
+    const buffer = canvas.toBuffer('image/png');
+    
+    // Crear archivo temporal
+    const tempFilePath = `public/uploads/design-preview-${design._id}-${Date.now()}.png`;
+    require('fs').writeFileSync(tempFilePath, buffer);
+    
+    console.log('📤 [generateDesignPreview] Subiendo vista previa a Cloudinary...');
+    
+    // Subir a Cloudinary
+    const uploadResult = await cloudinary.uploadImage(tempFilePath, 'designs/previews', {
+      public_id: `design-preview-${design._id}`,
+      transformation: [
+        { width: 800, height: 600, crop: 'fit', quality: 'auto:good' },
+        { flags: 'progressive' }
+      ]
+    });
+
+    console.log('✅ [generateDesignPreview] Vista previa subida exitosamente:', uploadResult.secure_url);
+    
+    // Actualizar el diseño con la URL de la vista previa
+    design.previewImage = uploadResult.secure_url;
+    await design.save();
+    
+    console.log('💾 [generateDesignPreview] Diseño actualizado con vista previa');
+    
+    return uploadResult.secure_url;
+    
   } catch (error) {
-    console.error('Error generando vista previa:', error);
+    console.error('❌ [generateDesignPreview] Error generando vista previa:', error);
     return null;
+  }
+}
+
+/**
+ * Renderiza el diseño en un canvas usando node-canvas
+ */
+async function renderDesignToCanvas(design, product) {
+  try {
+    console.log('🖼️ [renderDesignToCanvas] Iniciando renderizado...');
+    
+    // Importar node-canvas dinámicamente
+    const { createCanvas, loadImage } = await import('canvas');
+    
+    // Dimensiones del canvas
+    const canvasWidth = 800;
+    const canvasHeight = 600;
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+    
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
+    // Cargar imagen del producto si existe
+    if (product.images?.main) {
+      try {
+        console.log('🖼️ [renderDesignToCanvas] Cargando imagen del producto:', product.images.main);
+        const productImage = await loadImage(product.images.main);
+        
+        // Dibujar imagen del producto como fondo
+        ctx.drawImage(productImage, 0, 0, canvasWidth, canvasHeight);
+        ctx.globalAlpha = 0.3; // Hacer semi-transparente
+      } catch (imageError) {
+        console.warn('⚠️ [renderDesignToCanvas] No se pudo cargar imagen del producto:', imageError.message);
+      }
+    }
+    
+    // Restaurar opacidad
+    ctx.globalAlpha = 1.0;
+    
+    // Renderizar elementos del diseño
+    if (design.elements && design.elements.length > 0) {
+      console.log('🎨 [renderDesignToCanvas] Renderizando', design.elements.length, 'elementos');
+      
+      for (const element of design.elements) {
+        await renderElement(ctx, element, canvasWidth, canvasHeight);
+      }
+    }
+    
+    console.log('✅ [renderDesignToCanvas] Canvas renderizado exitosamente');
+    return canvas;
+    
+  } catch (error) {
+    console.error('❌ [renderDesignToCanvas] Error renderizando canvas:', error);
+    return null;
+  }
+}
+
+/**
+ * Renderiza un elemento individual en el canvas
+ */
+async function renderElement(ctx, element, canvasWidth, canvasHeight) {
+  try {
+    const { type, konvaAttrs } = element;
+    
+    if (!konvaAttrs) {
+      console.warn('⚠️ [renderElement] Elemento sin konvaAttrs:', element);
+      return;
+    }
+    
+    // Configurar estilos
+    if (konvaAttrs.fill) {
+      ctx.fillStyle = konvaAttrs.fill;
+    }
+    if (konvaAttrs.stroke) {
+      ctx.strokeStyle = konvaAttrs.stroke;
+      ctx.lineWidth = konvaAttrs.strokeWidth || 2;
+    }
+    
+    // Escalar coordenadas al tamaño del canvas
+    const scaleX = canvasWidth / 800; // Asumiendo canvas original de 800px
+    const scaleY = canvasHeight / 600; // Asumiendo canvas original de 600px
+    
+    switch (type) {
+      case 'rect':
+        const x = (konvaAttrs.x || 0) * scaleX;
+        const y = (konvaAttrs.y || 0) * scaleY;
+        const width = (konvaAttrs.width || 100) * scaleX;
+        const height = (konvaAttrs.height || 100) * scaleY;
+        
+        if (konvaAttrs.fill) {
+          ctx.fillRect(x, y, width, height);
+        }
+        if (konvaAttrs.stroke) {
+          ctx.strokeRect(x, y, width, height);
+        }
+        break;
+        
+      case 'circle':
+        const centerX = (konvaAttrs.x || 0) * scaleX;
+        const centerY = (konvaAttrs.y || 0) * scaleY;
+        const radius = (konvaAttrs.radius || 50) * Math.min(scaleX, scaleY);
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        if (konvaAttrs.fill) {
+          ctx.fill();
+        }
+        if (konvaAttrs.stroke) {
+          ctx.stroke();
+        }
+        break;
+        
+      case 'line':
+        if (konvaAttrs.points && konvaAttrs.points.length >= 4) {
+          ctx.beginPath();
+          ctx.moveTo(konvaAttrs.points[0] * scaleX, konvaAttrs.points[1] * scaleY);
+          
+          for (let i = 2; i < konvaAttrs.points.length; i += 2) {
+            ctx.lineTo(konvaAttrs.points[i] * scaleX, konvaAttrs.points[i + 1] * scaleY);
+          }
+          
+          if (konvaAttrs.stroke) {
+            ctx.stroke();
+          }
+        }
+        break;
+        
+      case 'text':
+        const textX = (konvaAttrs.x || 0) * scaleX;
+        const textY = (konvaAttrs.y || 0) * scaleY;
+        const fontSize = (konvaAttrs.fontSize || 16) * Math.min(scaleX, scaleY);
+        const text = konvaAttrs.text || '';
+        
+        ctx.font = `${fontSize}px Arial`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        
+        if (konvaAttrs.fill) {
+          ctx.fillText(text, textX, textY);
+        }
+        if (konvaAttrs.stroke) {
+          ctx.strokeText(text, textX, textY);
+        }
+        break;
+        
+      default:
+        console.warn('⚠️ [renderElement] Tipo de elemento no soportado:', type);
+    }
+    
+  } catch (error) {
+    console.error('❌ [renderElement] Error renderizando elemento:', error);
   }
 }
 

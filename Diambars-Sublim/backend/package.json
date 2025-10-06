@@ -15,7 +15,7 @@
     "sublimation",
     "ecommerce"
   ],
-  "author": "Tu nombre",
+  "author": "Steven",
   "license": "ISC",
   "description": "API backend para plataforma de sublimación Diambars",
   "dependencies": {

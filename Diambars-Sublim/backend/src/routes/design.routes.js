@@ -328,4 +328,24 @@ router.get('/:id/konva-config',
   }
 );
 
+// ========== RUTAS DE REGENERACIÓN DE VISTAS PREVIAS ==========
+
+// Regenerar vista previa de un diseño específico
+router.post('/:designId/regenerate-preview',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  validateMongoId('designId'),
+  designController.regeneratePreview
+);
+
+// Regenerar vistas previas de múltiples diseños
+router.post('/regenerate-previews',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  body('designIds').isArray().withMessage('designIds debe ser un array'),
+  body('designIds.*').isMongoId().withMessage('Cada ID debe ser un ObjectId válido'),
+  validateRequest,
+  designController.regenerateMultiplePreviews
+);
+
 export default router;
