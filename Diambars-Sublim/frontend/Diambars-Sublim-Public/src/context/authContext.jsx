@@ -20,55 +20,79 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 [AuthContext] Verificando estado de autenticación...');
       
-      // Intentar verificar autenticación usando las cookies
-      const response = await apiClient.get('/auth/checkAuth');
-      
-      if (response.authenticated && response.user) {
-        console.log('✅ [AuthContext] Usuario autenticado via cookies:', response.user);
-        setUser(response.user);
-        setIsAuthenticated(true);
+      // MOBILE FIX: Primero intentar recuperar desde localStorage para móviles
+      // iOS Safari tiene problemas con cookies en ciertos contextos
+      let localStorageValid = false;
+      try {
+        const savedUser = localStorage.getItem('user');
+        const savedAuth = localStorage.getItem('isAuthenticated');
+        const savedTimestamp = localStorage.getItem('authTimestamp');
         
-        // Sincronizar localStorage con datos del servidor
-        try {
-          localStorage.setItem('user', JSON.stringify(response.user));
-          localStorage.setItem('isAuthenticated', 'true');
-        } catch (error) {
-          console.warn('⚠️ [AuthContext] No se pudo sincronizar localStorage:', error);
-        }
-      } else {
-        console.log('❌ [AuthContext] No hay usuario autenticado via cookies');
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.log('❌ [AuthContext] Error verificando autenticación via cookies:', error.response?.status);
-      
-      // Si falla la verificación por cookies, intentar con localStorage (respaldo móvil)
-      if (error.response?.status === 401 || error.code === 'NETWORK_ERROR') {
-        console.log('📱 [AuthContext] Intentando recuperar sesión desde localStorage...');
-        
-        try {
-          const savedUser = localStorage.getItem('user');
-          const savedAuth = localStorage.getItem('isAuthenticated');
+        if (savedUser && savedAuth === 'true' && savedTimestamp) {
+          const timestamp = parseInt(savedTimestamp);
+          const now = Date.now();
+          const hoursSinceAuth = (now - timestamp) / (1000 * 60 * 60);
           
-          if (savedUser && savedAuth === 'true') {
+          // Sesión válida si es menor a 24 horas
+          if (hoursSinceAuth < 24) {
             const userData = JSON.parse(savedUser);
-            console.log('✅ [AuthContext] Sesión recuperada desde localStorage:', userData.email);
+            console.log('📱 [AuthContext] Sesión válida desde localStorage (móvil):', userData.email);
             setUser(userData);
             setIsAuthenticated(true);
-            return; // Salir temprano si se recuperó la sesión
+            localStorageValid = true;
+          } else {
+            console.log('⏰ [AuthContext] Sesión localStorage expirada');
+            localStorage.removeItem('user');
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('authTimestamp');
           }
-        } catch (localStorageError) {
-          console.warn('⚠️ [AuthContext] Error leyendo localStorage:', localStorageError);
         }
-        
-        // Si no se pudo recuperar, limpiar todo
-        setUser(null);
-        setIsAuthenticated(false);
-        clearAuthCookies();
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAuthenticated');
+      } catch (localStorageError) {
+        console.warn('⚠️ [AuthContext] Error leyendo localStorage:', localStorageError);
       }
+      
+      // Intentar verificar autenticación usando las cookies del servidor
+      try {
+        const response = await apiClient.get('/auth/checkAuth');
+        
+        if (response.authenticated && response.user) {
+          console.log('✅ [AuthContext] Usuario autenticado via cookies:', response.user);
+          setUser(response.user);
+          setIsAuthenticated(true);
+          
+          // Sincronizar localStorage con datos del servidor
+          try {
+            localStorage.setItem('user', JSON.stringify(response.user));
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('authTimestamp', Date.now().toString());
+          } catch (error) {
+            console.warn('⚠️ [AuthContext] No se pudo sincronizar localStorage:', error);
+          }
+        } else if (!localStorageValid) {
+          // Solo limpiar si localStorage tampoco era válido
+          console.log('❌ [AuthContext] No hay usuario autenticado');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.log('❌ [AuthContext] Error verificando cookies:', error.response?.status);
+        
+        // Si localStorage es válido, mantener la sesión aunque fallen las cookies
+        if (!localStorageValid) {
+          setUser(null);
+          setIsAuthenticated(false);
+          clearAuthCookies();
+          localStorage.removeItem('user');
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('authTimestamp');
+        } else {
+          console.log('📱 [AuthContext] Manteniendo sesión desde localStorage (modo offline)');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [AuthContext] Error crítico en checkAuthStatus:', error);
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
@@ -85,12 +109,13 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     setIsAuthenticated(true);
     
-    // Guardar en localStorage como respaldo para móviles
-    // donde las cookies pueden fallar
+    // MOBILE FIX: Guardar en localStorage con timestamp para móviles
+    // donde las cookies pueden fallar (especialmente iOS Safari)
     try {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
-      console.log('💾 [AuthContext] Usuario guardado en localStorage como respaldo');
+      localStorage.setItem('authTimestamp', Date.now().toString());
+      console.log('💾 [AuthContext] Usuario guardado en localStorage con timestamp');
     } catch (error) {
       console.warn('⚠️ [AuthContext] No se pudo guardar en localStorage:', error);
     }
@@ -116,6 +141,7 @@ export const AuthProvider = ({ children }) => {
       // Limpiar localStorage
       localStorage.removeItem('user');
       localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('authTimestamp');
       
       // Limpiar cualquier cache del navegador relacionado con la sesión
       if ('caches' in window) {
@@ -148,6 +174,16 @@ export const AuthProvider = ({ children }) => {
         console.log('🔄 [AuthContext] Usuario actualizado desde servidor:', response.user);
         setUser(response.user);
         setIsAuthenticated(true);
+        
+        // Actualizar localStorage también
+        try {
+          localStorage.setItem('user', JSON.stringify(response.user));
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('authTimestamp', Date.now().toString());
+        } catch (error) {
+          console.warn('⚠️ [AuthContext] No se pudo actualizar localStorage:', error);
+        }
+        
         console.log('✅ [AuthContext] Datos del usuario actualizados correctamente');
       } else {
         console.log('❌ [AuthContext] No hay usuario autenticado en refresh');
@@ -163,6 +199,9 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
         clearAuthCookies();
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('authTimestamp');
       }
     }
   };

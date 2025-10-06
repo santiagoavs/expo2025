@@ -38,8 +38,14 @@ orderController.getMyOrders = async (req, res) => {
       limit: parseInt(limit, 10),
       sort: { [sort]: order === 'asc' ? 1 : -1 },
       populate: [
-        { path: 'design', select: 'name previewImage' },
-        { path: 'product', select: 'name images' }
+        {
+          path: 'items',
+          populate: [
+            { path: 'design', select: 'name previewImage' },
+            { path: 'product', select: 'name images' }
+          ]
+        },
+        { path: 'user', select: 'name email' }
       ]
     };
 

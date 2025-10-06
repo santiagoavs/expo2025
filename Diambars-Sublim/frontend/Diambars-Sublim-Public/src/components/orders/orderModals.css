@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(41, 31, 23, 0.3);
+  background: rgba(41, 31, 23, 0.2);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -704,14 +704,14 @@
 }
 
 /* ==================== MODAL FOOTER ==================== */
-.modal-footer {
+/* .modal-footer {
   padding: 16px 24px;
   background: #F9FAFB;
   border-top: 1px solid #E5E7EB;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
+} */
 
 /* ==================== LOADING STATES ==================== */
 .spinner {

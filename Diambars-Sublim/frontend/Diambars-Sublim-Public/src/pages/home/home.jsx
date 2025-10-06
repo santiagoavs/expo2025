@@ -470,7 +470,7 @@ export default function Home() {
             <p>
               Si tienes dudas sobre quiénes somos, qué hacemos y cómo podemos ayudarte, tenemos una sección dedicada para ti.
             </p>
-            <a href="/about" className="content-card-link">Saber más →</a>
+            <Link to="/about" className="content-card-link">Saber más →</Link>
           </div>
 
           <div className="content-card">
@@ -478,7 +478,7 @@ export default function Home() {
             <p>
               Siempre seremos claros y honestos contigo, por lo que te incitamos a leer nuestros términos y condiciones para que sepas exactamente qué esperar de nosotros.
             </p>
-            <a href="/about#terms" className="content-card-link">Descubrir →</a>
+            <Link to="/about#terms" className="content-card-link">Descubrir →</Link>
           </div>
 
           <div className="content-card">
@@ -486,7 +486,7 @@ export default function Home() {
             <p>
               Continúa hacia la creación de tu perfil, y comienza a crear tus productos favoritos, podemos hacer todo lo que necesites.
             </p>
-            <a href="/profile" className="content-card-link">Explorar →</a>
+            <Link to="/profile" className="content-card-link">Explorar →</Link>
           </div>
         </div>
       </section>

@@ -157,22 +157,25 @@ authController.login = async (req, res) => {
     });
 
     // Enviar token en cookie segura
-    // Configuración de cookie optimizada para móviles
+    // MOBILE FIX: Configuración de cookie optimizada para iOS Safari y móviles
+    const isProduction = process.env.NODE_ENV === "production";
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
-      path: "/", // Asegurar que la cookie esté disponible en toda la app
-      domain: process.env.NODE_ENV === "production" ? undefined : undefined // No especificar dominio para mejor compatibilidad móvil
+      secure: isProduction, // HTTPS requerido en producción
+      sameSite: isProduction ? "none" : "lax", // "none" para cross-site en producción (móviles)
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas (reducido para mejor seguridad móvil)
+      path: "/", // Cookie disponible en toda la app
+      // No especificar domain para mejor compatibilidad móvil
     };
 
     res.cookie("authToken", token, cookieOptions);
 
     console.log('🍪 [authController.login] Cookie configurada:', {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      httpOnly: true
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      httpOnly: true,
+      maxAge: '24h',
+      production: isProduction
     });
 
     // Respuesta con datos del usuario y token
@@ -284,10 +287,13 @@ authController.checkAuth = async (req, res) => {
 authController.logout = (req, res) => {
   console.log('🚪 [authController.logout] Cerrando sesión');
   
+  // MOBILE FIX: Usar mismas opciones que al crear la cookie
+  const isProduction = process.env.NODE_ENV === "production";
   res.clearCookie("authToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: "/"
   });
 
   console.log('✅ [authController.logout] Cookie eliminada exitosamente');

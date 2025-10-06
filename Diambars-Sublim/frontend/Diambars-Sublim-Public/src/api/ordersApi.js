@@ -10,7 +10,7 @@ export const ordersAPI = {
     const { userId, ...queryParams } = filters;
     
     try {
-      const response = await apiClient.get('/user/me', { 
+      const response = await apiClient.get('orders/user/me', { 
         params: {
           ...queryParams,
           // Default sorting and limiting
@@ -34,22 +34,22 @@ export const ordersAPI = {
 
   // Obtener orden específica
   getOrderById: async (orderId) => {
-    return await apiClient.get(`/${orderId}`);
+    return await apiClient.get(`orders/${orderId}`);
   },
 
   // Crear orden desde diseño cotizado
   createOrderFromDesign: async (orderData) => {
-    return await apiClient.post('', orderData);
+    return await apiClient.post('orders', orderData);
   },
 
   // Responder a cotización
   respondToQuote: async (orderId, response) => {
-    return await apiClient.post(`/${orderId}/respond-quote`, response);
+    return await apiClient.post(`orders/${orderId}/respond-quote`, response);
   },
 
   // Aprobar/rechazar foto de calidad
   respondToQualityPhoto: async (orderId, photoId, response) => {
-    return await apiClient.post(`/${orderId}/quality-response`, {
+    return await apiClient.post(`orders/${orderId}/quality-response`, {
       photoId,
       ...response
     });
@@ -57,12 +57,12 @@ export const ordersAPI = {
 
   // Obtener detalles de pago
   getPaymentDetails: async (orderId) => {
-    return await apiClient.get(`/${orderId}/payment-details`);
+    return await apiClient.get(`orders/${orderId}/payment-details`);
   },
 
   // Obtener timeline
   getTimeline: async (orderId) => {
-    return await apiClient.get(`/${orderId}/timeline`);
+    return await apiClient.get(`orders/${orderId}/timeline`);
   }
 };
 
