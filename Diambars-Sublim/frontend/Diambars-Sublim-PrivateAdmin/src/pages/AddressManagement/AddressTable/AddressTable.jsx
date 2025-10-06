@@ -40,7 +40,7 @@ import {
   CaretDown as SortDownIcon
 } from '@phosphor-icons/react';
 
-// ================ ESTILOS STYLED COMPONENTS ================
+// ================ ESTILOS STYLED COMPONENTS CON EFECTOS ================
 const AddressTableContainer = styled(Paper)(({ theme }) => ({
   background: 'white',
   borderRadius: '16px',
@@ -48,6 +48,11 @@ const AddressTableContainer = styled(Paper)(({ theme }) => ({
   boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
   overflow: 'hidden',
   fontFamily: "'Mona Sans'",
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
+  },
   [theme.breakpoints.down('md')]: {
     borderRadius: '12px',
   }
@@ -125,6 +130,25 @@ const AddressBatchButton = styled(Button)(({ theme, variant: buttonVariant }) =>
     textTransform: 'none',
     fontFamily: "'Mona Sans'",
     minWidth: 'auto',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: buttonVariant === 'activate' 
+        ? 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.15), transparent)'
+        : buttonVariant === 'deactivate'
+          ? 'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.15), transparent)'
+          : 'linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.15), transparent)',
+      transition: 'left 0.5s ease'
+    },
+    '&:hover': {
+      '&::before': { left: '100%' }
+    },
     ...(variants[buttonVariant] || {}),
     [theme.breakpoints.down('sm')]: {
       padding: '6px 10px',
@@ -181,11 +205,12 @@ const AddressTableDataCell = styled(TableCell)(({ theme }) => ({
 
 const AddressTableRow = styled(TableRow)(({ theme, selected }) => ({
   backgroundColor: selected ? alpha('#1F64BF', 0.05) : 'transparent',
-  transition: 'all 0.2s ease',
+  transition: 'all 0.3s ease',
+  position: 'relative',
   '&:hover': {
     backgroundColor: selected ? alpha('#1F64BF', 0.08) : alpha('#1F64BF', 0.03),
-    transform: 'translateY(-1px)',
-    boxShadow: '0 2px 8px rgba(31, 100, 191, 0.1)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(31, 100, 191, 0.15)',
   }
 }));
 
@@ -208,6 +233,11 @@ const AddressStatusChip = styled(Chip)(({ status }) => {
     fontWeight: 600,
     height: '24px',
     fontFamily: "'Mona Sans'",
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    },
     ...(statusConfig[status] || statusConfig.active)
   };
 });
@@ -223,6 +253,11 @@ const AddressDefaultBadge = styled(Box)(({ theme }) => ({
   fontSize: '0.7rem',
   fontWeight: 600,
   fontFamily: "'Mona Sans'",
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-1px)',
+    backgroundColor: alpha('#F59E0B', 0.15),
+  },
   [theme.breakpoints.down('sm')]: {
     fontSize: '0.65rem',
     padding: '2px 4px',
@@ -329,7 +364,27 @@ const AddressActionButton = styled(IconButton)(({ theme, variant: actionVariant 
     width: '32px',
     height: '32px',
     borderRadius: '8px',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: actionVariant === 'edit'
+        ? 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)'
+        : actionVariant === 'delete'
+          ? 'linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.15), transparent)'
+          : 'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.15), transparent)',
+      transition: 'left 0.5s ease'
+    },
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      '&::before': { left: '100%' }
+    },
     ...(variants[actionVariant] || variants.edit),
     [theme.breakpoints.down('md')]: {
       width: '28px',
@@ -386,9 +441,22 @@ const AddressPaginationButton = styled(Button)(({ theme }) => ({
   fontFamily: "'Mona Sans'",
   color: '#1F64BF',
   border: `1px solid ${alpha('#1F64BF', 0.2)}`,
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+    transition: 'left 0.5s ease'
+  },
   '&:hover': {
     backgroundColor: alpha('#1F64BF', 0.05),
     borderColor: '#1F64BF',
+    '&::before': { left: '100%' }
   },
   '&:disabled': {
     color: alpha('#1F64BF', 0.4),

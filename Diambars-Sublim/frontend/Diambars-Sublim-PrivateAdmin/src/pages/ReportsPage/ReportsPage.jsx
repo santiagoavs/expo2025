@@ -1,4 +1,4 @@
-// src/pages/ReportsPage/ReportsPage.jsx - Página de reportes refactorizada
+// src/pages/ReportsPage/ReportsPage.jsx - Página de reportes con gráficas en posición original
 import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import {
@@ -14,7 +14,12 @@ import {
   useTheme,
   alpha,
   Tabs,
-  Tab
+  Tab,
+  LinearProgress,
+  Divider,
+  Chip,
+  Tooltip,
+  useMediaQuery
 } from '@mui/material';
 import {
   ChartBar,
@@ -22,9 +27,17 @@ import {
   Users,
   Package,
   Clock,
-  Download
+  Download,
+  ChartLine,
+  ChartPie,
+  Target,
+  Lightning,
+  Coffee,
+  Gear,
+  ArrowRight,
+  EyeSlash
 } from '@phosphor-icons/react';
-import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import { Line, Bar, Pie, Doughnut, PolarArea } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,6 +49,7 @@ import {
   Tooltip as ChartTooltip,
   Legend,
   ArcElement,
+  Filler
 } from 'chart.js';
 import { 
   useDashboardStats, 
@@ -57,7 +71,8 @@ ChartJS.register(
   Title,
   ChartTooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  Filler
 );
 
 // Configuración global de SweetAlert2
@@ -74,7 +89,7 @@ Swal.mixin({
   }
 });
 
-// ================ ESTILOS MODERNOS RESPONSIVE - REPORTS ================
+// ================ ESTILOS COMPLETAMENTE ACORDES AL DASHBOARD ================
 const ReportsPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Mona Sans'",
@@ -130,11 +145,14 @@ const ReportsModernCard = styled(Paper)(({ theme }) => ({
   }
 }));
 
+// Header Principal - Igual al Dashboard
 const ReportsHeaderSection = styled(ReportsModernCard)(({ theme }) => ({
   padding: '40px',
   marginBottom: '32px',
-  fontWeight: '700 !important',
-  background: 'white',
+  background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
+  color: '#FFFFFF',
+  boxShadow: '0 4px 24px rgba(31, 100, 191, 0.25)',
+  border: 'none',
   position: 'relative',
   zIndex: 1,
   width: '100%',
@@ -187,7 +205,7 @@ const ReportsHeaderInfo = styled(Box)(({ theme }) => ({
 const ReportsMainTitle = styled(Typography)(({ theme }) => ({
   fontSize: '2.5rem',
   fontWeight: '700 !important',
-  color: '#010326',
+  color: '#FFFFFF',
   marginBottom: '12px',
   letterSpacing: '-0.025em',
   lineHeight: 1.2,
@@ -207,10 +225,9 @@ const ReportsMainTitle = styled(Typography)(({ theme }) => ({
 
 const ReportsMainDescription = styled(Typography)(({ theme }) => ({
   fontSize: '1.1rem',
-  color: '#032CA6',
-  fontWeight: '700 !important',
+  color: 'rgba(255, 255, 255, 0.9)',
+  fontWeight: '500 !important',
   lineHeight: 1.6,
-  opacity: 0.9,
   textAlign: 'left',
   maxWidth: '600px',
   fontFamily: "'Mona Sans'",
@@ -250,23 +267,37 @@ const ReportsHeaderActions = styled(Box)(({ theme }) => ({
   }
 }));
 
+// Botones con efecto shimmer - Iguales al Dashboard
 const ReportsPrimaryActionButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-  color: 'white',
-  borderRadius: '12px',
+  background: 'rgba(255, 255, 255, 0.15)',
+  color: '#FFFFFF',
+  border: '1px solid rgba(255, 255, 255, 0.4)',
+  borderRadius: '16px',
   padding: '14px 28px',
   fontSize: '0.9rem',
   fontWeight: 600,
   textTransform: 'none',
   fontFamily: "'Mona Sans'",
-  boxShadow: '0 4px 16px rgba(31, 100, 191, 0.24)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   minWidth: '160px',
   whiteSpace: 'nowrap',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    transition: 'left 0.5s ease'
+  },
   '&:hover': {
-    background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
-    boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)',
+    background: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
     transform: 'translateY(-1px)',
+    '&::before': { left: '100%' }
   },
   '&:active': {
     transform: 'translateY(0)',
@@ -288,16 +319,31 @@ const ReportsPrimaryActionButton = styled(Button)(({ theme }) => ({
 }));
 
 const ReportsSecondaryActionButton = styled(IconButton)(({ theme }) => ({
-  background: alpha('#1F64BF', 0.08),
-  color: '#1F64BF',
+  background: 'rgba(255, 255, 255, 0.15)',
+  color: '#FFFFFF',
   borderRadius: '12px',
   width: '52px',
   height: '52px',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   flexShrink: 0,
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    transition: 'left 0.5s ease'
+  },
   '&:hover': {
-    background: alpha('#1F64BF', 0.12),
+    background: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
     transform: 'translateY(-1px)',
+    '&::before': { left: '100%' }
   },
   [theme.breakpoints.down('lg')]: {
     width: '48px',
@@ -313,25 +359,13 @@ const ReportsSecondaryActionButton = styled(IconButton)(({ theme }) => ({
   }
 }));
 
-// CONTENEDOR UNIFICADO REPORTS
-const ReportsUnifiedContainer = styled(Box)(({ theme }) => ({
-  width: '100%',
-  maxWidth: '100%',
-  margin: '0 auto',
-}));
-
-const ReportsStatsContainer = styled(ReportsUnifiedContainer)(({ theme }) => ({
-  marginBottom: '32px',
-  position: 'relative',
-  zIndex: 1,
-}));
-
-// GRID DE ESTADÍSTICAS REPORTS
+// GRID DE ESTADÍSTICAS - Igual al Dashboard
 const ReportsStatsGrid = styled(Box)(({ theme }) => ({
   width: '100%',
   display: 'grid',
   gap: '24px',
   gridTemplateColumns: 'repeat(4, 1fr)',
+  marginBottom: '32px',
   [theme.breakpoints.down(1400)]: {
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '20px',
@@ -380,18 +414,42 @@ const ReportsStatCard = styled(ReportsModernCard)(({ theme, variant }) => {
     position: 'relative',
     overflow: 'hidden',
     boxSizing: 'border-box',
+    cursor: 'pointer',
+    boxShadow: variant === 'primary' ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)',
     ...selectedVariant,
-    '&::before': variant === 'primary' ? {
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: variant === 'primary' 
+        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+        : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+      transition: 'left 0.5s ease',
+      zIndex: 1
+    },
+    '&::after': variant === 'primary' ? {
       content: '""',
       position: 'absolute',
       top: 0,
       right: 0,
-      width: '120px',
-      height: '120px',
+      width: '70px',
+      height: '70px',
       background: 'rgba(255, 255, 255, 0.1)',
       borderRadius: '50%',
-      transform: 'translate(30px, -30px)',
+      transform: 'translate(20px, -20px)',
+      zIndex: 0
     } : {},
+    '& > *': { position: 'relative', zIndex: 2 },
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: variant === 'primary' 
+        ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)'
+        : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)',
+      '&::before': { left: '100%' }
+    },
     [theme.breakpoints.down('lg')]: {
       padding: '24px',
       minHeight: '150px',
@@ -509,73 +567,167 @@ const ReportsStatTrendText = styled(Typography)(({ variant, trend, theme }) => (
   }
 }));
 
-const ReportsTabsSection = styled(ReportsModernCard)(({ theme }) => ({
-  padding: '32px',
+// Sección de Control - Igual al Dashboard
+const ReportsControlSection = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+  gap: '24px',
   marginBottom: '32px',
-  background: 'white',
-  position: 'relative',
-  zIndex: 1,
-  width: '100%',
-  boxSizing: 'border-box',
+  [theme.breakpoints.down('md')]: {
+    gap: '20px',
+    marginBottom: '24px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    gap: '16px',
+    marginBottom: '20px',
+  }
+}));
+
+const ControlCard = styled(ReportsModernCard)(({ theme }) => ({
+  padding: '32px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
+  },
   [theme.breakpoints.down('lg')]: {
     padding: '28px',
   },
   [theme.breakpoints.down('md')]: {
     padding: '24px',
-    marginBottom: '24px',
   },
   [theme.breakpoints.down('sm')]: {
     padding: '20px',
-    marginBottom: '20px',
   }
 }));
 
-const ReportsSection = styled(ReportsUnifiedContainer)({
-  marginBottom: '32px',
-  position: 'relative',
-  zIndex: 1,
+// Botones de control con efecto shimmer
+const ControlButton = styled(Button)(({ theme, variant = 'primary' }) => {
+  const isPrimary = variant === 'primary';
+  
+  return {
+    border: isPrimary ? 'none' : `1px solid ${alpha('#032CA6', 0.3)}`,
+    background: isPrimary 
+      ? 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)' 
+      : 'transparent',
+    color: isPrimary ? 'white' : '#032CA6',
+    borderRadius: '12px',
+    padding: '12px 24px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textTransform: 'none',
+    fontFamily: "'Mona Sans'",
+    boxShadow: isPrimary ? '0 4px 16px rgba(31, 100, 191, 0.24)' : 'none',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    overflow: 'hidden',
+    width: '100%',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: isPrimary
+        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+        : 'linear-gradient(90deg, transparent, rgba(3, 44, 166, 0.15), transparent)',
+      transition: 'left 0.5s ease'
+    },
+    '&:hover': {
+      background: isPrimary 
+        ? 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)' 
+        : alpha('#032CA6', 0.05),
+      boxShadow: isPrimary ? '0 6px 24px rgba(31, 100, 191, 0.32)' : 'none',
+      transform: 'translateY(-1px)',
+      borderColor: isPrimary ? 'none' : alpha('#032CA6', 0.5),
+      '&::before': { left: '100%' }
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+    }
+  };
 });
 
-const ReportsSectionHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: '28px',
-  paddingBottom: '18px',
-  borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  width: '100%',
-  [theme.breakpoints.down('lg')]: {
+// Sección de Gráficas Principal - POSICIÓN ORIGINAL DE GRÁFICAS
+const ReportsChartsSection = styled(ReportsModernCard)(({ theme }) => ({
+  padding: { xs: '24px', sm: '32px', md: '40px' },
+  marginBottom: '32px',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
+  },
+  [theme.breakpoints.down('md')]: {
     marginBottom: '24px',
-    paddingBottom: '16px',
   },
   [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: '14px',
     marginBottom: '20px',
-    paddingBottom: '12px',
   }
 }));
 
-const ReportsSectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '1.6rem',
-  fontWeight: 600,
-  color: '#010326',
+const ChartsHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('lg')]: {
-    fontSize: '1.5rem',
+  flexDirection: { xs: 'column', sm: 'row' },
+  alignItems: { xs: 'flex-start', sm: 'center' },
+  justifyContent: 'space-between',
+  gap: '16px',
+  marginBottom: '32px',
+  padding: '20px',
+  background: '#f8fafc',
+  borderRadius: '12px',
+  border: `1px solid ${alpha('#1F64BF', 0.1)}`,
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: '24px',
+    padding: '16px',
+  }
+}));
+
+// Cards de Gráficas Individuales - POSICIÓN ORIGINAL
+const ChartCard = styled(ReportsModernCard)(({ theme }) => ({
+  padding: '24px',
+  borderRadius: '12px',
+  background: 'white',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)',
+  display: 'flex',
+  flexDirection: 'column',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
   },
   [theme.breakpoints.down('sm')]: {
-    fontSize: '1.3rem',
+    padding: '20px',
   }
+}));
+
+// Tabs personalizados
+const ReportsTabs = styled(Tabs)(({ theme }) => ({
+  '& .MuiTab-root': {
+    textTransform: 'none',
+    fontWeight: 600,
+    fontSize: '0.9rem',
+    fontFamily: "'Mona Sans'",
+    minHeight: '48px',
+    color: '#64748b',
+    '&.Mui-selected': {
+      color: '#1F64BF',
+    },
+  },
+  '& .MuiTabs-indicator': {
+    backgroundColor: '#1F64BF',
+    height: '3px',
+    borderRadius: '2px',
+  },
 }));
 
 const ReportsPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeTab, setActiveTab] = useState(0);
   const [exportLoading, setExportLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Hooks de reportes
   const { data: dashboardStats, loading: dashboardLoading, error: dashboardError } = useDashboardStats();
@@ -584,6 +736,19 @@ const ReportsPage = () => {
   const { data: customersData, loading: customersLoading, error: customersError } = useTopCustomersReport();
   const { data: productionData, loading: productionLoading, error: productionError } = useProductionReport();
   const { exportReport } = useReportExport();
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date) => date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const getGreeting = () => { 
+    const hour = currentTime.getHours(); 
+    if (hour < 12) return 'Buenos días'; 
+    if (hour < 18) return 'Buenas tardes'; 
+    return 'Buenas noches'; 
+  };
 
   // Función para manejar cambio de pestaña
   const handleTabChange = (event, newValue) => {
@@ -615,48 +780,29 @@ const ReportsPage = () => {
 
   // Calcular estadísticas
   const stats = useMemo(() => {
-    console.log('📊 [ReportsPage] Dashboard Stats:', dashboardStats);
-    console.log('📊 [ReportsPage] Customers Data:', customersData);
-    console.log('📊 [ReportsPage] Products Data:', productsData);
-    
     if (!dashboardStats) return { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0 };
     
-    // El backend devuelve datos anidados, necesitamos extraerlos correctamente
     const todayData = dashboardStats.today || {};
     const monthData = dashboardStats.thisMonth || {};
-    const productionData = dashboardStats.production || {};
-    
-    // Calcular total de clientes únicos desde los datos de clientes
     const totalCustomers = customersData?.customerStatistics?.totalCustomers || 0;
-    
-    // Calcular total de productos desde los datos de productos
     const totalProducts = productsData?.topProductsByQuantity?.length || 0;
     
-    const calculatedStats = {
+    return {
       totalRevenue: monthData.totalRevenue || todayData.totalRevenue || 0,
       totalOrders: monthData.totalOrders || todayData.totalOrders || 0,
       totalCustomers: totalCustomers,
       totalProducts: totalProducts
     };
-    
-    console.log('📊 [ReportsPage] Calculated Stats:', calculatedStats);
-    return calculatedStats;
   }, [dashboardStats, customersData, productsData]);
 
   // Función para validar y formatear datos de gráficos
   const getValidChartData = (data, type = 'bar') => {
-    console.log(`📊 [getValidChartData] Processing data for type ${type}:`, data);
-    
-    // Si los datos ya están formateados para gráficos, usarlos directamente
     if (data && data.datasets && Array.isArray(data.datasets)) {
-      console.log('📊 [getValidChartData] Using pre-formatted chart data');
       return data;
     }
     
-    // Si los datos son del backend (datos originales), formatearlos
     if (data && (data.topProductsByQuantity || data.topCustomers || data.salesByPeriod)) {
       if (type === 'pie' || type === 'doughnut') {
-        // Formatear para gráfico de pastel
         if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
           return {
             labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
@@ -673,7 +819,6 @@ const ReportsPage = () => {
           };
         }
       } else {
-        // Formatear para gráfico de barras
         if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
           return {
             labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
@@ -725,7 +870,7 @@ const ReportsPage = () => {
       }
     }
     
-    // Retornar datos por defecto si no hay datos válidos
+    // Datos por defecto
     const defaultData = {
       labels: ['Sin datos'],
       datasets: [{
@@ -752,11 +897,53 @@ const ReportsPage = () => {
     return defaultData;
   };
 
+  // Opciones de gráficos consistentes
+  const getChartOptions = () => ({
+    responsive: true, 
+    maintainAspectRatio: false, 
+    plugins: { 
+      legend: { 
+        display: true, 
+        position: 'top', 
+        labels: { 
+          usePointStyle: true, 
+          padding: isMobile ? 8 : 15, 
+          font: { 
+            size: isMobile ? 9 : 11, 
+            weight: '600' 
+          } 
+        } 
+      } 
+    } 
+  });
+
   if (dashboardLoading) {
     return (
       <ReportsPageContainer>
         <ReportsContentWrapper>
-          <CircularProgress />
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center', 
+            justifyContent: 'center',
+            minHeight: '60vh', 
+            gap: '24px' 
+          }}>
+            <CircularProgress 
+              size={48} 
+              sx={{ 
+                color: '#1F64BF',
+                filter: 'drop-shadow(0 4px 8px rgba(31, 100, 191, 0.3))'
+              }} 
+            />
+            <Typography variant="body1" sx={{ 
+              color: '#010326', 
+              fontWeight: 600, 
+              fontFamily: "'Mona Sans'" 
+            }}>
+              Cargando reportes...
+            </Typography>
+          </Box>
         </ReportsContentWrapper>
       </ReportsPageContainer>
     );
@@ -765,25 +952,46 @@ const ReportsPage = () => {
   return (
     <ReportsPageContainer>
       <ReportsContentWrapper>
-        {/* HEADER SECTION */}
+        {/* HEADER PRINCIPAL - Igual al Dashboard */}
         <ReportsHeaderSection>
           <ReportsHeaderContent>
-            <ReportsHeaderInfo>
-              <ReportsMainTitle>
-                Reportes y Análisis
-              </ReportsMainTitle>
-              <ReportsMainDescription>
-                Analiza el rendimiento de tu negocio con reportes detallados y visualizaciones interactivas
-              </ReportsMainDescription>
-            </ReportsHeaderInfo>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
+              <Box sx={{ 
+                width: 56, 
+                height: 56, 
+                borderRadius: '16px', 
+                background: 'rgba(255, 255, 255, 0.2)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <ChartBar size={24} weight="duotone" />
+              </Box>
+              <Box>
+                <ReportsMainTitle>
+                  {getGreeting()} Administrador
+                </ReportsMainTitle>
+                <ReportsMainDescription>
+                  Panel de reportes y análisis - 5 categorías disponibles
+                </ReportsMainDescription>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.8, mt: 1 }}>
+                  <Clock size={14} />
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                    {formatTime(currentTime)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+            
             <ReportsHeaderActions>
               <ReportsPrimaryActionButton
                 startIcon={<Download size={18} weight="bold" />}
                 onClick={() => handleExport(activeTab, 'excel')}
                 disabled={exportLoading}
               >
-                Exportar Excel
+                {isMobile ? 'Exportar' : 'Exportar Excel'}
               </ReportsPrimaryActionButton>
+              
               <ReportsSecondaryActionButton
                 onClick={() => handleExport(activeTab, 'pdf')}
                 title="Exportar PDF"
@@ -795,247 +1003,435 @@ const ReportsPage = () => {
           </ReportsHeaderContent>
         </ReportsHeaderSection>
 
-        {/* ESTADÍSTICAS */}
-        <ReportsStatsContainer>
-          <ReportsStatsGrid>
-            <ReportsStatCard variant="primary">
-              <ReportsStatHeader>
-                <ReportsStatIconContainer variant="primary">
-                  <TrendUp size={24} weight="duotone" />
-                </ReportsStatIconContainer>
-              </ReportsStatHeader>
-              <ReportsStatValue variant="primary">
-                {formatCurrency(stats.totalRevenue)}
-              </ReportsStatValue>
-              <ReportsStatLabel variant="primary">
-                Ingresos Totales
-              </ReportsStatLabel>
-              <ReportsStatChange variant="primary" trend="up">
-                <TrendUp size={14} weight="bold" />
-                <ReportsStatTrendText variant="primary" trend="up">
-                  +12% este mes
-                </ReportsStatTrendText>
-              </ReportsStatChange>
-            </ReportsStatCard>
+        {/* ESTADÍSTICAS PRINCIPALES */}
+        <ReportsStatsGrid>
+          <ReportsStatCard variant="primary">
+            <ReportsStatHeader>
+              <Box>
+                <ReportsStatValue variant="primary">
+                  {formatCurrency(stats.totalRevenue)}
+                </ReportsStatValue>
+                <ReportsStatLabel variant="primary">
+                  Ingresos Totales
+                </ReportsStatLabel>
+              </Box>
+              <ReportsStatIconContainer variant="primary">
+                <TrendUp size={24} weight="duotone" />
+              </ReportsStatIconContainer>
+            </ReportsStatHeader>
+            <ReportsStatChange variant="primary" trend="up">
+              <TrendUp size={14} weight="bold" />
+              <ReportsStatTrendText variant="primary" trend="up">
+                +12% este mes
+              </ReportsStatTrendText>
+            </ReportsStatChange>
+          </ReportsStatCard>
 
-            <ReportsStatCard>
-              <ReportsStatHeader>
-                <ReportsStatIconContainer>
-                  <ChartBar size={24} weight="duotone" />
-                </ReportsStatIconContainer>
-              </ReportsStatHeader>
-              <ReportsStatValue>
-                {stats.totalOrders}
-              </ReportsStatValue>
-              <ReportsStatLabel>
-                Total de Órdenes
-              </ReportsStatLabel>
-              <ReportsStatChange trend="up">
-                <TrendUp size={14} weight="bold" />
-                <ReportsStatTrendText trend="up">
-                  +8% este mes
-                </ReportsStatTrendText>
-              </ReportsStatChange>
-            </ReportsStatCard>
+          <ReportsStatCard>
+            <ReportsStatHeader>
+              <Box>
+                <ReportsStatValue>
+                  {stats.totalOrders}
+                </ReportsStatValue>
+                <ReportsStatLabel>
+                  Total de Órdenes
+                </ReportsStatLabel>
+              </Box>
+              <ReportsStatIconContainer>
+                <ChartBar size={24} weight="duotone" />
+              </ReportsStatIconContainer>
+            </ReportsStatHeader>
+            <ReportsStatChange trend="up">
+              <TrendUp size={14} weight="bold" />
+              <ReportsStatTrendText trend="up">
+                +8% este mes
+              </ReportsStatTrendText>
+            </ReportsStatChange>
+          </ReportsStatCard>
 
-            <ReportsStatCard>
-              <ReportsStatHeader>
-                <ReportsStatIconContainer>
-                  <Users size={24} weight="duotone" />
-                </ReportsStatIconContainer>
-              </ReportsStatHeader>
-              <ReportsStatValue>
-                {stats.totalCustomers}
-              </ReportsStatValue>
-              <ReportsStatLabel>
-                Clientes Activos
-              </ReportsStatLabel>
-              <ReportsStatChange trend="up">
-                <TrendUp size={14} weight="bold" />
-                <ReportsStatTrendText trend="up">
-                  +15% este mes
-                </ReportsStatTrendText>
-              </ReportsStatChange>
-            </ReportsStatCard>
+          <ReportsStatCard>
+            <ReportsStatHeader>
+              <Box>
+                <ReportsStatValue>
+                  {stats.totalCustomers}
+                </ReportsStatValue>
+                <ReportsStatLabel>
+                  Clientes Activos
+                </ReportsStatLabel>
+              </Box>
+              <ReportsStatIconContainer>
+                <Users size={24} weight="duotone" />
+              </ReportsStatIconContainer>
+            </ReportsStatHeader>
+            <ReportsStatChange trend="up">
+              <TrendUp size={14} weight="bold" />
+              <ReportsStatTrendText trend="up">
+                +15% este mes
+              </ReportsStatTrendText>
+            </ReportsStatChange>
+          </ReportsStatCard>
 
-            <ReportsStatCard>
-              <ReportsStatHeader>
-                <ReportsStatIconContainer>
-                  <Package size={24} weight="duotone" />
-                </ReportsStatIconContainer>
-              </ReportsStatHeader>
-              <ReportsStatValue>
-                {stats.totalProducts}
-              </ReportsStatValue>
-              <ReportsStatLabel>
-                Productos Vendidos
-              </ReportsStatLabel>
-              <ReportsStatChange trend="up">
-                <TrendUp size={14} weight="bold" />
-                <ReportsStatTrendText trend="up">
-                  +22% este mes
-                </ReportsStatTrendText>
-              </ReportsStatChange>
-            </ReportsStatCard>
-          </ReportsStatsGrid>
-        </ReportsStatsContainer>
+          <ReportsStatCard>
+            <ReportsStatHeader>
+              <Box>
+                <ReportsStatValue>
+                  {stats.totalProducts}
+                </ReportsStatValue>
+                <ReportsStatLabel>
+                  Productos Vendidos
+                </ReportsStatLabel>
+              </Box>
+              <ReportsStatIconContainer>
+                <Package size={24} weight="duotone" />
+              </ReportsStatIconContainer>
+            </ReportsStatHeader>
+            <ReportsStatChange trend="up">
+              <TrendUp size={14} weight="bold" />
+              <ReportsStatTrendText trend="up">
+                +22% este mes
+              </ReportsStatTrendText>
+            </ReportsStatChange>
+          </ReportsStatCard>
+        </ReportsStatsGrid>
 
-        {/* PESTAÑAS DE REPORTES */}
-        <ReportsTabsSection>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs value={activeTab} onChange={handleTabChange} aria-label="report tabs">
+        {/* SECCIÓN DE CONTROL */}
+        <ReportsControlSection>
+          <ControlCard>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
+              <Box sx={{ 
+                width: 48, 
+                height: 48, 
+                borderRadius: '12px', 
+                background: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#1F64BF' 
+              }}>
+                <Target size={20} weight="duotone" />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
+                Estado del Sistema de Reportes
+              </Typography>
+            </Box>
+            
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>Servicios de Datos</Typography>
+                <Typography variant="body2" sx={{ color: '#1F64BF', fontWeight: 600 }}>5/5</Typography>
+              </Box>
+              <LinearProgress 
+                variant="determinate" 
+                value={100} 
+                sx={{ 
+                  height: 6, 
+                  borderRadius: 3, 
+                  backgroundColor: alpha('#1F64BF', 0.1),
+                  '& .MuiLinearProgress-bar': { 
+                    backgroundColor: '#1F64BF', 
+                    borderRadius: 3 
+                  } 
+                }} 
+              />
+            </Box>
+            
+            <Divider sx={{ mb: 2 }} />
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Box sx={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: '8px', 
+                background: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#1F64BF' 
+              }}>
+                <Lightning size={18} weight="duotone" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#010326' }}>
+                  Reporte Más Solicitado
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
+                  Ventas por Mes
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: '8px', 
+                background: alpha('#10B981', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#10B981' 
+              }}>
+                <Coffee size={18} weight="duotone" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#010326' }}>
+                  Última Actualización
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
+                  {formatTime(currentTime)}
+                </Typography>
+              </Box>
+            </Box>
+          </ControlCard>
+
+          <ControlCard>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
+              <Box sx={{ 
+                width: 48, 
+                height: 48, 
+                borderRadius: '12px', 
+                background: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#1F64BF' 
+              }}>
+                <ChartLine size={20} weight="duotone" />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
+                Control de Reportes
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <ControlButton
+                variant="primary"
+                startIcon={<Download size={16} weight="bold" />}
+                onClick={() => handleExport(activeTab, 'excel')}
+                disabled={exportLoading}
+              >
+                Exportar Reporte Actual
+              </ControlButton>
+              
+              <ControlButton
+                variant="secondary"
+                startIcon={<ArrowRight size={16} weight="bold" />}
+              >
+                Actualizar Datos
+              </ControlButton>
+              
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.8rem' }}>
+                  Categorías Disponibles
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {['Dashboard', 'Ventas', 'Productos', 'Clientes', 'Producción'].map((category) => (
+                    <Chip 
+                      key={category}
+                      label={category} 
+                      size="small" 
+                      sx={{ 
+                        background: alpha('#1F64BF', 0.1), 
+                        color: '#1F64BF', 
+                        fontWeight: 600, 
+                        fontSize: '0.7rem', 
+                        height: '24px' 
+                      }} 
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </ControlCard>
+        </ReportsControlSection>
+
+        {/* SECCIÓN PRINCIPAL DE GRÁFICAS - POSICIÓN ORIGINAL */}
+        <ReportsChartsSection>
+          <ChartsHeader>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ 
+                padding: 1, 
+                borderRadius: '8px', 
+                backgroundColor: alpha('#1F64BF', 0.1), 
+                color: '#1F64BF' 
+              }}>
+                <ChartLine size={20} weight="duotone" />
+              </Box>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: { xs: '1rem', md: '1.1rem' } }}>
+                  Reportes Analíticos
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.8rem' }}>
+                  Visualización interactiva de datos y métricas
+                </Typography>
+              </Box>
+              <Chip 
+                label="5 categorías" 
+                size="small" 
+                sx={{ 
+                  background: '#1F64BF', 
+                  color: '#fff', 
+                  fontWeight: 600, 
+                  fontSize: '0.7rem', 
+                  height: '24px' 
+                }} 
+              />
+            </Box>
+            
+            <Tooltip title="Opciones de exportación">
+              <IconButton 
+                size="small" 
+                sx={{ 
+                  color: '#1F64BF', 
+                  '&:hover': { backgroundColor: alpha('#1F64BF', 0.1) } 
+                }}
+              >
+                <Gear size={18} />
+              </IconButton>
+            </Tooltip>
+          </ChartsHeader>
+
+          {/* TABS DE NAVEGACIÓN */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+            <ReportsTabs value={activeTab} onChange={handleTabChange} aria-label="report tabs">
               <Tab icon={<ChartBar size={18} weight="duotone" />} label="Dashboard" />
               <Tab icon={<TrendUp size={18} weight="duotone" />} label="Ventas" />
               <Tab icon={<Package size={18} weight="duotone" />} label="Productos" />
               <Tab icon={<Users size={18} weight="duotone" />} label="Clientes" />
               <Tab icon={<Clock size={18} weight="duotone" />} label="Producción" />
-            </Tabs>
+            </ReportsTabs>
           </Box>
 
-          {/* CONTENIDO DE PESTAÑAS */}
+          {/* CONTENIDO DE PESTAÑAS - POSICIÓN ORIGINAL DE GRÁFICAS */}
           {activeTab === 0 && (
-            <ReportsSection>
-              <ReportsSectionHeader>
-                <ReportsSectionTitle>
-                  <ChartBar size={24} weight="duotone" />
-                  Dashboard General
-                </ReportsSectionTitle>
-              </ReportsSectionHeader>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <ReportsModernCard sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Ventas por Mes
-                    </Typography>
-                    {salesData ? (
-                      <ChartErrorBoundary>
-                        <Bar data={getValidChartData(salesData, 'bar')} options={{ responsive: true }} />
-                      </ChartErrorBoundary>
-                    ) : (
-                      <CircularProgress />
-                    )}
-                  </ReportsModernCard>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <ReportsModernCard sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Distribución de Productos
-                    </Typography>
-                    {productsData ? (
-                      <ChartErrorBoundary>
-                        <Pie data={getValidChartData(productsData, 'pie')} options={{ responsive: true }} />
-                      </ChartErrorBoundary>
-                    ) : (
-                      <CircularProgress />
-                    )}
-                  </ReportsModernCard>
-                </Grid>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <ChartCard sx={{ height: '400px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Ventas por Mes
+                  </Typography>
+                  {salesData ? (
+                    <ChartErrorBoundary>
+                      <Bar 
+                        data={getValidChartData(salesData, 'bar')} 
+                        options={getChartOptions()} 
+                      />
+                    </ChartErrorBoundary>
+                  ) : (
+                    <CircularProgress />
+                  )}
+                </ChartCard>
               </Grid>
-            </ReportsSection>
+              <Grid item xs={12} md={6}>
+                <ChartCard sx={{ height: '400px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Distribución de Productos
+                  </Typography>
+                  {productsData ? (
+                    <ChartErrorBoundary>
+                      <Pie 
+                        data={getValidChartData(productsData, 'pie')} 
+                        options={getChartOptions()} 
+                      />
+                    </ChartErrorBoundary>
+                  ) : (
+                    <CircularProgress />
+                  )}
+                </ChartCard>
+              </Grid>
+            </Grid>
           )}
 
           {activeTab === 1 && (
-            <ReportsSection>
-              <ReportsSectionHeader>
-                <ReportsSectionTitle>
-                  <TrendUp size={24} weight="duotone" />
-                  Reporte de Ventas
-                </ReportsSectionTitle>
-              </ReportsSectionHeader>
-              <ReportsModernCard sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Tendencias de Ventas
-                </Typography>
-                {salesData ? (
-                  <ChartErrorBoundary>
-                    <Line data={getValidChartData(salesData, 'line')} options={{ responsive: true }} />
-                  </ChartErrorBoundary>
-                ) : (
-                  <CircularProgress />
-                )}
-              </ReportsModernCard>
-            </ReportsSection>
+            <ChartCard sx={{ height: '500px' }}>
+              <Typography variant="h6" gutterBottom>
+                Tendencias de Ventas
+              </Typography>
+              {salesData ? (
+                <ChartErrorBoundary>
+                  <Line 
+                    data={getValidChartData(salesData, 'line')} 
+                    options={getChartOptions()} 
+                  />
+                </ChartErrorBoundary>
+              ) : (
+                <CircularProgress />
+              )}
+            </ChartCard>
           )}
 
           {activeTab === 2 && (
-            <ReportsSection>
-              <ReportsSectionHeader>
-                <ReportsSectionTitle>
-                  <Package size={24} weight="duotone" />
-                  Productos Más Vendidos
-                </ReportsSectionTitle>
-              </ReportsSectionHeader>
-              <ReportsModernCard sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Top 10 Productos
-                </Typography>
-                {productsData ? (
-                  <ChartErrorBoundary>
-                    <Bar data={getValidChartData(productsData, 'bar')} options={{ responsive: true }} />
-                  </ChartErrorBoundary>
-                ) : (
-                  <CircularProgress />
-                )}
-              </ReportsModernCard>
-            </ReportsSection>
+            <ChartCard sx={{ height: '500px' }}>
+              <Typography variant="h6" gutterBottom>
+                Productos Más Vendidos
+              </Typography>
+              {productsData ? (
+                <ChartErrorBoundary>
+                  <Bar 
+                    data={getValidChartData(productsData, 'bar')} 
+                    options={getChartOptions()} 
+                  />
+                </ChartErrorBoundary>
+              ) : (
+                <CircularProgress />
+              )}
+            </ChartCard>
           )}
 
           {activeTab === 3 && (
-            <ReportsSection>
-              <ReportsSectionHeader>
-                <ReportsSectionTitle>
-                  <Users size={24} weight="duotone" />
-                  Clientes Más Activos
-                </ReportsSectionTitle>
-              </ReportsSectionHeader>
-              <ReportsModernCard sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Top 10 Clientes
-                </Typography>
-                {customersData ? (
-                  <ChartErrorBoundary>
-                    <Bar data={getValidChartData(customersData, 'bar')} options={{ responsive: true }} />
-                  </ChartErrorBoundary>
-                ) : (
-                  <CircularProgress />
-                )}
-              </ReportsModernCard>
-            </ReportsSection>
+            <ChartCard sx={{ height: '500px' }}>
+              <Typography variant="h6" gutterBottom>
+                Clientes Más Activos
+              </Typography>
+              {customersData ? (
+                <ChartErrorBoundary>
+                  <Bar 
+                    data={getValidChartData(customersData, 'bar')} 
+                    options={getChartOptions()} 
+                  />
+                </ChartErrorBoundary>
+              ) : (
+                <CircularProgress />
+              )}
+            </ChartCard>
           )}
 
           {activeTab === 4 && (
-            <ReportsSection>
-              <ReportsSectionHeader>
-                <ReportsSectionTitle>
-                  <Clock size={24} weight="duotone" />
-                  Reporte de Producción
-                </ReportsSectionTitle>
-              </ReportsSectionHeader>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <ReportsModernCard sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Tiempo Promedio de Producción
-                    </Typography>
-                    <Typography variant="h4" color="primary">
-                      {productionData?.averageProductionTime || '0'} días
-                    </Typography>
-                  </ReportsModernCard>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <ReportsModernCard sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Eficiencia de Producción
-                    </Typography>
-                    <Typography variant="h4" color="success.main">
-                      {productionData?.efficiency || '0'}%
-                    </Typography>
-                  </ReportsModernCard>
-                </Grid>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <ChartCard sx={{ height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Tiempo Promedio de Producción
+                  </Typography>
+                  <Typography variant="h4" color="primary" sx={{ textAlign: 'center', my: 4 }}>
+                    {productionData?.averageProductionTime || '0'} días
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={75} 
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                </ChartCard>
               </Grid>
-            </ReportsSection>
+              <Grid item xs={12} md={6}>
+                <ChartCard sx={{ height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Eficiencia de Producción
+                  </Typography>
+                  <Typography variant="h4" color="success.main" sx={{ textAlign: 'center', my: 4 }}>
+                    {productionData?.efficiency || '0'}%
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={productionData?.efficiency || 0} 
+                    color="success"
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                </ChartCard>
+              </Grid>
+            </Grid>
           )}
-        </ReportsTabsSection>
+        </ReportsChartsSection>
 
         {/* Mostrar errores si existen */}
         {(dashboardError || salesError || productsError || customersError || productionError) && (

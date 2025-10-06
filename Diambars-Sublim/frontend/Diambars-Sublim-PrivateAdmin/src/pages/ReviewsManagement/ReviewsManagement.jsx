@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAdminReviews } from '../../hooks/useAdminReviews'; // Ajusta la ruta según tu estructura
+import { useAdminReviews } from '../../hooks/useAdminReviews';
 import {
   Box,
   Button,
@@ -15,7 +15,9 @@ import {
   Avatar,
   FormControlLabel,
   Switch,
-  alpha
+  alpha,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   ChatCircle,
@@ -33,6 +35,9 @@ import {
 } from '@phosphor-icons/react';
 
 const ReviewsManagement = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const {
     reviews,
     filteredReviews,
@@ -53,6 +58,8 @@ const ReviewsManagement = () => {
     getStats,
     stats
   } = useAdminReviews();
+
+  const colors = { primary: '#1F64BF', secondary: '#032CA6', accent: '#040DBF', dark: '#010326', gray: '#64748b' };
 
   const getStatusText = (status) => {
     const statusTexts = {
@@ -108,12 +115,11 @@ const ReviewsManagement = () => {
       paddingTop: '120px',
       paddingBottom: '40px',
       paddingX: { xs: 2, sm: 3, md: 4 },
-      backgroundColor: '#ffffff',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      backgroundColor: '#ffffff'
     }}>
       <Box sx={{ maxWidth: '1600px', margin: '0 auto' }}>
         
-        {/* Header */}
+        {/* Header - Mantenido en blanco como estaba */}
         <Paper sx={{ 
           padding: { xs: 3, md: 5 },
           marginBottom: 4,
@@ -121,9 +127,9 @@ const ReviewsManagement = () => {
           background: 'white',
           border: `1px solid ${alpha('#1F64BF', 0.08)}`,
           boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.3s ease',
           '&:hover': {
-            boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+            boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
             transform: 'translateY(-1px)'
           }
         }}>
@@ -165,29 +171,43 @@ const ReviewsManagement = () => {
               </Box>
             </Box>
             
+            {/* Botón con efecto shimmer */}
             <Button
-              variant="contained"
+              variant="outlined"
               startIcon={<ArrowsClockwise size={18} />}
+              onClick={fetchAllReviews}
               sx={{
-                background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-                borderRadius: '12px',
+                borderColor: colors.primary,
+                color: colors.primary,
+                borderRadius: '16px',
                 padding: '12px 24px',
                 textTransform: 'none',
                 fontWeight: 600,
-                transition: 'all 0.2s ease-in-out',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+                  transition: 'left 0.5s ease'
+                },
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(31, 100, 191, 0.3)'
+                  borderColor: colors.secondary,
+                  backgroundColor: alpha(colors.primary, 0.05),
+                  '&::before': { left: '100%' }
                 }
               }}
-              onClick={fetchAllReviews}
             >
-              Refrescar
+              {isMobile ? 'Refrescar' : 'Refrescar Datos'}
             </Button>
           </Box>
         </Paper>
 
-        {/* Estadísticas */}
+        {/* Cards de estadísticas - hover disminuido */}
         <Box sx={{ 
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
@@ -199,36 +219,31 @@ const ReviewsManagement = () => {
               value: stats.total, 
               label: 'Total de Reseñas', 
               icon: ChatCircle,
-              gradient: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
-              delay: '0.2s'
+              gradient: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)'
             },
             { 
               value: stats.pending, 
               label: 'Pendientes', 
               icon: Clock,
-              color: '#f59e0b',
-              delay: '0.4s'
+              color: '#f59e0b'
             },
             { 
               value: stats.approved, 
               label: 'Aprobadas', 
               icon: CheckCircle,
-              color: '#10b981',
-              delay: '0.6s'
+              color: '#10b981'
             },
             { 
               value: stats.rejected, 
               label: 'Rechazadas', 
               icon: XCircle,
-              color: '#ef4444',
-              delay: '0.8s'
+              color: '#ef4444'
             },
             { 
               value: stats.avgRating, 
               label: 'Rating Promedio', 
               icon: Star,
-              color: '#1F64BF',
-              delay: '1s'
+              color: '#1F64BF'
             }
           ].map((stat, index) => (
             <Paper 
@@ -239,12 +254,43 @@ const ReviewsManagement = () => {
                 background: stat.gradient || 'white',
                 color: stat.gradient ? 'white' : '#010326',
                 border: stat.gradient ? 'none' : `1px solid ${alpha('#1F64BF', 0.08)}`,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
-                boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+                boxShadow: stat.gradient ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: stat.gradient 
+                    ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+                  transition: 'left 0.5s ease',
+                  zIndex: 1
+                },
+                '&::after': stat.gradient ? {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '70px',
+                  height: '70px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%',
+                  transform: 'translate(20px, -20px)',
+                  zIndex: 0
+                } : {},
+                '& > *': { position: 'relative', zIndex: 2 },
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)'
+                  boxShadow: stat.gradient 
+                    ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)'
+                    : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)',
+                  '&::before': { left: '100%' }
                 }
               }}
             >
@@ -252,32 +298,24 @@ const ReviewsManagement = () => {
                 <Box>
                   <Typography variant="h4" sx={{ 
                     fontWeight: 700, 
-                    marginBottom: 1,
-                    color: stat.gradient ? 'white' : '#010326'
+                    marginBottom: 1
                   }}>
                     {stat.value}
                   </Typography>
                   <Typography variant="body2" sx={{ 
-                    opacity: stat.gradient ? 0.9 : 0.7,
-                    color: stat.gradient ? 'white' : '#64748b'
+                    opacity: 0.9,
+                    fontWeight: 500
                   }}>
                     {stat.label}
                   </Typography>
                 </Box>
                 <Box sx={{ 
                   backgroundColor: stat.gradient 
-                    ? alpha('#ffffff', 0.2)
+                    ? 'rgba(255, 255, 255, 0.2)'
                     : alpha(stat.color, 0.1),
                   borderRadius: '12px',
                   padding: 1.5,
-                  color: stat.gradient ? 'white' : stat.color,
-                  transition: 'all 0.2s ease-in-out',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    backgroundColor: stat.gradient 
-                      ? alpha('#ffffff', 0.3)
-                      : alpha(stat.color, 0.15)
-                  }
+                  color: stat.gradient ? 'white' : stat.color
                 }}>
                   <stat.icon size={32} weight="duotone" />
                 </Box>
@@ -286,17 +324,17 @@ const ReviewsManagement = () => {
           ))}
         </Box>
 
-        {/* Controles */}
+        {/* Controles con hover sutil y efectos en los selects */}
         <Paper sx={{ 
           padding: 3,
           marginBottom: 4,
           borderRadius: '16px',
           background: 'white',
           border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+          transition: 'all 0.3s ease',
           '&:hover': {
-            boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+            boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
             transform: 'translateY(-1px)'
           }
         }}>
@@ -341,6 +379,7 @@ const ReviewsManagement = () => {
               flexWrap: 'wrap',
               minWidth: { md: 'fit-content' }
             }}>
+              {/* Select Pendientes con efectos */}
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <Select
                   value={selectedFilter}
@@ -348,9 +387,19 @@ const ReviewsManagement = () => {
                   displayEmpty
                   sx={{ 
                     borderRadius: '12px',
-                    transition: 'all 0.2s ease-in-out',
+                    backgroundColor: '#F2F2F2',
+                    transition: 'all 0.3s ease',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none'
+                    },
                     '&:hover': {
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      backgroundColor: '#e5e7eb',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      transform: 'translateY(-1px)'
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: 'white',
+                      boxShadow: '0 2px 12px rgba(31, 100, 191, 0.2)'
                     }
                   }}
                 >
@@ -361,15 +410,26 @@ const ReviewsManagement = () => {
                 </Select>
               </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 120 }}>
+              {/* Select Más recientes con efectos */}
+              <FormControl size="small" sx={{ minWidth: 140 }}>
                 <Select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
                   sx={{ 
                     borderRadius: '12px',
-                    transition: 'all 0.2s ease-in-out',
+                    backgroundColor: '#F2F2F2',
+                    transition: 'all 0.3s ease',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none'
+                    },
                     '&:hover': {
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      backgroundColor: '#e5e7eb',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      transform: 'translateY(-1px)'
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: 'white',
+                      boxShadow: '0 2px 12px rgba(31, 100, 191, 0.2)'
                     }
                   }}
                 >
@@ -397,9 +457,21 @@ const ReviewsManagement = () => {
                   startIcon={<Broom size={16} />}
                   sx={{ 
                     textTransform: 'none',
-                    transition: 'all 0.2s ease-in-out',
+                    borderRadius: '12px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: '-100%',
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+                      transition: 'left 0.5s ease'
+                    },
                     '&:hover': {
-                      transform: 'translateY(-1px)'
+                      '&::before': { left: '100%' }
                     }
                   }}
                 >
@@ -410,38 +482,49 @@ const ReviewsManagement = () => {
           </Box>
         </Paper>
 
-        {/* Header de resultados */}
-        <Box sx={{ 
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          marginBottom: 3,
-          paddingBottom: 2,
-          borderBottom: `1px solid ${alpha('#1F64BF', 0.08)}`
+        {/* Header de resultados con hover sutil */}
+        <Paper sx={{ 
+          padding: 3,
+          marginBottom: 4,
+          borderRadius: '16px',
+          background: 'white',
+          border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+          boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+            transform: 'translateY(-1px)'
+          }
         }}>
-          <Box sx={{
-            padding: 1,
-            borderRadius: '8px',
-            backgroundColor: alpha('#1F64BF', 0.1),
-            color: '#1F64BF'
+          <Box sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
           }}>
-            <GridNine size={24} weight="duotone" />
+            <Box sx={{
+              padding: 1,
+              borderRadius: '8px',
+              backgroundColor: alpha('#1F64BF', 0.1),
+              color: '#1F64BF'
+            }}>
+              <GridNine size={24} weight="duotone" />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
+              Reseñas
+            </Typography>
+            <Chip 
+              label={`${filteredReviews.length} encontrada${filteredReviews.length !== 1 ? 's' : ''}`}
+              size="small"
+              sx={{
+                background: alpha('#1F64BF', 0.1),
+                color: '#032CA6',
+                fontWeight: 600
+              }}
+            />
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
-            Reseñas
-          </Typography>
-          <Chip 
-            label={`${filteredReviews.length} encontrada${filteredReviews.length !== 1 ? 's' : ''}`}
-            size="small"
-            sx={{
-              background: alpha('#1F64BF', 0.1),
-              color: '#032CA6',
-              fontWeight: 600
-            }}
-          />
-        </Box>
+        </Paper>
 
-        {/* Lista de reseñas */}
+        {/* Lista de reseñas con hover sutil */}
         {filteredReviews.length > 0 ? (
           <Box sx={{ 
             display: 'grid',
@@ -457,18 +540,12 @@ const ReviewsManagement = () => {
                   background: 'white',
                   borderLeft: `4px solid ${getStatusColor(review.status)}`,
                   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
                   boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
-                  opacity: 0,
-                  animation: 'slideUp 0.6s ease-out 0.5s forwards',
-                  '@keyframes slideUp': {
-                    '0%': { transform: 'translateY(30px)', opacity: 0 },
-                    '100%': { transform: 'translateY(0)', opacity: 1 }
-                  },
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
                   '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 32px rgba(1, 3, 38, 0.12)'
+                    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+                    transform: 'translateY(-1px)'
                   }
                 }}
               >
@@ -529,7 +606,7 @@ const ReviewsManagement = () => {
                   "{review.comment}"
                 </Typography>
 
-                {/* Acciones */}
+                {/* Acciones con efecto shimmer */}
                 <Box sx={{ 
                   display: 'flex',
                   gap: 1,
@@ -544,10 +621,24 @@ const ReviewsManagement = () => {
                       textTransform: 'none',
                       borderRadius: '8px',
                       fontSize: '0.8rem',
-                      transition: 'all 0.2s ease-in-out',
+                      borderColor: colors.primary,
+                      color: colors.primary,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: '-100%',
+                        width: '100%',
+                        height: '100%',
+                        background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+                        transition: 'left 0.5s ease'
+                      },
                       '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: '0 4px 12px rgba(31, 100, 191, 0.2)'
+                        borderColor: colors.secondary,
+                        backgroundColor: alpha(colors.primary, 0.05),
+                        '&::before': { left: '100%' }
                       }
                     }}
                   >
@@ -566,11 +657,21 @@ const ReviewsManagement = () => {
                           textTransform: 'none',
                           borderRadius: '8px',
                           fontSize: '0.8rem',
-                          transition: 'all 0.2s ease-in-out',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: '-100%',
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+                            transition: 'left 0.5s ease'
+                          },
                           '&:hover': { 
                             backgroundColor: '#059669',
-                            transform: 'translateY(-1px)',
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                            '&::before': { left: '100%' }
                           }
                         }}
                       >
@@ -586,11 +687,21 @@ const ReviewsManagement = () => {
                           textTransform: 'none',
                           borderRadius: '8px',
                           fontSize: '0.8rem',
-                          transition: 'all 0.2s ease-in-out',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: '-100%',
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+                            transition: 'left 0.5s ease'
+                          },
                           '&:hover': { 
                             backgroundColor: '#dc2626',
-                            transform: 'translateY(-1px)',
-                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                            '&::before': { left: '100%' }
                           }
                         }}
                       >
@@ -609,12 +720,12 @@ const ReviewsManagement = () => {
             borderRadius: '16px',
             background: 'white',
             border: `2px dashed ${alpha('#1F64BF', 0.2)}`,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+            transition: 'all 0.3s ease',
             '&:hover': {
               borderColor: alpha('#1F64BF', 0.4),
               transform: 'translateY(-1px)',
-              boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)'
+              boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)'
             }
           }}>
             <Box sx={{
@@ -633,22 +744,34 @@ const ReviewsManagement = () => {
             <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', marginBottom: 2 }}>
               No se encontraron reseñas
             </Typography>
-            <Typography variant="body1" sx={{ color: '#032CA6', marginBottom: 3 }}>
+            <Typography variant="body1" sx={{ color: '#64748b', marginBottom: 3 }}>
               Intenta ajustar los filtros de búsqueda
             </Typography>
+            
+            {/* Botón con efecto shimmer */}
             <Button
               onClick={handleClearFilters}
               variant="contained"
               startIcon={<Broom size={18} />}
               sx={{
-                backgroundColor: '#1F64BF',
+                backgroundColor: colors.primary,
                 borderRadius: '12px',
                 textTransform: 'none',
-                transition: 'all 0.2s ease-in-out',
+                position: 'relative',
+                overflow: 'hidden',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+                  transition: 'left 0.5s ease'
+                },
                 '&:hover': {
-                  backgroundColor: '#032CA6',
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(31, 100, 191, 0.3)'
+                  backgroundColor: colors.secondary,
+                  '&::before': { left: '100%' }
                 }
               }}
             >

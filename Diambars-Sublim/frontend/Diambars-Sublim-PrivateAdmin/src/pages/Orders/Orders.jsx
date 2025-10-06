@@ -262,10 +262,23 @@ const OrdersPrimaryActionButton = styled(Button)(({ theme }) => ({
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   minWidth: '160px',
   whiteSpace: 'nowrap',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+    transition: 'left 0.5s ease'
+  },
   '&:hover': {
     background: 'linear-gradient(135deg, #032CA6 0%, #1F64BF 100%)',
     boxShadow: '0 6px 24px rgba(31, 100, 191, 0.32)',
     transform: 'translateY(-1px)',
+    '&::before': { left: '100%' }
   },
   '&:active': {
     transform: 'translateY(0)',
@@ -294,9 +307,22 @@ const OrdersSecondaryActionButton = styled(IconButton)(({ theme }) => ({
   height: '52px',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   flexShrink: 0,
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+    transition: 'left 0.5s ease'
+  },
   '&:hover': {
     background: alpha('#1F64BF', 0.12),
     transform: 'translateY(-1px)',
+    '&::before': { left: '100%' }
   },
   [theme.breakpoints.down('lg')]: {
     width: '48px',
@@ -366,18 +392,42 @@ const OrdersStatCard = styled(OrdersModernCard)(({ theme, variant }) => {
     position: 'relative',
     overflow: 'hidden',
     boxSizing: 'border-box',
+    cursor: 'pointer',
+    boxShadow: variant === 'primary' ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)',
     ...selectedVariant,
-    '&::before': variant === 'primary' ? {
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: variant === 'primary' 
+        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+        : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+      transition: 'left 0.5s ease',
+      zIndex: 1
+    },
+    '&::after': variant === 'primary' ? {
       content: '""',
       position: 'absolute',
       top: 0,
       right: 0,
-      width: '120px',
-      height: '120px',
+      width: '70px',
+      height: '70px',
       background: 'rgba(255, 255, 255, 0.1)',
       borderRadius: '50%',
-      transform: 'translate(30px, -30px)',
+      transform: 'translate(20px, -20px)',
+      zIndex: 0
     } : {},
+    '& > *': { position: 'relative', zIndex: 2 },
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: variant === 'primary' 
+        ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)'
+        : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)',
+      '&::before': { left: '100%' }
+    },
     [theme.breakpoints.down('lg')]: {
       padding: '24px',
       minHeight: '150px',
@@ -543,8 +593,13 @@ const OrdersTable = styled(Table)(({ theme }) => ({
     borderBottom: `1px solid ${alpha('#1F64BF', 0.05)}`,
     fontFamily: "'Mona Sans'",
   },
-  '& .MuiTableRow-root:hover': {
-    backgroundColor: alpha('#1F64BF', 0.02),
+  '& .MuiTableRow-root': {
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: alpha('#1F64BF', 0.03),
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 12px rgba(31, 100, 191, 0.15)',
+    }
   }
 }));
 
@@ -577,9 +632,101 @@ const StatusChip = styled(Chip)(({ status, theme }) => {
     fontSize: '0.75rem',
     fontWeight: 600,
     height: '24px',
-    fontFamily: "'Mona Sans'"
+    fontFamily: "'Mona Sans'",
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    }
   };
 });
+
+// Botón Limpiar con efecto shimmer
+const OrdersClearButton = styled(Button)(({ theme }) => ({
+  textTransform: 'none',
+  borderRadius: '12px',
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  color: '#032CA6',
+  backgroundColor: alpha('#032CA6', 0.1),
+  padding: '10px 16px',
+  minWidth: 'auto',
+  fontFamily: "'Mona Sans'",
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(3, 44, 166, 0.15), transparent)',
+    transition: 'left 0.5s ease'
+  },
+  '&:hover': {
+    backgroundColor: alpha('#032CA6', 0.15),
+    '&::before': { left: '100%' }
+  }
+}));
+
+// Botones de paginación con efecto shimmer
+const OrdersPaginationButton = styled(Button)(({ theme }) => ({
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontWeight: 600,
+  borderColor: alpha('#1F64BF', 0.3),
+  color: '#1F64BF',
+  minWidth: { xs: '100%', sm: 'auto' },
+  fontFamily: "'Mona Sans'",
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+    transition: 'left 0.5s ease'
+  },
+  '&:hover': {
+    borderColor: '#1F64BF',
+    backgroundColor: alpha('#1F64BF', 0.05),
+    '&::before': { left: '100%' }
+  },
+  '&:disabled': {
+    borderColor: alpha('#1F64BF', 0.1),
+    color: alpha('#1F64BF', 0.3),
+  }
+}));
+
+// Botones de acción en tabla con efecto shimmer
+const OrdersActionButton = styled(IconButton)(({ theme, color: buttonColor }) => ({
+  transition: 'all 0.3s ease',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: buttonColor === 'success' 
+      ? 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.15), transparent)'
+      : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)',
+    transition: 'left 0.5s ease'
+  },
+  '&:hover': {
+    backgroundColor: buttonColor === 'success' 
+      ? alpha('#10b981', 0.08) 
+      : alpha('#1F64BF', 0.08),
+    transform: 'translateY(-1px)',
+    '&::before': { left: '100%' }
+  }
+}));
 
 // ================ COMPONENTE PRINCIPAL ================
 const Orders = () => {
@@ -965,24 +1112,12 @@ const Orders = () => {
               </FormControl>
 
               {(searchQuery || statusFilter !== 'all' || sortOption !== 'newest') && (
-                <Button
+                <OrdersClearButton
                   onClick={handleClearFilters}
                   startIcon={<Broom size={16} weight="bold" />}
-                  sx={{
-                    textTransform: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#032CA6',
-                    backgroundColor: alpha('#032CA6', 0.1),
-                    fontFamily: "'Mona Sans'",
-                    '&:hover': {
-                      backgroundColor: alpha('#032CA6', 0.15),
-                    }
-                  }}
                 >
                   Limpiar
-                </Button>
+                </OrdersClearButton>
               )}
             </Box>
           </Box>
@@ -1033,7 +1168,7 @@ const Orders = () => {
                             color: '#010326',
                             fontFamily: "'Mona Sans'"
                           }}>
-                            #{order.orderNumber}
+                            # {order.orderNumber}
                           </Typography>
                           {order.isManualOrder && (
                             <Chip 
@@ -1098,32 +1233,27 @@ const Orders = () => {
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                           <Tooltip title="Ver detalles">
-                            <IconButton
+                            <OrdersActionButton
                               onClick={() => handleViewOrderDetails(order)}
                               size="small"
+                              color="success"
                               sx={{
                                 color: '#10b981',
-                                '&:hover': {
-                                  backgroundColor: alpha('#10b981', 0.08),
-                                }
                               }}
                             >
                               <Eye size={18} weight="bold" />
-                            </IconButton>
+                            </OrdersActionButton>
                           </Tooltip>
                           <Tooltip title="Más acciones">
-                            <IconButton
+                            <OrdersActionButton
                               onClick={(e) => handleMenuClick(e, order)}
                               size="small"
                               sx={{
                                 color: '#032CA6',
-                                '&:hover': {
-                                  backgroundColor: alpha('#1F64BF', 0.08),
-                                }
                               }}
                             >
                               <DotsThreeVertical size={18} weight="bold" />
-                            </IconButton>
+                            </OrdersActionButton>
                           </Tooltip>
                         </Box>
                       </TableCell>
@@ -1196,30 +1326,13 @@ const Orders = () => {
             gap: 2,
             flexDirection: { xs: 'column', sm: 'row' },
           }}>
-            <Button
+            <OrdersPaginationButton
               variant="outlined"
               onClick={() => fetchOrders({ ...filters, page: pagination.page - 1 })}
               disabled={!pagination.hasPrev || loading}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 600,
-                borderColor: alpha('#1F64BF', 0.3),
-                color: '#1F64BF',
-                minWidth: { xs: '100%', sm: 'auto' },
-                fontFamily: "'Mona Sans'",
-                '&:hover': {
-                  borderColor: '#1F64BF',
-                  backgroundColor: alpha('#1F64BF', 0.05),
-                },
-                '&:disabled': {
-                  borderColor: alpha('#1F64BF', 0.1),
-                  color: alpha('#1F64BF', 0.3),
-                }
-              }}
             >
               ← Anterior
-            </Button>
+            </OrdersPaginationButton>
             
             <OrdersModernCard sx={{ 
               px: 3, 
@@ -1236,30 +1349,13 @@ const Orders = () => {
               </Typography>
             </OrdersModernCard>
             
-            <Button
+            <OrdersPaginationButton
               variant="outlined"
               onClick={() => fetchOrders({ ...filters, page: pagination.page + 1 })}
               disabled={!pagination.hasNext || loading}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 600,
-                borderColor: alpha('#1F64BF', 0.3),
-                color: '#1F64BF',
-                minWidth: { xs: '100%', sm: 'auto' },
-                fontFamily: "'Mona Sans'",
-                '&:hover': {
-                  borderColor: '#1F64BF',
-                  backgroundColor: alpha('#1F64BF', 0.05),
-                },
-                '&:disabled': {
-                  borderColor: alpha('#1F64BF', 0.1),
-                  color: alpha('#1F64BF', 0.3),
-                }
-              }}
             >
               Siguiente →
-            </Button>
+            </OrdersPaginationButton>
           </Box>
         )}
 
