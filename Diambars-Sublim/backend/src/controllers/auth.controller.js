@@ -179,6 +179,8 @@ authController.login = async (req, res) => {
     });
 
     // Respuesta con datos del usuario y token
+    // MOBILE FIX: Incluir token en respuesta como fallback para iOS Safari
+    // donde las cookies pueden no persistir correctamente
     const responseData = {
       message: "Login exitoso",
       success: true,
@@ -193,7 +195,8 @@ authController.login = async (req, res) => {
         verified: user.verified || false,
         active: user.active || true
       },
-      token // Incluir token en respuesta para debugging
+      token, // Token para localStorage fallback en móviles
+      expiresIn: config.JWT.expiresIn // Información de expiración
     };
 
     console.log('✅ [authController.login] Login exitoso - respuesta:', {

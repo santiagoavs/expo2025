@@ -52,6 +52,17 @@ export const loginUser = async (credentials) => {
         verified: response.user.verified,
         active: response.user.active
       });
+      
+      // MOBILE FIX: Guardar token en localStorage si viene en la respuesta (fallback para iOS)
+      if (response.token) {
+        try {
+          localStorage.setItem('authToken', response.token);
+          console.log('🔑 [loginService] Token guardado en localStorage para iOS fallback');
+        } catch (error) {
+          console.warn('⚠️ [loginService] No se pudo guardar token en localStorage:', error);
+        }
+      }
+      
       return response.user;
     } else if (response.user && !response.success) {
       console.log('⚠️ [loginService] Usuario presente pero sin success flag');
