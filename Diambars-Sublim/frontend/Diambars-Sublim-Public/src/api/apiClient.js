@@ -52,14 +52,13 @@ apiClient.interceptors.request.use(
     console.log('📋 [apiClient] Headers enviados:', config.headers);
     console.log('🍪 [apiClient] WithCredentials:', config.withCredentials);
     
-    // IMPORTANTE: NO agregar token en headers para app pública
-    // La app pública debe usar SOLO cookies para evitar conflictos
-    // Solo agregar token si estamos en rutas del dashboard admin
+    // Detectar si estamos en rutas del dashboard admin
     const isDashboardRoute = window.location.pathname.includes('/dashboard') || 
                             window.location.pathname.includes('/admin') ||
                             config.url?.includes('/employees');
     
     if (isDashboardRoute) {
+      // Dashboard usa token en localStorage
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -68,11 +67,17 @@ apiClient.interceptors.request.use(
         console.log('🔑 [apiClient] No hay token en localStorage para dashboard');
       }
     } else {
-      // Para app pública, usar SOLO cookies
-      console.log('🍪 [apiClient] App pública - usando solo cookies');
-      // Asegurar que no hay token en headers
-      delete config.headers.Authorization;
-      delete config.headers['x-access-token'];
+      // MOBILE FIX: Para app pública, priorizar cookies pero agregar token como fallback para iOS
+      // iOS Safari puede tener problemas con cookies en ciertos contextos
+      const authToken = localStorage.getItem('authToken');
+      
+      if (authToken) {
+        // Agregar token como fallback para iOS donde las cookies pueden fallar
+        config.headers.Authorization = `Bearer ${authToken}`;
+        console.log('📱 [apiClient] Token iOS fallback agregado');
+      } else {
+        console.log('🍪 [apiClient] App pública - usando solo cookies');
+      }
     }
     
     // Log de datos enviados (sin mostrar passwords)

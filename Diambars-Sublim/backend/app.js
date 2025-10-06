@@ -37,6 +37,11 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// ==================== TRUST PROXY FOR SERVERLESS (RENDER/VERCEL) ====================
+// CRITICAL FOR iOS/MOBILE: Enable trust proxy for proper cookie handling behind reverse proxies
+// This ensures Express correctly reads the X-Forwarded-* headers from Render/Vercel
+app.set('trust proxy', 1);
+
 // ==================== CONFIGURACIÓN DE CORS ====================
 const corsOptions = {
   origin: function (origin, callback) {
