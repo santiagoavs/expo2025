@@ -31,6 +31,7 @@ import 'leaflet/dist/leaflet.css';
 import useGeolocation from '../../../hooks/useGeolocation';
 import addressService from '../../../api/AddressService';
 import geocodingService from '../../../api/GeocodingService';
+import enhancedGeocodingService from '../../../api/EnhancedGeocodingService';
 
 // Fix para iconos de Leaflet en React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -703,7 +704,10 @@ const AddressMapPicker = ({
   // Nuevas props para centrado automático por departamento/municipio
   selectedDepartment = null,
   selectedMunicipality = null,
-  autoCenterOnLocationChange = true
+  autoCenterOnLocationChange = true,
+  // Nuevas props para auto-población de formulario
+  onAddressDataChange = null,
+  enableAutoFormPopulation = true
 }) => {
   const theme = useTheme();
   
@@ -794,24 +798,61 @@ const AddressMapPicker = ({
     }
   }, [currentLocation, crosshairMode]);
 
-  // Auto reverse geocoding cuando se selecciona una ubicación
+  // Enhanced auto reverse geocoding con auto-población de formulario
   useEffect(() => {
-    const performReverseGeocode = async () => {
-      if (currentLocation && !crosshairMode) {
+    const performEnhancedReverseGeocode = async () => {
+      if (currentLocation && !crosshairMode && enableAutoFormPopulation) {
         try {
-          const result = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+          console.log('🗺️ [AddressMapPicker] Iniciando reverse geocoding mejorado...');
+          
+          // Usar el servicio mejorado de geocodificación
+          const result = await enhancedGeocodingService.reverseGeocodeEnhanced(
+            currentLocation.lat, 
+            currentLocation.lng
+          );
+          
           if (result) {
+            console.log('🗺️ [AddressMapPicker] Resultado de reverse geocoding:', result);
+            
             setAddressInfo(result.addressComponents);
+            
+            // Auto-poblar formulario si hay callback
+            if (onAddressDataChange && result.formData) {
+              console.log('🗺️ [AddressMapPicker] Auto-poblando formulario:', result.formData);
+              
+              onAddressDataChange({
+                department: result.formData.department,
+                municipality: result.formData.municipality,
+                suggestedAddress: result.formData.suggestedAddress,
+                coordinates: {
+                  lat: currentLocation.lat,
+                  lng: currentLocation.lng
+                },
+                confidence: result.formData.confidence,
+                isAutoPopulated: true,
+                source: result.source || 'enhanced_geocoding'
+              });
+            }
           }
         } catch (error) {
-          console.log('Reverse geocoding failed:', error);
+          console.error('❌ [AddressMapPicker] Enhanced reverse geocoding failed:', error);
+          
+          // Fallback al método original
+          try {
+            const fallbackResult = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+            if (fallbackResult) {
+              setAddressInfo(fallbackResult.addressComponents);
+            }
+          } catch (fallbackError) {
+            console.log('Fallback reverse geocoding also failed:', fallbackError);
+          }
         }
       }
     };
 
-    const timeoutId = setTimeout(performReverseGeocode, 1000);
+    const timeoutId = setTimeout(performEnhancedReverseGeocode, 1000);
     return () => clearTimeout(timeoutId);
-  }, [currentLocation, crosshairMode, reverseGeocode]);
+  }, [currentLocation, crosshairMode, reverseGeocode, enableAutoFormPopulation, onAddressDataChange]);
 
   // Efecto para manejar tecla Escape en pantalla completa
   useEffect(() => {

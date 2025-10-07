@@ -1782,30 +1782,46 @@ orderController.uploadProductionPhoto = async (req, res) => {
     // Verificar que esté en control de calidad
     if (order.status !== 'quality_check') {
       return res.status(400).json({
-        success: false,
         message: "La orden debe estar en etapa de control de calidad"
       });
     }
 
-    // Crear URL de la foto
-    const photoUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/uploads/${photo.filename}`;
+    // Subir foto a Cloudinary
+    const cloudinary = (await import('../utils/cloudinary.js')).default;
     
-    console.log('📸 [OrderController] Foto subida:', {
+    console.log('📸 [OrderController] Subiendo foto a Cloudinary:', {
       filename: photo.filename,
       path: photo.path,
       size: photo.size,
-      photoUrl: photoUrl,
       orderId: orderId,
       stage: stage,
       notes: notes
     });
     
-    // Verificar que el archivo existe
-    const fs = await import('fs');
-    if (fs.existsSync(photo.path)) {
-      console.log('✅ [OrderController] Archivo existe en:', photo.path);
-    } else {
-      console.log('❌ [OrderController] Archivo NO existe en:', photo.path);
+    let photoUrl;
+    try {
+      const cloudinaryResult = await cloudinary.uploadImage(
+        photo.path, 
+        'quality-control', // folder en Cloudinary
+        {
+          public_id: `order-${order.orderNumber}-quality-${Date.now()}`,
+          tags: ['quality-control', 'production', order.orderNumber]
+        }
+      );
+      
+      photoUrl = cloudinaryResult.secure_url;
+      
+      console.log('✅ [OrderController] Foto subida a Cloudinary:', {
+        url: photoUrl,
+        public_id: cloudinaryResult.public_id
+      });
+      
+    } catch (cloudinaryError) {
+      console.error('❌ [OrderController] Error subiendo a Cloudinary:', cloudinaryError);
+      
+      // Fallback: usar almacenamiento local si Cloudinary falla
+      photoUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/uploads/${photo.filename}`;
+      console.log('⚠️ [OrderController] Usando almacenamiento local como fallback:', photoUrl);
     }
 
     // Agregar foto al historial de la orden

@@ -1349,4 +1349,140 @@ addressController.getStatistics = async (req, res) => {
   }
 };
 
+/**
+ * Detectar direcciones duplicadas
+ */
+addressController.detectDuplicates = async (req, res) => {
+  try {
+    const { userId, address, department, municipality, coordinates } = req.body;
+    
+    console.log('🔍 [detectDuplicates] Buscando duplicados para:', { userId, address, department, municipality });
+    
+    // Buscar direcciones similares del mismo usuario
+    const existingAddresses = await Address.find({
+      user: userId,
+      department,
+      municipality,
+      isActive: true
+    });
+    
+    const duplicates = [];
+    
+    for (const existing of existingAddresses) {
+      let similarityScore = 0;
+      
+      // Calcular similitud de texto
+      const textSimilarity = calculateTextSimilarity(
+        address.toLowerCase().trim(),
+        existing.address.toLowerCase().trim()
+      );
+      similarityScore += textSimilarity * 60;
+      
+      // Calcular similitud por coordenadas si ambas tienen
+      if (coordinates && existing.location && existing.location.coordinates) {
+        const distance = calculateDistance(
+          coordinates[1], coordinates[0], // lat, lng
+          existing.location.coordinates[1], existing.location.coordinates[0]
+        );
+        
+        if (distance < 0.1) similarityScore += 30; // Muy cerca (100m)
+        else if (distance < 0.5) similarityScore += 15; // Cerca (500m)
+        else if (distance < 1) similarityScore += 5; // Relativamente cerca (1km)
+      }
+      
+      // Misma ubicación geográfica
+      if (existing.department === department && existing.municipality === municipality) {
+        similarityScore += 10;
+      }
+      
+      // Solo considerar como duplicado si el score es alto
+      if (similarityScore > 70) {
+        duplicates.push({
+          ...existing.toObject(),
+          similarityScore: Math.round(similarityScore),
+          textSimilarity: Math.round(textSimilarity * 100),
+          distance: coordinates && existing.location ? 
+            calculateDistance(
+              coordinates[1], coordinates[0],
+              existing.location.coordinates[1], existing.location.coordinates[0]
+            ) : null
+        });
+      }
+    }
+    
+    console.log('🔍 [detectDuplicates] Encontrados', duplicates.length, 'posibles duplicados');
+    
+    res.json({
+      success: true,
+      data: {
+        hasDuplicates: duplicates.length > 0,
+        duplicates: duplicates.sort((a, b) => b.similarityScore - a.similarityScore),
+        totalFound: duplicates.length
+      }
+    });
+    
+  } catch (error) {
+    console.error("❌ Error en detectDuplicates:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al detectar direcciones duplicadas",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'INTERNAL_ERROR'
+    });
+  }
+};
+
+// Función auxiliar para calcular similitud de texto
+function calculateTextSimilarity(str1, str2) {
+  if (str1 === str2) return 1.0;
+  
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  
+  if (longer.length === 0) return 1.0;
+  
+  const editDistance = levenshteinDistance(longer, shorter);
+  return (longer.length - editDistance) / longer.length;
+}
+
+// Función auxiliar para calcular distancia de Levenshtein
+function levenshteinDistance(str1, str2) {
+  const matrix = [];
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+}
+
+// Función auxiliar para calcular distancia entre coordenadas
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default addressController;

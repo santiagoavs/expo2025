@@ -433,7 +433,7 @@ const ManualOrderForm = ({ open, onClose, onOrderCreated }) => {
                 Tipo de Entrega
               </Typography>
               <Grid container spacing={{ xs: 2, sm: 2.5 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6} key="meetup">
                   <SelectionCard 
                     selected={deliveryType === 'meetup'}
                     onClick={() => setDeliveryType('meetup')}
@@ -456,7 +456,7 @@ const ManualOrderForm = ({ open, onClose, onOrderCreated }) => {
                     </CardContent>
                   </SelectionCard>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6} key="delivery">
                   <SelectionCard 
                     selected={deliveryType === 'delivery'}
                     onClick={() => setDeliveryType('delivery')}

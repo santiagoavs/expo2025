@@ -750,39 +750,167 @@ const AddressFormModal = ({
       </AddressSectionTitle>
       
       <AddressFormGrid>
-        <AddressStyledSelect fullWidth error={!!validationErrors.userId}>
-          <InputLabel>Usuario *</InputLabel>
-          <Select
-            value={formData.userId}
-            label="Usuario *"
-            onChange={(e) => handleInputChange('userId', e.target.value)}
-            disabled={loadingUsers}
-          >
-            {loadingUsers ? (
-              <MenuItem disabled>Cargando usuarios...</MenuItem>
-            ) : (
-              users.map(user => (
-                <MenuItem key={user.id} value={user.id}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Typography sx={{ fontWeight: 600, fontFamily: "'Mona Sans'" }}>
-                      {user.name}
-                    </Typography>
-                    {user.email && (
-                      <Typography variant="caption" sx={{ color: '#032CA6', fontFamily: "'Mona Sans'" }}>
-                        {user.email}
-                      </Typography>
-                    )}
-                  </Box>
-                </MenuItem>
-              ))
+        <Box sx={{ width: '100%' }}>
+          <Autocomplete
+            fullWidth
+            options={users || []}
+            value={selectedUser}
+            onChange={(event, newValue) => {
+              handleInputChange('userId', newValue ? (newValue.id || newValue._id) : '');
+            }}
+            getOptionLabel={(option) => {
+              if (!option) return '';
+              return `${option.name || 'Sin nombre'} (${option.email || 'Sin email'})`;
+            }}
+            filterOptions={(options, { inputValue }) => {
+              if (!inputValue) return options;
+              
+              const searchTerm = inputValue.toLowerCase();
+              return options.filter(option => {
+                const name = (option.name || '').toLowerCase();
+                const email = (option.email || '').toLowerCase();
+                const phone = (option.phone || '').toLowerCase();
+                const id = (option.id || option._id || '').toString().toLowerCase();
+                
+                return name.includes(searchTerm) || 
+                       email.includes(searchTerm) || 
+                       phone.includes(searchTerm) ||
+                       id.includes(searchTerm);
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Buscar Usuario *"
+                placeholder="Escribe nombre, email o teléfono..."
+                error={!!validationErrors.userId}
+                helperText={validationErrors.userId || "Busca por nombre, email, teléfono o ID"}
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <>
+                      <SearchIcon size={20} style={{ marginRight: '8px', color: '#032CA6' }} />
+                      {params.InputProps.startAdornment}
+                    </>
+                  ),
+                  endAdornment: (
+                    <>
+                      {loadingUsers && <CircularProgress size={20} />}
+                      {params.InputProps.endAdornment}
+                    </>
+                  )
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    fontFamily: "'Mona Sans'",
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#1F64BF'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#1F64BF'
+                    }
+                  },
+                  '& .MuiInputLabel-root': {
+                    fontFamily: "'Mona Sans'",
+                    '&.Mui-focused': {
+                      color: '#1F64BF'
+                    }
+                  }
+                }}
+              />
             )}
-          </Select>
-          {validationErrors.userId && (
-            <Typography variant="caption" color="error" sx={{ mt: 1, fontFamily: "'Mona Sans'" }}>
-              {validationErrors.userId}
-            </Typography>
-          )}
-        </AddressStyledSelect>
+            renderOption={(props, option) => (
+              <Box component="li" {...props} sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'flex-start',
+                padding: '12px 16px',
+                '&:hover': {
+                  backgroundColor: alpha('#1F64BF', 0.05)
+                }
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
+                  <Typography sx={{ 
+                    fontWeight: 600, 
+                    fontFamily: "'Mona Sans'",
+                    color: '#010326',
+                    flex: 1
+                  }}>
+                    {option.name || 'Sin nombre'}
+                  </Typography>
+                  {option.role && (
+                    <Chip 
+                      label={option.role} 
+                      size="small" 
+                      sx={{ 
+                        height: '20px',
+                        fontSize: '0.7rem',
+                        fontFamily: "'Mona Sans'"
+                      }}
+                    />
+                  )}
+                </Box>
+                {option.email && (
+                  <Typography variant="caption" sx={{ 
+                    color: '#032CA6', 
+                    fontFamily: "'Mona Sans'",
+                    marginTop: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    ?? {option.email}
+                  </Typography>
+                )}
+                {option.phone && (
+                  <Typography variant="caption" sx={{ 
+                    color: '#6B7280', 
+                    fontFamily: "'Mona Sans'",
+                    marginTop: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    ?? {option.phone}
+                  </Typography>
+                )}
+                {(option.id || option._id) && (
+                  <Typography variant="caption" sx={{ 
+                    color: '#9CA3AF', 
+                    fontFamily: "'Mona Sans'",
+                    marginTop: '2px',
+                    fontSize: '0.65rem'
+                  }}>
+                    ID: {option.id || option._id}
+                  </Typography>
+                )}
+              </Box>
+            )}
+            noOptionsText={
+              loadingUsers ? "Cargando usuarios..." : 
+              "No se encontraron usuarios. Intenta con otro término de búsqueda."
+            }
+            loading={loadingUsers}
+            disabled={loadingUsers}
+            sx={{
+              '& .MuiAutocomplete-paper': {
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                maxHeight: '300px'
+              },
+              '& .MuiAutocomplete-listbox': {
+                maxHeight: '250px',
+                '& .MuiAutocomplete-option': {
+                  borderBottom: `1px solid ${alpha('#E5E7EB', 0.5)}`,
+                  '&:last-child': {
+                    borderBottom: 'none'
+                  }
+                }
+              }
+            }}
+          />
+        </Box>
 
         {selectedUser && (
           <Box sx={{ 
@@ -1018,6 +1146,30 @@ const AddressFormModal = ({
               }}
               onLocationSelect={handleCoordinatesFromMap}
               selectedLocation={coordinatesFromMap}
+              selectedDepartment={formData.department}
+              selectedMunicipality={formData.municipality}
+              enableAutoFormPopulation={true}
+              onAddressDataChange={(addressData) => {
+                console.log(' [AddressFormModal] Datos de direcciÃ³n recibidos del mapa:', addressData);
+                
+                // Auto-poblar campos del formulario
+                if (addressData.isAutoPopulated) {
+                  setFormData(prev => ({
+                    ...prev,
+                    department: addressData.department || prev.department,
+                    municipality: addressData.municipality || prev.municipality,
+                    address: addressData.suggestedAddress || prev.address,
+                    coordinates: addressData.coordinates ? [addressData.coordinates.lng, addressData.coordinates.lat] : prev.coordinates
+                  }));
+                  
+                  // Limpiar errores de validaciÃ³n para campos auto-poblados
+                  setValidationErrors(prev => ({
+                    ...prev,
+                    department: addressData.department ? null : prev.department,
+                    municipality: addressData.municipality ? null : prev.municipality
+                  }));
+                }
+              }}
             />
           </AddressMapContainer>
         )}

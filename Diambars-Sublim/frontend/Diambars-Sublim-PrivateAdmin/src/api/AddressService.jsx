@@ -265,5 +265,14 @@ export default {
       `${BASE_URL}/admin/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
     );
     return response;
+  },
+
+  /**
+   * Detectar direcciones duplicadas
+   * @param {Object} addressData - Datos de la dirección a verificar
+   */
+  detectDuplicates: async (addressData) => {
+    const response = await apiClient.post(`${BASE_URL}/detect-duplicates`, addressData);
+    return response;
   }
 };
