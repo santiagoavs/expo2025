@@ -20,7 +20,7 @@ const mockData = {
   designs: { total: 28, pending: 7, quoted: 8, approved: 10, rejected: 2, completed: 1, drafts: 0 }
 };
 
-// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL ================ 
 const marbleFlowKeyframes = `
 @keyframes marbleFlow {
   0% {
@@ -41,20 +41,19 @@ const marbleFlowKeyframes = `
 }
 `;
 
-// Inyectar keyframes en el documento
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
   styleSheet.textContent = marbleFlowKeyframes;
   document.head.appendChild(styleSheet);
 }
 
-// ================ STYLED COMPONENTS PARA EL DASHBOARD ================ 
+// ================ STYLED COMPONENTS ================ 
 const ModernCard = styled(Paper)(({ theme }) => ({
   background: 'white',
   borderRadius: '16px',
   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
   boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  transition: 'all 0.3s ease',
   fontFamily: "'Mona Sans'",
   '&:hover': {
     boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
@@ -114,9 +113,9 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
   const isColoredVariant = ['primary', 'success', 'warning', 'danger'].includes(variant);
 
   return {
-    padding: '28px',
+    padding: '20px',
     width: '100%',
-    minHeight: '160px',
+    minHeight: '140px',
     maxHeight: 'auto',
     display: 'flex',
     flexDirection: 'column',
@@ -177,8 +176,8 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
     },
 
     '&:hover': {
-      transform: 'translateY(-1px) scale(1.02)',
-      boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+      transform: 'translateY(-2px) scale(1.01)',
+      boxShadow: '0 8px 28px rgba(1, 3, 38, 0.1)',
       '&::before': {
         opacity: 1,
       },
@@ -198,32 +197,33 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
     },
 
     [theme.breakpoints.down('lg')]: {
-      padding: '24px',
-      minHeight: '150px',
-    },
-    [theme.breakpoints.down('md')]: {
-      padding: '20px',
-      minHeight: '140px',
-    },
-    [theme.breakpoints.down('sm')]: {
       padding: '18px',
       minHeight: '130px',
+    },
+    [theme.breakpoints.down('md')]: {
+      padding: '16px',
+      minHeight: '120px',
+    },
+    [theme.breakpoints.down('sm')]: {
+      padding: '14px',
+      minHeight: '110px',
     }
   };
 });
 
 const DashboardStatHeader = styled(Box)({
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   justifyContent: 'space-between',
   marginBottom: '16px',
   width: '100%',
+  gap: '12px',
 });
 
 const DashboardStatIconContainer = styled(Box)(({ variant, theme }) => ({
-  width: '56px',
-  height: '56px',
-  borderRadius: '14px',
+  width: '44px',
+  height: '44px',
+  borderRadius: '12px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -237,71 +237,73 @@ const DashboardStatIconContainer = styled(Box)(({ variant, theme }) => ({
   position: 'relative',
   zIndex: 2,
   [theme.breakpoints.down('lg')]: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-  },
-  [theme.breakpoints.down('md')]: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '10px',
-  },
-  [theme.breakpoints.down('sm')]: {
     width: '40px',
     height: '40px',
     borderRadius: '10px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
   }
 }));
 
 const DashboardStatValue = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '2.2rem',
+  fontSize: '1.9rem',
   fontWeight: 700,
-  lineHeight: 1.1,
-  marginBottom: '6px',
+  lineHeight: 1,
+  marginBottom: '8px',
+  letterSpacing: '0.5px',
   color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#010326',
   fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
-    fontSize: '2rem',
+    fontSize: '1.7rem',
   },
   [theme.breakpoints.down('md')]: {
-    fontSize: '1.8rem',
+    fontSize: '1.5rem',
   },
   [theme.breakpoints.down('sm')]: {
-    fontSize: '1.6rem',
+    fontSize: '1.4rem',
   }
 }));
 
 const DashboardStatLabel = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '0.9rem',
+  fontSize: '0.85rem',
   fontWeight: 500,
   opacity: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 0.9 : 0.7,
   color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#032CA6',
   lineHeight: 1.3,
+  letterSpacing: '0.3px',
   fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('lg')]: {
-    fontSize: '0.875rem',
-  },
-  [theme.breakpoints.down('md')]: {
     fontSize: '0.8rem',
   },
-  [theme.breakpoints.down('sm')]: {
+  [theme.breakpoints.down('md')]: {
     fontSize: '0.75rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.7rem',
   }
 }));
 
 const DashboardStatChange = styled(Box)(({ variant, trend }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '6px',
-  marginTop: 'auto',
-  padding: '6px 10px',
-  borderRadius: '8px',
+  gap: '4px',
+  marginTop: '8px',
+  padding: '4px 8px',
+  borderRadius: '6px',
   background: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'rgba(255, 255, 255, 0.15)' : trend === 'up' ? alpha('#10B981', 0.1) : alpha('#EF4444', 0.1),
   width: 'fit-content',
 }));
 
 const DashboardStatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
-  fontSize: '0.8rem',
+  fontSize: '0.75rem',
   fontWeight: 600,
   color: ['primary', 'success', 'warning', 'danger'].includes(variant)
     ? 'white' 
@@ -310,7 +312,7 @@ const DashboardStatTrendText = styled(Typography)(({ variant, trend, theme }) =>
       : '#EF4444',
   fontFamily: "'Mona Sans'",
   [theme.breakpoints.down('sm')]: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
   }
 }));
 
@@ -359,9 +361,8 @@ const Dashboard = () => {
               </Box>
             </Box>
             
-            {/* Botón con efecto shimmer */}
             <Button variant="outlined" startIcon={<Gear size={18} />} onClick={() => setChartSettingsOpen(true)}
-              sx={{   background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)', color: '#FFFFFF', border: `2px solid ${alpha('#1F64BF', 0.25)}`, borderRadius: '16px', padding: '12px 24px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { background: alpha('#1F64BF', 0.05), borderColor: '#1F64BF', '&::before': { left: '100%' } } }}>
+              sx={{ background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)', color: '#FFFFFF', border: `2px solid ${alpha('#1F64BF', 0.25)}`, borderRadius: '16px', padding: '12px 24px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { background: alpha('#1F64BF', 0.05), borderColor: '#1F64BF', '&::before': { left: '100%' } } }}>
               {isMobile ? 'Configurar' : 'Configurar Gráficas'}
             </Button>
           </Box>
@@ -372,16 +373,16 @@ const Dashboard = () => {
           {getDashboardStats().map((stat) => (
             <DashboardStatCard key={stat.id} variant={stat.variant}>
               <DashboardStatHeader>
+                <Box sx={{ flex: 1 }}>
+                  <DashboardStatValue variant={stat.variant}>{stat.value}</DashboardStatValue>
+                  <DashboardStatLabel variant={stat.variant}>{stat.title}</DashboardStatLabel>
+                </Box>
                 <DashboardStatIconContainer variant={stat.variant}>
-                  <stat.icon size={24} weight="duotone" />
+                  <stat.icon size={20} weight="duotone" />
                 </DashboardStatIconContainer>
               </DashboardStatHeader>
-              <Box>
-                <DashboardStatValue variant={stat.variant}>{stat.value}</DashboardStatValue>
-                <DashboardStatLabel variant={stat.variant}>{stat.title}</DashboardStatLabel>
-              </Box>
               <DashboardStatChange variant={stat.variant} trend={stat.trend}>
-                <TrendUp size={12} weight="bold" />
+                <TrendUp size={11} weight="bold" />
                 <DashboardStatTrendText variant={stat.variant} trend={stat.trend}>{stat.change}</DashboardStatTrendText>
               </DashboardStatChange>
             </DashboardStatCard>
@@ -416,12 +417,8 @@ const Dashboard = () => {
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>Control de Gráficas</Typography>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              
-              {/* Botones con efecto shimmer */}
               <Button variant="outlined" startIcon={<Gear size={16} />} onClick={() => setChartSettingsOpen(true)} fullWidth sx={{ borderColor: colors.primary, color: colors.primary, borderRadius: '12px', padding: '12px 16px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { borderColor: colors.secondary, backgroundColor: alpha(colors.primary, 0.05), '&::before': { left: '100%' } } }}>Configurar Gráficas</Button>
-              
               <Button variant="outlined" startIcon={<ArrowRight size={16} />} fullWidth sx={{ borderColor: colors.secondary, color: colors.secondary, borderRadius: '12px', padding: '12px 16px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(3, 44, 166, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { borderColor: colors.accent, backgroundColor: alpha(colors.secondary, 0.05), '&::before': { left: '100%' } } }}>Actualizar Datos</Button>
-              
               <Box sx={{ mt: 2 }}>
                 <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.8rem' }}>Gráficas Activas</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -432,7 +429,7 @@ const Dashboard = () => {
           </Paper>
         </Box>
 
-        {/* Sección de gráficas con hover sutil */}
+        {/* Sección de gráficas */}
         <Paper sx={{ padding: { xs: 2, sm: 3, md: 4 }, marginBottom: 4, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2, marginBottom: 3, padding: 2, background: '#f8fafc', borderRadius: '12px', border: `1px solid ${alpha('#1F64BF', 0.1)}` }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -448,13 +445,10 @@ const Dashboard = () => {
               <Box sx={{ width: 80, height: 80, borderRadius: '50%', backgroundColor: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem', color: '#1F64BF' }}><EyeSlash size={32} weight="duotone" /></Box>
               <Typography variant="h6" sx={{ color: colors.dark, mb: 1 }}>No hay gráficas seleccionadas</Typography>
               <Typography variant="body2" sx={{ color: colors.gray, mb: 2 }}>Selecciona al menos una gráfica para visualizar los datos</Typography>
-              
-              {/* Botón con efecto shimmer */}
               <Button variant="contained" startIcon={<Gear size={16} />} onClick={() => setChartSettingsOpen(true)} sx={{ backgroundColor: colors.primary, borderRadius: '12px', textTransform: 'none', position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)', transition: 'left 0.5s ease' }, '&:hover': { backgroundColor: colors.secondary, '&::before': { left: '100%' } } }}>Configurar Gráficas</Button>
             </Box>
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }, gap: 3 }}>
-              {/* Cards de gráficas con hover sutil */}
               {visibleCharts.products_overview && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><Package size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Productos</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><Doughnut data={{ labels: ['Activos', 'Inactivos'], datasets: [{ data: [mockData.products.active, mockData.products.inactive], backgroundColor: [colors.primary, colors.gray], borderWidth: 0 }] }} options={getChartOptions()} /></Box></Paper>)}
               
               {visibleCharts.user_stats && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><Users size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Usuarios</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><Bar data={{ labels: ['Activos', 'Inactivos', 'Admins', 'Premium', 'Clientes'], datasets: [{ label: 'Usuarios', data: [mockData.users.active, mockData.users.inactive, mockData.users.admins, mockData.users.premium, mockData.users.customers], backgroundColor: [colors.primary, colors.gray, colors.accent, colors.secondary, alpha(colors.primary, 0.6)], borderRadius: 6 }] }} options={getChartOptions()} /></Box></Paper>)}
