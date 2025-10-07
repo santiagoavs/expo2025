@@ -706,7 +706,11 @@ const AddressMapPicker = ({
   autoCenterOnLocationChange = true,
   // Nuevas props para auto-población de formulario
   onAddressDataChange = null,
-  enableAutoFormPopulation = true
+  enableAutoFormPopulation = true,
+  // Nueva prop para manejar limpieza de campos
+  onClearFields = null,
+  // Prop adicional para función de limpieza directa del formulario
+  onClearAllFormFields = null
 }) => {
   const theme = useTheme();
   
@@ -733,9 +737,11 @@ const AddressMapPicker = ({
   const [showConfirmationToast, setShowConfirmationToast] = useState(false);
   const [isAutoPopulating, setIsAutoPopulating] = useState(false); // Bandera para evitar bucles
   const [lastAutoCenter, setLastAutoCenter] = useState(null); // Último auto-centrado
+  const [lastProcessedLocation, setLastProcessedLocation] = useState(null); // Última ubicación procesada
 
   const mapRef = useRef(null);
   const reverseGeocodingTimeoutRef = useRef(null);
+  const isProcessingRef = useRef(false); // Ref para evitar múltiples procesamientos
 
   // ==================== EFECTOS ====================
   useEffect(() => {
@@ -745,84 +751,26 @@ const AddressMapPicker = ({
     }
   }, [selectedLocation]);
 
-  // Efecto para centrar automáticamente el mapa cuando cambien departamento/municipio
+  // Efecto para centrar automáticamente el mapa cuando cambien departamento/municipio (DESHABILITADO PARA EVITAR BUCLES)
   useEffect(() => {
-    const centerMap = async () => {
-      // Evitar auto-centrado si estamos en proceso de auto-población
-      if (isAutoPopulating) {
-        console.log('🗺️ [AddressMapPicker] Saltando auto-centrado - en proceso de auto-población');
-        return;
-      }
-      
-      if (autoCenterOnLocationChange && (selectedDepartment || selectedMunicipality)) {
-        let newCenter = null;
-        
-        // Priorizar municipio si está disponible
-        if (selectedMunicipality && selectedDepartment) {
-          // Primero intentar con la base de datos local
-          newCenter = geocodingService.getMunicipalityCenter(selectedMunicipality, selectedDepartment);
-          
-          // Si no se encuentra en la base local, intentar búsqueda online
-          if (!newCenter || (newCenter.lat === 13.8667 && newCenter.lng === -88.6333)) {
-            console.log('🗺️ [AddressMapPicker] Municipio no encontrado en base local, buscando online...');
-            newCenter = await geocodingService.searchMunicipalityOnline(selectedMunicipality, selectedDepartment);
-          }
-        } else if (selectedDepartment) {
-          newCenter = geocodingService.getDepartmentCenter(selectedDepartment);
-        }
-        
-        if (newCenter) {
-          // Verificar si ya estamos cerca de esta ubicación (tolerancia de ~1km)
-          const tolerance = 0.01; // Aproximadamente 1km
-          const isNearby = currentLocation && 
-            Math.abs(currentLocation.lat - newCenter.lat) < tolerance &&
-            Math.abs(currentLocation.lng - newCenter.lng) < tolerance;
-            
-          // Verificar si es el mismo auto-centrado que el anterior
-          const isSameAsLast = lastAutoCenter &&
-            Math.abs(lastAutoCenter.lat - newCenter.lat) < tolerance &&
-            Math.abs(lastAutoCenter.lng - newCenter.lng) < tolerance;
-          
-          if (isNearby || isSameAsLast) {
-            console.log('🗺️ [AddressMapPicker] Saltando auto-centrado - ya estamos cerca o es el mismo que antes');
-            return;
-          }
-          
-          console.log('🗺️ [AddressMapPicker] Centrando mapa en:', { 
-            department: selectedDepartment, 
-            municipality: selectedMunicipality, 
-            coordinates: newCenter 
-          });
-          
-          // Marcar que estamos haciendo auto-centrado
-          setLastAutoCenter(newCenter);
-          setIsAutoPopulating(true);
-          
-          setCurrentLocation(newCenter);
-          setCrosshairMode(false);
-          setShowLocationPanel(true); // Mostrar panel para confirmar ubicación
-          
-          // Forzar centrado del mapa con un pequeño delay
-          setTimeout(() => {
-            setShouldCenter(true);
-            setTimeout(() => setShouldCenter(false), 100);
-          }, 100);
-          
-          // Limpiar información anterior para forzar nueva búsqueda
-          setAddressInfo(null);
-          
-          // Desmarcar auto-población después de un tiempo
-          setTimeout(() => {
-            setIsAutoPopulating(false);
-          }, 2000);
-        }
-      }
-    };
-
-    // Agregar un debounce para evitar múltiples ejecuciones rápidas
-    const timeoutId = setTimeout(centerMap, 300);
-    return () => clearTimeout(timeoutId);
-  }, [selectedDepartment, selectedMunicipality, autoCenterOnLocationChange, currentLocation, isAutoPopulating, lastAutoCenter]);
+    // TEMPORALMENTE DESHABILITADO para evitar bucles infinitos
+    // Solo permitir auto-centrado si NO viene de auto-población
+    if (isAutoPopulating || isProcessingRef.current) {
+      console.log('🗺️ [AddressMapPicker] Auto-centrado DESHABILITADO - evitando bucles');
+      return;
+    }
+    
+    // Por ahora, solo log para debugging
+    if (selectedDepartment || selectedMunicipality) {
+      console.log('🗺️ [AddressMapPicker] Auto-centrado solicitado pero DESHABILITADO:', {
+        department: selectedDepartment,
+        municipality: selectedMunicipality,
+        isAutoPopulating,
+        isProcessing: isProcessingRef.current,
+        lastAutoCenter: lastAutoCenter ? JSON.stringify(lastAutoCenter) : null
+      });
+    }
+  }, [selectedDepartment, selectedMunicipality, autoCenterOnLocationChange, isAutoPopulating, lastAutoCenter]);
 
   // Efecto para centrar automáticamente cuando cambie currentLocation
   useEffect(() => {
@@ -836,16 +784,35 @@ const AddressMapPicker = ({
   // Auto reverse geocoding con auto-población de formulario
   useEffect(() => {
     const performReverseGeocode = async () => {
+      // Verificar si ya estamos procesando para evitar bucles
+      if (isProcessingRef.current) {
+        console.log('🗺️ [AddressMapPicker] Saltando reverse geocoding - ya procesando');
+        return;
+      }
+      
+      // Verificar si la ubicación ya fue procesada
+      if (lastProcessedLocation && currentLocation &&
+          Math.abs(lastProcessedLocation.lat - currentLocation.lat) < 0.0001 &&
+          Math.abs(lastProcessedLocation.lng - currentLocation.lng) < 0.0001) {
+        console.log('🗺️ [AddressMapPicker] Saltando reverse geocoding - ubicación ya procesada');
+        return;
+      }
+      
       console.log('🗺️ [useEffect] Evaluando condiciones para reverse geocoding:', {
         currentLocation: !!currentLocation,
         crosshairMode,
         enableAutoFormPopulation,
         hasCallback: !!onAddressDataChange,
-        isAutoPopulating
+        isAutoPopulating,
+        isProcessing: isProcessingRef.current
       });
       
-      if (currentLocation && !crosshairMode && enableAutoFormPopulation) {
+      if (currentLocation && !crosshairMode && enableAutoFormPopulation && onAddressDataChange) {
         try {
+          // Marcar que estamos procesando
+          isProcessingRef.current = true;
+          setIsAutoPopulating(true);
+          
           console.log('🗺️ [AddressMapPicker] Iniciando reverse geocoding para:', currentLocation);
           
           // Usar el servicio de geocodificación
@@ -857,45 +824,43 @@ const AddressMapPicker = ({
             // Actualizar addressInfo
             setAddressInfo(result.addressComponents);
             
-            // Auto-poblar formulario si hay callback y NO estamos en auto-población
-            if (onAddressDataChange && !isAutoPopulating) {
-              console.log('🗺️ [AddressMapPicker] Auto-poblando formulario con:', result.addressComponents);
-              
-              // Marcar temporalmente que estamos auto-poblando para evitar bucles
-              setIsAutoPopulating(true);
-              
-              const formData = {
-                department: result.addressComponents.department || '',
-                municipality: result.addressComponents.municipality || '',
-                suggestedAddress: result.addressComponents.formattedAddress || '',
-                coordinates: {
-                  lat: currentLocation.lat,
-                  lng: currentLocation.lng
-                },
-                confidence: 'medium',
-                isAutoPopulated: true,
-                source: 'geocoding_service',
-                timestamp: new Date().toISOString() // Añadir timestamp para forzar actualización
-              };
-              
-              console.log('🗺️ [AddressMapPicker] Enviando datos al formulario:', formData);
-              onAddressDataChange(formData);
-              
-              // Desmarcar auto-población después de un delay
-              setTimeout(() => {
-                setIsAutoPopulating(false);
-              }, 1500);
-            } else if (isAutoPopulating) {
-              console.log('🗺️ [AddressMapPicker] Saltando auto-población - ya en proceso');
-            } else {
-              console.warn('⚠️ [AddressMapPicker] No hay callback onAddressDataChange disponible');
-            }
+            // Marcar esta ubicación como procesada
+            setLastProcessedLocation({
+              lat: currentLocation.lat,
+              lng: currentLocation.lng
+            });
+            
+            console.log('🗺️ [AddressMapPicker] Auto-poblando formulario con:', result.addressComponents);
+            
+            const formData = {
+              department: result.addressComponents.department || '',
+              municipality: result.addressComponents.municipality || '',
+              suggestedAddress: result.addressComponents.formattedAddress || '',
+              coordinates: {
+                lat: currentLocation.lat,
+                lng: currentLocation.lng
+              },
+              confidence: 'medium',
+              isAutoPopulated: true,
+              source: 'geocoding_service',
+              timestamp: new Date().toISOString()
+            };
+            
+            console.log('🗺️ [AddressMapPicker] Enviando datos al formulario:', formData);
+            onAddressDataChange(formData);
+            
           } else {
             console.warn('⚠️ [AddressMapPicker] No se obtuvo resultado válido del reverse geocoding');
           }
         } catch (error) {
           console.error('❌ [AddressMapPicker] Reverse geocoding failed:', error);
           setError('Error al obtener información de la ubicación');
+        } finally {
+          // Siempre limpiar las banderas de procesamiento
+          setTimeout(() => {
+            isProcessingRef.current = false;
+            setIsAutoPopulating(false);
+          }, 2000);
         }
       } else {
         console.log('🗺️ [AddressMapPicker] Saltando reverse geocoding - condiciones no cumplidas');
@@ -907,8 +872,10 @@ const AddressMapPicker = ({
       clearTimeout(reverseGeocodingTimeoutRef.current);
     }
 
-    // Usar un delay más largo para evitar llamadas excesivas
-    reverseGeocodingTimeoutRef.current = setTimeout(performReverseGeocode, 1000);
+    // Solo ejecutar si no estamos procesando
+    if (!isProcessingRef.current) {
+      reverseGeocodingTimeoutRef.current = setTimeout(performReverseGeocode, 1500);
+    }
     
     return () => {
       if (reverseGeocodingTimeoutRef.current) {
@@ -916,7 +883,7 @@ const AddressMapPicker = ({
         console.log('🗺️ [AddressMapPicker] Limpiando timeout de reverse geocoding');
       }
     };
-  }, [currentLocation, crosshairMode, reverseGeocode, enableAutoFormPopulation, onAddressDataChange, isAutoPopulating]);
+  }, [currentLocation, crosshairMode, reverseGeocode, enableAutoFormPopulation, onAddressDataChange]);
 
   // Efecto para manejar tecla Escape en pantalla completa
   useEffect(() => {
@@ -942,11 +909,19 @@ const AddressMapPicker = ({
       return;
     }
 
-    // Limpiar estado anterior ANTES de establecer la nueva ubicación
+    // Limpiar COMPLETAMENTE el estado anterior
     setAddressInfo(null);
     setError(null);
-    setIsAutoPopulating(false); // Resetear bandera de auto-población
-    setLastAutoCenter(null); // Resetear último auto-centrado
+    setIsAutoPopulating(false);
+    setLastAutoCenter(null);
+    setLastProcessedLocation(null); // Resetear ubicación procesada
+    isProcessingRef.current = false; // Resetear ref de procesamiento
+    
+    // Limpiar timeout si existe
+    if (reverseGeocodingTimeoutRef.current) {
+      clearTimeout(reverseGeocodingTimeoutRef.current);
+      reverseGeocodingTimeoutRef.current = null;
+    }
     
     // Establecer nueva ubicación y estado
     setCurrentLocation(location);
@@ -1050,9 +1025,17 @@ const AddressMapPicker = ({
     // Limpiar información anterior cuando se habilita el crosshair
     setAddressInfo(null);
     setShowLocationPanel(false);
-    // Resetear banderas de auto-población
+    // Resetear TODAS las banderas de auto-población
     setIsAutoPopulating(false);
     setLastAutoCenter(null);
+    setLastProcessedLocation(null);
+    isProcessingRef.current = false;
+    
+    // Limpiar timeout si existe
+    if (reverseGeocodingTimeoutRef.current) {
+      clearTimeout(reverseGeocodingTimeoutRef.current);
+      reverseGeocodingTimeoutRef.current = null;
+    }
   };
 
   const handleCenterToElSalvador = () => {
@@ -1074,15 +1057,18 @@ const AddressMapPicker = ({
   };
 
   const handleClearLocation = () => {
-    console.log('🗺️ [handleClearLocation] Limpiando ubicación y reseteando estado');
+    console.log('🗺️ [handleClearLocation] Limpiando ubicación y reseteando estado COMPLETO');
+    
+    // Limpiar COMPLETAMENTE todo el estado
     setCurrentLocation(null);
     setCrosshairMode(true);
     setAddressInfo(null);
     setShowLocationPanel(false);
     setError(null);
-    // Resetear banderas de auto-población
     setIsAutoPopulating(false);
     setLastAutoCenter(null);
+    setLastProcessedLocation(null);
+    isProcessingRef.current = false;
     
     // Limpiar timeout de reverse geocoding si existe
     if (reverseGeocodingTimeoutRef.current) {
@@ -1090,18 +1076,74 @@ const AddressMapPicker = ({
       reverseGeocodingTimeoutRef.current = null;
     }
     
-    // Notificar al componente padre que se limpió la ubicación
+    // Notificar al componente padre que se limpió la ubicación Y los campos
+    console.log('🗺️ [handleClearLocation] Limpiando campos de departamento y municipio');
+    
+    // Usar callback específico para limpieza si está disponible
+    if (onClearFields) {
+      console.log('🗺️ [handleClearLocation] Usando callback específico de limpieza');
+      onClearFields();
+    }
+    
+    // Usar función de limpieza directa del formulario si está disponible
+    if (onClearAllFormFields) {
+      console.log('🗺️ [handleClearLocation] Usando función de limpieza directa del formulario');
+      onClearAllFormFields();
+    }
+    
+    // FORZAR limpieza COMPLETA de todos los campos - Estrategia más agresiva
     if (onAddressDataChange) {
-      onAddressDataChange({
-        department: '',
-        municipality: '',
-        suggestedAddress: '',
+      console.log('🗺️ [handleClearLocation] FORZANDO limpieza completa de TODOS los campos');
+      
+      // Estrategia más directa: Enviar valores que el AddressFormModal no pueda ignorar
+      // Usar valores especiales que indiquen limpieza forzada
+      
+      const clearData = {
+        // Usar valores especiales que no sean ni falsy ni truthy normales
+        department: '___FORCE_CLEAR___',
+        municipality: '___FORCE_CLEAR___',
+        suggestedAddress: '___FORCE_CLEAR___',
+        address: '___FORCE_CLEAR___', // También limpiar el campo address
         coordinates: null,
         confidence: null,
-        isAutoPopulated: false,
-        source: 'manual_clear',
-        timestamp: new Date().toISOString()
-      });
+        isAutoPopulated: true,
+        source: 'force_clear_all_fields',
+        timestamp: new Date().toISOString(),
+        clearFields: true,
+        forceClear: true,
+        clearAll: true,
+        // Banderas adicionales para máxima compatibilidad
+        action: 'CLEAR_ALL_FIELDS',
+        mustClear: true,
+        resetForm: true
+      };
+      
+      console.log('🗺️ [handleClearLocation] Enviando datos de limpieza:', clearData);
+      onAddressDataChange(clearData);
+      
+      // Enviar una segunda actualización con valores completamente vacíos
+      setTimeout(() => {
+        const finalClearData = {
+          department: '',
+          municipality: '',
+          suggestedAddress: '',
+          address: '',
+          coordinates: [],
+          confidence: null,
+          isAutoPopulated: true,
+          source: 'final_clear_empty',
+          timestamp: new Date().toISOString(),
+          clearFields: true,
+          forceClear: true,
+          clearAll: true,
+          action: 'CLEAR_ALL_FIELDS',
+          mustClear: true,
+          resetForm: true
+        };
+        
+        console.log('🗺️ [handleClearLocation] Enviando limpieza final:', finalClearData);
+        onAddressDataChange(finalClearData);
+      }, 50);
     }
   };
 
