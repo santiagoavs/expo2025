@@ -708,4 +708,190 @@ reportController.getDashboardStats = async (req, res) => {
   }
 };
 
+// ==================== REPORTE DE ANÁLISIS DE ÓRDENES (NUEVO) ====================
+
+/**
+ * Reporte consolidado para el análisis de órdenes
+ */
+reportController.getOrderAnalysisReport = async (req, res) => {
+  try {
+    const { startDate, endDate, groupBy = 'day' } = req.query;
+
+    const dateFilter = {};
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+
+    const matchFilter = {
+      ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
+    };
+
+    // 1. Estadísticas Generales (KPIs)
+    const generalStatsPromise = Order.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' },
+          totalItemsSold: { $sum: { $size: '$items' } },
+          uniqueCustomers: { $addToSet: '$user' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalOrders: 1,
+          totalRevenue: 1,
+          averageOrderValue: { $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalRevenue', '$totalOrders'] }] },
+          averageItemsPerOrder: { $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalItemsSold', '$totalOrders'] }] },
+          totalUniqueCustomers: { $size: '$uniqueCustomers' }
+        }
+      }
+    ]);
+
+    // 2. Desglose de Órdenes por Estado
+    const statusBreakdownPromise = Order.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalValue: { $sum: '$total' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // 3. Análisis Geográfico (por departamento)
+    const geoBreakdownPromise = Order.aggregate([
+      { $match: matchFilter },
+      {
+        $lookup: {
+          from: 'addresses',
+          localField: 'shippingAddress',
+          foreignField: '_id',
+          as: 'addressInfo'
+        }
+      },
+      { $unwind: { path: '$addressInfo', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: { $ifNull: ['$addressInfo.department', 'No especificado'] },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { totalRevenue: -1 } }
+    ]);
+
+    // 4. Ventas a lo largo del tiempo
+    let dateGrouping;
+    switch (groupBy) {
+      case 'day':
+        dateGrouping = { year: { $year: '$createdAt' }, month: { $month: '$createdAt' }, day: { $dayOfMonth: '$createdAt' } };
+        break;
+      case 'week':
+        dateGrouping = { year: { $year: '$createdAt' }, week: { $week: '$createdAt' } };
+        break;
+      case 'month':
+        dateGrouping = { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } };
+        break;
+      default:
+        dateGrouping = { year: { $year: '$createdAt' } };
+    }
+
+    const salesOverTimePromise = Order.aggregate([
+        { $match: matchFilter },
+        {
+            $group: {
+                _id: dateGrouping,
+                totalRevenue: { $sum: '$total' },
+                totalOrders: { $sum: 1 }
+            }
+        },
+        {
+            $addFields: {
+                date: {
+                    $dateFromParts: {
+                        year: '$_id.year',
+                        month: { $ifNull: ['$_id.month', 1] },
+                        day: { $ifNull: ['$_id.day', 1] }
+                    }
+                }
+            }
+        },
+        { $sort: { date: 1 } }
+    ]);
+
+    // 5. Ventas por Categoría
+    const salesByCategoryPromise = Order.aggregate([
+      { $match: matchFilter },
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'productInfo.category',
+          foreignField: '_id',
+          as: 'categoryInfo'
+        }
+      },
+      { $unwind: '$categoryInfo' },
+      {
+        $group: {
+          _id: '$categoryInfo._id',
+          categoryName: { $first: '$categoryInfo.name' },
+          totalRevenue: { $sum: '$items.subtotal' },
+          totalQuantity: { $sum: '$items.quantity' }
+        }
+      },
+      { $sort: { totalRevenue: -1 } }
+    ]);
+
+    // Ejecutar todas las promesas en paralelo
+    const [generalStats, statusBreakdown, geoBreakdown, salesOverTime, salesByCategory] = await Promise.all([
+      generalStatsPromise,
+      statusBreakdownPromise,
+      geoBreakdownPromise,
+      salesOverTimePromise,
+      salesByCategoryPromise
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: generalStats[0] || {
+          totalOrders: 0,
+          totalRevenue: 0,
+          averageOrderValue: 0,
+          averageItemsPerOrder: 0,
+          totalUniqueCustomers: 0
+        },
+        statusBreakdown,
+        geoBreakdown,
+        salesOverTime,
+        salesByCategory,
+        filters: { startDate, endDate, groupBy },
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getOrderAnalysisReport:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generando el reporte de análisis de órdenes",
+      error: 'ORDER_ANALYSIS_REPORT_ERROR'
+    });
+  }
+};
+
 export default reportController;

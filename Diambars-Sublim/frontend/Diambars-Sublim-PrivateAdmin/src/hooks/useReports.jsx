@@ -556,4 +556,53 @@ export const useReports = (initialConfig = {}) => {
   };
 };
 
+/**
+ * Hook para el nuevo reporte de análisis de órdenes
+ */
+export const useOrderAnalysisReport = (initialFilters = {}) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState(initialFilters);
+
+  const fetchReport = useCallback(async (customFilters = null) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const currentFilters = customFilters || filters;
+      console.log('📈 [useOrderAnalysisReport] Fetching report with filters:', currentFilters);
+      
+      const response = await reportService.getOrderAnalysisReport(currentFilters);
+      console.log('📈 [useOrderAnalysisReport] Response received:', response);
+      
+      if (response.success) {
+        console.log('📈 [useOrderAnalysisReport] Setting data:', response.data);
+        setData(response.data);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('❌ [useOrderAnalysisReport] Error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchReport();
+  }, []); // Solo ejecutar una vez al montar
+
+  return {
+    data,
+    loading,
+    error,
+    filters,
+    refetch: fetchReport,
+    updateFilters: setFilters,
+    hasData: !!data
+  };
+};
+
 export default useReports;

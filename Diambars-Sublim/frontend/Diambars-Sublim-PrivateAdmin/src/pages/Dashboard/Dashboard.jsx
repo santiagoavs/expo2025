@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, LinearProgress, Chip, Paper, alpha, Divider, FormControl, InputLabel, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Switch, FormControlLabel, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Typography, Button, LinearProgress, Chip, Paper, alpha, Divider, FormControl, InputLabel, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Switch, FormControlLabel, useTheme, useMediaQuery, styled } from '@mui/material';
 import { ChartLine, Package, Users, TrendUp, Clock, ArrowRight, User, Coffee, Lightning, Target, Gear, EyeSlash, ChartPie, X } from '@phosphor-icons/react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip as ChartTooltip, Legend, ArcElement, Filler } from 'chart.js';
 import { Doughnut, Bar, Pie, PolarArea } from 'react-chartjs-2';
@@ -20,6 +20,300 @@ const mockData = {
   designs: { total: 28, pending: 7, quoted: 8, approved: 10, rejected: 2, completed: 1, drafts: 0 }
 };
 
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+const marbleFlowKeyframes = `
+@keyframes marbleFlow {
+  0% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-8%, -8%) rotate(5deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-15%, 8%) rotate(-3deg) scale(1.08);
+  }
+  75% {
+    transform: translate(-8%, -5%) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+}
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
+// ================ STYLED COMPONENTS PARA EL DASHBOARD ================ 
+const ModernCard = styled(Paper)(({ theme }) => ({
+  background: 'white',
+  borderRadius: '16px',
+  border: `1px solid ${alpha('#1F64BF', 0.08)}`,
+  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  fontFamily: "'Mona Sans'",
+  '&:hover': {
+    boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+    transform: 'translateY(-1px)',
+  }
+}));
+
+const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(25, 83, 158, 0.3)',
+      marbleVeins: 'rgba(3, 44, 166, 0.5)',
+      marbleHighlight: 'rgba(123, 164, 221, 0.6)',
+      marbleDark: 'rgba(1, 21, 63, 0.25)',
+    },
+    success: {
+      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(13, 75, 54, 0.3)',
+      marbleVeins: 'rgba(9, 138, 97, 0.5)',
+      marbleHighlight: 'rgba(86, 236, 181, 0.6)',
+      marbleDark: 'rgba(2, 77, 55, 0.25)',
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(245, 158, 11, 0.3)',
+      marbleVeins: 'rgba(217, 119, 6, 0.5)',
+      marbleHighlight: 'rgba(251, 191, 36, 0.6)',
+      marbleDark: 'rgba(180, 83, 9, 0.25)',
+    },
+    danger: {
+      background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(239, 68, 68, 0.3)',
+      marbleVeins: 'rgba(220, 38, 38, 0.5)',
+      marbleHighlight: 'rgba(248, 113, 113, 0.6)',
+      marbleDark: 'rgba(185, 28, 28, 0.25)',
+    },
+    secondary: {
+      background: 'white',
+      color: '#010326',
+      marbleBase: 'rgba(31, 100, 191, 0.08)',
+      marbleVeins: 'rgba(3, 44, 166, 0.15)',
+      marbleHighlight: 'rgba(100, 150, 220, 0.25)',
+      marbleDark: 'rgba(31, 100, 191, 0.05)',
+    }
+  };
+
+  const selectedVariant = variants[variant] || variants.secondary;
+  const isColoredVariant = ['primary', 'success', 'warning', 'danger'].includes(variant);
+
+  return {
+    padding: '28px',
+    width: '100%',
+    minHeight: '160px',
+    maxHeight: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+    boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
+    ...selectedVariant,
+    
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: '-50%',
+      left: '-50%',
+      width: '200%',
+      height: '200%',
+      opacity: 0,
+      transition: 'opacity 0.5s ease',
+      pointerEvents: 'none',
+      zIndex: 0,
+      background: `
+        radial-gradient(ellipse at 15% 30%, ${selectedVariant.marbleHighlight} 0%, transparent 40%),
+        radial-gradient(ellipse at 85% 20%, ${selectedVariant.marbleVeins} 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, ${selectedVariant.marbleBase} 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, ${selectedVariant.marbleHighlight} 0%, transparent 35%),
+        radial-gradient(ellipse at 30% 70%, ${selectedVariant.marbleVeins} 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 90%, ${selectedVariant.marbleBase} 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 90%, ${selectedVariant.marbleDark} 0%, transparent 30%),
+        linear-gradient(125deg, 
+          ${selectedVariant.marbleBase} 0%, 
+          transparent 25%, 
+          ${selectedVariant.marbleVeins} 50%, 
+          transparent 75%, 
+          ${selectedVariant.marbleHighlight} 100%
+        )
+      `,
+      backgroundSize: '100% 100%',
+      animation: 'marbleFlow 10s ease-in-out infinite',
+      filter: 'blur(2px)',
+    },
+
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: isColoredVariant 
+        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+        : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+      transition: 'left 0.6s ease',
+      zIndex: 1,
+      pointerEvents: 'none',
+    },
+
+    '&:hover': {
+      transform: 'translateY(-1px) scale(1.02)',
+      boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+      '&::before': {
+        opacity: 1,
+      },
+      '&::after': {
+        left: '100%',
+      }
+    },
+
+    '&:active': {
+      transform: 'translateY(0)',
+      transition: 'transform 0.1s ease-out',
+    },
+
+    '& > *': {
+      position: 'relative',
+      zIndex: 2,
+    },
+
+    [theme.breakpoints.down('lg')]: {
+      padding: '24px',
+      minHeight: '150px',
+    },
+    [theme.breakpoints.down('md')]: {
+      padding: '20px',
+      minHeight: '140px',
+    },
+    [theme.breakpoints.down('sm')]: {
+      padding: '18px',
+      minHeight: '130px',
+    }
+  };
+});
+
+const DashboardStatHeader = styled(Box)({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  marginBottom: '16px',
+  width: '100%',
+});
+
+const DashboardStatIconContainer = styled(Box)(({ variant, theme }) => ({
+  width: '56px',
+  height: '56px',
+  borderRadius: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: ['primary', 'success', 'warning', 'danger'].includes(variant)
+    ? 'rgba(255, 255, 255, 0.15)' 
+    : alpha('#1F64BF', 0.08),
+  backdropFilter: 'blur(8px)',
+  color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#1F64BF',
+  flexShrink: 0,
+  transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+  position: 'relative',
+  zIndex: 2,
+  [theme.breakpoints.down('lg')]: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '10px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
+  }
+}));
+
+const DashboardStatValue = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '2.2rem',
+  fontWeight: 700,
+  lineHeight: 1.1,
+  marginBottom: '6px',
+  color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#010326',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '2rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.8rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.6rem',
+  }
+}));
+
+const DashboardStatLabel = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '0.9rem',
+  fontWeight: 500,
+  opacity: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 0.9 : 0.7,
+  color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#032CA6',
+  lineHeight: 1.3,
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '0.875rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '0.8rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.75rem',
+  }
+}));
+
+const DashboardStatChange = styled(Box)(({ variant, trend }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  marginTop: 'auto',
+  padding: '6px 10px',
+  borderRadius: '8px',
+  background: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'rgba(255, 255, 255, 0.15)' : trend === 'up' ? alpha('#10B981', 0.1) : alpha('#EF4444', 0.1),
+  width: 'fit-content',
+}));
+
+const DashboardStatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
+  fontSize: '0.8rem',
+  fontWeight: 600,
+  color: ['primary', 'success', 'warning', 'danger'].includes(variant)
+    ? 'white' 
+    : trend === 'up' 
+      ? '#10B981' 
+      : '#EF4444',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.75rem',
+  }
+}));
+
 const Dashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -39,10 +333,10 @@ const Dashboard = () => {
   const getChartOptions = () => ({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: isMobile ? 8 : 15, font: { size: isMobile ? 9 : 11, weight: '600' } } } } });
 
   const getDashboardStats = () => [
-    { id: 'products', title: 'Total Productos', value: mockData.products.total.toString(), change: `${Math.round((mockData.products.active/mockData.products.total)*100)}% activos`, icon: Package, gradient: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)' },
-    { id: 'users', title: 'Usuarios Totales', value: mockData.users.total.toString(), change: `${mockData.users.active} activos`, icon: Users, color: '#10b981' },
-    { id: 'employees', title: 'Personal Activo', value: mockData.employees.active.toString(), change: `${mockData.employees.total} total`, icon: User, color: '#f59e0b' },
-    { id: 'designs', title: 'Diseños Pendientes', value: mockData.designs.pending.toString(), change: `${mockData.designs.total} total`, icon: ChartLine, color: '#ef4444' }
+    { id: 'products', title: 'Total Productos', value: mockData.products.total.toString(), change: `${Math.round((mockData.products.active/mockData.products.total)*100)}% activos`, icon: Package, variant: 'primary', trend: 'up' },
+    { id: 'users', title: 'Usuarios Totales', value: mockData.users.total.toString(), change: `${mockData.users.active} activos`, icon: Users, variant: 'success', trend: 'up' },
+    { id: 'employees', title: 'Personal Activo', value: mockData.employees.active.toString(), change: `${mockData.employees.total} total`, icon: User, variant: 'warning', trend: 'up' },
+    { id: 'designs', title: 'Diseños Pendientes', value: mockData.designs.pending.toString(), change: `${mockData.designs.total} total`, icon: ChartLine, variant: 'danger', trend: 'down' }
   ];
 
   const formatTime = (date) => date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
@@ -54,38 +348,43 @@ const Dashboard = () => {
       <Box sx={{ maxWidth: '1600px', margin: '0 auto' }}>
         
         {/* Header */}
-        <Paper sx={{ padding: { xs: 3, md: 5 }, marginBottom: 4, borderRadius: '16px', background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)', color: '#FFFFFF', boxShadow: '0 4px 24px rgba(31, 100, 191, 0.25)' }}>
+        <Paper sx={{ padding: { xs: 3, md: 5 }, marginBottom: 4, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ width: 56, height: 56, borderRadius: '16px', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Target size={24} weight="duotone" /></Box>
+              <Box sx={{ width: 56, height: 56, borderRadius: '16px', background: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1F64BF' }}><Target size={24} weight="duotone" /></Box>
               <Box>
-                <Typography variant="h3" sx={{ fontWeight: 700, marginBottom: 1, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>{getGreeting()} Administrador</Typography>
-                <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>Panel de control - {visibleChartsCount} gráfica{visibleChartsCount !== 1 ? 's' : ''} activa{visibleChartsCount !== 1 ? 's' : ''}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.8, mt: 1 }}><Clock size={14} /><Typography variant="body2" sx={{ fontSize: '0.75rem' }}>{formatTime(currentTime)}</Typography></Box>
+                <Typography variant="h3" sx={{ fontWeight: 700, marginBottom: 1, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: '#010326' }}>{getGreeting()} Administrador</Typography>
+                <Typography variant="h6" sx={{ color: '#032CA6', fontWeight: 500 }}>Panel de control - {visibleChartsCount} gráfica{visibleChartsCount !== 1 ? 's' : ''} activa{visibleChartsCount !== 1 ? 's' : ''}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.7, mt: 1, color: '#64748b' }}><Clock size={14} /><Typography variant="body2" sx={{ fontSize: '0.75rem' }}>{formatTime(currentTime)}</Typography></Box>
               </Box>
             </Box>
             
             {/* Botón con efecto shimmer */}
             <Button variant="outlined" startIcon={<Gear size={18} />} onClick={() => setChartSettingsOpen(true)}
-              sx={{ background: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '16px', padding: '12px 24px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)', transition: 'left 0.5s ease' }, '&:hover': { background: 'rgba(255, 255, 255, 0.25)', borderColor: 'rgba(255, 255, 255, 0.6)', '&::before': { left: '100%' } } }}>
+              sx={{   background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)', color: '#FFFFFF', border: `2px solid ${alpha('#1F64BF', 0.25)}`, borderRadius: '16px', padding: '12px 24px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { background: alpha('#1F64BF', 0.05), borderColor: '#1F64BF', '&::before': { left: '100%' } } }}>
               {isMobile ? 'Configurar' : 'Configurar Gráficas'}
             </Button>
           </Box>
         </Paper>
 
-        {/* Cards de estadísticas - hover disminuido */}
+        {/* Cards de estadísticas */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, marginBottom: 4 }}>
           {getDashboardStats().map((stat) => (
-            <Paper key={stat.id} sx={{ padding: 3, borderRadius: '16px', background: stat.gradient || 'white', color: stat.gradient ? 'white' : '#010326', border: stat.gradient ? 'none' : `1px solid ${alpha('#1F64BF', 0.08)}`, cursor: 'pointer', boxShadow: stat.gradient ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: stat.gradient ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)' : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)', transition: 'left 0.5s ease', zIndex: 1 }, '&::after': stat.gradient ? { content: '""', position: 'absolute', top: 0, right: 0, width: '70px', height: '70px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', transform: 'translate(20px, -20px)', zIndex: 0 } : {}, '& > *': { position: 'relative', zIndex: 2 }, '&:hover': { transform: 'translateY(-2px)', boxShadow: stat.gradient ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)' : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)', '&::before': { left: '100%' } } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h4" sx={{ fontWeight: 700, marginBottom: 1 }}>{stat.value}</Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 500 }}>{stat.title}</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '4px 8px', borderRadius: '6px', background: stat.gradient ? 'rgba(255, 255, 255, 0.15)' : alpha(stat.color, 0.1), width: 'fit-content' }}><TrendUp size={12} weight="bold" /><Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{stat.change}</Typography></Box>
-                </Box>
-                <Box sx={{ backgroundColor: stat.gradient ? 'rgba(255, 255, 255, 0.2)' : alpha(stat.color, 0.1), borderRadius: '12px', padding: 1.5, color: stat.gradient ? 'white' : stat.color }}><stat.icon size={32} weight="duotone" /></Box>
+            <DashboardStatCard key={stat.id} variant={stat.variant}>
+              <DashboardStatHeader>
+                <DashboardStatIconContainer variant={stat.variant}>
+                  <stat.icon size={24} weight="duotone" />
+                </DashboardStatIconContainer>
+              </DashboardStatHeader>
+              <Box>
+                <DashboardStatValue variant={stat.variant}>{stat.value}</DashboardStatValue>
+                <DashboardStatLabel variant={stat.variant}>{stat.title}</DashboardStatLabel>
               </Box>
-            </Paper>
+              <DashboardStatChange variant={stat.variant} trend={stat.trend}>
+                <TrendUp size={12} weight="bold" />
+                <DashboardStatTrendText variant={stat.variant} trend={stat.trend}>{stat.change}</DashboardStatTrendText>
+              </DashboardStatChange>
+            </DashboardStatCard>
           ))}
         </Box>
 

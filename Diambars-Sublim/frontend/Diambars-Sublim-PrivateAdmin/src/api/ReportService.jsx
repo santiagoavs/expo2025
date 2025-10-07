@@ -114,7 +114,7 @@ const reportService = {
    */
   async getProductionReport(filters = {}) {
     try {
-      console.log('⏱️ [reportService] Obteniendo reporte de producción:', filters);
+      console.log(' [reportService] Obteniendo reporte de producción:', filters);
       
       const response = await apiClient.get('/orders/reports/production', {
         params: filters
@@ -123,6 +123,23 @@ const reportService = {
       return response;
     } catch (error) {
       console.error('❌ [reportService] Error obteniendo reporte producción:', error);
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Obtiene el reporte consolidado de análisis de órdenes.
+   * @param {object} filters - Filtros para el reporte (startDate, endDate, groupBy).
+   * @returns {Promise<object>} - Los datos del reporte.
+   */
+  async getOrderAnalysisReport(filters = {}) {
+    try {
+      console.log('📈 [reportService] Obteniendo reporte de análisis de órdenes:', filters);
+      const params = new URLSearchParams(filters).toString();
+      const response = await apiClient.get(`/orders/reports/order-analysis?${params}`);
+      return response;
+    } catch (error) {
+      console.error('❌ [reportService] Error obteniendo reporte de análisis de órdenes:', error);
       throw this.handleError(error);
     }
   },

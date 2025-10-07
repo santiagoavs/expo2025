@@ -63,7 +63,35 @@ Swal.mixin({
   }
 });
 
-// ================ ESTILOS MODERNOS RESPONSIVE - DIRECCIONES ================
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+const marbleFlowKeyframes = `
+@keyframes marbleFlow {
+  0% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-8%, -8%) rotate(5deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-15%, 8%) rotate(-3deg) scale(1.08);
+  }
+  75% {
+    transform: translate(-8%, -5%) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+}
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
+// ================ ESTILOS MODERNOS RESPONSIVE - DIRECCIONES ================ 
 const AddressPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Mona Sans'",
@@ -375,14 +403,41 @@ const AddressStatCard = styled(AddressModernCard)(({ theme, variant }) => {
       background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
       color: 'white',
       border: 'none',
+      marbleBase: 'rgba(25, 83, 158, 0.2)',
+      marbleVeins: 'rgba(3, 44, 166, 0.35)',
+      marbleHighlight: 'rgba(123, 164, 221, 0.4)',
+      marbleDark: 'rgba(1, 21, 63, 0.15)',
+    },
+    success: {
+      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(13, 75, 54, 0.2)',
+      marbleVeins: 'rgba(9, 138, 97, 0.35)',
+      marbleHighlight: 'rgba(86, 236, 181, 0.4)',
+      marbleDark: 'rgba(2, 77, 55, 0.15)',
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(245, 158, 11, 0.2)',
+      marbleVeins: 'rgba(217, 119, 6, 0.35)',
+      marbleHighlight: 'rgba(251, 191, 36, 0.4)',
+      marbleDark: 'rgba(180, 83, 9, 0.15)',
     },
     secondary: {
       background: 'white',
       color: '#010326',
+      marbleBase: 'rgba(31, 100, 191, 0.08)',
+      marbleVeins: 'rgba(3, 44, 166, 0.15)',
+      marbleHighlight: 'rgba(100, 150, 220, 0.25)',
+      marbleDark: 'rgba(31, 100, 191, 0.05)',
     }
   };
 
   const selectedVariant = variants[variant] || variants.secondary;
+  const isColoredVariant = variant === 'primary' || variant === 'success' || variant === 'warning';
 
   return {
     padding: '28px',
@@ -396,41 +451,78 @@ const AddressStatCard = styled(AddressModernCard)(({ theme, variant }) => {
     overflow: 'hidden',
     boxSizing: 'border-box',
     cursor: 'pointer',
-    boxShadow: variant === 'primary' ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)',
+    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+    boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
     ...selectedVariant,
+    
     '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: '-50%',
+      left: '-50%',
+      width: '200%',
+      height: '200%',
+      opacity: 0,
+      transition: 'opacity 0.5s ease',
+      pointerEvents: 'none',
+      zIndex: 0, 
+      background: `
+        radial-gradient(ellipse at 15% 30%, ${selectedVariant.marbleHighlight} 0%, transparent 40%),
+        radial-gradient(ellipse at 85% 20%, ${selectedVariant.marbleVeins} 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, ${selectedVariant.marbleBase} 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, ${selectedVariant.marbleHighlight} 0%, transparent 35%),
+        radial-gradient(ellipse at 30% 70%, ${selectedVariant.marbleVeins} 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 90%, ${selectedVariant.marbleBase} 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 90%, ${selectedVariant.marbleDark} 0%, transparent 30%),
+        linear-gradient(125deg, 
+          ${selectedVariant.marbleBase} 0%, 
+          transparent 25%, 
+          ${selectedVariant.marbleVeins} 50%, 
+          transparent 75%, 
+          ${selectedVariant.marbleHighlight} 100%
+        )
+      `,
+      backgroundSize: '100% 100%',
+      animation: 'marbleFlow 10s ease-in-out infinite',
+      filter: 'blur(2px)',
+    },
+
+    '&::after': {
       content: '""',
       position: 'absolute',
       top: 0,
       left: '-100%',
       width: '100%',
       height: '100%',
-      background: variant === 'primary' 
+      background: isColoredVariant 
         ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
         : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
-      transition: 'left 0.5s ease',
-      zIndex: 1
+      transition: 'left 0.6s ease',
+      zIndex: 1, 
+      pointerEvents: 'none',
     },
-    '&::after': variant === 'primary' ? {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      width: '70px',
-      height: '70px',
-      background: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '50%',
-      transform: 'translate(20px, -20px)',
-      zIndex: 0
-    } : {},
-    '& > *': { position: 'relative', zIndex: 2 },
+
     '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: variant === 'primary' 
-        ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)'
-        : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)',
-      '&::before': { left: '100%' }
+      transform: 'translateY(-1px) scale(1.02)',
+      boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+      '&::before': {
+        opacity: 1,
+      },
+      '&::after': {
+        left: '100%',
+      }
     },
+
+    '&:active': {
+      transform: 'translateY(0)',
+      transition: 'transform 0.1s ease-out',
+    },
+
+    '& > *': {
+      position: 'relative',
+      zIndex: 2,
+    },
+
     [theme.breakpoints.down('lg')]: {
       padding: '24px',
       minHeight: '150px',

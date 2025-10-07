@@ -1,4 +1,4 @@
-// src/pages/ReportsPage/ReportsPage.jsx - Página de reportes con gráficas en posición original
+                                                                                            // src/pages/ReportsPage/ReportsPage.jsx - Página de reportes con gráficas en posición original
 import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import {
@@ -52,11 +52,7 @@ import {
   Filler
 } from 'chart.js';
 import { 
-  useDashboardStats, 
-  useSalesReport, 
-  useTopProductsReport, 
-  useTopCustomersReport, 
-  useProductionReport,
+  useOrderAnalysisReport,
   useReportExport
 } from '../../hooks/useReports';
 import ChartErrorBoundary from '../../components/ChartErrorBoundary/ChartErrorBoundary';
@@ -89,7 +85,35 @@ Swal.mixin({
   }
 });
 
-// ================ ESTILOS COMPLETAMENTE ACORDES AL DASHBOARD ================
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+const marbleFlowKeyframes = `
+@keyframes marbleFlow {
+  0% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-8%, -8%) rotate(5deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-15%, 8%) rotate(-3deg) scale(1.08);
+  }
+  75% {
+    transform: translate(-8%, -5%) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+}
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
+// ================ ESTILOS COMPLETAMENTE ACORDES AL DASHBOARD ================ 
 const ReportsPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Mona Sans'",
@@ -394,14 +418,41 @@ const ReportsStatCard = styled(ReportsModernCard)(({ theme, variant }) => {
       background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
       color: 'white',
       border: 'none',
+      marbleBase: 'rgba(25, 83, 158, 0.2)',
+      marbleVeins: 'rgba(3, 44, 166, 0.35)',
+      marbleHighlight: 'rgba(123, 164, 221, 0.4)',
+      marbleDark: 'rgba(1, 21, 63, 0.15)',
+    },
+    success: {
+      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(13, 75, 54, 0.2)',
+      marbleVeins: 'rgba(9, 138, 97, 0.35)',
+      marbleHighlight: 'rgba(86, 236, 181, 0.4)',
+      marbleDark: 'rgba(2, 77, 55, 0.15)',
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(245, 158, 11, 0.2)',
+      marbleVeins: 'rgba(217, 119, 6, 0.35)',
+      marbleHighlight: 'rgba(251, 191, 36, 0.4)',
+      marbleDark: 'rgba(180, 83, 9, 0.15)',
     },
     secondary: {
       background: 'white',
       color: '#010326',
+      marbleBase: 'rgba(31, 100, 191, 0.08)',
+      marbleVeins: 'rgba(3, 44, 166, 0.15)',
+      marbleHighlight: 'rgba(100, 150, 220, 0.25)',
+      marbleDark: 'rgba(31, 100, 191, 0.05)',
     }
   };
 
   const selectedVariant = variants[variant] || variants.secondary;
+  const isColoredVariant = variant === 'primary' || variant === 'success' || variant === 'warning';
 
   return {
     padding: '28px',
@@ -415,41 +466,78 @@ const ReportsStatCard = styled(ReportsModernCard)(({ theme, variant }) => {
     overflow: 'hidden',
     boxSizing: 'border-box',
     cursor: 'pointer',
-    boxShadow: variant === 'primary' ? '0 4px 20px rgba(31, 100, 191, 0.25)' : '0 2px 16px rgba(1, 3, 38, 0.06)',
+    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+    boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
     ...selectedVariant,
+    
     '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: '-50%',
+      left: '-50%',
+      width: '200%',
+      height: '200%',
+      opacity: 0,
+      transition: 'opacity 0.5s ease',
+      pointerEvents: 'none',
+      zIndex: 0, 
+      background: `
+        radial-gradient(ellipse at 15% 30%, ${selectedVariant.marbleHighlight} 0%, transparent 40%),
+        radial-gradient(ellipse at 85% 20%, ${selectedVariant.marbleVeins} 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, ${selectedVariant.marbleBase} 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, ${selectedVariant.marbleHighlight} 0%, transparent 35%),
+        radial-gradient(ellipse at 30% 70%, ${selectedVariant.marbleVeins} 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 90%, ${selectedVariant.marbleBase} 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 90%, ${selectedVariant.marbleDark} 0%, transparent 30%),
+        linear-gradient(125deg, 
+          ${selectedVariant.marbleBase} 0%, 
+          transparent 25%, 
+          ${selectedVariant.marbleVeins} 50%, 
+          transparent 75%, 
+          ${selectedVariant.marbleHighlight} 100%
+        )
+      `,
+      backgroundSize: '100% 100%',
+      animation: 'marbleFlow 10s ease-in-out infinite',
+      filter: 'blur(2px)',
+    },
+
+    '&::after': {
       content: '""',
       position: 'absolute',
       top: 0,
       left: '-100%',
       width: '100%',
       height: '100%',
-      background: variant === 'primary' 
+      background: isColoredVariant 
         ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
         : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
-      transition: 'left 0.5s ease',
-      zIndex: 1
+      transition: 'left 0.6s ease',
+      zIndex: 1, 
+      pointerEvents: 'none',
     },
-    '&::after': variant === 'primary' ? {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      width: '70px',
-      height: '70px',
-      background: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '50%',
-      transform: 'translate(20px, -20px)',
-      zIndex: 0
-    } : {},
-    '& > *': { position: 'relative', zIndex: 2 },
+
     '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: variant === 'primary' 
-        ? '0 8px 28px rgba(31, 100, 191, 0.3), 0 0 12px rgba(31, 100, 191, 0.15)'
-        : '0 8px 24px rgba(1, 3, 38, 0.1), 0 0 12px rgba(31, 100, 191, 0.08)',
-      '&::before': { left: '100%' }
+      transform: 'translateY(-1px) scale(1.02)',
+      boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+      '&::before': {
+        opacity: 1,
+      },
+      '&::after': {
+        left: '100%',
+      }
     },
+
+    '&:active': {
+      transform: 'translateY(0)',
+      transition: 'transform 0.1s ease-out',
+    },
+
+    '& > *': {
+      position: 'relative',
+      zIndex: 2,
+    },
+
     [theme.breakpoints.down('lg')]: {
       padding: '24px',
       minHeight: '150px',
@@ -722,46 +810,24 @@ const ReportsTabs = styled(Tabs)(({ theme }) => ({
   },
 }));
 
-const ReportsPage = () => {
+const ReportsPage = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [activeTab, setActiveTab] = useState(0);
   const [exportLoading, setExportLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
+  
   // Hooks de reportes
-  const { data: dashboardStats, loading: dashboardLoading, error: dashboardError } = useDashboardStats();
-  const { data: salesData, loading: salesLoading, error: salesError } = useSalesReport();
-  const { data: productsData, loading: productsLoading, error: productsError } = useTopProductsReport();
-  const { data: customersData, loading: customersLoading, error: customersError } = useTopCustomersReport();
-  const { data: productionData, loading: productionLoading, error: productionError } = useProductionReport();
+  const { data: reportData, loading: reportLoading, error: reportError, refetch: refetchReport } = useOrderAnalysisReport();
   const { exportReport } = useReportExport();
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (date) => date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  const getGreeting = () => { 
-    const hour = currentTime.getHours(); 
-    if (hour < 12) return 'Buenos días'; 
-    if (hour < 18) return 'Buenas tardes'; 
-    return 'Buenas noches'; 
-  };
-
+  
+  
   // Función para manejar cambio de pestaña
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-
+  
   // Función para exportar reportes
-  const handleExport = async (tabIndex, format) => {
+  const handleExport = async (format) => {
     setExportLoading(true);
     try {
-      const reportTypes = ['dashboard', 'sales', 'products', 'customers', 'production'];
-      const reportType = reportTypes[tabIndex];
-      await exportReport(reportType, format);
+      await exportReport('order-analysis', format);
     } catch (error) {
       console.error('Error exporting report:', error);
     } finally {
@@ -778,146 +844,159 @@ const ReportsPage = () => {
     }).format(amount);
   };
 
-  // Calcular estadísticas
+  // Extraer estadísticas del nuevo hook
   const stats = useMemo(() => {
-    if (!dashboardStats) return { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0 };
-    
-    const todayData = dashboardStats.today || {};
-    const monthData = dashboardStats.thisMonth || {};
-    const totalCustomers = customersData?.customerStatistics?.totalCustomers || 0;
-    const totalProducts = productsData?.topProductsByQuantity?.length || 0;
+    if (!reportData) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, totalUniqueCustomers: 0 };
     
     return {
-      totalRevenue: monthData.totalRevenue || todayData.totalRevenue || 0,
-      totalOrders: monthData.totalOrders || todayData.totalOrders || 0,
-      totalCustomers: totalCustomers,
-      totalProducts: totalProducts
+      totalRevenue: reportData.summary.totalRevenue || 0,
+      totalOrders: reportData.summary.totalOrders || 0,
+      averageOrderValue: reportData.summary.averageOrderValue || 0,
+      totalUniqueCustomers: reportData.summary.totalUniqueCustomers || 0
     };
-  }, [dashboardStats, customersData, productsData]);
+  }, [reportData]);
 
   // Función para validar y formatear datos de gráficos
-  const getValidChartData = (data, type = 'bar') => {
-    if (data && data.datasets && Array.isArray(data.datasets)) {
-      return data;
-    }
-    
-    if (data && (data.topProductsByQuantity || data.topCustomers || data.salesByPeriod)) {
-      if (type === 'pie' || type === 'doughnut') {
-        if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
-          return {
-            labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
-            datasets: [{
-              data: data.topProductsByQuantity.map(item => item.totalQuantity || 0),
-              backgroundColor: data.topProductsByQuantity.map((_, index) => 
-                `hsl(${(index * 137.5) % 360}, 70%, 50%)`
-              ),
-              borderColor: data.topProductsByQuantity.map((_, index) => 
-                `hsl(${(index * 137.5) % 360}, 70%, 30%)`
-              ),
-              borderWidth: 1
-            }]
-          };
-        }
-      } else {
-        if (data.topProductsByQuantity && Array.isArray(data.topProductsByQuantity)) {
-          return {
-            labels: data.topProductsByQuantity.map(item => item.productName || 'Producto'),
-            datasets: [{
-              label: 'Cantidad Vendida',
-              data: data.topProductsByQuantity.map(item => item.totalQuantity || 0),
-              backgroundColor: 'rgba(31, 100, 191, 0.1)',
-              borderColor: '#1F64BF',
-              borderWidth: 2
-            }]
-          };
-        }
-        
-        if (data.topCustomers && Array.isArray(data.topCustomers)) {
-          return {
-            labels: data.topCustomers.map(item => item.userName || 'Cliente'),
-            datasets: [{
-              label: 'Total Gastado',
-              data: data.topCustomers.map(item => item.totalSpent || 0),
-              backgroundColor: 'rgba(31, 100, 191, 0.1)',
-              borderColor: '#1F64BF',
-              borderWidth: 2
-            }]
-          };
-        }
-        
-        if (data.salesByPeriod && Array.isArray(data.salesByPeriod)) {
-          return {
-            labels: data.salesByPeriod.map(item => {
-              const date = new Date(item._id);
-              return date.toLocaleDateString('es-CO', { 
-                month: 'short', 
-                day: 'numeric' 
-              });
-            }),
-            datasets: [
-              {
-                label: 'Ventas',
-                data: data.salesByPeriod.map(item => item.totalRevenue || 0),
-                backgroundColor: 'rgba(31, 100, 191, 0.1)',
-                borderColor: '#1F64BF',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4
-              }
-            ]
-          };
-        }
-      }
-    }
-    
-    // Datos por defecto
-    const defaultData = {
-      labels: ['Sin datos'],
-      datasets: [{
-        label: 'Sin datos',
-        data: [0],
-        backgroundColor: 'rgba(128, 128, 128, 0.2)',
-        borderColor: 'rgba(128, 128, 128, 1)',
-        borderWidth: 1
-      }]
-    };
-    
-    if (type === 'pie' || type === 'doughnut') {
+  const getValidChartData = (labels, data, chartType) => {
+    const chartColors = [
+      '#1F64BF', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#3B82F6',
+      '#059669', '#D97706', '#7C3AED', '#DC2626', '#2563EB', '#047857'
+    ];
+
+    if (chartType === 'line') {
       return {
-        labels: ['Sin datos'],
+        labels,
         datasets: [{
-          data: [1],
-          backgroundColor: ['rgba(128, 128, 128, 0.2)'],
-          borderColor: ['rgba(128, 128, 128, 1)'],
-          borderWidth: 1
-        }]
+          label: 'Ingresos',
+          data,
+          fill: true,
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, alpha('#1F64BF', 0.3));
+            gradient.addColorStop(1, alpha('#1F64BF', 0));
+            return gradient;
+          },
+          borderColor: '#1F64BF',
+          borderWidth: 3,
+          pointBackgroundColor: '#FFFFFF',
+          pointBorderColor: '#1F64BF',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.4,
+        }],
       };
     }
-    
-    return defaultData;
+
+    if (chartType === 'doughnut' || chartType === 'pie') {
+      return {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: chartColors.map(color => alpha(color, 0.8)),
+          borderColor: '#FFFFFF',
+          borderWidth: 3,
+        }],
+      };
+    }
+
+    // Default for Bar chart
+    return {
+      labels,
+      datasets: [{
+        label: 'Total',
+        data,
+        backgroundColor: chartColors.map(color => alpha(color, 0.6)),
+        borderColor: chartColors,
+        borderWidth: 2,
+        borderRadius: 4,
+      }],
+    };
   };
 
   // Opciones de gráficos consistentes
-  const getChartOptions = () => ({
-    responsive: true, 
-    maintainAspectRatio: false, 
-    plugins: { 
-      legend: { 
-        display: true, 
-        position: 'top', 
-        labels: { 
-          usePointStyle: true, 
-          padding: isMobile ? 8 : 15, 
-          font: { 
-            size: isMobile ? 9 : 11, 
-            weight: '600' 
-          } 
-        } 
-      } 
-    } 
-  });
+  const getChartOptions = (chartType) => {
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: chartType !== 'line',
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: isMobile ? 10 : 20,
+            font: { size: isMobile ? 10 : 12, weight: '600', family: "'Mona Sans'" },
+            color: '#475569',
+          }
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: alpha('#010326', 0.9),
+          titleColor: '#FFFFFF',
+          bodyColor: '#E2E8F0',
+          titleFont: { size: 14, weight: 'bold', family: "'Mona Sans'" },
+          bodyFont: { size: 12, family: "'Mona Sans'" },
+          padding: 12,
+          cornerRadius: 8,
+          boxPadding: 4,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(context.parsed.y);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          border: { display: false },
+          grid: { display: false },
+          ticks: { font: { family: "'Mona Sans'" }, color: '#64748b' }
+        },
+        y: {
+          border: { display: false },
+          grid: { color: '#E2E8F0' },
+          ticks: { font: { family: "'Mona Sans'" }, color: '#64748b' }
+        }
+      }
+    };
 
-  if (dashboardLoading) {
+    if (chartType === 'line') {
+      return {
+        ...baseOptions,
+        scales: {
+          ...baseOptions.scales,
+          y: {
+            ...baseOptions.scales.y,
+            grid: { display: false }
+          }
+        }
+      };
+    }
+
+    if (chartType === 'doughnut') {
+        return {
+            ...baseOptions,
+            cutout: '60%',
+            scales: {
+                x: { display: false }, 
+                y: { display: false }
+            }
+        };
+    }
+
+    return baseOptions;
+  };
+
+  if (reportLoading) {
     return (
       <ReportsPageContainer>
         <ReportsContentWrapper>
@@ -936,6 +1015,9 @@ const ReportsPage = () => {
                 filter: 'drop-shadow(0 4px 8px rgba(31, 100, 191, 0.3))'
               }} 
             />
+            <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
+              {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+            </Typography>
             <Typography variant="body1" sx={{ 
               color: '#010326', 
               fontWeight: 600, 
@@ -952,7 +1034,6 @@ const ReportsPage = () => {
   return (
     <ReportsPageContainer>
       <ReportsContentWrapper>
-        {/* HEADER PRINCIPAL - Igual al Dashboard */}
         <ReportsHeaderSection>
           <ReportsHeaderContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
@@ -969,31 +1050,23 @@ const ReportsPage = () => {
               </Box>
               <Box>
                 <ReportsMainTitle>
-                  {getGreeting()} Administrador
+                  Reportes y Estadísticas
                 </ReportsMainTitle>
                 <ReportsMainDescription>
-                  Panel de reportes y análisis - 5 categorías disponibles
+                  Análisis detallado de órdenes, ventas y rendimiento.
                 </ReportsMainDescription>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.8, mt: 1 }}>
-                  <Clock size={14} />
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    {formatTime(currentTime)}
-                  </Typography>
-                </Box>
               </Box>
             </Box>
-            
             <ReportsHeaderActions>
               <ReportsPrimaryActionButton
                 startIcon={<Download size={18} weight="bold" />}
-                onClick={() => handleExport(activeTab, 'excel')}
+                onClick={() => handleExport('excel')}
                 disabled={exportLoading}
               >
                 {isMobile ? 'Exportar' : 'Exportar Excel'}
               </ReportsPrimaryActionButton>
-              
               <ReportsSecondaryActionButton
-                onClick={() => handleExport(activeTab, 'pdf')}
+                onClick={() => handleExport('pdf')}
                 title="Exportar PDF"
                 disabled={exportLoading}
               >
@@ -1003,7 +1076,6 @@ const ReportsPage = () => {
           </ReportsHeaderContent>
         </ReportsHeaderSection>
 
-        {/* ESTADÍSTICAS PRINCIPALES */}
         <ReportsStatsGrid>
           <ReportsStatCard variant="primary">
             <ReportsStatHeader>
@@ -1012,7 +1084,7 @@ const ReportsPage = () => {
                   {formatCurrency(stats.totalRevenue)}
                 </ReportsStatValue>
                 <ReportsStatLabel variant="primary">
-                  Ingresos Totales
+                  Ingresos Totales (COP)
                 </ReportsStatLabel>
               </Box>
               <ReportsStatIconContainer variant="primary">
@@ -1027,421 +1099,152 @@ const ReportsPage = () => {
             </ReportsStatChange>
           </ReportsStatCard>
 
-          <ReportsStatCard>
+          <ReportsStatCard variant="secondary">
             <ReportsStatHeader>
               <Box>
-                <ReportsStatValue>
+                <ReportsStatValue variant="secondary">
                   {stats.totalOrders}
                 </ReportsStatValue>
-                <ReportsStatLabel>
+                <ReportsStatLabel variant="secondary">
                   Total de Órdenes
                 </ReportsStatLabel>
               </Box>
-              <ReportsStatIconContainer>
+              <ReportsStatIconContainer variant="secondary">
                 <ChartBar size={24} weight="duotone" />
               </ReportsStatIconContainer>
             </ReportsStatHeader>
-            <ReportsStatChange trend="up">
+            <ReportsStatChange variant="secondary" trend="up">
               <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText trend="up">
+              <ReportsStatTrendText variant="secondary" trend="up">
                 +8% este mes
               </ReportsStatTrendText>
             </ReportsStatChange>
           </ReportsStatCard>
 
-          <ReportsStatCard>
+          <ReportsStatCard variant="secondary">
             <ReportsStatHeader>
               <Box>
-                <ReportsStatValue>
-                  {stats.totalCustomers}
+                <ReportsStatValue variant="secondary">
+                  {formatCurrency(stats.averageOrderValue)}
                 </ReportsStatValue>
-                <ReportsStatLabel>
-                  Clientes Activos
+                <ReportsStatLabel variant="secondary">
+                  Ticket Promedio
                 </ReportsStatLabel>
               </Box>
-              <ReportsStatIconContainer>
+              <ReportsStatIconContainer variant="secondary">
                 <Users size={24} weight="duotone" />
               </ReportsStatIconContainer>
             </ReportsStatHeader>
-            <ReportsStatChange trend="up">
+            <ReportsStatChange variant="secondary" trend="up">
               <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText trend="up">
-                +15% este mes
+              <ReportsStatTrendText variant="secondary" trend="up">
+                +5% este mes
               </ReportsStatTrendText>
             </ReportsStatChange>
           </ReportsStatCard>
 
-          <ReportsStatCard>
+          <ReportsStatCard variant="secondary">
             <ReportsStatHeader>
               <Box>
-                <ReportsStatValue>
-                  {stats.totalProducts}
+                <ReportsStatValue variant="secondary">
+                  {stats.totalUniqueCustomers}
                 </ReportsStatValue>
-                <ReportsStatLabel>
-                  Productos Vendidos
+                <ReportsStatLabel variant="secondary">
+                  Clientes Únicos
                 </ReportsStatLabel>
               </Box>
-              <ReportsStatIconContainer>
+              <ReportsStatIconContainer variant="secondary">
                 <Package size={24} weight="duotone" />
               </ReportsStatIconContainer>
             </ReportsStatHeader>
-            <ReportsStatChange trend="up">
+            <ReportsStatChange variant="secondary" trend="up">
               <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText trend="up">
-                +22% este mes
+              <ReportsStatTrendText variant="secondary" trend="up">
+                +20 nuevos
               </ReportsStatTrendText>
             </ReportsStatChange>
           </ReportsStatCard>
         </ReportsStatsGrid>
 
-        {/* SECCIÓN DE CONTROL */}
-        <ReportsControlSection>
-          <ControlCard>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
-              <Box sx={{ 
-                width: 48, 
-                height: 48, 
-                borderRadius: '12px', 
-                background: alpha('#1F64BF', 0.1), 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                color: '#1F64BF' 
-              }}>
-                <Target size={20} weight="duotone" />
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
-                Estado del Sistema de Reportes
-              </Typography>
-            </Box>
-            
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Servicios de Datos</Typography>
-                <Typography variant="body2" sx={{ color: '#1F64BF', fontWeight: 600 }}>5/5</Typography>
-              </Box>
-              <LinearProgress 
-                variant="determinate" 
-                value={100} 
-                sx={{ 
-                  height: 6, 
-                  borderRadius: 3, 
-                  backgroundColor: alpha('#1F64BF', 0.1),
-                  '& .MuiLinearProgress-bar': { 
-                    backgroundColor: '#1F64BF', 
-                    borderRadius: 3 
-                  } 
-                }} 
-              />
-            </Box>
-            
-            <Divider sx={{ mb: 2 }} />
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Box sx={{ 
-                width: 40, 
-                height: 40, 
-                borderRadius: '8px', 
-                background: alpha('#1F64BF', 0.1), 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                color: '#1F64BF' 
-              }}>
-                <Lightning size={18} weight="duotone" />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#010326' }}>
-                  Reporte Más Solicitado
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
-                  Ventas por Mes
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ 
-                width: 40, 
-                height: 40, 
-                borderRadius: '8px', 
-                background: alpha('#10B981', 0.1), 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                color: '#10B981' 
-              }}>
-                <Coffee size={18} weight="duotone" />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#010326' }}>
-                  Última Actualización
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.75rem' }}>
-                  {formatTime(currentTime)}
-                </Typography>
-              </Box>
-            </Box>
-          </ControlCard>
-
-          <ControlCard>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
-              <Box sx={{ 
-                width: 48, 
-                height: 48, 
-                borderRadius: '12px', 
-                background: alpha('#1F64BF', 0.1), 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                color: '#1F64BF' 
-              }}>
-                <ChartLine size={20} weight="duotone" />
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>
-                Control de Reportes
-              </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <ControlButton
-                variant="primary"
-                startIcon={<Download size={16} weight="bold" />}
-                onClick={() => handleExport(activeTab, 'excel')}
-                disabled={exportLoading}
-              >
-                Exportar Reporte Actual
-              </ControlButton>
-              
-              <ControlButton
-                variant="secondary"
-                startIcon={<ArrowRight size={16} weight="bold" />}
-              >
-                Actualizar Datos
-              </ControlButton>
-              
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.8rem' }}>
-                  Categorías Disponibles
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {['Dashboard', 'Ventas', 'Productos', 'Clientes', 'Producción'].map((category) => (
-                    <Chip 
-                      key={category}
-                      label={category} 
-                      size="small" 
-                      sx={{ 
-                        background: alpha('#1F64BF', 0.1), 
-                        color: '#1F64BF', 
-                        fontWeight: 600, 
-                        fontSize: '0.7rem', 
-                        height: '24px' 
-                      }} 
+        <Grid container spacing={4} sx={{ mb: 4 }}>
+          {/* Gráfico de Tendencia de Ingresos */}
+          <Grid item xs={12}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Tendencia de Ingresos</Typography>
+              <Box sx={{ height: 350 }}>
+                {reportData?.salesOverTime && reportData.salesOverTime.length > 0 ? (
+                  <ChartErrorBoundary>
+                    <Line
+                      data={getValidChartData(
+                        reportData.salesOverTime.map(item => new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })),
+                        reportData.salesOverTime.map(item => item.totalRevenue),
+                        'line'
+                      )}
+                      options={getChartOptions('line')}
                     />
-                  ))}
-                </Box>
+                  </ChartErrorBoundary>
+                ) : (
+                  <Typography>No hay datos de ventas a lo largo del tiempo.</Typography>
+                )}
               </Box>
-            </Box>
-          </ControlCard>
-        </ReportsControlSection>
+            </ChartCard>
+          </Grid>
 
-        {/* SECCIÓN PRINCIPAL DE GRÁFICAS - POSICIÓN ORIGINAL */}
-        <ReportsChartsSection>
-          <ChartsHeader>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ 
-                padding: 1, 
-                borderRadius: '8px', 
-                backgroundColor: alpha('#1F64BF', 0.1), 
-                color: '#1F64BF' 
-              }}>
-                <ChartLine size={20} weight="duotone" />
+          {/* Gráfico de Desglose de Órdenes por Estado */}
+          <Grid item xs={12} md={6}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Desglose de Órdenes por Estado</Typography>
+              <Box sx={{ height: 350 }}>
+                {reportData?.statusBreakdown ? (
+                  <ChartErrorBoundary>
+                    <Doughnut
+                      data={getValidChartData(
+                        reportData.statusBreakdown.map(item => item._id),
+                        reportData.statusBreakdown.map(item => item.count),
+                        'doughnut'
+                      )}
+                      options={getChartOptions()}
+                    />
+                  </ChartErrorBoundary>
+                ) : (
+                  <Typography>No hay datos de estado.</Typography>
+                )}
               </Box>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: { xs: '1rem', md: '1.1rem' } }}>
-                  Reportes Analíticos
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.8rem' }}>
-                  Visualización interactiva de datos y métricas
-                </Typography>
+            </ChartCard>
+          </Grid>
+
+          {/* Gráfico de Ventas por Categoría de Producto */}
+          <Grid item xs={12} md={6}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Ventas por Categoría de Producto</Typography>
+              <Box sx={{ height: 350 }}>
+                {reportData?.salesByCategory ? (
+                  <ChartErrorBoundary>
+                    <Bar
+                      data={getValidChartData(
+                        reportData.salesByCategory.map(item => item.categoryName),
+                        reportData.salesByCategory.map(item => item.totalRevenue),
+                        'bar'
+                      )}
+                      options={getChartOptions()}
+                    />
+                  </ChartErrorBoundary>
+                ) : (
+                  <Typography>No hay datos de ventas por categoría.</Typography>
+                )}
               </Box>
-              <Chip 
-                label="5 categorías" 
-                size="small" 
-                sx={{ 
-                  background: '#1F64BF', 
-                  color: '#fff', 
-                  fontWeight: 600, 
-                  fontSize: '0.7rem', 
-                  height: '24px' 
-                }} 
-              />
-            </Box>
-            
-            <Tooltip title="Opciones de exportación">
-              <IconButton 
-                size="small" 
-                sx={{ 
-                  color: '#1F64BF', 
-                  '&:hover': { backgroundColor: alpha('#1F64BF', 0.1) } 
-                }}
-              >
-                <Gear size={18} />
-              </IconButton>
-            </Tooltip>
-          </ChartsHeader>
-
-          {/* TABS DE NAVEGACIÓN */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-            <ReportsTabs value={activeTab} onChange={handleTabChange} aria-label="report tabs">
-              <Tab icon={<ChartBar size={18} weight="duotone" />} label="Dashboard" />
-              <Tab icon={<TrendUp size={18} weight="duotone" />} label="Ventas" />
-              <Tab icon={<Package size={18} weight="duotone" />} label="Productos" />
-              <Tab icon={<Users size={18} weight="duotone" />} label="Clientes" />
-              <Tab icon={<Clock size={18} weight="duotone" />} label="Producción" />
-            </ReportsTabs>
-          </Box>
-
-          {/* CONTENIDO DE PESTAÑAS - POSICIÓN ORIGINAL DE GRÁFICAS */}
-          {activeTab === 0 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <ChartCard sx={{ height: '400px' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Ventas por Mes
-                  </Typography>
-                  {salesData ? (
-                    <ChartErrorBoundary>
-                      <Bar 
-                        data={getValidChartData(salesData, 'bar')} 
-                        options={getChartOptions()} 
-                      />
-                    </ChartErrorBoundary>
-                  ) : (
-                    <CircularProgress />
-                  )}
-                </ChartCard>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ChartCard sx={{ height: '400px' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Distribución de Productos
-                  </Typography>
-                  {productsData ? (
-                    <ChartErrorBoundary>
-                      <Pie 
-                        data={getValidChartData(productsData, 'pie')} 
-                        options={getChartOptions()} 
-                      />
-                    </ChartErrorBoundary>
-                  ) : (
-                    <CircularProgress />
-                  )}
-                </ChartCard>
-              </Grid>
-            </Grid>
-          )}
-
-          {activeTab === 1 && (
-            <ChartCard sx={{ height: '500px' }}>
-              <Typography variant="h6" gutterBottom>
-                Tendencias de Ventas
-              </Typography>
-              {salesData ? (
-                <ChartErrorBoundary>
-                  <Line 
-                    data={getValidChartData(salesData, 'line')} 
-                    options={getChartOptions()} 
-                  />
-                </ChartErrorBoundary>
-              ) : (
-                <CircularProgress />
-              )}
             </ChartCard>
-          )}
+          </Grid>
+        </Grid>
 
-          {activeTab === 2 && (
-            <ChartCard sx={{ height: '500px' }}>
-              <Typography variant="h6" gutterBottom>
-                Productos Más Vendidos
-              </Typography>
-              {productsData ? (
-                <ChartErrorBoundary>
-                  <Bar 
-                    data={getValidChartData(productsData, 'bar')} 
-                    options={getChartOptions()} 
-                  />
-                </ChartErrorBoundary>
-              ) : (
-                <CircularProgress />
-              )}
-            </ChartCard>
-          )}
-
-          {activeTab === 3 && (
-            <ChartCard sx={{ height: '500px' }}>
-              <Typography variant="h6" gutterBottom>
-                Clientes Más Activos
-              </Typography>
-              {customersData ? (
-                <ChartErrorBoundary>
-                  <Bar 
-                    data={getValidChartData(customersData, 'bar')} 
-                    options={getChartOptions()} 
-                  />
-                </ChartErrorBoundary>
-              ) : (
-                <CircularProgress />
-              )}
-            </ChartCard>
-          )}
-
-          {activeTab === 4 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <ChartCard sx={{ height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Tiempo Promedio de Producción
-                  </Typography>
-                  <Typography variant="h4" color="primary" sx={{ textAlign: 'center', my: 4 }}>
-                    {productionData?.averageProductionTime || '0'} días
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={75} 
-                    sx={{ height: 8, borderRadius: 4 }}
-                  />
-                </ChartCard>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ChartCard sx={{ height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Eficiencia de Producción
-                  </Typography>
-                  <Typography variant="h4" color="success.main" sx={{ textAlign: 'center', my: 4 }}>
-                    {productionData?.efficiency || '0'}%
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={productionData?.efficiency || 0} 
-                    color="success"
-                    sx={{ height: 8, borderRadius: 4 }}
-                  />
-                </ChartCard>
-              </Grid>
-            </Grid>
-          )}
-        </ReportsChartsSection>
-
-        {/* Mostrar errores si existen */}
-        {(dashboardError || salesError || productsError || customersError || productionError) && (
+        {reportError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            Error al cargar los reportes. Por favor, inténtalo de nuevo.
+            Error al cargar los reportes: {reportError}
           </Alert>
         )}
       </ReportsContentWrapper>
     </ReportsPageContainer>
   );
-};
+});
 
 export default ReportsPage;

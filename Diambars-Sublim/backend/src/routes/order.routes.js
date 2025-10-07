@@ -199,6 +199,16 @@ router.get('/reports/production',
   reportController.getProductionReport
 );
 
+// NUEVO: Reporte de análisis de órdenes
+router.get('/reports/order-analysis',
+  authRequired,
+  roleRequired(['admin', 'manager']),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  validateRequest,
+  reportController.getOrderAnalysisReport
+);
+
 // ==================== CONFIGURACIÓN DE PAGOS ====================
 
 // NOTA: Las rutas de configuración y estadísticas de pagos han sido movidas a /api/payments/

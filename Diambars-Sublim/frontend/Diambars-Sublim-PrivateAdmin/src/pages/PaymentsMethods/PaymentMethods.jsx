@@ -41,7 +41,35 @@ import {
   X
 } from '@phosphor-icons/react';
 
-// ================ ESTILOS CON EFECTOS HOVER APLICADOS ================
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+const marbleFlowKeyframes = `
+@keyframes marbleFlow {
+  0% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-8%, -8%) rotate(5deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-15%, 8%) rotate(-3deg) scale(1.08);
+  }
+  75% {
+    transform: translate(-8%, -5%) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+}
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
+// ================ ESTILOS CON EFECTOS HOVER APLICADOS ================ 
 
 const PaymentPageContainer = styled(Box)({
   minHeight: '100vh',
@@ -245,6 +273,252 @@ const PaymentModernButton = styled(Button)(({ theme }) => ({
 }));
 
 // HOVER DISMINUIDO (-2px) en cards de métodos de pago
+const PaymentStatsGrid = styled(Box)(({ theme }) => ({
+  width: '100%',
+  display: 'grid',
+  gap: '24px',
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  marginBottom: '32px',
+  [theme.breakpoints.down(1400)]: {
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '20px',
+  },
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '18px',
+  },
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '16px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '14px',
+  },
+  [theme.breakpoints.down(480)]: {
+    gridTemplateColumns: '1fr',
+    gap: '12px',
+  }
+}));
+
+const PaymentStatCard = styled(PaymentModernCard)(({ theme, variant }) => {
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(25, 83, 158, 0.2)',
+      marbleVeins: 'rgba(3, 44, 166, 0.35)',
+      marbleHighlight: 'rgba(123, 164, 221, 0.4)',
+      marbleDark: 'rgba(1, 21, 63, 0.15)',
+    },
+    success: {
+      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(13, 75, 54, 0.2)',
+      marbleVeins: 'rgba(9, 138, 97, 0.35)',
+      marbleHighlight: 'rgba(86, 236, 181, 0.4)',
+      marbleDark: 'rgba(2, 77, 55, 0.15)',
+    },
+    warning: {
+      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+      color: 'white',
+      border: 'none',
+      marbleBase: 'rgba(245, 158, 11, 0.2)',
+      marbleVeins: 'rgba(217, 119, 6, 0.35)',
+      marbleHighlight: 'rgba(251, 191, 36, 0.4)',
+      marbleDark: 'rgba(180, 83, 9, 0.15)',
+    },
+    secondary: {
+      background: 'white',
+      color: '#010326',
+      marbleBase: 'rgba(31, 100, 191, 0.08)',
+      marbleVeins: 'rgba(3, 44, 166, 0.15)',
+      marbleHighlight: 'rgba(100, 150, 220, 0.25)',
+      marbleDark: 'rgba(31, 100, 191, 0.05)',
+    }
+  };
+
+  const selectedVariant = variants[variant] || variants.secondary;
+  const isColoredVariant = variant === 'primary' || variant === 'success' || variant === 'warning';
+
+  return {
+    padding: '28px',
+    width: '100%',
+    minHeight: '160px',
+    maxHeight: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
+    boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
+    ...selectedVariant,
+    
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: '-50%',
+      left: '-50%',
+      width: '200%',
+      height: '200%',
+      opacity: 0,
+      transition: 'opacity 0.5s ease',
+      pointerEvents: 'none',
+      zIndex: 0,
+      background: `
+        radial-gradient(ellipse at 15% 30%, ${selectedVariant.marbleHighlight} 0%, transparent 40%),
+        radial-gradient(ellipse at 85% 20%, ${selectedVariant.marbleVeins} 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, ${selectedVariant.marbleBase} 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, ${selectedVariant.marbleHighlight} 0%, transparent 35%),
+        radial-gradient(ellipse at 30% 70%, ${selectedVariant.marbleVeins} 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 90%, ${selectedVariant.marbleBase} 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 90%, ${selectedVariant.marbleDark} 0%, transparent 30%),
+        linear-gradient(125deg, 
+          ${selectedVariant.marbleBase} 0%, 
+          transparent 25%, 
+          ${selectedVariant.marbleVeins} 50%, 
+          transparent 75%, 
+          ${selectedVariant.marbleHighlight} 100%
+        )
+      `,
+      backgroundSize: '100% 100%',
+      animation: 'marbleFlow 10s ease-in-out infinite',
+      filter: 'blur(2px)',
+    },
+
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      background: isColoredVariant 
+        ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+        : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
+      transition: 'left 0.6s ease',
+      zIndex: 1,
+      pointerEvents: 'none',
+    },
+
+    '&:hover': {
+      transform: 'translateY(-1px) scale(1.02)',
+      boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
+      '&::before': {
+        opacity: 1,
+      },
+      '&::after': {
+        left: '100%',
+      }
+    },
+
+    '&:active': {
+      transform: 'translateY(0)',
+      transition: 'transform 0.1s ease-out',
+    },
+
+    '& > *': {
+      position: 'relative',
+      zIndex: 2,
+    },
+
+    [theme.breakpoints.down('lg')]: {
+      padding: '24px',
+      minHeight: '150px',
+    },
+    [theme.breakpoints.down('md')]: {
+      padding: '20px',
+      minHeight: '140px',
+    },
+    [theme.breakpoints.down('sm')]: {
+      padding: '18px',
+      minHeight: '130px',
+    }
+  };
+});
+
+const PaymentStatHeader = styled(Box)({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  marginBottom: '16px',
+  width: '100%',
+});
+
+const PaymentStatIconContainer = styled(Box)(({ variant, theme }) => ({
+  width: '56px',
+  height: '56px',
+  borderRadius: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: (variant === 'primary' || variant === 'success' || variant === 'warning')
+    ? 'rgba(255, 255, 255, 0.15)' 
+    : alpha('#1F64BF', 0.08),
+  backdropFilter: 'blur(8px)',
+  color: (variant === 'primary' || variant === 'success' || variant === 'warning') ? 'white' : '#1F64BF',
+  flexShrink: 0,
+  transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+  position: 'relative',
+  zIndex: 2,
+  [theme.breakpoints.down('lg')]: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+  },
+  [theme.breakpoints.down('md')]: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '10px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
+  }
+}));
+
+const PaymentStatValue = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '2.2rem',
+  fontWeight: 700,
+  lineHeight: 1.1,
+  marginBottom: '6px',
+  color: (variant === 'primary' || variant === 'success' || variant === 'warning') ? 'white' : '#010326',
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '2rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.8rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.6rem',
+  }
+}));
+
+const PaymentStatLabel = styled(Typography)(({ variant, theme }) => ({
+  fontSize: '0.9rem',
+  fontWeight: 500,
+  opacity: (variant === 'primary' || variant === 'success' || variant === 'warning') ? 0.9 : 0.7,
+  color: (variant === 'primary' || variant === 'success' || variant === 'warning') ? 'white' : '#032CA6',
+  lineHeight: 1.3,
+  fontFamily: "'Mona Sans'",
+  [theme.breakpoints.down('lg')]: {
+    fontSize: '0.875rem',
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '0.8rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.75rem',
+  }
+}));
+
 const PaymentMethodCard = styled(PaymentModernCard)(({ theme }) => ({
   padding: '24px',
   transition: 'all 0.3s ease',
@@ -403,23 +677,60 @@ const PaymentMethods = () => {
               >
                 Agregar Método
               </PaymentModernButton>
-              
-              <PaymentModernButton
-                variant="outlined"
-                startIcon={<ChartBar size={20} />}
-                onClick={() => setStatsModalOpen(true)}
-                sx={{
-                  borderColor: '#032CA6',
-                  color: '#032CA6',
-                  '&::before': { background: 'linear-gradient(90deg, transparent, rgba(3, 44, 166, 0.15), transparent)' },
-                  '&:hover': { borderColor: '#021A7A', backgroundColor: alpha('#032CA6', 0.04) }
-                }}
-              >
-                Ver Estadísticas
-              </PaymentModernButton>
             </PaymentActionsSection>
           </PaymentHeaderContent>
         </PaymentHeaderSection>
+
+        {/* Estadísticas */}
+        <PaymentStatsGrid>
+          <PaymentStatCard variant="primary">
+            <PaymentStatHeader>
+              <PaymentStatIconContainer variant="primary">
+                <ChartBar size={24} weight="duotone" />
+              </PaymentStatIconContainer>
+            </PaymentStatHeader>
+            <Box>
+              <PaymentStatValue variant="primary">{stats.totalTransactions}</PaymentStatValue>
+              <PaymentStatLabel variant="primary">Total Transacciones</PaymentStatLabel>
+            </Box>
+          </PaymentStatCard>
+
+          <PaymentStatCard variant="success">
+            <PaymentStatHeader>
+              <PaymentStatIconContainer variant="success">
+                <Money size={24} weight="duotone" />
+              </PaymentStatIconContainer>
+            </PaymentStatHeader>
+            <Box>
+              <PaymentStatValue variant="success">${stats.totalAmount.toFixed(2)}</PaymentStatValue>
+              <PaymentStatLabel variant="success">Monto Total</PaymentStatLabel>
+            </Box>
+          </PaymentStatCard>
+
+          <PaymentStatCard variant="secondary">
+            <PaymentStatHeader>
+              <PaymentStatIconContainer variant="secondary">
+                <CreditCard size={24} weight="duotone" />
+              </PaymentStatIconContainer>
+            </PaymentStatHeader>
+            <Box>
+              <PaymentStatValue variant="secondary">Wompi</PaymentStatValue>
+              <PaymentStatLabel variant="secondary">Método Más Usado</PaymentStatLabel>
+            </Box>
+          </PaymentStatCard>
+
+          <PaymentStatCard variant="secondary">
+            <PaymentStatHeader>
+              <PaymentStatIconContainer variant="secondary">
+                <ChartBar size={24} weight="duotone" />
+              </PaymentStatIconContainer>
+            </PaymentStatHeader>
+            <Box>
+              <PaymentStatValue variant="secondary">${(stats.totalAmount / stats.totalTransactions).toFixed(2)}</PaymentStatValue>
+              <PaymentStatLabel variant="secondary">Ticket Promedio</PaymentStatLabel>
+            </Box>
+          </PaymentStatCard>
+        </PaymentStatsGrid>
 
         {/* Lista */}
         {loading ? (

@@ -1,4 +1,4 @@
-// src/pages/Users/Users.jsx - REFACTORIZADO CON ARQUITECTURA DESIGNMANAGEMENT
+// src/pages/Users/Users.jsx - CON EFECTO HOVER MÁRMOL EN STATS CARDS
 import React, { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import {
@@ -61,6 +61,34 @@ Swal.mixin({
   }
 });
 
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================
+const marbleFlowKeyframes = `
+@keyframes marbleFlow {
+  0% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate(-8%, -8%) rotate(5deg) scale(1.05);
+  }
+  50% {
+    transform: translate(-15%, 8%) rotate(-3deg) scale(1.08);
+  }
+  75% {
+    transform: translate(-8%, -5%) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translate(2%, 2%) rotate(0deg) scale(1);
+  }
+}
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
 // ================ ESTILOS MODERNOS RESPONSIVE - USERS ================
 const UsersPageContainer = styled(Box)({
   minHeight: '100vh',
@@ -74,7 +102,7 @@ const UsersPageContainer = styled(Box)({
 
 const UsersContentWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '1600px', // Mismo ancho que DesignManagement
+  maxWidth: '1600px',
   margin: '0 auto',
   paddingTop: '120px',
   paddingBottom: '40px',
@@ -364,7 +392,6 @@ const UsersSecondaryActionButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-// CONTENEDOR UNIFICADO USUARIOS
 const UsersUnifiedContainer = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: '100%',
@@ -377,18 +404,17 @@ const UsersStatsContainer = styled(UsersUnifiedContainer)(({ theme }) => ({
   zIndex: 1,
 }));
 
-// GRID DE ESTADÍSTICAS USUARIOS - IDENTICAL TO DESIGNMANAGEMENT
 const UsersStatsGrid = styled(Box)(({ theme }) => ({
   width: '100%',
   display: 'grid',
   gap: '24px',
-  gridTemplateColumns: 'repeat(4, 1fr)', // Desktop - 4 columnas iguales
+  gridTemplateColumns: 'repeat(4, 1fr)',
   [theme.breakpoints.down(1400)]: {
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '20px',
   },
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 grid para tablets
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '18px',
   },
   [theme.breakpoints.down('md')]: {
@@ -396,39 +422,61 @@ const UsersStatsGrid = styled(Box)(({ theme }) => ({
     gap: '16px',
   },
   [theme.breakpoints.down('sm')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)', // 2 columnas en móviles grandes
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '14px',
   },
   [theme.breakpoints.down(480)]: {
-    gridTemplateColumns: '1fr', // 1 columna para móviles muy pequeños
+    gridTemplateColumns: '1fr',
     gap: '12px',
   }
 }));
 
+// ================ NUEVA STAT CARD CON EFECTO MÁRMOL MUY MARCADO Y ADAPTADO AL COLOR ================
 const UsersStatCard = styled(UsersModernCard)(({ theme, variant }) => {
   const variants = {
     primary: {
       background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
       color: 'white',
       border: 'none',
+      // Efecto mármol AZUL sobre fondo azul
+      marbleBase: 'rgba(25, 83, 158, 0.2)',
+      marbleVeins: 'rgba(3, 44, 166, 0.35)',
+      marbleHighlight: 'rgba(123, 164, 221, 0.4)',
+      marbleDark: 'rgba(1, 21, 63, 0.15)',
     },
     success: {
       background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
       color: 'white',
       border: 'none',
+      // Efecto mármol VERDE sobre fondo verde
+      marbleBase: 'rgba(13, 75, 54, 0.2)',
+      marbleVeins: 'rgba(9, 138, 97, 0.35)',
+      marbleHighlight: 'rgba(86, 236, 181, 0.4)',
+      marbleDark: 'rgba(2, 77, 55, 0.15)',
     },
     warning: {
       background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
       color: 'white',
       border: 'none',
+      // Efecto mármol NARANJA/AMARILLO sobre fondo naranja
+      marbleBase: 'rgba(245, 158, 11, 0.2)',
+      marbleVeins: 'rgba(217, 119, 6, 0.35)',
+      marbleHighlight: 'rgba(251, 191, 36, 0.4)',
+      marbleDark: 'rgba(180, 83, 9, 0.15)',
     },
     secondary: {
       background: 'white',
       color: '#010326',
+      // Para blanco: efecto mármol AZULADO como ProductCard
+      marbleBase: 'rgba(31, 100, 191, 0.08)',
+      marbleVeins: 'rgba(3, 44, 166, 0.15)',
+      marbleHighlight: 'rgba(100, 150, 220, 0.25)',
+      marbleDark: 'rgba(31, 100, 191, 0.05)',
     }
   };
 
   const selectedVariant = variants[variant] || variants.secondary;
+  const isColoredVariant = variant === 'primary' || variant === 'success' || variant === 'warning';
 
   return {
     padding: '28px',
@@ -445,18 +493,42 @@ const UsersStatCard = styled(UsersModernCard)(({ theme, variant }) => {
     transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
     boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
     ...selectedVariant,
-    '&::before': (variant === 'primary' || variant === 'success' || variant === 'warning') ? {
+    
+    // EFECTO MÁRMOL ANIMADO MUY VISIBLE - DETRÁS DEL CONTENIDO
+    '&::before': {
       content: '""',
       position: 'absolute',
-      top: 0,
-      right: 0,
-      width: '120px',
-      height: '120px',
-      background: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '50%',
-      transform: 'translate(30px, -30px)',
-      transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
-    } : {},
+      top: '-50%',
+      left: '-50%',
+      width: '200%',
+      height: '200%',
+      opacity: 0,
+      transition: 'opacity 0.5s ease',
+      pointerEvents: 'none',
+      zIndex: 0, // DETRÁS del contenido
+      // Mármol adaptado al color de la card
+      background: `
+        radial-gradient(ellipse at 15% 30%, ${selectedVariant.marbleHighlight} 0%, transparent 40%),
+        radial-gradient(ellipse at 85% 20%, ${selectedVariant.marbleVeins} 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, ${selectedVariant.marbleBase} 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, ${selectedVariant.marbleHighlight} 0%, transparent 35%),
+        radial-gradient(ellipse at 30% 70%, ${selectedVariant.marbleVeins} 0%, transparent 40%),
+        radial-gradient(ellipse at 90% 90%, ${selectedVariant.marbleBase} 0%, transparent 45%),
+        radial-gradient(ellipse at 10% 90%, ${selectedVariant.marbleDark} 0%, transparent 30%),
+        linear-gradient(125deg, 
+          ${selectedVariant.marbleBase} 0%, 
+          transparent 25%, 
+          ${selectedVariant.marbleVeins} 50%, 
+          transparent 75%, 
+          ${selectedVariant.marbleHighlight} 100%
+        )
+      `,
+      backgroundSize: '100% 100%',
+      animation: 'marbleFlow 10s ease-in-out infinite',
+      filter: 'blur(2px)',
+    },
+
+    // Efecto de destello horizontal - ENCIMA del mármol pero DETRÁS del contenido
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -464,26 +536,37 @@ const UsersStatCard = styled(UsersModernCard)(({ theme, variant }) => {
       left: '-100%',
       width: '100%',
       height: '100%',
-      background: (variant === 'primary' || variant === 'success' || variant === 'warning') 
+      background: isColoredVariant 
         ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
         : 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.1), transparent)',
-      transition: 'left 0.5s ease',
-      zIndex: 1,
+      transition: 'left 0.6s ease',
+      zIndex: 1, // DETRÁS del contenido
+      pointerEvents: 'none',
     },
+
     '&:hover': {
       transform: 'translateY(-1px) scale(1.02)',
       boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
-      '&::before': (variant === 'primary' || variant === 'success' || variant === 'warning') ? {
-        transform: 'translate(20px, -20px) scale(1.1)',
-      } : {},
+      // ACTIVAR MÁRMOL CON OPACIDAD ALTA
+      '&::before': {
+        opacity: 1,
+      },
       '&::after': {
         left: '100%',
       }
     },
+
     '&:active': {
       transform: 'translateY(0)',
       transition: 'transform 0.1s ease-out',
     },
+
+    // TODO EL CONTENIDO ENCIMA (z-index: 2)
+    '& > *': {
+      position: 'relative',
+      zIndex: 2,
+    },
+
     [theme.breakpoints.down('lg')]: {
       padding: '24px',
       minHeight: '150px',
@@ -515,11 +598,14 @@ const UsersStatIconContainer = styled(Box)(({ variant, theme }) => ({
   alignItems: 'center',
   justifyContent: 'center',
   background: (variant === 'primary' || variant === 'success' || variant === 'warning')
-    ? 'rgba(255, 255, 255, 0.2)' 
-    : alpha('#1F64BF', 0.1),
+    ? 'rgba(255, 255, 255, 0.15)' 
+    : alpha('#1F64BF', 0.08),
+  backdropFilter: 'blur(8px)',
   color: (variant === 'primary' || variant === 'success' || variant === 'warning') ? 'white' : '#1F64BF',
   flexShrink: 0,
   transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+  position: 'relative',
+  zIndex: 2,
   [theme.breakpoints.down('lg')]: {
     width: '48px',
     height: '48px',
@@ -780,7 +866,6 @@ const UsersSortControl = styled(Box)(({ theme }) => ({
   }
 }));
 
-// Lista de usuarios
 const UsersSection = styled(UsersUnifiedContainer)({
   marginBottom: '32px',
   position: 'relative',
@@ -828,8 +913,7 @@ const UsersGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gap: '28px',
   width: '100%',
-  // Grid responsivo para usuarios mejorado - 3 columnas por fila
-  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', // Desktop - 3 columnas
+  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
   [theme.breakpoints.down('xl')]: {
     gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
     gap: '24px',
@@ -961,7 +1045,6 @@ const ErrorAlert = styled(UsersModernCard)(({ theme }) => ({
 const Users = () => {
   const theme = useTheme();
   
-  // ==================== HOOKS ====================
   const {
     users,
     loading,
@@ -974,7 +1057,6 @@ const Users = () => {
     refetch
   } = useUsers();
 
-  // ==================== ESTADOS LOCALES ====================
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -984,9 +1066,6 @@ const Users = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // ==================== EFECTOS ====================
-  
-  // Filtrar usuarios cuando cambien los valores
   useEffect(() => {
     let filtered = users.filter(user => {
       const matchesSearch = 
@@ -1002,7 +1081,6 @@ const Users = () => {
       return matchesSearch && matchesRole && matchesStatus;
     });
 
-    // Aplicar ordenamiento
     filtered.sort((a, b) => {
       let aValue = a[sortOption];
       let bValue = b[sortOption];
@@ -1022,7 +1100,6 @@ const Users = () => {
     setFilteredUsers(filtered);
   }, [users, searchQuery, selectedRole, selectedStatus, sortOption, sortOrder]);
 
-  // ==================== ESTADÍSTICAS CALCULADAS ====================
   const stats = useMemo(() => {
     const userStats = getUserStats();
     
@@ -1070,8 +1147,6 @@ const Users = () => {
     ];
   }, [getUserStats]);
 
-  // ==================== MANEJADORES DE FILTROS ====================
-  
   const handleFilterByRole = (role) => {
     setSelectedRole(role);
   };
@@ -1105,8 +1180,6 @@ const Users = () => {
     setSortOrder('desc');
   };
 
-  // ==================== MANEJADORES DE ACCIONES ====================
-  
   const handleCreateUser = async (userData) => {
     try {
       setActionLoading(true);
@@ -1263,7 +1336,6 @@ const Users = () => {
       });
 
       if (format) {
-        // Preparar datos para exportar
         const exportData = filteredUsers.map(user => ({
           Nombre: user.name,
           Email: user.email,
@@ -1274,7 +1346,6 @@ const Users = () => {
           'Último Login': user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('es-ES') : 'Nunca'
         }));
 
-        // Crear CSV
         const headers = Object.keys(exportData[0]);
         const csvContent = [
           headers.join(','),
@@ -1283,7 +1354,6 @@ const Users = () => {
           )
         ].join('\n');
 
-        // Descargar archivo
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -1314,8 +1384,6 @@ const Users = () => {
     }
   };
 
-  // ==================== RENDER DE LOADING INICIAL ====================
-  
   if (loading && users.length === 0) {
     return (
       <UsersPageContainer>
@@ -1337,12 +1405,9 @@ const Users = () => {
     );
   }
 
-  // ==================== RENDER PRINCIPAL ====================
-  
   return (
     <UsersPageContainer>
       <UsersContentWrapper>
-        {/* Header Principal */}
         <UsersHeaderSection sx={{ fontWeight: '700 !important' }} className="force-bold" style={{ fontWeight: '700 !important' }}>
           <UsersHeaderContent>
             <UsersHeaderInfo>
@@ -1385,7 +1450,6 @@ const Users = () => {
           </UsersHeaderContent>
         </UsersHeaderSection>
 
-        {/* Alerta de Error */}
         {error && (
           <ErrorAlert>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1416,7 +1480,6 @@ const Users = () => {
           </ErrorAlert>
         )}
 
-        {/* Estadísticas Interactivas */}
         <UsersStatsContainer>
           <UsersStatsGrid>
             {stats.map((stat) => (
@@ -1449,10 +1512,8 @@ const Users = () => {
           </UsersStatsGrid>
         </UsersStatsContainer>
 
-        {/* Controles de búsqueda y filtros */}
         <UsersControlsSection>
           <UsersControlsContent>
-            {/* Barra de búsqueda principal */}
             <UsersSearchSection>
               <UsersModernTextField
                 placeholder="Buscar usuarios por nombre, email o teléfono..."
@@ -1479,7 +1540,6 @@ const Users = () => {
               </UsersSortControl>
             </UsersSearchSection>
 
-            {/* Filtros avanzados */}
             <UsersFiltersSection>
               <UsersFilterControl size="small">
                 <Select
@@ -1553,7 +1613,6 @@ const Users = () => {
                 </Select>
               </UsersFilterControl>
 
-              {/* Botón para limpiar filtros */}
               {(searchQuery || selectedRole || selectedStatus) && (
                 <Tooltip title="Limpiar todos los filtros">
                   <Button
@@ -1584,7 +1643,6 @@ const Users = () => {
           </UsersControlsContent>
         </UsersControlsSection>
 
-        {/* Lista de Usuarios */}
         <UsersSection>
           <UsersSectionHeader>
             <UsersSectionTitle component="div">
@@ -1610,7 +1668,6 @@ const Users = () => {
               </Box>
             </UsersSectionTitle>
 
-            {/* Información de resultados */}
             {filteredUsers.length > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <Typography variant="body2" sx={{ color: '#032CA6', opacity: 0.8, fontFamily: "'Mona Sans'" }}>
@@ -1620,7 +1677,6 @@ const Users = () => {
             )}
           </UsersSectionHeader>
 
-          {/* Estado de carga durante refetch */}
           {loading && users.length > 0 && (
             <UsersLoadingOverlay>
               <CircularProgress size={20} sx={{ color: '#1F64BF' }} />
@@ -1630,7 +1686,6 @@ const Users = () => {
             </UsersLoadingOverlay>
           )}
 
-          {/* Grid de usuarios o estado vacío */}
           {filteredUsers.length > 0 ? (
             <UsersGrid>
               {filteredUsers.map((user) => (
@@ -1645,7 +1700,6 @@ const Users = () => {
               ))}
             </UsersGrid>
           ) : (
-            /* Estado vacío mejorado */
             <UsersEmptyState>
               <UsersEmptyStateIcon>
                 <UsersIcon size={40} weight="duotone" />
@@ -1699,7 +1753,6 @@ const Users = () => {
                 )}
               </Box>
 
-              {/* Sugerencias de acción */}
               {users.length === 0 && !loading && (
                 <Box sx={{
                   mt: 4,
@@ -1738,7 +1791,6 @@ const Users = () => {
           )}
         </UsersSection>
 
-        {/* Indicador de carga durante actualizaciones */}
         {loading && users.length > 0 && (
           <Box sx={{
             position: 'fixed',
@@ -1762,9 +1814,6 @@ const Users = () => {
         )}
       </UsersContentWrapper>
 
-      {/* ==================== MODAL DE CREACIÓN ==================== */}
-      
-      {/* Modal de creación de usuario - SIN wrapper Modal genérico */}
       {showCreateModal && (
         <CreateUserModal
           open={showCreateModal}
@@ -1776,5 +1825,4 @@ const Users = () => {
   );
 };
 
-// ==================== EXPORT ==================== 
 export default Users;
