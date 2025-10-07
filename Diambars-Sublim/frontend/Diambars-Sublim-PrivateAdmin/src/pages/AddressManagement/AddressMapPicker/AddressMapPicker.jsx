@@ -31,7 +31,6 @@ import 'leaflet/dist/leaflet.css';
 import useGeolocation from '../../../hooks/useGeolocation';
 import addressService from '../../../api/AddressService';
 import geocodingService from '../../../api/GeocodingService';
-import enhancedGeocodingService from '../../../api/EnhancedGeocodingService';
 
 // Fix para iconos de Leaflet en React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -732,8 +731,11 @@ const AddressMapPicker = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(13);
   const [showConfirmationToast, setShowConfirmationToast] = useState(false);
+  const [isAutoPopulating, setIsAutoPopulating] = useState(false); // Bandera para evitar bucles
+  const [lastAutoCenter, setLastAutoCenter] = useState(null); // Último auto-centrado
 
   const mapRef = useRef(null);
+  const reverseGeocodingTimeoutRef = useRef(null);
 
   // ==================== EFECTOS ====================
   useEffect(() => {
@@ -746,6 +748,12 @@ const AddressMapPicker = ({
   // Efecto para centrar automáticamente el mapa cuando cambien departamento/municipio
   useEffect(() => {
     const centerMap = async () => {
+      // Evitar auto-centrado si estamos en proceso de auto-población
+      if (isAutoPopulating) {
+        console.log('🗺️ [AddressMapPicker] Saltando auto-centrado - en proceso de auto-población');
+        return;
+      }
+      
       if (autoCenterOnLocationChange && (selectedDepartment || selectedMunicipality)) {
         let newCenter = null;
         
@@ -764,11 +772,31 @@ const AddressMapPicker = ({
         }
         
         if (newCenter) {
+          // Verificar si ya estamos cerca de esta ubicación (tolerancia de ~1km)
+          const tolerance = 0.01; // Aproximadamente 1km
+          const isNearby = currentLocation && 
+            Math.abs(currentLocation.lat - newCenter.lat) < tolerance &&
+            Math.abs(currentLocation.lng - newCenter.lng) < tolerance;
+            
+          // Verificar si es el mismo auto-centrado que el anterior
+          const isSameAsLast = lastAutoCenter &&
+            Math.abs(lastAutoCenter.lat - newCenter.lat) < tolerance &&
+            Math.abs(lastAutoCenter.lng - newCenter.lng) < tolerance;
+          
+          if (isNearby || isSameAsLast) {
+            console.log('🗺️ [AddressMapPicker] Saltando auto-centrado - ya estamos cerca o es el mismo que antes');
+            return;
+          }
+          
           console.log('🗺️ [AddressMapPicker] Centrando mapa en:', { 
             department: selectedDepartment, 
             municipality: selectedMunicipality, 
             coordinates: newCenter 
           });
+          
+          // Marcar que estamos haciendo auto-centrado
+          setLastAutoCenter(newCenter);
+          setIsAutoPopulating(true);
           
           setCurrentLocation(newCenter);
           setCrosshairMode(false);
@@ -782,12 +810,19 @@ const AddressMapPicker = ({
           
           // Limpiar información anterior para forzar nueva búsqueda
           setAddressInfo(null);
+          
+          // Desmarcar auto-población después de un tiempo
+          setTimeout(() => {
+            setIsAutoPopulating(false);
+          }, 2000);
         }
       }
     };
 
-    centerMap();
-  }, [selectedDepartment, selectedMunicipality, autoCenterOnLocationChange]);
+    // Agregar un debounce para evitar múltiples ejecuciones rápidas
+    const timeoutId = setTimeout(centerMap, 300);
+    return () => clearTimeout(timeoutId);
+  }, [selectedDepartment, selectedMunicipality, autoCenterOnLocationChange, currentLocation, isAutoPopulating, lastAutoCenter]);
 
   // Efecto para centrar automáticamente cuando cambie currentLocation
   useEffect(() => {
@@ -798,61 +833,90 @@ const AddressMapPicker = ({
     }
   }, [currentLocation, crosshairMode]);
 
-  // Enhanced auto reverse geocoding con auto-población de formulario
+  // Auto reverse geocoding con auto-población de formulario
   useEffect(() => {
-    const performEnhancedReverseGeocode = async () => {
+    const performReverseGeocode = async () => {
+      console.log('🗺️ [useEffect] Evaluando condiciones para reverse geocoding:', {
+        currentLocation: !!currentLocation,
+        crosshairMode,
+        enableAutoFormPopulation,
+        hasCallback: !!onAddressDataChange,
+        isAutoPopulating
+      });
+      
       if (currentLocation && !crosshairMode && enableAutoFormPopulation) {
         try {
-          console.log('🗺️ [AddressMapPicker] Iniciando reverse geocoding mejorado...');
+          console.log('🗺️ [AddressMapPicker] Iniciando reverse geocoding para:', currentLocation);
           
-          // Usar el servicio mejorado de geocodificación
-          const result = await enhancedGeocodingService.reverseGeocodeEnhanced(
-            currentLocation.lat, 
-            currentLocation.lng
-          );
+          // Usar el servicio de geocodificación
+          const result = await reverseGeocode(currentLocation.lat, currentLocation.lng);
           
-          if (result) {
+          if (result && result.addressComponents) {
             console.log('🗺️ [AddressMapPicker] Resultado de reverse geocoding:', result);
             
+            // Actualizar addressInfo
             setAddressInfo(result.addressComponents);
             
-            // Auto-poblar formulario si hay callback
-            if (onAddressDataChange && result.formData) {
-              console.log('🗺️ [AddressMapPicker] Auto-poblando formulario:', result.formData);
+            // Auto-poblar formulario si hay callback y NO estamos en auto-población
+            if (onAddressDataChange && !isAutoPopulating) {
+              console.log('🗺️ [AddressMapPicker] Auto-poblando formulario con:', result.addressComponents);
               
-              onAddressDataChange({
-                department: result.formData.department,
-                municipality: result.formData.municipality,
-                suggestedAddress: result.formData.suggestedAddress,
+              // Marcar temporalmente que estamos auto-poblando para evitar bucles
+              setIsAutoPopulating(true);
+              
+              const formData = {
+                department: result.addressComponents.department || '',
+                municipality: result.addressComponents.municipality || '',
+                suggestedAddress: result.addressComponents.formattedAddress || '',
                 coordinates: {
                   lat: currentLocation.lat,
                   lng: currentLocation.lng
                 },
-                confidence: result.formData.confidence,
+                confidence: 'medium',
                 isAutoPopulated: true,
-                source: result.source || 'enhanced_geocoding'
-              });
+                source: 'geocoding_service',
+                timestamp: new Date().toISOString() // Añadir timestamp para forzar actualización
+              };
+              
+              console.log('🗺️ [AddressMapPicker] Enviando datos al formulario:', formData);
+              onAddressDataChange(formData);
+              
+              // Desmarcar auto-población después de un delay
+              setTimeout(() => {
+                setIsAutoPopulating(false);
+              }, 1500);
+            } else if (isAutoPopulating) {
+              console.log('🗺️ [AddressMapPicker] Saltando auto-población - ya en proceso');
+            } else {
+              console.warn('⚠️ [AddressMapPicker] No hay callback onAddressDataChange disponible');
             }
+          } else {
+            console.warn('⚠️ [AddressMapPicker] No se obtuvo resultado válido del reverse geocoding');
           }
         } catch (error) {
-          console.error('❌ [AddressMapPicker] Enhanced reverse geocoding failed:', error);
-          
-          // Fallback al método original
-          try {
-            const fallbackResult = await reverseGeocode(currentLocation.lat, currentLocation.lng);
-            if (fallbackResult) {
-              setAddressInfo(fallbackResult.addressComponents);
-            }
-          } catch (fallbackError) {
-            console.log('Fallback reverse geocoding also failed:', fallbackError);
-          }
+          console.error('❌ [AddressMapPicker] Reverse geocoding failed:', error);
+          setError('Error al obtener información de la ubicación');
         }
+      } else {
+        console.log('🗺️ [AddressMapPicker] Saltando reverse geocoding - condiciones no cumplidas');
       }
     };
 
-    const timeoutId = setTimeout(performEnhancedReverseGeocode, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [currentLocation, crosshairMode, reverseGeocode, enableAutoFormPopulation, onAddressDataChange]);
+    // Limpiar timeout anterior si existe
+    if (reverseGeocodingTimeoutRef.current) {
+      clearTimeout(reverseGeocodingTimeoutRef.current);
+    }
+
+    // Usar un delay más largo para evitar llamadas excesivas
+    reverseGeocodingTimeoutRef.current = setTimeout(performReverseGeocode, 1000);
+    
+    return () => {
+      if (reverseGeocodingTimeoutRef.current) {
+        clearTimeout(reverseGeocodingTimeoutRef.current);
+        console.log('🗺️ [AddressMapPicker] Limpiando timeout de reverse geocoding');
+      }
+    };
+  }, [currentLocation, crosshairMode, reverseGeocode, enableAutoFormPopulation, onAddressDataChange, isAutoPopulating]);
 
   // Efecto para manejar tecla Escape en pantalla completa
   useEffect(() => {
@@ -870,22 +934,31 @@ const AddressMapPicker = ({
 
   // ==================== MANEJADORES ====================
   const handleLocationSelect = useCallback((location) => {
+    console.log('🗺️ [handleLocationSelect] Nueva ubicación seleccionada:', location);
+    
     // Validar que esté dentro de El Salvador
     if (!isWithinElSalvador(location.lat, location.lng)) {
       setError('La ubicación debe estar dentro de El Salvador');
       return;
     }
 
+    // Limpiar estado anterior ANTES de establecer la nueva ubicación
+    setAddressInfo(null);
+    setError(null);
+    setIsAutoPopulating(false); // Resetear bandera de auto-población
+    setLastAutoCenter(null); // Resetear último auto-centrado
+    
+    // Establecer nueva ubicación y estado
     setCurrentLocation(location);
     setCrosshairMode(false);
-    setError(null);
-    setShowLocationPanel(true); // Mostrar panel cuando se selecciona nueva ubicación
+    setShowLocationPanel(true);
     
-    // Limpiar información de dirección anterior para forzar nueva búsqueda
-    setAddressInfo(null);
+    console.log('🗺️ [handleLocationSelect] Estado actualizado - crosshairMode: false, location:', location);
   }, [isWithinElSalvador]);
 
   const handleConfirmLocation = () => {
+    console.log('🗺️ [handleConfirmLocation] Confirmando ubicación:', currentLocation);
+    
     if (currentLocation && onLocationSelect) {
       onLocationSelect(currentLocation);
       setShowLocationPanel(false); // Ocultar panel después de confirmar
@@ -895,6 +968,10 @@ const AddressMapPicker = ({
       setTimeout(() => {
         setShowConfirmationToast(false);
       }, 3000); // Ocultar después de 3 segundos
+      
+      console.log('🗺️ [handleConfirmLocation] Ubicación confirmada y panel ocultado');
+    } else {
+      console.warn('⚠️ [handleConfirmLocation] No se puede confirmar - falta ubicación o callback');
     }
   };
 
@@ -967,8 +1044,15 @@ const AddressMapPicker = ({
   };
 
   const handleEnableCrosshair = () => {
+    console.log('🗺️ [handleEnableCrosshair] Habilitando modo crosshair');
     setCrosshairMode(true);
     setError(null);
+    // Limpiar información anterior cuando se habilita el crosshair
+    setAddressInfo(null);
+    setShowLocationPanel(false);
+    // Resetear banderas de auto-población
+    setIsAutoPopulating(false);
+    setLastAutoCenter(null);
   };
 
   const handleCenterToElSalvador = () => {
@@ -990,11 +1074,35 @@ const AddressMapPicker = ({
   };
 
   const handleClearLocation = () => {
+    console.log('🗺️ [handleClearLocation] Limpiando ubicación y reseteando estado');
     setCurrentLocation(null);
     setCrosshairMode(true);
     setAddressInfo(null);
     setShowLocationPanel(false);
     setError(null);
+    // Resetear banderas de auto-población
+    setIsAutoPopulating(false);
+    setLastAutoCenter(null);
+    
+    // Limpiar timeout de reverse geocoding si existe
+    if (reverseGeocodingTimeoutRef.current) {
+      clearTimeout(reverseGeocodingTimeoutRef.current);
+      reverseGeocodingTimeoutRef.current = null;
+    }
+    
+    // Notificar al componente padre que se limpió la ubicación
+    if (onAddressDataChange) {
+      onAddressDataChange({
+        department: '',
+        municipality: '',
+        suggestedAddress: '',
+        coordinates: null,
+        confidence: null,
+        isAutoPopulated: false,
+        source: 'manual_clear',
+        timestamp: new Date().toISOString()
+      });
+    }
   };
 
   // ==================== DATOS CALCULADOS ====================
