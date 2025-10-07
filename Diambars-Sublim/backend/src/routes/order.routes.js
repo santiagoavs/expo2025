@@ -267,6 +267,20 @@ router.get('/:id/quality-control',
   orderController.getQualityControlData
 );
 
+// Obtener timeline de una orden
+router.get('/:id/timeline',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderTimeline
+);
+
+// Obtener detalles de pago de una orden
+router.get('/:id/payment-details',
+  authRequired,
+  validateMongoId('id'),
+  orderController.getOrderPaymentDetails
+);
+
 // Obtener orden específica por ID (DEBE ir al final para evitar conflictos con rutas específicas)
 router.get('/:id',
   authRequired,

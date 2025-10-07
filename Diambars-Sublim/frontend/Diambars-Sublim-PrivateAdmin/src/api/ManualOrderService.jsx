@@ -346,11 +346,15 @@ const manualOrderService = {
   validateDeliveryAddress(address) {
     const errors = [];
     
-    if (!address.street || address.street.trim().length < 5) {
+    // Soportar tanto "street" como "address" por compatibilidad
+    const addressField = address.address || address.street;
+    if (!addressField || addressField.trim().length < 5) {
       errors.push('Dirección debe tener al menos 5 caracteres');
     }
     
-    if (!address.city || address.city.trim().length < 2) {
+    // Soportar tanto "city" como "municipality" por compatibilidad
+    const cityField = address.municipality || address.city;
+    if (!cityField || cityField.trim().length < 2) {
       errors.push('Ciudad requerida');
     }
     
@@ -358,11 +362,9 @@ const manualOrderService = {
       errors.push('Departamento requerido');
     }
     
-    if (!address.municipality) {
-      errors.push('Municipio requerido');
-    }
-    
-    if (address.phone && !/^\+?[\d\s-()]{8,}$/.test(address.phone)) {
+    // Validar teléfono si está presente (soportar phoneNumber o phone)
+    const phoneField = address.phoneNumber || address.phone;
+    if (phoneField && !/^\+?[\d\s-()]{8,}$/.test(phoneField)) {
       errors.push('Formato de teléfono inválido');
     }
     

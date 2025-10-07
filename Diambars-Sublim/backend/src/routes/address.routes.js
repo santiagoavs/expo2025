@@ -155,7 +155,6 @@ router.post('/set-default-location',
       .optional()
       .isMongoId().withMessage('ID de usuario inválido')
   ],
-  validateRequest,
   addressController.setDefaultLocationFromCoordinates
 );
 
@@ -166,6 +165,19 @@ router.post('/validate',
   addressValidations.validate,
   validateRequest,
   addressController.validateAddress
+);
+
+// Detectar direcciones duplicadas
+router.post('/detect-duplicates',
+  [
+    body('userId').isMongoId().withMessage('ID de usuario inválido'),
+    body('address').notEmpty().withMessage('Dirección requerida'),
+    body('department').notEmpty().withMessage('Departamento requerido'),
+    body('municipality').notEmpty().withMessage('Municipio requerido'),
+    body('coordinates').optional().isArray({ min: 2, max: 2 }).withMessage('Coordenadas deben ser un array de 2 números')
+  ],
+  validateRequest,
+  addressController.detectDuplicates
 );
 
 // Obtener tarifas de envío
