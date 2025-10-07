@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, LinearProgress, Chip, Paper, alpha, Divider, FormControl, InputLabel, Select, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip, Switch, FormControlLabel, useTheme, useMediaQuery, styled } from '@mui/material';
 import { ChartLine, Package, Users, TrendUp, Clock, ArrowRight, User, Coffee, Lightning, Target, Gear, EyeSlash, ChartPie, X } from '@phosphor-icons/react';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip as ChartTooltip, Legend, ArcElement, Filler } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip as ChartTooltip, Legend, ArcElement, Filler, RadialLinearScale } from 'chart.js';
 import { Doughnut, Bar, Pie, PolarArea } from 'react-chartjs-2';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, ChartTooltip, Legend, ArcElement, Filler);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, ChartTooltip, Legend, ArcElement, Filler, RadialLinearScale);
 
 const CHART_TYPES = {
   PRODUCTS_OVERVIEW: { id: 'products_overview', name: 'Productos', icon: Package, description: 'Estado de productos' },
