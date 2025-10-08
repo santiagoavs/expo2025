@@ -262,3 +262,36 @@ export const PERFORMANCE_CONFIG = {
     historyLimit: 50
   }
 };
+
+// ==================== SCALING UTILITIES ====================
+
+/**
+ * Scale customization area coordinates
+ */
+export const scaleCustomizationArea = (area, scaleFactor = 1) => {
+  return {
+    x: (area.x || 0) * scaleFactor,
+    y: (area.y || 0) * scaleFactor,
+    width: (area.width || 100) * scaleFactor,
+    height: (area.height || 100) * scaleFactor
+  };
+};
+
+/**
+ * Calculate scaled dimensions for product images
+ */
+export const calculateScaledDimensions = (originalWidth, originalHeight, scale) => {
+  const scaledWidth = originalWidth * scale;
+  const scaledHeight = originalHeight * scale;
+  
+  // Center the scaled image
+  const x = (CANVAS_CONFIG.width - scaledWidth) / 2;
+  const y = (CANVAS_CONFIG.height - scaledHeight) / 2;
+  
+  return {
+    width: scaledWidth,
+    height: scaledHeight,
+    x: Math.max(x, 0),
+    y: Math.max(y, 0)
+  };
+};

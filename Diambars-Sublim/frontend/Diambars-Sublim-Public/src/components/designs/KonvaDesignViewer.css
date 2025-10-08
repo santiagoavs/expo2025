@@ -1,0 +1,412 @@
+/* components/designs/KonvaDesignViewer.css - KONVA DESIGN VIEWER STYLES (CSS VERSION) */
+
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --color-primary: #3F2724;
+  --color-primary-light: #5A3E3A;
+  --color-primary-dark: #2A1B18;
+  --color-accent: #10B981;
+  --color-accent-light: #34D399;
+  --color-accent-dark: #059669;
+  --color-white: #FFFFFF;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-success: #10B981;
+  
+  /* Glassmorphism variables */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-hover: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+  
+  /* Transitions */
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+}
+
+/* ==================== MAIN CONTAINER ==================== */
+.konva-design-viewer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  font-family: 'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.01) 100%);
+}
+
+/* ==================== CANVAS CONTAINER ==================== */
+.canvas-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 400px;
+  padding: 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.02) 100%);
+  overflow: hidden;
+}
+
+.design-stage {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  background-color: var(--color-white);
+  transition: var(--transition-normal);
+  position: relative;
+}
+
+.design-stage::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ==================== OVERLAY STATES ==================== */
+.loading-overlay,
+.error-overlay,
+.empty-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10;
+  text-align: center;
+  padding: 2rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-gray-200);
+  border-top: 3px solid var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-overlay p,
+.error-overlay p,
+.empty-overlay p {
+  margin: 0;
+  color: var(--color-gray-600);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.empty-overlay h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-gray-700);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Error State */
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.retry-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.retry-btn:active {
+  transform: translateY(0);
+}
+
+/* ==================== DESIGN INFO ==================== */
+.design-info {
+  border-top: 1px solid var(--glass-border);
+  background: transparent;
+  padding: 1.5rem 2rem;
+  position: relative;
+}
+
+.info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.design-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.design-details p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-gray-600);
+  line-height: 1.4;
+}
+
+.design-details strong {
+  color: var(--color-gray-700);
+  font-weight: 600;
+}
+
+.product-name strong {
+  color: var(--color-primary);
+}
+
+.elements-count strong {
+  color: var(--color-accent);
+}
+
+.design-name strong {
+  color: var(--color-primary-light);
+}
+
+.design-status strong {
+  color: var(--color-gray-700);
+}
+
+/* ==================== DOWNLOAD BUTTON ==================== */
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+  color: var(--color-white);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, var(--color-accent-dark) 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.download-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.download-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .canvas-container {
+    padding: 1.5rem;
+    min-height: 300px;
+  }
+  
+  .design-info {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .info-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .download-btn {
+    align-self: stretch;
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+  }
+  
+  .design-details {
+    width: 100%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .canvas-container {
+    padding: 1rem;
+    min-height: 250px;
+  }
+  
+  .design-info {
+    padding: 1rem;
+  }
+  
+  .info-content {
+    gap: 0.75rem;
+  }
+  
+  .design-details {
+    gap: 0.375rem;
+  }
+  
+  .design-details p {
+    font-size: 0.8rem;
+  }
+  
+  .download-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+  }
+  
+  .loading-overlay,
+  .error-overlay,
+  .empty-overlay {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 2px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 320px) {
+  .canvas-container {
+    padding: 0.75rem;
+  }
+  
+  .design-info {
+    padding: 0.75rem;
+  }
+  
+  .download-btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.download-btn:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.retry-btn:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .download-btn,
+  .retry-btn,
+  .design-stage {
+    transition: none;
+  }
+  
+  .download-btn:hover,
+  .retry-btn:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .design-stage {
+    border-color: var(--color-gray-800);
+  }
+  
+  .loading-overlay,
+  .error-overlay,
+  .empty-overlay {
+    background: var(--color-white);
+    border-color: var(--color-gray-800);
+  }
+  
+  .design-info {
+    background: var(--color-white);
+    border-color: var(--color-gray-800);
+  }
+}

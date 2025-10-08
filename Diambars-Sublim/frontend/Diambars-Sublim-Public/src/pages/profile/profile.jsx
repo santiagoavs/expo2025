@@ -15,7 +15,6 @@ const Profile = () => {
   // Refrescar datos del usuario cuando se carga la página de perfil
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('[Profile] Refrescando datos del usuario al cargar perfil');
       refreshUser();
     }
   }, [isAuthenticated, refreshUser]);

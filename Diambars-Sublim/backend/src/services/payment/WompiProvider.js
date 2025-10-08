@@ -358,6 +358,271 @@ export class WompiProvider {
     }
   }
   
+  // ==================== TOKENIZACIÓN DE TARJETAS ====================
+  
+  /**
+   * Tokenizar tarjeta de crédito con Wompi
+   */
+  async tokenizeCard(cardData) {
+    console.log('🔐 [Wompi] Tokenizando tarjeta');
+    
+    if (!this.isConfigured) {
+      console.warn('⚠️ [Wompi] No configurado - generando token simulado');
+      return this.generateSimulatedToken(cardData);
+    }
+    
+    try {
+      const tokenData = {
+        number: cardData.number.replace(/\s/g, ''),
+        cvc: cardData.cvc,
+        exp_month: cardData.exp_month.padStart(2, '0'),
+        exp_year: cardData.exp_year.length === 2 ? `20${cardData.exp_year}` : cardData.exp_year,
+        card_holder: cardData.card_holder.trim()
+      };
+      
+      console.log('📝 [Wompi] Enviando datos para tokenización:', {
+        number: `****${tokenData.number.slice(-4)}`,
+        exp_month: tokenData.exp_month,
+        exp_year: tokenData.exp_year,
+        card_holder: tokenData.card_holder
+      });
+      
+      const response = await axios.post(
+        `${this.config.baseUrl}/tokens/cards`,
+        tokenData,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.config.publicKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+      
+      if (!response.data?.data?.id) {
+        throw new Error('Respuesta inválida de Wompi al tokenizar');
+      }
+      
+      const tokenInfo = response.data.data;
+      
+      console.log('✅ [Wompi] Tarjeta tokenizada exitosamente:', {
+        id: tokenInfo.id,
+        status: tokenInfo.status,
+        card_type: tokenInfo.card?.type,
+        brand: tokenInfo.card?.brand
+      });
+      
+      return {
+        id: tokenInfo.id,
+        status: tokenInfo.status,
+        card_type: tokenInfo.card?.type || 'UNKNOWN',
+        brand: tokenInfo.card?.brand || 'unknown',
+        last_four: tokenInfo.card?.last_four || cardData.number.slice(-4),
+        exp_month: tokenInfo.card?.exp_month || cardData.exp_month,
+        exp_year: tokenInfo.card?.exp_year || cardData.exp_year,
+        issuer_country: tokenInfo.card?.issuer_country,
+        issuer_bank: tokenInfo.card?.issuer_bank,
+        created_at: tokenInfo.created_at || new Date().toISOString()
+      };
+      
+    } catch (error) {
+      console.error('❌ [Wompi] Error tokenizando tarjeta:', error);
+      
+      // Manejar errores específicos de Wompi
+      if (error.response?.data?.error) {
+        const wompiError = error.response.data.error;
+        throw new Error(`Error de Wompi: ${wompiError.reason || wompiError.type || 'Error desconocido'}`);
+      }
+      
+      throw new Error(`Error tokenizando tarjeta: ${error.message}`);
+    }
+  }
+  
+  /**
+   * Crear pago usando token de tarjeta guardada
+   */
+  async createPaymentWithToken(tokenId, amount, orderId, customerData = {}) {
+    console.log(`💳 [Wompi] Creando pago con token: ${tokenId}`);
+    
+    if (!this.isConfigured) {
+      console.warn('⚠️ [Wompi] No configurado - simulando pago con token');
+      return this.generateSimulatedTokenPayment(tokenId, amount, orderId);
+    }
+    
+    try {
+      const amountInCents = Math.round(amount * 100);
+      const reference = `DS-TOKEN-${orderId}-${Date.now()}`;
+      
+      const paymentData = {
+        amount_in_cents: amountInCents,
+        currency: 'USD',
+        customer_email: customerData.email || 'customer@example.com',
+        payment_method: {
+          type: 'CARD',
+          token: tokenId,
+          installments: 1
+        },
+        reference: reference,
+        customer_data: {
+          phone_number: customerData.phone || '',
+          full_name: customerData.name || ''
+        },
+        metadata: {
+          order_id: orderId.toString(),
+          payment_type: 'saved_card',
+          created_at: new Date().toISOString()
+        }
+      };
+      
+      console.log('📝 [Wompi] Enviando pago con token:', {
+        amount_in_cents: amountInCents,
+        reference,
+        token: tokenId
+      });
+      
+      const response = await axios.post(
+        `${this.config.baseUrl}/transactions`,
+        paymentData,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.config.privateKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+      
+      if (!response.data?.data?.id) {
+        throw new Error('Respuesta inválida de Wompi al procesar pago');
+      }
+      
+      const transactionInfo = response.data.data;
+      
+      console.log('✅ [Wompi] Pago con token creado:', {
+        id: transactionInfo.id,
+        status: transactionInfo.status,
+        reference: transactionInfo.reference
+      });
+      
+      return {
+        transactionId: transactionInfo.id,
+        status: transactionInfo.status,
+        reference: transactionInfo.reference,
+        amount: amount,
+        currency: 'USD',
+        paymentMethod: 'saved_card',
+        cardInfo: {
+          lastFour: transactionInfo.payment_source?.card?.last_four,
+          brand: transactionInfo.payment_source?.card?.brand,
+          type: transactionInfo.payment_source?.card?.type
+        },
+        createdAt: transactionInfo.created_at,
+        authorizationCode: transactionInfo.authorization_code
+      };
+      
+    } catch (error) {
+      console.error('❌ [Wompi] Error creando pago con token:', error);
+      
+      if (error.response?.data?.error) {
+        const wompiError = error.response.data.error;
+        throw new Error(`Error de Wompi: ${wompiError.reason || wompiError.type || 'Error desconocido'}`);
+      }
+      
+      throw new Error(`Error procesando pago: ${error.message}`);
+    }
+  }
+  
+  /**
+   * Validar token de tarjeta
+   */
+  async validateToken(tokenId) {
+    console.log(`🔍 [Wompi] Validando token: ${tokenId}`);
+    
+    if (!this.isConfigured) {
+      console.warn('⚠️ [Wompi] No configurado - asumiendo token válido');
+      return { valid: true, status: 'active' };
+    }
+    
+    try {
+      const response = await axios.get(
+        `${this.config.baseUrl}/tokens/${tokenId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.config.privateKey}`
+          },
+          timeout: 15000
+        }
+      );
+      
+      const tokenInfo = response.data.data;
+      const isValid = tokenInfo.status === 'AVAILABLE';
+      
+      console.log(`✅ [Wompi] Token validado: ${tokenId} - Válido: ${isValid}`);
+      
+      return {
+        valid: isValid,
+        status: tokenInfo.status,
+        card: tokenInfo.card
+      };
+      
+    } catch (error) {
+      console.error('❌ [Wompi] Error validando token:', error);
+      return { valid: false, status: 'invalid', error: error.message };
+    }
+  }
+  
+  /**
+   * Generar token simulado para desarrollo
+   */
+  generateSimulatedToken(cardData) {
+    const tokenId = `tok_sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Detectar marca de tarjeta
+    const number = cardData.number.replace(/\s/g, '');
+    let brand = 'unknown';
+    if (/^4/.test(number)) brand = 'visa';
+    else if (/^5[1-5]/.test(number)) brand = 'mastercard';
+    else if (/^3[47]/.test(number)) brand = 'amex';
+    
+    return {
+      id: tokenId,
+      status: 'AVAILABLE',
+      card_type: 'CREDIT',
+      brand: brand,
+      last_four: number.slice(-4),
+      exp_month: cardData.exp_month,
+      exp_year: cardData.exp_year,
+      issuer_country: 'SV',
+      issuer_bank: 'Banco Simulado',
+      created_at: new Date().toISOString(),
+      isSimulated: true
+    };
+  }
+  
+  /**
+   * Generar pago simulado con token
+   */
+  generateSimulatedTokenPayment(tokenId, amount, orderId) {
+    const transactionId = `txn_sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    return {
+      transactionId: transactionId,
+      status: 'APPROVED',
+      reference: `SIM-TOKEN-${orderId}-${Date.now()}`,
+      amount: amount,
+      currency: 'USD',
+      paymentMethod: 'saved_card',
+      cardInfo: {
+        lastFour: '1234',
+        brand: 'visa',
+        type: 'CREDIT'
+      },
+      createdAt: new Date().toISOString(),
+      authorizationCode: `AUTH_${Date.now()}`,
+      isSimulated: true
+    };
+  }
+  
   // ==================== MÉTODOS PÚBLICOS ====================
   
   /**
@@ -371,7 +636,8 @@ export class WompiProvider {
       isConfigured: this.isConfigured,
       isFakeMode: !this.isConfigured,
       supportedCards: ['VISA', 'MASTERCARD', 'AMERICAN_EXPRESS'],
-      locale: 'es'
+      locale: 'es',
+      tokenizationEnabled: true
     };
   }
   

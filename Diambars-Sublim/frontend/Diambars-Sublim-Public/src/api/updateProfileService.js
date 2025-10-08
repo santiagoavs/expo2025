@@ -4,8 +4,6 @@ import { resendVerificationEmail } from './resendVerificatonService';
 
 export const updateUserProfile = async (userId, userData, originalEmail) => {
   try {
-    console.log('[updateProfileService] Datos a actualizar:', userData);
-    console.log('[updateProfileService] Email original:', originalEmail);
     
     // Normalizar datos antes de enviar
     const normalizedData = {
@@ -21,22 +19,16 @@ export const updateUserProfile = async (userId, userData, originalEmail) => {
       }
     });
 
-    console.log('[updateProfileService] Datos normalizados a enviar:', normalizedData);
-    
     // Llamada para actualizar el perfil usando endpoint específico de perfil
     const response = await apiClient.put('/users/profile', normalizedData);
     
-    console.log('[updateProfileService] Respuesta del servidor:', response);
-    
     // Si el email cambió, automáticamente enviar verificación
     if (normalizedData.email && normalizedData.email !== originalEmail?.toLowerCase()) {
-      console.log('[updateProfileService] Email cambió, enviando verificación automática');
       try {
         await resendVerificationEmail(normalizedData.email);
-        console.log('[updateProfileService] Verificación enviada exitosamente');
       } catch (verificationError) {
-        console.warn('[updateProfileService] Error al enviar verificación automática:', verificationError);
         // No fallar la actualización por esto, solo advertir
+        console.warn('Error al enviar verificación automática:', verificationError);
       }
     }
     

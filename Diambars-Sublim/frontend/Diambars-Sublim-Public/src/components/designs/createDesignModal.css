@@ -86,7 +86,15 @@
 }
 
 .modal-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a5f;
+}
+
+.modal-icon svg {
+  stroke-width: 2;
+  transition: all 0.3s ease;
 }
 
 .modal-title h2 {
@@ -104,6 +112,10 @@
   margin: 0;
   opacity: 0.8;
   font-size: 0.9rem;
+  background: linear-gradient(187deg, #1e3a5f 0%, #265c99 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .close-btn-design {
@@ -537,12 +549,21 @@
 
 .product-preview {
   display: flex;
+  font-size: 1rem;
   align-items: center;
   gap: 16px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(63, 39, 36, 0.1);
-  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  background: rgba(179, 218, 249, 0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: fadeInUp 0.5s ease-out;
+  color: #01285bda;
+  box-shadow: 
+    0 4px 20px rgba(68, 162, 229, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   margin-bottom: 24px;
 }
 
@@ -555,7 +576,11 @@
 
 .product-preview h4 {
   margin: 0 0 4px;
-  color: #3F2724;
+  background: linear-gradient(187deg, #1e3a5f 0%, #265c99 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -581,7 +606,15 @@
 }
 
 .preview-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a5f;
+}
+
+.preview-icon svg {
+  stroke-width: 2;
+  transition: all 0.3s ease;
 }
 
 .design-preview-header h4 {
@@ -612,14 +645,31 @@
 }
 
 .placeholder-icon {
-  font-size: 3rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 16px;
+  color: #1e3a5f;
+  opacity: 1;
+}
+
+.placeholder-icon svg {
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+}
+
+.design-placeholder:hover .placeholder-icon svg {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .placeholder-content h4 {
   margin: 0 0 8px;
-  color: #3F2724;
+  background: linear-gradient(187deg, #1e3a5f 0%, #285b95 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -634,15 +684,27 @@
 /* ==================== STEP 3: REVISIÓN ==================== */
 .summary-section {
   margin-bottom: 24px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(63, 39, 36, 0.1);
-  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  background: rgba(179, 218, 249, 0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: fadeInUp 0.5s ease-out;
+  color: #01285bda;
+  box-shadow: 
+    0 4px 20px rgba(68, 162, 229, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .summary-section h4 {
   margin: 0 0 16px;
-  color: #3F2724;
+  background: linear-gradient(187deg, #1e3a5f 0%, #285b95 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-size: 1rem;
   font-weight: 600;
   border-bottom: 1px solid rgba(63, 39, 36, 0.1);
@@ -664,7 +726,11 @@
 
 .summary-product h5 {
   margin: 0 0 4px;
-  color: #3F2724;
+  background: linear-gradient(187deg, #1e3a5f 0%, #285b95 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -678,7 +744,11 @@
 
 .summary-design h5 {
   margin: 0 0 8px;
-  color: #3F2724;
+  background: linear-gradient(187deg, #1e3a5f 0%, #285b95 50%, #1e3a5f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -704,42 +774,49 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.notes-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 12px 16px;
-  border: 2px solid rgba(63, 39, 36, 0.2);
-  border-radius: 12px;
-  font-size: 0.9rem;
+.notes-textarea-create {
+  height: 70px;
+  width: 94.6%;
+  resize: none;
+  padding: 1rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  font-size: 1rem;
   font-family: inherit;
-  resize: vertical;
-  transition: all 0.3s ease;
+  background: rgba(179, 218, 249, 0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: #01285bda;
+  box-shadow: 
+    0 4px 20px rgba(68, 162, 229, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-.notes-textarea:focus {
+.notes-textarea-create:focus {
   outline: none;
-  border-color: #3F2724;
-  box-shadow: 0 0 0 3px rgba(63, 39, 36, 0.1);
+  border-color: rgba(54, 100, 156, 0.377);
+  box-shadow: 0 0 0 2px rgba(31, 100, 191, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);;
 }
 
 .char-count {
   text-align: right;
   font-size: 0.75rem;
-  color: #888;
+  color: rgba(3, 77, 180, 0.653);
   margin-top: 4px;
 }
 
 /* ==================== BOTONES ==================== */
-
-
-
 .btn-primary {
   position: relative;
-  background: rgba(27, 68, 121, 0.85);
+  background: linear-gradient(135deg, rgba(27, 68, 121, 0.9) 0%, rgba(74, 144, 226, 0.8) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: rgba(254, 247, 233, 0.95);
-  border: 1px solid rgba(74, 144, 226, 0.3);
+  border: 1px solid rgba(74, 144, 226, 0.4);
   box-shadow: 
     0 8px 32px rgba(27, 68, 121, 0.2),
     0 2px 8px rgba(74, 144, 226, 0.15),
@@ -759,7 +836,7 @@
   background: linear-gradient(
     to right,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.15) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   transform: rotate(30deg) translateX(-100%);
@@ -769,7 +846,7 @@
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: rgba(27, 68, 121, 0.9);
+  background: linear-gradient(135deg, rgba(27, 68, 121, 0.95) 0%, rgba(74, 144, 226, 0.85) 100%);
   box-shadow: 
     0 12px 40px rgba(27, 68, 121, 0.25),
     0 4px 12px rgba(74, 144, 226, 0.2),

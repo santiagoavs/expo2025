@@ -81,26 +81,21 @@ export const usePaymentMethods = () => {
     return true;
   };
 
-  const addPaymentMethod = async (cardData) => {
+  const addPaymentMethod = async (cardData, setAsDefault = false) => {
     try {
       console.log('🆕 [usePaymentMethods] Agregando método de pago');
       setLoading(true);
       setError(null);
 
-      // Validar datos (sin CVC)
+      // Validar datos (sin CVC para almacenamiento, pero necesario para tokenización)
       validateCard(cardData);
 
-      // Preparar datos para enviar al backend (SIN CVC)
-      const paymentData = {
-        number: cardData.number.replace(/\s/g, ''), // Enviar número completo al backend
-        name: cardData.name.trim(),
-        expiry: cardData.expiry,
-        issuer: detectCardType(cardData.number),
-        nickname: cardData.nickname?.trim() || '',
-        active: false // Los nuevos métodos inician inactivos
-      };
+      // Nota: El CVC es requerido para tokenización pero no se almacena
+      if (!cardData.cvc || cardData.cvc.length < 3) {
+        throw new Error('CVC es requerido para verificar la tarjeta');
+      }
 
-      const newMethod = await paymentMethodsService.createPaymentMethod(paymentData);
+      const newMethod = await paymentMethodsService.createPaymentMethod(cardData, setAsDefault);
       
       // Actualizar lista local
       setMethods(prev => [...prev, newMethod]);
@@ -117,30 +112,24 @@ export const usePaymentMethods = () => {
     }
   };
 
-  const updatePaymentMethod = async (methodId, cardData) => {
+  const updatePaymentMethod = async (methodId, updateData) => {
     try {
       console.log('🔄 [usePaymentMethods] Actualizando método:', methodId);
       setLoading(true);
       setError(null);
 
-      // Validar datos (sin CVC)
-      validateCard(cardData);
-
-      // Preparar datos para enviar al backend (SIN CVC)
-      const paymentData = {
-        number: cardData.number.replace(/\s/g, ''),
-        name: cardData.name.trim(),
-        expiry: cardData.expiry,
-        issuer: detectCardType(cardData.number),
-        nickname: cardData.nickname?.trim() || ''
+      // Solo se pueden actualizar nickname y configuración, no datos de la tarjeta
+      const allowedUpdates = {
+        nickname: updateData.nickname?.trim() || null,
+        setAsDefault: updateData.setAsDefault || false
       };
 
-      const updatedMethod = await paymentMethodsService.updatePaymentMethod(methodId, paymentData);
+      const updatedMethod = await paymentMethodsService.updatePaymentMethod(methodId, allowedUpdates);
       
       // Actualizar lista local
       setMethods(prev => 
         prev.map(method => 
-          method._id === methodId ? updatedMethod : method
+          method.id === methodId || method._id === methodId ? updatedMethod : method
         )
       );
       
@@ -184,27 +173,26 @@ export const usePaymentMethods = () => {
       setLoading(true);
       setError(null);
 
-      // Si estamos activando un método, desactivar todos los demás primero
       if (isActive) {
+        // Si estamos activando, marcar como por defecto
+        const updatedMethod = await paymentMethodsService.setDefaultPaymentMethod(methodId);
+        
+        // Actualizar lista local - solo uno puede ser por defecto
         setMethods(prev => 
-          prev.map(method => ({ ...method, active: false }))
+          prev.map(method => ({
+            ...method,
+            isDefault: (method.id === methodId || method._id === methodId),
+            active: (method.id === methodId || method._id === methodId) // Para compatibilidad con UI existente
+          }))
         );
+        
+        console.log('✅ [usePaymentMethods] Método marcado como por defecto');
+        return updatedMethod;
+      } else {
+        // Si estamos desactivando, mostrar mensaje informativo
+        console.log('ℹ️ [usePaymentMethods] No se puede desactivar tarjeta, use eliminar');
+        throw new Error('Para desactivar una tarjeta, elimínela en su lugar');
       }
-
-      const updatedMethod = await paymentMethodsService.togglePaymentMethod(methodId, isActive);
-      
-      // Actualizar lista local
-      setMethods(prev => 
-        prev.map(method => {
-          if (method._id === methodId) {
-            return { ...method, active: isActive };
-          }
-          // Si estamos activando uno, desactivar los demás
-          return isActive ? { ...method, active: false } : method;
-        })
-      );
-      
-      console.log('✅ [usePaymentMethods] Estado cambiado exitosamente');
     } catch (err) {
       console.error('❌ [usePaymentMethods] Error cambiando estado:', err);
       const errorMessage = err.message || 'Error cambiando estado del método';

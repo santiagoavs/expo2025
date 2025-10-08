@@ -90,7 +90,7 @@
 }
 
 /* ==================== STATS CARDS ==================== */
-.stats-grid {
+.stats-grid-orders {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
@@ -235,7 +235,7 @@
   font-weight: 600;
 }
 
-.search-input {
+/* .search-input {
   flex: 1;
   min-width: 200px;
   height: 20px;
@@ -259,7 +259,7 @@
 .search-input:focus {
   outline: none;
   transform: translateY(-1px);
-}
+} */
 
 /* ==================== ORDERS LIST ==================== */
 .orders-list {
@@ -394,7 +394,7 @@
   flex-wrap: wrap;
 }
 
-.btn {
+/* .btn {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -445,7 +445,7 @@
   box-shadow: 
     0 6px 25px rgba(107, 114, 128, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
+} */
 
 /* ==================== LOADING & EMPTY STATES ==================== */
 .loading-state,
@@ -525,7 +525,7 @@
     font-size: 2rem;
   }
 
-  .stats-grid {
+  .stats-grid-orders {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
@@ -568,9 +568,9 @@
     padding-bottom: 0.5rem;
   }
 
-  .search-input {
+  /* .search-input {
     width: 100%;
-  }
+  } */
 
   .order-details {
     grid-template-columns: 1fr;

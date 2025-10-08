@@ -796,18 +796,19 @@ designController.createDesign = async (req, res) => {
     console.log('🔍 [createDesign] Request body:', req.body);
     console.log('🔍 [createDesign] User:', req.user);
     
-    const { productId, elements, productOptions, clientNotes, mode = 'simple', productColorFilter } = req.body;
+    const { productId, elements, productOptions, clientNotes, name, mode = 'simple', productColorFilter } = req.body;
     const userId = req.user._id;
     
     console.log('🔍 [createDesign] Parsed data:', {
-      userId, productId, elements: elements?.length, productOptions: productOptions?.length
+      userId, productId, name, elements: elements?.length, productOptions: productOptions?.length
     });
 
     const basicValidation = validateFields({
-      productId, clientNotes, mode
+      productId, clientNotes, name, mode
     }, {
       productId: (value) => validators.mongoId(value, 'ID de producto'),
       clientNotes: (value) => validators.text(value, 0, 1000),
+      name: (value) => value ? validators.text(value, 1, 100) : { isValid: true, cleaned: value },
       mode: (value) => validators.text(value, 1, 20)
     });
 
@@ -876,7 +877,7 @@ designController.createDesign = async (req, res) => {
     const newDesign = new Design({
       product: product._id,
       user: userId,
-      name: `Diseño personalizado - ${product.name}`,
+      name: basicValidation.cleaned.name || `Diseño personalizado - ${product.name}`,
       elements: normalizedElements,
       productColorFilter: productColorFilter || null,
       productOptions: optionsValidation.cleaned,

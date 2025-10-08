@@ -3,21 +3,37 @@ import axios from 'axios';
 
 const computeBaseURL = () => {
   try {
+    // Check for backend mode override
+    const backendMode = import.meta.env.VITE_BACKEND_MODE;
+    
+    if (backendMode === 'local') {
+      console.log('🏠 [apiClient] Using LOCAL backend mode');
+      return 'http://localhost:4000/api';
+    } else if (backendMode === 'render') {
+      console.log('☁️ [apiClient] Using RENDER backend mode');
+      return 'https://expo2025-8bjn.onrender.com/api';
+    }
+    
+    // Fallback to VITE_API_URL if set
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl && typeof envUrl === 'string') {
       const trimmed = envUrl.replace(/\/$/, '');
-      return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+      const finalUrl = trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+      console.log('🔧 [apiClient] Using VITE_API_URL:', finalUrl);
+      return finalUrl;
     }
-  } catch (_) {}
+  } catch (error) {
+    console.warn('⚠️ [apiClient] Error reading environment variables:', error);
+  }
   
-  // Detectar si estamos en producción o desarrollo
+  // Final fallback based on environment
   const isProduction = import.meta.env.PROD || import.meta.env.NODE_ENV === 'production';
   
   if (isProduction) {
-    // En producción, usar la URL completa del backend
+    console.log('🌐 [apiClient] Production fallback - using Render');
     return 'https://expo2025-8bjn.onrender.com/api';
   } else {
-    // En desarrollo, usar ruta relativa para aprovechar el proxy de Vite
+    console.log('🔧 [apiClient] Development fallback - using proxy');
     return '/api';
   }
 };

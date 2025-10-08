@@ -298,6 +298,16 @@ export const ShapeRenderer = ({ element, isSelected, onSelect, onTransform }) =>
 // ==================== SHAPE UTILITIES ====================
 
 export const createShapeElement = (shapeType, properties = {}) => {
+  // ✅ DEBUGGING: Log shape creation
+  console.log(`🎨 [Shapes.jsx] Creating shape element:`, {
+    shapeType,
+    hasPoints: !!properties.points,
+    pointsLength: properties.points?.length,
+    x: properties.x,
+    y: properties.y,
+    properties
+  });
+
   const baseElement = {
     id: `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     type: 'shape',
@@ -341,17 +351,29 @@ export const createShapeElement = (shapeType, properties = {}) => {
     case 'pentagon':
     case 'hexagon':
     case 'octagon':
-      const sidesMap = {
-        triangle: 3,
-        pentagon: 5,
-        hexagon: 6,
-        octagon: 8
-      };
-      return {
-        ...baseElement,
-        sides: sidesMap[shapeType] || 6,
-        radius: properties.radius || 40
-      };
+      // ✅ CRITICAL FIX: If points are provided, use them (from ShapeCreatorModal)
+      if (properties.points && Array.isArray(properties.points)) {
+        return {
+          ...baseElement,
+          points: properties.points,
+          closed: properties.closed !== undefined ? properties.closed : true,
+          lineCap: properties.lineCap || 'round',
+          lineJoin: properties.lineJoin || 'round'
+        };
+      } else {
+        // Fallback to RegularPolygon approach
+        const sidesMap = {
+          triangle: 3,
+          pentagon: 5,
+          hexagon: 6,
+          octagon: 8
+        };
+        return {
+          ...baseElement,
+          sides: sidesMap[shapeType] || 6,
+          radius: properties.radius || 40
+        };
+      }
     
     case 'custom':
     case 'line':
@@ -367,8 +389,41 @@ export const createShapeElement = (shapeType, properties = {}) => {
       };
     
     default:
+      console.log(`🎨 [Shapes.jsx] Created default shape element:`, baseElement);
       return baseElement;
   }
+  
+  // ✅ DEBUGGING: Log final result for complex shapes
+  const result = (() => {
+    switch (shapeType) {
+      case 'triangle':
+      case 'pentagon':
+      case 'hexagon':
+      case 'octagon':
+        if (properties.points && Array.isArray(properties.points)) {
+          const pointsResult = {
+            ...baseElement,
+            points: properties.points,
+            closed: properties.closed !== undefined ? properties.closed : true,
+            lineCap: properties.lineCap || 'round',
+            lineJoin: properties.lineJoin || 'round'
+          };
+          console.log(`🎨 [Shapes.jsx] Created ${shapeType} with points:`, {
+            id: pointsResult.id,
+            shapeType: pointsResult.shapeType,
+            x: pointsResult.x,
+            y: pointsResult.y,
+            pointsLength: pointsResult.points.length,
+            points: pointsResult.points
+          });
+          return pointsResult;
+        }
+        break;
+    }
+    return null; // This should not happen as we already handled it above
+  })();
+  
+  return result;
 };
 
 export const getShapeDefaults = (shapeType) => {

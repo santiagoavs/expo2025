@@ -531,7 +531,7 @@
   color: #374e6d;
 }
 
-.char-count {
+.char-count-response {
   text-align: right;
   font-size: 0.8rem;
   color: #94A3B8;
@@ -786,33 +786,33 @@
   border-color: rgba(148, 163, 184, 0.5);
 }
 
-.btn-submit {
+.btn-submit-response {
   min-width: 220px;
 }
 
-.btn-submit.accept {
+.btn-submit-response.accept {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: white;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
 }
 
-.btn-submit.accept:hover:not(:disabled) {
+.btn-submit-response.accept:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
 }
 
-.btn-submit.reject {
+.btn-submit-response.reject {
   background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: white;
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
 }
 
-.btn-submit.reject:hover:not(:disabled) {
+.btn-submit-response.reject:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
 }
 
-.btn-submit:not(.accept):not(.reject) {
+.btn-submit-response:not(.accept):not(.reject) {
   background: rgba(148, 163, 184, 0.2);
   color: #94A3B8;
   cursor: not-allowed;
@@ -934,7 +934,7 @@ gap: 12px;
 .option-icon {
 font-size: 1.8rem;
 }
-.btn-submit {
+.btn-submit-response {
 min-width: 100%;
 }
 }

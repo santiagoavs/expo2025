@@ -69,7 +69,7 @@
   margin: 0 auto;
   padding: 120px 20px 40px;
   position: relative;
-  z-index: 1;
+  z-index: 11; 
 }
 
 /* ==================== HEADER ==================== */
@@ -439,6 +439,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   position: relative;
   will-change: transform;
+  overflow: visible; 
 }
 
 .design-card:hover {
@@ -456,7 +457,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 0rem;
   gap: 1rem;
 }
 
@@ -518,7 +519,7 @@
 }
 
 .design-card-content {
-  padding: 0 1.5rem 1rem;
+  padding: 0 1.5rem 0.5rem;
 }
 
 .design-price {
@@ -550,6 +551,19 @@
   line-height: 1.4;
 }
 
+.design-notes-inline {
+  margin: 0.5rem 0;
+}
+
+.design-notes-inline p {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .needs-response-alert {
   background: rgba(245, 158, 11, 0.1);
   backdrop-filter: blur(16px);
@@ -558,6 +572,14 @@
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.needs-response-alert svg {
+  color: #F59E0B;
+  flex-shrink: 0;
 }
 
 .needs-response-alert span {
@@ -587,7 +609,7 @@
   justify-content: center;
 }
 
-.btn-primary {
+/* .btn-primary {
   background: linear-gradient(135deg, #3F2724 0%, #2d1e1b 100%);
   color: white;
 }
@@ -595,7 +617,7 @@
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(63, 39, 36, 0.3);
-}
+} */
 
 .btn-view {
   font-family: 'Mona Sans', sans-serif;
@@ -661,6 +683,9 @@
 .design-menu {
   position: relative;
   margin-left: auto;
+  z-index: 12;
+  isolation: isolate;
+  
 }
 
 .btn-menu {
@@ -691,22 +716,30 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(213, 218, 217, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  isolation: isolate;
+  contain: layout style paint;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 10px 25px rgba(0, 0, 0, 0.15),
+    0 4px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 8px 16px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  z-index: 10;
+  z-index: 15; 
   min-width: 120px;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-8px);
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   overflow: hidden;
+}
+
+@supports not (backdrop-filter: blur(20px)) {
+  .design-menu-dropdown {
+    background: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .design-menu:hover .design-menu-dropdown {
@@ -731,7 +764,6 @@
 }
 
 .design-menu-dropdown button:hover {
-  background: rgba(255, 255, 255, 0.6);
   color: rgba(1, 40, 91, 0.95);
   transform: translateX(2px);
 }
@@ -805,6 +837,22 @@
 .empty-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-icon svg {
+  color: #dc2626;
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+}
+
+.empty-icon svg {
+  stroke-width: 1.5;
+  color: #3F2724; 
+  transition: all 0.3s ease;
 }
 
 .loading-state p,
@@ -822,6 +870,20 @@
 }
 
 /* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1136px) {
+  .stats-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
 
 @media (max-width: 768px) {
   .design-hub-container {
@@ -843,7 +905,7 @@
   }
   
   .search-input {
-    width: 100%;
+    width: 80%;
   }
   
   .stats-grid {
@@ -884,6 +946,14 @@
   .design-card-actions {
     padding: 0 1rem 1rem;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 681px) {
+  .design-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem 1rem;
   }
 }
 

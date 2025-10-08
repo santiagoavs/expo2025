@@ -1,6 +1,7 @@
 // src/components/designs/CreateDesignModal.jsx - MODAL DE CREACIÓN PARA USUARIOS PÚBLICOS
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import EnhancedDesignEditorModal from './EnhancedDesignEditorModal';
+import { Palette } from 'lucide-react';
 import './createDesignModal.css';
 
 
@@ -344,7 +345,9 @@ const CreateDesignModal = ({
       {designElements.length > 0 ? (
         <div className="design-preview">
           <div className="design-preview-header">
-            <span className="preview-icon">🎨</span>
+            <span className="preview-icon">
+              <Palette size={24} strokeWidth={2} />
+            </span>
             <div>
               <h4>Diseño creado</h4>
               <p>{designElements.length} elemento{designElements.length !== 1 ? 's' : ''} agregado{designElements.length !== 1 ? 's' : ''}</p>
@@ -360,7 +363,9 @@ const CreateDesignModal = ({
       ) : (
         <div className="design-placeholder">
           <div className="placeholder-content">
-            <span className="placeholder-icon">🎨</span>
+            <span className="placeholder-icon">
+              <Palette size={48} strokeWidth={1.5} />
+            </span>
             <h4>Crea tu diseño personalizado</h4>
             <p>Usa nuestro editor visual para agregar texto, imágenes y formas</p>
             <button 
@@ -417,7 +422,7 @@ const CreateDesignModal = ({
             onChange={(e) => handleInputChange('clientNotes', e.target.value)}
             placeholder="Instrucciones especiales, preferencias de colores, etc."
             maxLength={1000}
-            className="notes-textarea"
+            className="notes-textarea-create"
           />
           <div className="char-count">
             {designData.clientNotes.length}/1000 caracteres
@@ -465,7 +470,9 @@ const CreateDesignModal = ({
           {/* Header */}
           <div className="modal-header">
             <div className="modal-title">
-              <span className="modal-icon">🎨</span>
+              <span className="modal-icon">
+                <Palette size={32} strokeWidth={2} />
+              </span>
               <div>
                 <h2>Crear diseño personalizado</h2>
                 <p>Paso {step} de 3</p>

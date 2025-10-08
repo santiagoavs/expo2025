@@ -24,6 +24,7 @@ import addressRoutes from "./src/routes/address.routes.js";
 import reviewsRoutes from "./src/routes/reviews.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js";
 import paymentConfigRoutes from "./src/routes/paymentConfig.routes.js";
+// import userPaymentMethodsRoutes from "./src/routes/userPaymentMethods.routes.js";
 import contactRoutes from "./src/routes/contact.routes.js";
 import qualityApprovalRoutes from "./src/routes/quality-approval.routes.js";
 
@@ -219,6 +220,9 @@ app.use('/api/users', conditionalJsonMiddleware, userRoutes);
 
 // ========== RUTAS DE CONFIGURACIÓN DE MÉTODOS DE PAGO ==========
 app.use("/api/payment-config", jsonMiddleware, paymentConfigRoutes);
+
+// ========== RUTAS DE MÉTODOS DE PAGO DE USUARIOS ==========
+// app.use("/api/user/payment-methods", jsonMiddleware, userPaymentMethodsRoutes);
 
 // ========== RUTAS DE CATEGORÍAS ==========
 app.use("/api/categories", conditionalJsonMiddleware, categoryRoutes);

@@ -317,7 +317,7 @@ const QuoteResponseModal = ({
               rows={4}
               maxLength={1000}
             />
-            <div className="char-count">
+            <div className="char-count-response">
               {clientNotes.length} / 1000 caracteres
             </div>
           </div>
@@ -367,7 +367,7 @@ const QuoteResponseModal = ({
           <button
             type="button"
             onClick={handleSubmit}
-            className={`btn btn-submit ${decision === 'accept' ? 'accept' : decision === 'reject' ? 'reject' : ''}`}
+            className={`btn btn-submit-response ${decision === 'accept' ? 'accept' : decision === 'reject' ? 'reject' : ''}`}
             disabled={loading || !decision}
           >
             {loading ? (

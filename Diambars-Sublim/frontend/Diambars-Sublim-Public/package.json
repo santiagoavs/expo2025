@@ -9,7 +9,11 @@
     "vercel-build": "vite build",
     "start": "vite preview --port 3000",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "switch:local": "node switch-backend.js local",
+    "switch:render": "node switch-backend.js render",
+    "dev:local": "npm run switch:local && vite",
+    "dev:render": "npm run switch:render && vite"
   },
   "engines": {
     "node": ">=16.0.0"

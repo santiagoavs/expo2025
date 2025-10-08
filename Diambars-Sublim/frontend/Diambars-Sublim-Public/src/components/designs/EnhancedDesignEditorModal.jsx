@@ -25,14 +25,28 @@ const EnhancedDesignEditorModal = ({
       console.log('💾 Original design:', design);
       console.log('💾 Product:', product);
       
+      // ✅ DEBUGGING: Check design ID structure
+      console.log('🔍 [EnhancedDesignEditorModal] Design ID debugging:', {
+        'design?._id': design?._id,
+        'design?.design?._id': design?.design?._id,
+        'design?.id': design?.id,
+        'design?.design?.id': design?.design?.id,
+        isUpdate: !!(design?._id || design?.design?._id || design?.id || design?.design?.id)
+      });
+      
+      // ✅ CRITICAL FIX: Preserve ALL fields from AdvancedDesignEditor like private admin
       const updatedDesign = {
         ...design,
-        name: design?.name || design?.design?.name || 'Diseño sin nombre',
-        elements: designData.elements || [],
-        productColorFilter: designData.productColorFilter,
+        // ✅ CRITICAL: Pass through ALL designData fields from AdvancedDesignEditor
+        ...designData, // This includes productId, elements, canvasConfig, metadata, and name
+        // ✅ FIX: Preserve name from designData first, then fallback to existing design name
+        name: designData.name || design?.name || design?.design?.name || 'Diseño sin nombre',
         lastModified: new Date().toISOString(),
-        // Preserve existing design properties
-        productId: design?.productId || design?.design?.productId || product?._id || product?.id,
+        // ✅ CRITICAL: Preserve design ID for updates (check multiple possible locations)
+        _id: design?._id || design?.design?._id,
+        id: design?.id || design?.design?.id,
+        // Preserve existing design properties (but don't override designData)
+        productId: designData.productId || design?.productId || design?.design?.productId || product?._id || product?.id,
         userId: design?.userId || design?.design?.userId,
         status: design?.status || design?.design?.status || 'draft'
       };
@@ -65,6 +79,7 @@ const EnhancedDesignEditorModal = ({
   const designData = design?.design || design;
   const initialElements = designData?.elements || designData?.designElements || designData?.canvasElements || [];
   const initialProductColor = designData?.productColorFilter || designData?.productColor || '#ffffff';
+  const initialDesignName = designData?.name || design?.name || '';
   
   // Extract product from design data if not provided directly
   const productData = product || designData?.product || design?.product;
@@ -86,6 +101,7 @@ const EnhancedDesignEditorModal = ({
       product={productData}
       initialElements={initialElements}
       initialProductColor={initialProductColor}
+      initialDesignName={initialDesignName}
     />
   );
 };

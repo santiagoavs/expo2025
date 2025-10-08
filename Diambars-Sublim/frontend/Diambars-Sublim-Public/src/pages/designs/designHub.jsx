@@ -5,10 +5,11 @@ import useDesigns from '../../hooks/useDesign';
 import useProducts from '../../hooks/useProducts';
 import Footer from '../../components/UI/footer/footer';
 import CreateDesignModal from '../../components/designs/createDesignModal';
-// import DesignEditorModal from '../../components/designs/designEditorModal'; // Replaced with enhanced version
 import EnhancedDesignEditorModal from '../../components/designs/EnhancedDesignEditorModal';
 import DesignViewerModal from '../../components/designs/designViewerModal';
 import QuoteResponseModal from '../../components/designs/quoteResponseModal';
+import { Palette, AlertTriangle } from 'lucide-react';
+import Swal from 'sweetalert2';
 import './designHub.css';
 
 const DesignHub = ({ initialProductId = null }) => {
@@ -136,11 +137,23 @@ const DesignHub = ({ initialProductId = null }) => {
         setSelectedProduct(product);
         openModal('create');
       } else {
-        alert('Este producto no se puede personalizar');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Producto no personalizable',
+          text: 'Este producto no se puede personalizar',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#3F2724'
+        });
       }
     } catch (error) {
       console.error('Error obteniendo producto:', error);
-      alert('Error al cargar el producto');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar el producto',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3F2724'
+      });
     }
   }, [getProductById, openModal]);
 
@@ -153,7 +166,13 @@ const DesignHub = ({ initialProductId = null }) => {
       }
     } catch (error) {
       console.error('Error obteniendo diseño:', error);
-      alert('Error al cargar el diseño');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar el diseño',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3F2724'
+      });
     }
   }, [getDesignById, openModal]);
 
@@ -163,11 +182,23 @@ const DesignHub = ({ initialProductId = null }) => {
       if (designData && designData.design.canEdit) {
         setEditorModal({ isOpen: true, design: designData });
       } else {
-        alert('Este diseño no se puede editar');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Diseño no editable',
+          text: 'Este diseño no se puede editar',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#3F2724'
+        });
       }
     } catch (error) {
       console.error('Error obteniendo diseño:', error);
-      alert('Error al cargar el diseño');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar el diseño',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3F2724'
+      });
     }
   }, [getDesignById]);
 
@@ -204,7 +235,14 @@ const DesignHub = ({ initialProductId = null }) => {
       
       // Show success message
       const action = accept ? 'aceptada' : 'rechazada';
-      alert(`Cotización ${action} exitosamente`);
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: `Cotización ${action} exitosamente`,
+        timer: 3000,
+        timerProgressBar: true,
+        confirmButtonColor: '#3F2724'
+      });
       
       // Refresh the designs list
       await fetchUserDesigns();
@@ -229,27 +267,99 @@ const DesignHub = ({ initialProductId = null }) => {
 
   const handleCloneDesign = useCallback(async (designId, designName) => {
     try {
-      const confirmClone = window.confirm(`¿Deseas clonar el diseño "${designName}"?`);
-      if (confirmClone) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Clonar diseño',
+        text: `¿Deseas clonar el diseño "${designName}"?`,
+        showCancelButton: true,
+        confirmButtonText: 'Sí, clonar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3F2724',
+        cancelButtonColor: '#6c757d'
+      });
+      
+      if (result.isConfirmed) {
+        // Show loading
+        Swal.fire({
+          title: 'Clonando diseño...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
         await cloneDesign(designId, { name: `Copia de ${designName}` });
-        alert('Diseño clonado exitosamente');
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Diseño clonado exitosamente',
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonColor: '#3F2724'
+        });
       }
     } catch (error) {
       console.error('Error clonando diseño:', error);
-      alert('Error al clonar el diseño');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al clonar el diseño',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3F2724'
+      });
     }
   }, [cloneDesign]);
 
   const handleCancelDesign = useCallback(async (designId, designName) => {
     try {
-      const reason = window.prompt(`¿Por qué deseas cancelar "${designName}"?\n(Opcional)`);
-      if (reason !== null) { // null significa que canceló el prompt
-        await cancelDesign(designId, reason);
-        alert('Diseño cancelado exitosamente');
+      const { value: reason } = await Swal.fire({
+        icon: 'warning',
+        title: 'Cancelar diseño',
+        text: `¿Por qué deseas cancelar "${designName}"?`,
+        input: 'textarea',
+        inputPlaceholder: 'Motivo de cancelación (opcional)...',
+        showCancelButton: true,
+        confirmButtonText: 'Cancelar diseño',
+        cancelButtonText: 'No cancelar',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        inputValidator: () => {
+          // No validation needed since reason is optional
+          return null;
+        }
+      });
+      
+      if (reason !== undefined) { // undefined means user clicked cancel
+        // Show loading
+        Swal.fire({
+          title: 'Cancelando diseño...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        await cancelDesign(designId, reason || '');
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Diseño cancelado exitosamente',
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonColor: '#3F2724'
+        });
       }
     } catch (error) {
       console.error('Error cancelando diseño:', error);
-      alert('Error al cancelar el diseño');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cancelar el diseño',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3F2724'
+      });
     }
   }, [cancelDesign]);
 
@@ -259,7 +369,14 @@ const DesignHub = ({ initialProductId = null }) => {
     try {
       await createDesign(designData);
       closeModal('create');
-      alert('Diseño creado y enviado para cotización');
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Diseño creado y enviado para cotización',
+        timer: 3000,
+        timerProgressBar: true,
+        confirmButtonColor: '#3F2724'
+      });
     } catch (error) {
       console.error('Error creando diseño:', error);
       throw error; // Re-lanzar para que el modal maneje el error
@@ -271,14 +388,43 @@ const DesignHub = ({ initialProductId = null }) => {
   // Enhanced save handler for the new editor
   const handleSaveDesign = useCallback(async (designData) => {
     try {
-      if (editorModal.design?.design?._id) {
+      // ✅ DEBUGGING: Check what design data we have
+      console.log('🔍 [designHub] handleSaveDesign - Design ID debugging:', {
+        'editorModal.design': editorModal.design,
+        'editorModal.design?.design?._id': editorModal.design?.design?._id,
+        'editorModal.design?._id': editorModal.design?._id,
+        'designData._id': designData._id,
+        'designData.id': designData.id,
+        'designData': designData
+      });
+      
+      // ✅ ENHANCED: Check multiple possible ID locations
+      const designId = editorModal.design?.design?._id || editorModal.design?._id || designData._id || designData.id;
+      
+      if (designId) {
         // Update existing design
-        await updateDesign(editorModal.design.design._id, designData);
-        alert('Diseño actualizado exitosamente');
+        console.log('✏️ [designHub] Updating existing design with ID:', designId);
+        await updateDesign(designId, designData);
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Diseño actualizado exitosamente',
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonColor: '#3F2724'
+        });
       } else {
         // Create new design
+        console.log('➕ [designHub] Creating new design');
         await createDesign(designData);
-        alert('Diseño creado exitosamente');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Diseño creado exitosamente',
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonColor: '#3F2724'
+        });
       }
       setEditorModal({ isOpen: false, design: null });
     } catch (error) {
@@ -346,9 +492,16 @@ const DesignHub = ({ initialProductId = null }) => {
       </div>
 
       <div className="design-card-content">
-        {design.price > 0 && (
+        {(design.price > 0 || design.clientNotes || design.productionDays > 0) && (
           <div className="design-price">
-            <strong>{design.formattedPrice}</strong>
+            {design.price > 0 && <strong>{design.formattedPrice}</strong>}
+            
+            {design.clientNotes && (
+              <div className="design-notes-inline">
+                <p>"{design.clientNotes}"</p>
+              </div>
+            )}
+            
             {design.productionDays > 0 && (
               <span className="production-time">
                 {design.productionDays} días
@@ -357,15 +510,10 @@ const DesignHub = ({ initialProductId = null }) => {
           </div>
         )}
 
-        {design.clientNotes && (
-          <div className="design-notes">
-            <p>"{design.clientNotes}"</p>
-          </div>
-        )}
-
         {design.needsResponse && (
           <div className="needs-response-alert">
-            <span>⚠️ Requiere tu respuesta</span>
+            <AlertTriangle size={16} strokeWidth={2} />
+            <span>Requiere tu respuesta</span>
           </div>
         )}
       </div>
@@ -573,7 +721,9 @@ const DesignHub = ({ initialProductId = null }) => {
             </div>
           ) : error ? (
             <div className="error-state">
-              <div className="error-icon">⚠️</div>
+              <div className="error-icon">
+                <AlertTriangle size={64} strokeWidth={1.5} />
+              </div>
               <h3>Error al cargar diseños</h3>
               <p>{error}</p>
               <button onClick={() => window.location.reload()} className="create-design-btn">
@@ -582,7 +732,9 @@ const DesignHub = ({ initialProductId = null }) => {
             </div>
           ) : filteredDesigns.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">🎨</div>
+              <div className="empty-icon">
+                <Palette size={64} strokeWidth={1.5} />
+              </div>
               <h3>
                 {searchTerm ? 'No se encontraron diseños' : 
                  activeTab === 'all' ? 'No tienes diseños aún' :

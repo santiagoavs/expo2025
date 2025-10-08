@@ -12,15 +12,24 @@ export default defineConfig(({ command, mode }) => {
     }
   });
 
+  // Determine proxy target based on backend mode
+  const backendMode = env.VITE_BACKEND_MODE || 'render';
+  const proxyTarget = backendMode === 'local' 
+    ? 'http://localhost:4000'
+    : 'https://expo2025-8bjn.onrender.com';
+
+  console.log(`🔧 [Vite] Backend mode: ${backendMode}`);
+  console.log(`🎯 [Vite] Proxy target: ${proxyTarget}`);
+
   return {
     base: './',
     plugins: [react()],
     server: {
       proxy: {
         '/api': {
-          target: 'https://expo2025-8bjn.onrender.com',
+          target: proxyTarget,
           changeOrigin: true,
-          secure: false,
+          secure: backendMode !== 'local',
         }
       }
     },

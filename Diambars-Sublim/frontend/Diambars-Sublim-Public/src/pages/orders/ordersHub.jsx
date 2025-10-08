@@ -163,7 +163,7 @@ const OrdersHub = () => {
         </div>
 
         {/* Estadísticas */}
-        <div className="stats-grid">
+        <div className="stats-grid-orders">
           <StatsCard
             title="Total de Pedidos"
             value={stats.total}

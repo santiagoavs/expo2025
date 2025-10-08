@@ -1,6 +1,7 @@
 // ShapeCreatorModal.jsx - Modal for creating custom shapes with traditional CSS
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Circle, Rect, Star, RegularPolygon } from 'react-konva';
+import Swal from 'sweetalert2';
 import { 
   PiSquare, 
   PiCircle, 
@@ -46,7 +47,7 @@ const ShapeCreatorModal = ({
 
   const shapeTemplates = [
     { id: 'rect', label: 'Rectángulo', icon: <PiSquare /> },
-    { id: 'circle', label: 'Círculo', icon: <PiCircle /> },
+    { id: 'ellipse', label: 'Círculo', icon: <PiCircle /> }, // ✅ Ellipse labeled as Circle with circle icon
     { id: 'triangle', label: 'Triángulo', icon: <PiTriangle /> },
     { id: 'star', label: 'Estrella', icon: <PiStar /> },
     { id: 'pentagon', label: 'Pentágono', icon: <PiPolygon /> },
@@ -75,7 +76,13 @@ const ShapeCreatorModal = ({
 
   const finishCustomShape = () => {
     if (customPoints.length < 6) {
-      alert('Necesitas al menos 3 puntos para crear una forma');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Puntos insuficientes',
+        text: 'Necesitas al menos 3 puntos para crear una forma',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3F2724'
+      });
       return;
     }
     
@@ -85,12 +92,29 @@ const ShapeCreatorModal = ({
 
   const createPresetShape = (shapeType) => {
     let shapeData = {
-      fill: shapeProperties.fill,
+      fill: shapeProperties.fill, // ✅ CRITICAL FIX: Include user-selected fill color
       stroke: shapeProperties.stroke,
       strokeWidth: shapeProperties.strokeWidth
     };
 
     switch (shapeType) {
+      case 'rect':
+        // ✅ CRITICAL FIX: Add missing rectangle case
+        shapeData = {
+          ...shapeData,
+          width: 100,
+          height: 80
+        };
+        break;
+      case 'ellipse':
+        // ✅ ELLIPSE CREATION: Start neutral, let user stretch as desired
+        shapeData = {
+          ...shapeData,
+          radius: 50,
+          scaleX: 1, // ✅ Start as circle, user can stretch
+          scaleY: 1  // ✅ Start as circle, user can stretch
+        };
+        break;
       case 'star':
         const starPoints = generateStarPoints(
           starProperties.numPoints,
@@ -243,12 +267,14 @@ const ShapeCreatorModal = ({
           />
         );
       
-      case 'circle':
+      case 'ellipse':
         return (
           <Circle
             x={centerX}
             y={centerY}
             radius={size/2}
+            scaleX={1} // ✅ Preview as circle, user will stretch it
+            scaleY={1} // ✅ Preview as circle, user will stretch it
             fill={shapeProperties.fill}
             stroke={shapeProperties.stroke}
             strokeWidth={shapeProperties.strokeWidth}

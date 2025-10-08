@@ -1,5 +1,5 @@
-// src/components/designs/DesignViewerModal.jsx - MODAL PARA VER DISEÑOS
 import React, { useState, useCallback } from 'react';
+import KonvaDesignViewer from './KonvaDesignViewer';
 import './designViewerModal.css';
 
 const DesignViewerModal = ({
@@ -51,23 +51,18 @@ const DesignViewerModal = ({
 
         {/* Content */}
         <div className="modal-content">
-          {/* Información general del diseño */}
+          {/* Konva Design Viewer */}
           <div className="design-overview">
             <div className="design-main-info">
-              <div className="design-visual">
-                {design.previewImage && !imageError ? (
-                  <img 
-                    src={design.previewImage} 
-                    alt={design.name}
-                    onError={() => setImageError(true)}
-                    className="design-preview-large"
-                  />
-                ) : (
-                  <div className="design-preview-placeholder">
-                    <span className="placeholder-icon">🎨</span>
-                    <p>Vista previa no disponible</p>
-                  </div>
-                )}
+              <div className="design-visual konva-viewer-container">
+                <KonvaDesignViewer 
+                  design={design}
+                  product={design.product}
+                  enableDownload={true}
+                  onDownload={(dataURL) => {
+                    console.log('Design downloaded:', dataURL);
+                  }}
+                />
               </div>
 
               <div className="design-details">

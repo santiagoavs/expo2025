@@ -5,7 +5,7 @@ import { debounce } from '../utils/helpers';
 
 export const useKonvaCanvas = (initialElements = [], customizationAreas = []) => {
   // ==================== STATE ====================
-  const [elements, setElements] = useState(initialElements);
+  const [elements, setElements] = useState([]);
   const [selectedElementIds, setSelectedElementIds] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
@@ -18,6 +18,64 @@ export const useKonvaCanvas = (initialElements = [], customizationAreas = []) =>
   const layerRef = useRef(null);
   const containerRef = useRef(null);
   const transformerRef = useRef(null);
+  
+  // ==================== INITIALIZATION FROM DESIGN DATA ====================
+  // ✅ CRITICAL FIX: Process backend format elements like private admin
+  useEffect(() => {
+    console.log('🔄 [useKonvaCanvas] Processing initial elements:', initialElements);
+    
+    if (initialElements && initialElements.length > 0) {
+      const processedElements = initialElements.map(el => {
+        // Handle both backend format (with konvaAttrs) and direct format
+        if (el.konvaAttrs) {
+          // Backend format - extract konvaAttrs like private admin
+          console.log('🔄 [useKonvaCanvas] Processing backend format element:', {
+            id: el._id || el.id,
+            type: el.type,
+            areaId: el.areaId,
+            konvaAttrsKeys: Object.keys(el.konvaAttrs)
+          });
+          
+          return {
+            id: el._id || el.id || `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            type: el.type,
+            areaId: el.areaId,
+            ...el.konvaAttrs, // ✅ CRITICAL: Extract all properties from konvaAttrs
+            draggable: true,
+            listening: true
+          };
+        } else {
+          // Direct format - already processed
+          console.log('🔄 [useKonvaCanvas] Processing direct format element:', {
+            id: el.id,
+            type: el.type,
+            hasPoints: !!el.points
+          });
+          
+          return {
+            ...el,
+            id: el.id || `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            draggable: true,
+            listening: true
+          };
+        }
+      });
+      
+      console.log('🔄 [useKonvaCanvas] Final processed elements:', processedElements.map(el => ({
+        id: el.id,
+        type: el.type,
+        x: el.x,
+        y: el.y,
+        hasPoints: !!el.points,
+        pointsLength: el.points?.length
+      })));
+      
+      setElements(processedElements);
+    } else {
+      console.log('🔄 [useKonvaCanvas] No initial elements to process');
+      setElements([]);
+    }
+  }, [initialElements]);
   
   // ==================== ELEMENT MANAGEMENT ====================
   const addElement = useCallback((element) => {
@@ -252,40 +310,80 @@ export const useKonvaCanvas = (initialElements = [], customizationAreas = []) =>
   
   // Update transformer when selection changes
   useEffect(() => {
-    if (transformerRef.current && stageRef.current) {
-      console.log('Updating transformer for selected elements:', selectedElementIds);
+    if (transformerRef.current && stageRef.current && layerRef.current) {
+      console.log('🔧 [useKonvaCanvas] Updating transformer for selected elements:', selectedElementIds);
       
       if (selectedElementIds.length === 0) {
         // Clear transformer if no elements selected
         transformerRef.current.nodes([]);
-        transformerRef.current.getLayer()?.batchDraw();
+        layerRef.current.batchDraw();
         return;
       }
       
-      // Find selected nodes using both id and name attributes
-      const selectedNodes = selectedElementIds
-        .map(id => {
-          // Try finding by name first (more reliable), then by id
-          let node = stageRef.current.findOne(node => node.name() === id);
-          if (!node) {
+      // ✅ CRITICAL FIX: Use a more reliable node finding approach
+      // Wait for next tick to ensure elements are rendered
+      setTimeout(() => {
+        const selectedNodes = selectedElementIds
+          .map(id => {
+            // Try multiple approaches to find the node
+            let node = null;
+            
+            // Method 1: Find by name attribute
+            node = stageRef.current.findOne(`.${id}`);
+            if (node) {
+              console.log(`🎯 Found element ${id} by class name`);
+              return node;
+            }
+            
+            // Method 2: Find by id attribute  
             node = stageRef.current.findOne(`#${id}`);
-          }
-          console.log(`Finding element ${id}:`, node ? 'found' : 'not found');
-          return node;
-        })
-        .filter(Boolean);
-      
-      console.log('Selected nodes for transformer:', selectedNodes.length);
-      
-      if (selectedNodes.length > 0) {
-        transformerRef.current.nodes(selectedNodes);
-        transformerRef.current.getLayer()?.batchDraw();
+            if (node) {
+              console.log(`🎯 Found element ${id} by id`);
+              return node;
+            }
+            
+            // Method 3: Find by name() method
+            node = stageRef.current.findOne(node => node.name() === id);
+            if (node) {
+              console.log(`🎯 Found element ${id} by name() method`);
+              return node;
+            }
+            
+            // Method 4: Search through layer children directly
+            const layerChildren = layerRef.current.getChildren();
+            node = layerChildren.find(child => 
+              child.id() === id || 
+              child.name() === id ||
+              child.attrs.id === id ||
+              child.attrs.name === id
+            );
+            
+            if (node) {
+              console.log(`🎯 Found element ${id} by direct layer search`);
+              return node;
+            }
+            
+            console.warn(`❌ Could not find element ${id} in stage`);
+            return null;
+          })
+          .filter(Boolean);
         
-        // Force transformer to update its position
-        transformerRef.current.forceUpdate();
-      }
+        console.log('🔧 [useKonvaCanvas] Selected nodes for transformer:', selectedNodes.length, 'out of', selectedElementIds.length);
+        
+        if (selectedNodes.length > 0) {
+          transformerRef.current.nodes(selectedNodes);
+          layerRef.current.batchDraw();
+          
+          // Force transformer to update its position
+          transformerRef.current.forceUpdate();
+        } else {
+          console.warn('❌ No nodes found for transformer, clearing selection');
+          transformerRef.current.nodes([]);
+          layerRef.current.batchDraw();
+        }
+      }, 10); // Small delay to ensure rendering is complete
     }
-  }, [selectedElementIds]);
+  }, [selectedElementIds, elements.length]); // Also depend on elements.length to update when elements change
 
   return {
     // State

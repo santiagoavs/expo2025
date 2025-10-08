@@ -96,17 +96,12 @@ export class ElementFactory {
           cornerRadius: config.cornerRadius || 0
         };
       
-      case 'circle':
-        return {
-          ...baseElement,
-          radius: config.radius || 50
-        };
-      
       case 'ellipse':
         return {
           ...baseElement,
-          radiusX: config.radiusX || 50,
-          radiusY: config.radiusY || 30
+          radius: config.radius || 50,
+          scaleX: config.scaleX || 1, // ✅ Start neutral, let user control the stretch
+          scaleY: config.scaleY || 1  // ✅ Start neutral, let user control the stretch
         };
       
       case 'line':
@@ -149,6 +144,69 @@ export class ElementFactory {
     };
   }
 
+  // ==================== BACKEND CONVERSION ====================
+
+  /**
+   * Convierte un elemento del editor a formato compatible con el backend
+   */
+  toBackendFormat(element) {
+    // ✅ DEBUGGING: Solo logs importantes para formas complejas
+    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path', 'triangle', 'custom', 'line'].includes(element.type)) {
+      console.log('🔍 [ElementFactory] Convirtiendo forma compleja:', {
+        type: element.type,
+        hasPoints: !!element.points,
+        pointsLength: element.points?.length,
+        points: element.points
+      });
+    }
+    
+    // Extraer propiedades del elemento
+    const { 
+      id, 
+      type, 
+      areaId, 
+      draggable, 
+      visible, 
+      locked,
+      shapeType, // Propiedad específica del frontend
+      ...konvaAttrs 
+    } = element;
+    
+    // Validación especial para elementos de imagen
+    if (type === 'image') {
+      // El backend espera 'image' en lugar de 'imageUrl'
+      const backendKonvaAttrs = {
+        ...konvaAttrs,
+        image: konvaAttrs.imageUrl || konvaAttrs.image,
+        imageUrl: undefined
+      };
+
+      return {
+        id: id,
+        type: type,
+        areaId: areaId,
+        konvaAttrs: backendKonvaAttrs
+      };
+    }
+    
+    // ✅ CORRECCIÓN CRÍTICA: Asegurar que todas las propiedades estén en konvaAttrs
+    const backendKonvaAttrs = {
+      ...konvaAttrs,
+      draggable: draggable !== undefined ? draggable : true,
+      visible: visible !== undefined ? visible : true,
+      listening: true
+    };
+    
+    const result = {
+      id: id,
+      type: type,
+      areaId: areaId,
+      konvaAttrs: backendKonvaAttrs
+    };
+    
+    return result;
+  }
+
   // ==================== ELEMENT VALIDATION ====================
 
   validateElement(element) {
@@ -166,44 +224,24 @@ export class ElementFactory {
     if (typeof element.x !== 'number' || typeof element.y !== 'number') {
       errors.push('Element position (x, y) must be numbers');
     }
-
+    
     // Type-specific validation
     switch (element.type) {
       case 'text':
-        if (!element.text && element.text !== '') {
-          errors.push('Text element must have text property');
-        }
-        if (element.fontSize && (element.fontSize < 1 || element.fontSize > 500)) {
-          errors.push('Font size must be between 1 and 500');
+        if (!element.text || element.text.trim() === '') {
+          errors.push('Text element must have content');
         }
         break;
-
+      
       case 'image':
         if (!element.imageUrl && !element.image) {
-          errors.push('Image element must have imageUrl or image property');
-        }
-        if (element.width <= 0 || element.height <= 0) {
-          errors.push('Image dimensions must be positive');
+          errors.push('Image element must have imageUrl or image');
         }
         break;
-
+      
       case 'shape':
-        if (!element.shapeType) {
-          errors.push('Shape element must have shapeType property');
-        }
-        if (element.shapeType === 'circle' && (!element.radius || element.radius <= 0)) {
-          errors.push('Circle must have positive radius');
-        }
-        if (['rect', 'ellipse'].includes(element.shapeType)) {
-          if (!element.width || !element.height || element.width <= 0 || element.height <= 0) {
-            errors.push('Rectangle/Ellipse must have positive width and height');
-          }
-        }
-        break;
-
-      case 'group':
-        if (!Array.isArray(element.children)) {
-          errors.push('Group element must have children array');
+        if (element.shapeType === 'polygon' && (!element.points || element.points.length < 6)) {
+          errors.push('Polygon must have at least 3 points (6 coordinates)');
         }
         break;
     }
@@ -214,12 +252,15 @@ export class ElementFactory {
     };
   }
 
-  // ==================== ELEMENT UTILITIES ====================
+  // ==================== UTILITY METHODS ====================
+
+  generateId() {
+    return `element_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
 
   cloneElement(element) {
-    const cloned = JSON.parse(JSON.stringify(element));
+    const cloned = { ...element };
     cloned.id = this.generateId();
-    
     // Offset position slightly for visual distinction
     cloned.x = (cloned.x || 0) + 20;
     cloned.y = (cloned.y || 0) + 20;

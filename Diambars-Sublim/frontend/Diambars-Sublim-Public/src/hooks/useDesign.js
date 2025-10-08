@@ -359,7 +359,7 @@ const useDesigns = () => {
 
   // Obtener estadísticas de los diseños del usuario
   const getDesignStats = useCallback(() => {
-    const total = designs.length;
+    const total = designs.filter(d => !['cancelled', 'archived'].includes(d.status)).length;
     const drafts = designs.filter(d => d.status === 'draft').length;
     const pending = designs.filter(d => d.status === 'pending').length;
     const quoted = designs.filter(d => d.status === 'quoted').length;

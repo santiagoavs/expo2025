@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
+import './protectedRoute.css';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -10,39 +11,14 @@ const ProtectedRoute = ({ children }) => {
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '80vh',
-        background: 'linear-gradient(135deg, #FFF6E2 0%, #F5E7C6 100%)',
-        fontFamily: 'DiambarsFont, sans-serif'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem',
-          background: 'rgba(255, 255, 255, 0.8)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid rgba(63, 39, 36, 0.2)',
-            borderTop: '3px solid #3F2724',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }}></div>
-          <p style={{ 
-            color: '#3F2724', 
-            margin: 0,
-            fontSize: '1rem',
-            fontWeight: 600
-          }}>
+      <div className="protected-route-page">
+        <div className="protected-route-card">
+          <div className="protected-spinner"></div>
+          <p className="protected-message">
             Verificando autenticación...
+          </p>
+          <p className="protected-submessage">
+            Por favor espera un momento
           </p>
         </div>
       </div>
