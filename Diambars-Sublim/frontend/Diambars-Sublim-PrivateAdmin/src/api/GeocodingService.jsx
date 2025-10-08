@@ -261,20 +261,64 @@ class GeocodingService {
      * @returns {boolean} True si está dentro de El Salvador
      */
     isWithinElSalvador(lat, lng) {
-      // Límites aproximados de El Salvador
+      // Límites ULTRA-ESTRICTOS de El Salvador para colocación
       const bounds = {
-        north: 14.445,
-        south: 13.148,
-        east: -87.692,
-        west: -90.128
+        north: 14.380,    // Más restrictivo - evita frontera Honduras
+        south: 13.220,    // Más restrictivo - evita océano Pacífico  
+        east: -87.750,    // Más restrictivo - evita frontera Honduras
+        west: -90.080     // Más restrictivo - evita frontera Guatemala
       };
   
-      return (
-        lat >= bounds.south &&
-        lat <= bounds.north &&
-        lng >= bounds.west &&
-        lng <= bounds.east
-      );
+      // Validación básica de límites
+      if (!(lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east)) {
+        return false;
+      }
+      
+      // ===== VALIDACIONES ESPECÍFICAS ULTRA-ESTRICTAS =====
+      
+      // 1. PROHIBIR Océano Pacífico (costa sur)
+      if (lat < 13.300 && lng < -88.900) {
+        console.warn('🚫 Zona prohibida: Océano Pacífico occidental');
+        return false;
+      }
+      
+      if (lat < 13.280 && lng > -87.950) {
+        console.warn('🚫 Zona prohibida: Océano Pacífico oriental');
+        return false;
+      }
+      
+      // 2. PROHIBIR frontera norte con Honduras (Cabañas, Chalatenango)
+      if (lat > 14.320 && lng > -89.200 && lng < -88.200) {
+        console.warn('🚫 Zona prohibida: Frontera norte Honduras');
+        return false;
+      }
+      
+      // 3. PROHIBIR frontera este con Honduras (Morazán, La Unión)
+      if (lat > 13.750 && lng > -87.850) {
+        console.warn('🚫 Zona prohibida: Frontera este Honduras');
+        return false;
+      }
+      
+      // 4. PROHIBIR frontera oeste con Guatemala (Santa Ana, Ahuachapán)
+      if (lng < -89.950) {
+        console.warn('🚫 Zona prohibida: Frontera oeste Guatemala');
+        return false;
+      }
+      
+      // 5. ZONA CRÍTICA: Norte de Cabañas (donde reportaste el problema)
+      if (lat > 14.280 && lng > -88.700 && lng < -88.500) {
+        console.warn('🚫 Zona CRÍTICA prohibida: Norte Cabañas-Honduras');
+        return false;
+      }
+      
+      // 6. PROHIBIR cualquier zona marítima
+      if (lat < 13.250) {
+        console.warn('🚫 Zona prohibida: Área marítima');
+        return false;
+      }
+      
+      console.log('✅ Coordenadas válidas dentro de El Salvador:', { lat, lng });
+      return true;
     }
   
     /**
@@ -286,13 +330,26 @@ class GeocodingService {
     }
   
     /**
-     * Obtener límites de El Salvador para el mapa
+     * Obtener límites ULTRA-ESTRICTOS de El Salvador para validación de colocación
+     * Estos límites son más restrictivos para evitar colocación en fronteras
      * @returns {Array} Bounding box [[south, west], [north, east]]
      */
     getElSalvadorBounds() {
       return [
-        [13.148, -90.128], // Southwest
-        [14.445, -87.692]  // Northeast
+        [13.200, -90.100], // Southwest más restrictivo (evita océano Pacífico)
+        [14.400, -87.720]  // Northeast más restrictivo (evita frontera Honduras)
+      ];
+    }
+
+    /**
+     * Obtener límites expandidos para navegación del mapa (incluye zonas fronterizas)
+     * Permite navegación suave sin rebotes molestos en los bordes
+     * @returns {Array} Bounding box [[south, west], [north, east]]
+     */
+    getElSalvadorNavigationBounds() {
+      return [
+        [12.6, -90.6],   // Southwest MUY expandido - incluye Pacífico norte
+        [14.9, -87.2]    // Northeast expandido - permite navegación libre
       ];
     }
   
@@ -689,43 +746,6 @@ class GeocodingService {
         'Tejutepeque': { lat: 13.8667, lng: -88.6333 },
         'Victoria': { lat: 13.8667, lng: -88.6333 },
 
-        // Municipios adicionales de Cabañas
-        'Guacolecti': { lat: 13.8667, lng: -88.6333 },
-        'Sensuntepeque': { lat: 13.8667, lng: -88.6333 },
-        'Cinquera': { lat: 13.8667, lng: -88.6333 },
-        'Dolores': { lat: 13.8667, lng: -88.6333 },
-        'Guacotecti': { lat: 13.8667, lng: -88.6333 },
-        'Ilobasco': { lat: 13.8667, lng: -88.8500 },
-        'Jutiapa': { lat: 13.8667, lng: -88.6333 },
-        'San Isidro': { lat: 13.8667, lng: -88.6333 },
-        'Santa Cruz': { lat: 13.8667, lng: -88.6333 },
-        'Suchitoto': { lat: 13.8667, lng: -88.6333 },
-
-        // Municipios adicionales de Morazán
-        'Perquín': { lat: 13.8667, lng: -88.6333 },
-        'San Francisco Gotera': { lat: 13.8667, lng: -88.6333 },
-        'Arambala': { lat: 13.8667, lng: -88.6333 },
-        'Cacaopera': { lat: 13.8667, lng: -88.6333 },
-        'Chilanga': { lat: 13.8667, lng: -88.6333 },
-        'Corinto': { lat: 13.8667, lng: -88.6333 },
-        'Delicias de Concepción': { lat: 13.8667, lng: -88.6333 },
-        'El Divisadero': { lat: 13.8667, lng: -88.6333 },
-        'El Rosario': { lat: 13.8667, lng: -88.6333 },
-        'Gualococti': { lat: 13.8667, lng: -88.6333 },
-        'Guatajiagua': { lat: 13.8667, lng: -88.6333 },
-        'Jocoaitique': { lat: 13.8667, lng: -88.6333 },
-        'Jocoro': { lat: 13.8667, lng: -88.6333 },
-        'Lolotiquillo': { lat: 13.8667, lng: -88.6333 },
-        'Meanguera': { lat: 13.8667, lng: -88.6333 },
-        'Osicala': { lat: 13.8667, lng: -88.6333 },
-        'San Carlos': { lat: 13.8667, lng: -88.6333 },
-        'San Fernando': { lat: 13.8667, lng: -88.6333 },
-        'San Simón': { lat: 13.8667, lng: -88.6333 },
-        'Sensembra': { lat: 13.8667, lng: -88.6333 },
-        'Sociedad': { lat: 13.8667, lng: -88.6333 },
-        'Torola': { lat: 13.8667, lng: -88.6333 },
-        'Yamabal': { lat: 13.8667, lng: -88.6333 },
-        'Yoloaiquín': { lat: 13.8667, lng: -88.6333 }
       };
 
       // Buscar por municipio exacto (case insensitive)

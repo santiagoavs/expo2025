@@ -226,7 +226,7 @@ const useGeolocation = () => {
   }, []);
 
   /**
-   * Obtener límites de El Salvador para el mapa
+   * Obtener límites de El Salvador para validación de colocación
    * @returns {Array} Bounding box [[south, west], [north, east]]
    */
   const getElSalvadorBounds = useCallback(() => {
@@ -234,9 +234,17 @@ const useGeolocation = () => {
   }, []);
 
   /**
-   * Convertir coordenadas de diferentes formatos
+   * Obtener límites expandidos para navegación del mapa
+   * @returns {Array} Bounding box [[south, west], [north, east]]
+   */
+  const getElSalvadorNavigationBounds = useCallback(() => {
+    return geocodingService.getElSalvadorNavigationBounds();
+  }, []);
+
+  /**
+   * Normalizar formato de coordenadas
    * @param {Array|Object} coords - Coordenadas en diferentes formatos
-   * @returns {Object} Coordenadas normalizadas
+   * @returns {Object|null} Coordenadas normalizadas
    */
   const normalizeCoordinates = useCallback((coords) => {
     if (!coords) return null;
@@ -350,6 +358,7 @@ const useGeolocation = () => {
     formatCoordinates,
     getElSalvadorCenter,
     getElSalvadorBounds,
+    getElSalvadorNavigationBounds,
     normalizeCoordinates,
     getMapConfig,
     getTileLayerConfig,

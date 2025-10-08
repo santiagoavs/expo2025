@@ -6,7 +6,6 @@ function main() {
     app.listen(config.server.PORT, '0.0.0.0', () => {
         console.log(`Servidor corriendo en puerto ${config.server.PORT}`);
         console.log(`Disponible en: http://localhost:${config.server.PORT}`);
-        console.log(`Disponible en red: http://[TU-IP]:${config.server.PORT}`);
         console.log(`CORS configurado para: diambars-panel-administrativo.vercel.app`);
     });
 }

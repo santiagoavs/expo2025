@@ -253,7 +253,7 @@ const useEmployees = () => {
     getEmployeeStats,
     getEmployeesByStatus,
     searchEmployees,
-    fetchEmployees
+    updateOwnProfile
   };
 };
 
