@@ -1,27 +1,25 @@
-// NAVBAR.JSX - CÓDIGO COMPLETO CON EFECTOS HOVER APLICADOS
+// NAVBAR.JSX - CÓDIGO MEJORADO CON RESPONSIVE ROBUSTO
 // ============================================================
 
 /* 
-RESUMEN DE EFECTOS APLICADOS:
+MEJORAS DE RESPONSIVE APLICADAS:
 
-1. EFECTO SHIMMER (::before con gradiente):
-   - GlassButton
-   - GlassIconButton
-   - SidebarButton
+1. BREAKPOINTS MEJORADOS:
+   - md (960px-1279px): Navbar más compacta, menús ocultos
+   - sm (600px-959px): Navbar móvil horizontal
+   - xs (0px-599px): Navbar móvil full width
 
-2. HOVER SUTIL (translateY -1px):
-   - BrandContainer
-   - UserContainer
-   - StyledAvatar
+2. COMPORTAMIENTOS POR DISPOSITIVO:
+   - Desktop (lg+): Todos los elementos visibles
+   - Tablets/Laptops (md): Menús ocultos, solo brand + controls
+   - Tablets pequeñas (sm): Layout móvil compacto
+   - Móviles (xs): Layout móvil full width
 
-3. HOVER DISMINUIDO (translateY -2px):
-   - MenuItemStyled
-   - Todos los botones en hover
-
-INSTRUCCIONES:
-- Copia TODO este código
-- Reemplaza el contenido completo de tu archivo Navbar.jsx
-- Asegúrate de mantener tus imports de context y router
+3. FLUJO RESPONSIVE CLARO:
+   - lg+: Navegación completa
+   - md: Solo brand + user avatar + menu icon
+   - sm: Brand compacto + menu icon
+   - xs: Brand mínimo + menu icon
 */
 
 // ============================================================
@@ -102,7 +100,7 @@ const statusPulse = keyframes`
 `;
 
 // ============================================================
-// STYLED COMPONENTS CON EFECTOS HOVER
+// STYLED COMPONENTS CON RESPONSIVE MEJORADO
 // ============================================================
 
 const GlassBase = styled(Box)({
@@ -126,7 +124,7 @@ const GlassBase = styled(Box)({
   },
 });
 
-// BOTÓN PRINCIPAL CON EFECTO SHIMMER
+// BOTÓN PRINCIPAL CON EFECTO SHIMMER - RESPONSIVE MEJORADO
 const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, open }) => {
   const isActive = active || hasActiveItems;
   const isHover = open;
@@ -209,44 +207,38 @@ const GlassButton = styled(Button)(({ theme, active, variant, hasActiveItems, op
       '&::before': { left: '100%' }
     },
     
-    // Desktop grande
+    // Desktop grande (1920px+)
     [theme.breakpoints.up('xl')]: {
       height: 48,
       fontSize: 14,
       gap: 8,
     },
     
-    // Desktop
+    // Desktop (1280px - 1919px)
     [theme.breakpoints.between('lg', 'xl')]: {
       height: 44,
       fontSize: 13,
       gap: 6,
     },
     
-    // Tablets y laptops
+    // Tablets y laptops pequeños (960px - 1279px) - OCULTOS
     [theme.breakpoints.between('md', 'lg')]: {
-      height: 40,
-      fontSize: 12,
-      gap: 4,
+      display: "none",
     },
     
-    // Tablets pequeñas
+    // Tablets pequeñas (600px - 959px) - OCULTOS
     [theme.breakpoints.between('sm', 'md')]: {
-      height: 36,
-      fontSize: 11,
-      gap: 4,
+      display: "none",
     },
     
-    // Móviles
+    // Móviles (0px - 599px) - OCULTOS
     [theme.breakpoints.down('sm')]: {
-      height: 32,
-      fontSize: 11,
-      gap: 4,
+      display: "none",
     },
   };
 });
 
-// ICONBUTTON CON EFECTO SHIMMER + RESPONSIVE - CORREGIDO
+// ICONBUTTON CON EFECTO SHIMMER + RESPONSIVE MEJORADO
 const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
   width: 48,
   height: 48,
@@ -290,18 +282,21 @@ const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
     opacity: 1 
   },
   
+  // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     width: 40,
     height: 40,
     borderRadius: 14,
   },
   
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     width: 36,
     height: 36,
     borderRadius: 12,
   },
   
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     width: 40,
     height: 40,
@@ -309,6 +304,7 @@ const GlassIconButton = styled(IconButton)(({ theme, variant }) => ({
   },
 }));
 
+// APP BAR CON RESPONSIVE MEJORADO
 const StyledAppBar = styled(AppBar)(({ theme, hidden }) => ({
   position: "fixed",
   top: 8,
@@ -326,11 +322,18 @@ const StyledAppBar = styled(AppBar)(({ theme, hidden }) => ({
   zIndex: 1300,
   opacity: hidden ? 0 : 1,
   
-  // Tablet y laptops pequeños (960px - 1279px)
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    height: 68,
+    borderRadius: 34,
+  },
+  
+  // Tablets y laptops pequeños (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     height: 64,
     borderRadius: 32,
     maxWidth: "calc(100vw - 32px)",
+    top: 8,
   },
   
   // Tablets pequeñas (600px - 959px)
@@ -363,28 +366,35 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   
-  // Tablets y laptops
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    padding: "0 20px",
+  },
+  
+  // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     padding: "0 20px",
   },
   
-  // Tablets pequeñas
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     padding: "0 16px",
   },
   
-  // Móviles - Justificar a los extremos
+  // Móviles (0px - 599px) - Justificar a los extremos
   [theme.breakpoints.down('sm')]: {
     padding: "0 16px",
     justifyContent: "space-between",
   },
 }));
 
+// MAIN CONTENT CON RESPONSIVE MEJORADO
 const MainContent = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 32,
   maxWidth: "fit-content",
+  width: "100%",
   
   // Desktop grande (1920px+)
   [theme.breakpoints.up('xl')]: {
@@ -396,27 +406,26 @@ const MainContent = styled(Box)(({ theme }) => ({
     gap: 24,
   },
   
-  // Tablets y laptops pequeños (960px - 1279px)
+  // Tablets y laptops pequeños (960px - 1279px) - ESPACIO ENTRE BRAND Y CONTROLES
   [theme.breakpoints.between('md', 'lg')]: {
     gap: 16,
-  },
-  
-  // Tablets pequeñas (600px - 959px)
-  [theme.breakpoints.between('sm', 'md')]: {
-    gap: 12,
-    width: "100%",
     justifyContent: "space-between",
   },
   
-  // Móviles (0px - 599px)
+  // Tablets pequeñas (600px - 959px) - ESPACIO ENTRE BRAND Y CONTROLES
+  [theme.breakpoints.between('sm', 'md')]: {
+    gap: 12,
+    justifyContent: "space-between",
+  },
+  
+  // Móviles (0px - 599px) - ESPACIO ENTRE BRAND Y CONTROLES
   [theme.breakpoints.down('sm')]: {
     gap: 8,
-    width: "100%",
     justifyContent: "space-between",
   },
 }));
 
-// BRAND CON HOVER SUTIL + SHIMMER + RESPONSIVE
+// BRAND CONTAINER CON RESPONSIVE MEJORADO
 const BrandContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
@@ -455,28 +464,34 @@ const BrandContainer = styled(Box)(({ theme }) => ({
     left: "100%",
   },
   
-  // Desktop grande
+  // Desktop grande (1920px+)
   [theme.breakpoints.up('xl')]: {
     gap: 16,
     padding: "8px 12px",
   },
   
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    gap: 14,
+    padding: "6px 10px",
+  },
+  
   // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     gap: 12,
-    padding: "6px 10px",
+    padding: "4px 8px",
   },
   
   // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     gap: 10,
-    padding: "4px 8px",
+    padding: "4px 6px",
   },
   
-  // Móviles
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     gap: 8,
-    padding: "4px 6px",
+    padding: "2px 4px",
   },
 }));
 
@@ -512,21 +527,28 @@ const LogoContainer = styled(Box)(({ theme }) => ({
     transform: "scale(1.02)",
   },
   
-  // Tablets y laptops
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+  },
+  
+  // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     width: 40,
     height: 40,
     borderRadius: 14,
   },
   
-  // Tablets pequeñas
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     width: 36,
     height: 36,
     borderRadius: 12,
   },
   
-  // Móviles
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     width: 32,
     height: 32,
@@ -547,17 +569,22 @@ const BrandName = styled(Typography)(({ theme }) => ({
   letterSpacing: "-0.02em",
   lineHeight: 1,
   
-  // Tablets y laptops
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    fontSize: 22,
+  },
+  
+  // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     fontSize: 20,
   },
   
-  // Tablets pequeñas
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     fontSize: 18,
   },
   
-  // Móviles
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     fontSize: 16,
   },
@@ -569,9 +596,14 @@ const BrandSubtitle = styled(Typography)(({ theme }) => ({
   fontWeight: 500,
   textTransform: "lowercase",
   
-  // Tablets y laptops
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    fontSize: 11,
+  },
+  
+  // Tablets y laptops (960px - 1279px) - OCULTAR
   [theme.breakpoints.between('md', 'lg')]: {
-    fontSize: 10,
+    display: "none",
   },
   
   // Tablets pequeñas y móviles - Ocultar
@@ -580,34 +612,35 @@ const BrandSubtitle = styled(Typography)(({ theme }) => ({
   },
 }));
 
+// NAV CONTAINER - SOLO VISIBLE EN DESKTOP
 const NavContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: 4,
   padding: "6px",
   
-  // Desktop grande
+  // Desktop grande (1920px+)
   [theme.breakpoints.up('xl')]: {
     gap: 4,
   },
   
-  // Desktop
+  // Desktop (1280px - 1919px)
   [theme.breakpoints.between('lg', 'xl')]: {
     gap: 3,
   },
   
-  // Tablets y laptops pequeños (960px - 1279px) - Ocultar para evitar overflow
+  // Tablets y laptops pequeños (960px - 1279px) - OCULTAR
   [theme.breakpoints.between('md', 'lg')]: {
     display: "none",
   },
   
-  // Tablets pequeñas y móviles - Ocultar
+  // Tablets pequeñas y móviles - OCULTAR
   [theme.breakpoints.down('md')]: {
     display: "none",
   },
 }));
 
-// USER CONTAINER CON HOVER SUTIL + SHIMMER + RESPONSIVE
+// USER CONTAINER CON RESPONSIVE MEJORADO
 const UserContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
@@ -645,16 +678,23 @@ const UserContainer = styled(Box)(({ theme }) => ({
     left: "100%",
   },
   
-  // Tablets y laptops pequeños (960px - 1279px) - Ocultar para evitar overflow
-  [theme.breakpoints.between('md', 'lg')]: {
-    display: "none",
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    gap: 10,
+    padding: "4px 10px 4px 4px",
   },
   
-  // Tablets pequeñas y móviles - Solo mostrar avatar
-  [theme.breakpoints.down('md')]: {
-    padding: "4px",
+  // Tablets y laptops pequeños (960px - 1279px) - MOSTRAR SOLO AVATAR
+  [theme.breakpoints.between('md', 'lg')]: {
+    display: "flex",
     gap: 0,
+    padding: "4px",
     "& .user-info": { display: "none" },
+  },
+  
+  // Tablets pequeñas y móviles - SOLO MOSTRAR AVATAR
+  [theme.breakpoints.down('md')]: {
+    display: "none", // Ocultar completamente en móviles
   },
 }));
 
@@ -664,28 +704,33 @@ const RightControls = styled(Box)(({ theme }) => ({
   gap: 16,
   flexShrink: 0,
   
-  // Desktop
+  // Desktop grande (1920px+)
+  [theme.breakpoints.up('xl')]: {
+    gap: 16,
+  },
+  
+  // Desktop (1280px - 1919px)
   [theme.breakpoints.between('lg', 'xl')]: {
     gap: 12,
   },
   
-  // Tablets y laptops pequeños
+  // Tablets y laptops pequeños (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     gap: 10,
   },
   
-  // Tablets pequeñas
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
     gap: 8,
   },
   
-  // Móviles
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     gap: 8,
   },
 }));
 
-// AVATAR CON HOVER SUTIL + SHIMMER + RESPONSIVE
+// AVATAR CON RESPONSIVE MEJORADO
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: 40,
   height: 40,
@@ -734,21 +779,28 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
     left: "100%",
   },
   
-  // Tablets y laptops
+  // Desktop (1280px - 1919px)
+  [theme.breakpoints.between('lg', 'xl')]: {
+    width: 38,
+    height: 38,
+    "&::after": { width: 11, height: 11 },
+  },
+  
+  // Tablets y laptops (960px - 1279px)
   [theme.breakpoints.between('md', 'lg')]: {
     width: 36,
     height: 36,
     "&::after": { width: 10, height: 10 },
   },
   
-  // Tablets pequeñas
+  // Tablets pequeñas (600px - 959px)
   [theme.breakpoints.between('sm', 'md')]: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     "&::after": { width: 9, height: 9 },
   },
   
-  // Móviles
+  // Móviles (0px - 599px)
   [theme.breakpoints.down('sm')]: {
     width: 32,
     height: 32,
@@ -975,7 +1027,7 @@ const DROPDOWN_MENUS = {
 };
 
 // ============================================================
-// NAVBAR COMPONENT
+// NAVBAR COMPONENT - CON LÓGICA RESPONSIVE MEJORADA
 // ============================================================
 
 const Navbar = () => {
@@ -995,10 +1047,12 @@ const Navbar = () => {
   const location = useLocation();
   const { logout, user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isLaptopSmall = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  
+  // MEDIA QUERIES MEJORADAS
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 0-599px
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md')); // 600-959px
+  const isLaptopSmall = useMediaQuery(theme.breakpoints.between('md', 'lg')); // 960-1279px
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg')); // 1280px+
 
   const handleDropdownClick = (dropdownKey, event) => {
     setDropdownStates(prev => ({
@@ -1084,7 +1138,8 @@ const Navbar = () => {
       <StyledAppBar hidden={isSidebarOpen} elevation={0}>
         <StyledToolbar>
           <MainContent>
-            <BrandContainer>
+            {/* BRAND - SIEMPRE VISIBLE */}
+            <BrandContainer onClick={() => navigate('/dashboard')}>
               <LogoContainer>
                 <img src="/logo.png" alt="DIAMBARS" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </LogoContainer>
@@ -1094,7 +1149,8 @@ const Navbar = () => {
               </BrandText>
             </BrandContainer>
 
-            {!isMobile && !isTablet && !isLaptopSmall && (
+            {/* NAVIGATION - SOLO EN DESKTOP (lg+) */}
+            {isDesktop && (
               <NavContainer>
                 {MAIN_NAVIGATION.map((item) => (
                   <GlassButton
@@ -1127,8 +1183,10 @@ const Navbar = () => {
               </NavContainer>
             )}
 
+            {/* RIGHT CONTROLS - ESTRATEGIA RESPONSIVE MEJORADA */}
             <RightControls>
-              {isDesktop && (
+              {/* USER MENU - VISIBLE EN DESKTOP Y TABLETS/LAPTOPS (md+) */}
+              {(isDesktop || isLaptopSmall) && (
                 <UserContainer onClick={handleUserMenuClick}>
                   <StyledAvatar>{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</StyledAvatar>
                   <Box className="user-info">
@@ -1141,6 +1199,8 @@ const Navbar = () => {
                   </Box>
                 </UserContainer>
               )}
+              
+              {/* MENU BUTTON - SIEMPRE VISIBLE */}
               <GlassIconButton onClick={toggleSidebar}>
                 <ListIcon size={20} weight="duotone" />
               </GlassIconButton>
@@ -1314,8 +1374,8 @@ const Navbar = () => {
         </Box>
       </StyledDrawer>
 
-      {/* Dropdowns - Solo cuando navbar visible */}
-      {!isMobile && !isTablet && !isLaptopSmall && !isSidebarOpen && (
+      {/* Dropdowns - Solo cuando navbar visible y en desktop */}
+      {isDesktop && !isSidebarOpen && (
         <>
           {/* User Menu */}
           <StyledPopper open={showUserMenu} anchorEl={userMenuAnchor} placement="bottom-end">
