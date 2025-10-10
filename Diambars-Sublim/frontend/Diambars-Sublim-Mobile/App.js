@@ -1,11 +1,11 @@
-// App.js - CON SPLASH Y LOADING SCREENS
+// App.js - CON SPLASH Y LOADING SCREENS + ORDERS CORREGIDO
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Importar pantallas
-import SplashScreen from './src/screens/SplashScreen';        // 👈 SPLASH ANIMADO
-import LoadingScreen from './src/screens/LoadingScreen';      // 👈 NUEVA PANTALLA DE CARGA
+import SplashScreen from './src/screens/SplashScreen';
+import LoadingScreen from './src/screens/LoadingScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RecoveryPasswordScreen from './src/screens/RecoveryPasswordScreen';
 import CodeConfirmationScreen from './src/screens/CodeConfirmationScreen';
@@ -42,6 +42,9 @@ import ReviewsScreen from './src/screens/ReviewsScreen';
 // Importar pantalla de métodos de pago
 import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
 import PaymentStatsScreen from './src/screens/PaymentStatsScreen';
+
+// Importar pantalla de ÓRDENES (RUTA CORREGIDA)
+import OrderScreen from './src/screens/OrderScreen';
 
 const Stack = createStackNavigator();
 
@@ -162,6 +165,30 @@ export default function App() {
           }}
         />
 
+        {/* 📦 PANTALLA DE ÓRDENES (RUTA CORREGIDA) */}
+        <Stack.Screen 
+          name="Orders" 
+          component={OrderScreen}
+          options={{
+            title: 'Gestión de Órdenes',
+            headerShown: false,
+            cardStyleInterpolator: ({ current, layouts }) => {
+              return {
+                cardStyle: {
+                  transform: [
+                    {
+                      translateX: current.progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [layouts.screen.width, 0],
+                      }),
+                    },
+                  ],
+                },
+              };
+            },
+          }}
+        />
+
         {/* 📱 PANTALLAS DE PRODUCTOS */}
         <Stack.Screen 
           name="Products" 
@@ -187,144 +214,144 @@ export default function App() {
             headerShown: false,
           }}
         />
-    <Stack.Screen
-      name="CreateProduct"
-      component={CreateProductScreen}
-      options={{
-        title: 'Crear Producto',
-        headerShown: false,
-      }}
-    />
+        <Stack.Screen
+          name="CreateProduct"
+          component={CreateProductScreen}
+          options={{
+            title: 'Crear Producto',
+            headerShown: false,
+          }}
+        />
 
-    {/* 📁 PANTALLAS DE CATEGORÍAS */}
-    <Stack.Screen
-      name="Categories"
-      component={CategoriesScreen}
-      options={{
-        title: 'Gestión de Categorías',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="CategoryDetail"
-      component={CategoryDetailScreen}
-      options={{
-        title: 'Detalles de Categoría',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="EditCategory"
-      component={EditCategoryScreen}
-      options={{
-        title: 'Editar Categoría',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="CreateCategory"
-      component={CreateCategoryScreen}
-      options={{
-        title: 'Crear Categoría',
-        headerShown: false,
-      }}
-    />
+        {/* 📁 PANTALLAS DE CATEGORÍAS */}
+        <Stack.Screen
+          name="Categories"
+          component={CategoriesScreen}
+          options={{
+            title: 'Gestión de Categorías',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="CategoryDetail"
+          component={CategoryDetailScreen}
+          options={{
+            title: 'Detalles de Categoría',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="EditCategory"
+          component={EditCategoryScreen}
+          options={{
+            title: 'Editar Categoría',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="CreateCategory"
+          component={CreateCategoryScreen}
+          options={{
+            title: 'Crear Categoría',
+            headerShown: false,
+          }}
+        />
 
-    {/* 👥 PANTALLAS DE EMPLEADOS */}
-    <Stack.Screen
-      name="Employees"
-      component={EmployeesScreen}
-      options={{
-        title: 'Gestión de Empleados',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="EmployeeDetail"
-      component={EmployeeDetailScreen}
-      options={{
-        title: 'Detalles de Empleado',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="CreateEmployee"
-      component={CreateEmployeeScreen}
-      options={{
-        title: 'Crear Empleado',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="EditEmployee"
-      component={EditEmployeeScreen}
-      options={{
-        title: 'Editar Empleado',
-        headerShown: false,
-      }}
-    />
+        {/* 👥 PANTALLAS DE EMPLEADOS */}
+        <Stack.Screen
+          name="Employees"
+          component={EmployeesScreen}
+          options={{
+            title: 'Gestión de Empleados',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="EmployeeDetail"
+          component={EmployeeDetailScreen}
+          options={{
+            title: 'Detalles de Empleado',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="CreateEmployee"
+          component={CreateEmployeeScreen}
+          options={{
+            title: 'Crear Empleado',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="EditEmployee"
+          component={EditEmployeeScreen}
+          options={{
+            title: 'Editar Empleado',
+            headerShown: false,
+          }}
+        />
 
-    {/* 👤 PANTALLAS DE USUARIOS */}
-    <Stack.Screen
-      name="Users"
-      component={UsersScreen}
-      options={{
-        title: 'Gestión de Usuarios',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="UserDetail"
-      component={UserDetailScreen}
-      options={{
-        title: 'Detalles de Usuario',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="CreateUser"
-      component={CreateUserScreen}
-      options={{
-        title: 'Crear Usuario',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="EditUser"
-      component={EditUserScreen}
-      options={{
-        title: 'Editar Usuario',
-        headerShown: false,
-      }}
-    />
+        {/* 👤 PANTALLAS DE USUARIOS */}
+        <Stack.Screen
+          name="Users"
+          component={UsersScreen}
+          options={{
+            title: 'Gestión de Usuarios',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="UserDetail"
+          component={UserDetailScreen}
+          options={{
+            title: 'Detalles de Usuario',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="CreateUser"
+          component={CreateUserScreen}
+          options={{
+            title: 'Crear Usuario',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="EditUser"
+          component={EditUserScreen}
+          options={{
+            title: 'Editar Usuario',
+            headerShown: false,
+          }}
+        />
 
-    {/* ⭐ PANTALLAS DE RESEÑAS */}
-    <Stack.Screen
-      name="Reviews"
-      component={ReviewsScreen}
-      options={{
-        title: 'Gestión de Reseñas',
-        headerShown: false,
-      }}
-    />
+        {/* ⭐ PANTALLAS DE RESEÑAS */}
+        <Stack.Screen
+          name="Reviews"
+          component={ReviewsScreen}
+          options={{
+            title: 'Gestión de Reseñas',
+            headerShown: false,
+          }}
+        />
 
-    {/* 💳 PANTALLAS DE MÉTODOS DE PAGO */}
-    <Stack.Screen
-      name="PaymentMethods"
-      component={PaymentMethodsScreen}
-      options={{
-        title: 'Métodos de Pago',
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="PaymentStats"
-      component={PaymentStatsScreen}
-      options={{
-        title: 'Estadísticas de Métodos de Pago',
-        headerShown: false,
-      }}
-    />
+        {/* 💳 PANTALLAS DE MÉTODOS DE PAGO */}
+        <Stack.Screen
+          name="PaymentMethods"
+          component={PaymentMethodsScreen}
+          options={{
+            title: 'Métodos de Pago',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="PaymentStats"
+          component={PaymentStatsScreen}
+          options={{
+            title: 'Estadísticas de Métodos de Pago',
+            headerShown: false,
+          }}
+        />
 
       </Stack.Navigator>
     </NavigationContainer>

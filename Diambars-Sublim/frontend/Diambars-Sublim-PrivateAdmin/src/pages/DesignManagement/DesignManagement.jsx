@@ -44,7 +44,9 @@ import {
   Download,
   SortAscending,
   SortDescending,
-  PencilSimple
+  PencilSimple,
+  Copy,
+  Trash
 } from '@phosphor-icons/react';
 
 // Importar componentes personalizados  
@@ -72,7 +74,25 @@ Swal.mixin({
   }
 });
 
-// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ const marbleFlowKeyframes = ` @keyframes marbleFlow { 0% { transform: translate(2%, 2%) rotate(0deg) scale(1); } 25% { transform: translate(-8%, -8%) rotate(5deg) scale(1.05); } 50% { transform: translate(-15%, 8%) rotate(-3deg) scale(1.08); } 75% { transform: translate(-8%, -5%) rotate(2deg) scale(1.05); } 100% { transform: translate(2%, 2%) rotate(0deg) scale(1); } } `; // Inyectar keyframes en el documento if (typeof document !== 'undefined') { const styleSheet = document.createElement('style'); styleSheet.textContent = marbleFlowKeyframes; document.head.appendChild(styleSheet); } // ================ ESTILOS MODERNOS RESPONSIVE - DISEÑOS ================ 
+// ================ KEYFRAMES PARA ANIMACIÓN DE MÁRMOL MUY VISIBLE ================ 
+const marbleFlowKeyframes = ` 
+  @keyframes marbleFlow { 
+    0% { transform: translate(2%, 2%) rotate(0deg) scale(1); } 
+    25% { transform: translate(-8%, -8%) rotate(5deg) scale(1.05); } 
+    50% { transform: translate(-15%, 8%) rotate(-3deg) scale(1.08); } 
+    75% { transform: translate(-8%, -5%) rotate(2deg) scale(1.05); } 
+    100% { transform: translate(2%, 2%) rotate(0deg) scale(1); } 
+  } 
+`;
+
+// Inyectar keyframes en el documento
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = marbleFlowKeyframes;
+  document.head.appendChild(styleSheet);
+}
+
+// ================ ESTILOS MODERNOS RESPONSIVE - DISEÑOS ================ 
 const DesignPageContainer = styled(Box)({
   minHeight: '100vh',
   fontFamily: "'Mona Sans'",
@@ -85,7 +105,7 @@ const DesignPageContainer = styled(Box)({
 
 const DesignContentWrapper = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '1600px', // Más ancho para mejor uso del espacio
+  maxWidth: '1600px',
   margin: '0 auto',
   paddingTop: '120px',
   paddingBottom: '40px',
@@ -152,7 +172,7 @@ const DesignHeaderSection = styled(DesignModernCard)(({ theme }) => ({
 
 const DesignHeaderContent = styled(Box)(({ theme }) => ({
   display: 'flex',
-  alignItems: 'center', // Centrado vertical
+  alignItems: 'center',
   justifyContent: 'space-between',
   gap: '32px',
   width: '100%',
@@ -161,8 +181,8 @@ const DesignHeaderContent = styled(Box)(({ theme }) => ({
   },
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
-    alignItems: 'center', // Centrado en móvil
-    textAlign: 'center', // Texto centrado
+    alignItems: 'center',
+    textAlign: 'center',
     gap: '20px',
   },
   [theme.breakpoints.down('sm')]: {
@@ -174,10 +194,10 @@ const DesignHeaderInfo = styled(Box)(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'flex-start', // Alineación a la izquierda en desktop
+  alignItems: 'flex-start',
   justifyContent: 'center',
   [theme.breakpoints.down('md')]: {
-    alignItems: 'center', // Centrado en móvil
+    alignItems: 'center',
     textAlign: 'center',
   }
 }));
@@ -375,57 +395,6 @@ const DesignSecondaryActionButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const DesignActionIconButton = styled(IconButton)(({ theme }) => ({
-  background: alpha('#1F64BF', 0.08),
-  color: '#1F64BF',
-  borderRadius: '12px',
-  width: '52px',
-  height: '52px',
-  transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  flexShrink: 0,
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: alpha('#1F64BF', 0.12),
-    transform: 'scale(0)',
-    borderRadius: '50%',
-    transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  },
-  '& svg': {
-    position: 'relative',
-    zIndex: 2,
-  },
-  '&:hover': {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 16px rgba(31, 100, 191, 0.2)',
-    '&::before': {
-      transform: 'scale(1)',
-    }
-  },
-  '&:active': {
-    transform: 'translateY(0)',
-    transition: 'transform 0.1s ease-out',
-  },
-  [theme.breakpoints.down('lg')]: {
-    width: '48px',
-    height: '48px',
-  },
-  [theme.breakpoints.down('md')]: {
-    width: '48px',
-    height: '48px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    width: '48px',
-    height: '48px',
-  }
-}));
-
 // CONTENEDOR UNIFICADO DISEÑOS
 const DesignUnifiedContainer = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -444,26 +413,25 @@ const DesignStatsGrid = styled(Box)(({ theme }) => ({
   width: '100%',
   display: 'grid',
   gap: '24px',
-  // Grid responsivo mejorado
-  gridTemplateColumns: 'repeat(4, 1fr)', // Desktop - 4 columnas iguales
-  [theme.breakpoints.down(1400)]: { // Pantallas grandes pero no ultra wide
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  [theme.breakpoints.down(1400)]: {
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '20px',
   },
-  [theme.breakpoints.down('lg')]: { // Tablets grandes (≥992px) 
-    gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 grid para tablets
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '18px',
   },
-  [theme.breakpoints.down('md')]: { // Tablets pequeñas (≥768px)
-    gridTemplateColumns: 'repeat(2, 1fr)', // Mantener 2x2
+  [theme.breakpoints.down('md')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '16px',
   },
-  [theme.breakpoints.down('sm')]: { // Móviles grandes (≥600px)
-    gridTemplateColumns: 'repeat(2, 1fr)', // 2 columnas en móviles grandes
+  [theme.breakpoints.down('sm')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '14px',
   },
-  [theme.breakpoints.down(480)]: { // Móviles pequeños
-    gridTemplateColumns: '1fr', // 1 columna para móviles muy pequeños
+  [theme.breakpoints.down(480)]: {
+    gridTemplateColumns: '1fr',
     gap: '12px',
   }
 }));
@@ -687,7 +655,7 @@ const DesignStatChange = styled(Box)(({ variant, trend }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '6px',
-  marginTop: 'auto', // Empujar hacia abajo
+  marginTop: 'auto',
   padding: '6px 10px',
   borderRadius: '8px',
   background: (variant === 'primary' || variant === 'success' || variant === 'warning')
@@ -938,8 +906,7 @@ const DesignsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gap: '28px',
   width: '100%',
-  // Grid responsivo para diseños mejorado - 4 columnas por fila
-  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', // Desktop - 4 columnas
+  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
   [theme.breakpoints.down('xl')]: {
     gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
     gap: '24px',
@@ -1134,7 +1101,7 @@ const DesignManagement = () => {
         sort: sortOption,
         order: sortOrder
       });
-    }, 300); // Debounce para búsqueda
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, selectedStatus, selectedProduct, selectedUser, sortOption, sortOrder, updateFilters]);
@@ -1264,7 +1231,6 @@ const DesignManagement = () => {
   const handleDesignCreated = async (designData) => {
     try {
       setActionLoading(true);
-      // ✅ CORREGIDO: Usar updateDesign si está en modo edición, sino createDesignForClient
       if (editingDesign) {
         console.log('✏️ [DesignManagement] Actualizando diseño existente:', editingDesign._id);
         await updateDesign(editingDesign._id, designData);
@@ -1304,7 +1270,6 @@ const DesignManagement = () => {
       setActionLoading(true);
       const design = await getDesignById(designId);
       if (design) {
-        // Encontrar el producto correspondiente para el visor
         const product = products.find(p => p.id === design.productId || p._id === design.productId);
         
         setViewingDesign({
@@ -1331,7 +1296,6 @@ const DesignManagement = () => {
       setActionLoading(true);
       const designData = await getDesignById(designId);
       if (designData) {
-        // Verificar que el diseño se puede editar
         if (!designData.canEdit) {
           Swal.fire({
             title: 'No se puede editar',
@@ -1402,7 +1366,6 @@ const DesignManagement = () => {
       setActionLoading(true);
       const designData = await getDesignById(designId);
       if (designData) {
-        // Verificar que el diseño se puede cotizar
         if (designData.status !== 'pending') {
           const statusMessages = {
             'quoted': 'Este diseño ya ha sido cotizado anteriormente',
@@ -1447,7 +1410,6 @@ const DesignManagement = () => {
       }
     } catch (error) {
       console.error('Error en handleQuoteSubmitted:', error);
-      // Mostrar error específico al usuario
       await Swal.fire({
         title: 'Error al cotizar',
         text: error.message || 'No se pudo enviar la cotización',
@@ -1631,7 +1593,6 @@ const DesignManagement = () => {
       });
 
       if (format) {
-        // Aquí implementarías la lógica de exportación según el formato
         Swal.fire({
           title: 'Exportando...',
           text: `Generando archivo ${format.toUpperCase()}`,
@@ -1641,7 +1602,6 @@ const DesignManagement = () => {
           timerProgressBar: true
         });
         
-        // Simulación de exportación
         setTimeout(() => {
           Swal.fire({
             title: 'Exportación completada',
@@ -1708,7 +1668,7 @@ const DesignManagement = () => {
                 variant="outlined"
                 onClick={handleRefresh}
                 disabled={loading || actionLoading}
-                startIcon={loading ? <CircularProgress size={16} /> : <ArrowsClockwise size={18} weight="bold" />}
+                startIcon={loading ? <CircularProgress size={16} /> : <ArrowsClockwise size={20} weight="bold" />}
               >
                 {loading ? 'Actualizando...' : 'Actualizar'}
               </DesignSecondaryActionButton>
@@ -1717,7 +1677,7 @@ const DesignManagement = () => {
                 variant="outlined"
                 onClick={handleExportData}
                 disabled={!hasDesigns || loading}
-                startIcon={<Download size={18} weight="bold" />}
+                startIcon={<Download size={20} weight="bold" />}
               >
                 Exportar
               </DesignSecondaryActionButton>
@@ -1725,7 +1685,7 @@ const DesignManagement = () => {
               <DesignPrimaryActionButton
                 onClick={handleCreateDesign}
                 disabled={loading || actionLoading}
-                startIcon={<Plus size={18} weight="bold" />}
+                startIcon={<Plus size={20} weight="bold" />}
               >
                 Nuevo Diseño
               </DesignPrimaryActionButton>
@@ -2193,7 +2153,7 @@ const DesignManagement = () => {
                 <DesignPrimaryActionButton
                   onClick={handleCreateDesign}
                   disabled={loading || actionLoading}
-                  startIcon={<Plus size={18} weight="bold" />}
+                  startIcon={<Plus size={20} weight="bold" />}
                   sx={{
                     minWidth: { xs: '100%', sm: '140px' }
                   }}
@@ -2205,7 +2165,7 @@ const DesignManagement = () => {
                   <DesignSecondaryActionButton
                     variant="outlined"
                     onClick={handleClearFilters}
-                    startIcon={<Broom size={18} weight="bold" />}
+                    startIcon={<Broom size={20} weight="bold" />}
                     sx={{
                       minWidth: { xs: '100%', sm: 'auto' }
                     }}

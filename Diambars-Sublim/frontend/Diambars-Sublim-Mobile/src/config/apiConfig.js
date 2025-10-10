@@ -11,7 +11,7 @@
 const isDevelopment = __DEV__;
 
 // IP local de tu computadora (cambia esta por tu IP real)
-const LOCAL_IP = '10.31.24.123';
+const LOCAL_IP = '192.168.0.21';
 
 // Configuración de URLs
 const API_CONFIG = {
