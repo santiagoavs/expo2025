@@ -149,17 +149,22 @@ export const authRequired = async (req, res, next) => {
       }
 
       // Verificar que el tipo de usuario coincida con el contexto
-      // Configurar rutas públicas de usuarios
+      // Configurar rutas públicas de usuarios (accesibles para usuarios regulares)
       const isPublicUserRoute = req.originalUrl.includes('/orders/me') || 
                                req.originalUrl.includes('/orders/user/') ||
-                               req.originalUrl.includes('/user/orders');
+                               req.originalUrl.includes('/user/orders') ||
+                               req.originalUrl.includes('/designs/my-designs') ||
+                               (req.originalUrl.includes('/designs/') && 
+                                !req.originalUrl.includes('/admin') && 
+                                !req.originalUrl.includes('/stats') &&
+                                !req.originalUrl.includes('/konva-config') &&
+                                !req.originalUrl.includes('/regenerate'));
       
       // Solo las rutas específicas de empleados requieren verificación de empleado
       const isEmployeeRoute = !isPublicUserRoute && (
                              req.originalUrl.includes('/employees') || 
                              req.originalUrl.includes('/admin') ||
-                             req.originalUrl.includes('/dashboard') ||
-                             isAdminPanel);
+                             req.originalUrl.includes('/dashboard'));
       
       
       const isEmployee = userType === 'employee' || 

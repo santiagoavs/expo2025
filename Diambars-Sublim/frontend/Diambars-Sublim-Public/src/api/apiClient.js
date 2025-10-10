@@ -2,40 +2,17 @@
 import axios from 'axios';
 
 const computeBaseURL = () => {
-  try {
-    // Check for backend mode override
-    const backendMode = import.meta.env.VITE_BACKEND_MODE;
-    
-    if (backendMode === 'local') {
-      console.log('🏠 [apiClient] Using LOCAL backend mode');
-      return 'http://localhost:4000/api';
-    } else if (backendMode === 'render') {
-      console.log('☁️ [apiClient] Using RENDER backend mode');
-      return 'https://expo2025-8bjn.onrender.com/api';
-    }
-    
-    // Fallback to VITE_API_URL if set
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (envUrl && typeof envUrl === 'string') {
-      const trimmed = envUrl.replace(/\/$/, '');
-      const finalUrl = trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
-      console.log('🔧 [apiClient] Using VITE_API_URL:', finalUrl);
-      return finalUrl;
-    }
-  } catch (error) {
-    console.warn('⚠️ [apiClient] Error reading environment variables:', error);
+  // Simple backend switching: local for testing, render for everything else
+  const backendMode = import.meta.env.VITE_BACKEND_MODE;
+  
+  if (backendMode === 'local') {
+    console.log('🏠 [apiClient] Using LOCAL backend (testing)');
+    return 'http://localhost:4000/api';
   }
   
-  // Final fallback based on environment
-  const isProduction = import.meta.env.PROD || import.meta.env.NODE_ENV === 'production';
-  
-  if (isProduction) {
-    console.log('🌐 [apiClient] Production fallback - using Render');
-    return 'https://expo2025-8bjn.onrender.com/api';
-  } else {
-    console.log('🔧 [apiClient] Development fallback - using proxy');
-    return '/api';
-  }
+  // Default to Render in all other cases
+  console.log('☁️ [apiClient] Using RENDER backend (default)');
+  return 'https://expo2025-8bjn.onrender.com/api';
 };
 
 const apiClient = axios.create({
