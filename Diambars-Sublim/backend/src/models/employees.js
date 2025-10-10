@@ -59,7 +59,7 @@ const employeeSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "employee", "manager", "delivery", "production"], // Todo en minúsculas
+    enum: ["admin", "employee", "manager", "delivery"], // Todo en minúsculas
     default: "employee"
   },
   recoveryData: {

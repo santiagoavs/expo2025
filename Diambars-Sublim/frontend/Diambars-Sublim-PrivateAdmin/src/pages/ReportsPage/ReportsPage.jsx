@@ -49,12 +49,17 @@ import {
   Tooltip as ChartTooltip,
   Legend,
   ArcElement,
-  Filler
+  Filler,
+  RadialLinearScale
 } from 'chart.js';
 import { 
   useOrderAnalysisReport,
   useReportExport
 } from '../../hooks/useReports';
+import useProducts from '../../hooks/useProducts';
+import useUsers from '../../hooks/useUsers';
+import useEmployees from '../../hooks/useEmployees';
+import useDesigns from '../../hooks/useDesigns';
 import ChartErrorBoundary from '../../components/ChartErrorBoundary/ChartErrorBoundary';
 
 // Registrar componentes de Chart.js
@@ -68,7 +73,8 @@ ChartJS.register(
   ChartTooltip,
   Legend,
   ArcElement,
-  Filler
+  Filler,
+  RadialLinearScale
 );
 
 // Configuración global de SweetAlert2
@@ -813,11 +819,19 @@ const ReportsTabs = styled(Tabs)(({ theme }) => ({
 const ReportsPage = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [exportLoading, setExportLoading] = useState(false);
   
-  // Hooks de reportes
+  // Hooks de reportes y datos
   const { data: reportData, loading: reportLoading, error: reportError, refetch: refetchReport } = useOrderAnalysisReport();
   const { exportReport } = useReportExport();
+  
+  // Hooks para estadísticas adicionales
+  const { getProductStats } = useProducts();
+  const { getUserStats } = useUsers();
+  const { getEmployeeStats } = useEmployees();
+  const { getDesignStats } = useDesigns();
 
   
   
@@ -844,17 +858,60 @@ const ReportsPage = React.memo(() => {
     }).format(amount);
   };
 
-  // Extraer estadísticas del nuevo hook
+  // Extraer estadísticas de todos los hooks
   const stats = useMemo(() => {
-    if (!reportData) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, totalUniqueCustomers: 0 };
+    const productStats = getProductStats();
+    const userStats = getUserStats();
+    const employeeStats = getEmployeeStats();
+    const designStats = getDesignStats();
+    
+    const baseStats = {
+      totalRevenue: reportData?.summary?.totalRevenue || 0,
+      totalOrders: reportData?.summary?.totalOrders || 0,
+      averageOrderValue: reportData?.summary?.averageOrderValue || 0,
+      totalUniqueCustomers: reportData?.summary?.totalUniqueCustomers || 0,
+    };
     
     return {
-      totalRevenue: reportData.summary.totalRevenue || 0,
-      totalOrders: reportData.summary.totalOrders || 0,
-      averageOrderValue: reportData.summary.averageOrderValue || 0,
-      totalUniqueCustomers: reportData.summary.totalUniqueCustomers || 0
+      ...baseStats,
+      // Estadísticas de productos
+      totalProducts: productStats?.total || 0,
+      activeProducts: productStats?.active || 0,
+      inactiveProducts: productStats?.inactive || 0,
+      featuredProducts: productStats?.featured || 0,
+      productRevenue: productStats?.totalRevenue || 0,
+      avgProductPrice: productStats?.avgPrice || 0,
+      
+      // Estadísticas de usuarios
+      totalUsers: userStats?.total || 0,
+      activeUsers: userStats?.active || 0,
+      inactiveUsers: userStats?.inactive || 0,
+      adminUsers: userStats?.admins || 0,
+      premiumUsers: userStats?.premium || 0,
+      customerUsers: userStats?.customers || 0,
+      
+      // Estadísticas de empleados
+      totalEmployees: employeeStats?.total || 0,
+      activeEmployees: employeeStats?.active || 0,
+      inactiveEmployees: employeeStats?.inactive || 0,
+      adminEmployees: employeeStats?.roles?.admins || 0,
+      managerEmployees: employeeStats?.roles?.managers || 0,
+      regularEmployees: employeeStats?.roles?.employees || 0,
+      deliveryEmployees: employeeStats?.roles?.delivery || 0,
+      
+      // Estadísticas de diseños
+      totalDesigns: designStats?.total || 0,
+      pendingDesigns: designStats?.pending || 0,
+      quotedDesigns: designStats?.quoted || 0,
+      approvedDesigns: designStats?.approved || 0,
+      rejectedDesigns: designStats?.rejected || 0,
+      completedDesigns: designStats?.completed || 0,
+      draftDesigns: designStats?.drafts || 0,
+      designRevenue: designStats?.totalRevenue || 0,
+      avgDesignPrice: designStats?.avgPrice || 0,
+      designConversionRate: designStats?.conversionRate || 0,
     };
-  }, [reportData]);
+  }, [reportData, getProductStats, getUserStats, getEmployeeStats, getDesignStats]);
 
   // Función para validar y formatear datos de gráficos
   const getValidChartData = (labels, data, chartType) => {
@@ -915,7 +972,7 @@ const ReportsPage = React.memo(() => {
     };
   };
 
-  // Opciones de gráficos consistentes
+  // Opciones de gráficos consistentes y responsive
   const getChartOptions = (chartType) => {
     const baseOptions = {
       responsive: true,
@@ -923,12 +980,17 @@ const ReportsPage = React.memo(() => {
       plugins: {
         legend: {
           display: chartType !== 'line',
-          position: 'top',
+          position: isMobile ? 'bottom' : 'top',
           labels: {
             usePointStyle: true,
-            padding: isMobile ? 10 : 20,
-            font: { size: isMobile ? 10 : 12, weight: '600', family: "'Mona Sans'" },
+            padding: isMobile ? 8 : 15,
+            font: { 
+              size: isMobile ? 9 : isTablet ? 11 : 12, 
+              weight: '600', 
+              family: "'Mona Sans'" 
+            },
             color: '#475569',
+            boxWidth: isMobile ? 12 : 16,
           }
         },
         tooltip: {
@@ -936,9 +998,16 @@ const ReportsPage = React.memo(() => {
           backgroundColor: alpha('#010326', 0.9),
           titleColor: '#FFFFFF',
           bodyColor: '#E2E8F0',
-          titleFont: { size: 14, weight: 'bold', family: "'Mona Sans'" },
-          bodyFont: { size: 12, family: "'Mona Sans'" },
-          padding: 12,
+          titleFont: { 
+            size: isMobile ? 12 : 14, 
+            weight: 'bold', 
+            family: "'Mona Sans'" 
+          },
+          bodyFont: { 
+            size: isMobile ? 10 : 12, 
+            family: "'Mona Sans'" 
+          },
+          padding: isMobile ? 8 : 12,
           cornerRadius: 8,
           boxPadding: 4,
           callbacks: {
@@ -949,6 +1018,8 @@ const ReportsPage = React.memo(() => {
               }
               if (context.parsed.y !== null) {
                 label += new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(context.parsed.y);
+              } else if (context.parsed !== null) {
+                label += context.parsed;
               }
               return label;
             }
@@ -959,12 +1030,25 @@ const ReportsPage = React.memo(() => {
         x: {
           border: { display: false },
           grid: { display: false },
-          ticks: { font: { family: "'Mona Sans'" }, color: '#64748b' }
+          ticks: { 
+            font: { 
+              family: "'Mona Sans'",
+              size: isMobile ? 9 : 11
+            }, 
+            color: '#64748b',
+            maxRotation: isMobile ? 45 : 0
+          }
         },
         y: {
           border: { display: false },
           grid: { color: '#E2E8F0' },
-          ticks: { font: { family: "'Mona Sans'" }, color: '#64748b' }
+          ticks: { 
+            font: { 
+              family: "'Mona Sans'",
+              size: isMobile ? 9 : 11
+            }, 
+            color: '#64748b' 
+          }
         }
       }
     };
@@ -983,14 +1067,43 @@ const ReportsPage = React.memo(() => {
     }
 
     if (chartType === 'doughnut') {
-        return {
-            ...baseOptions,
-            cutout: '60%',
-            scales: {
-                x: { display: false }, 
-                y: { display: false }
+      return {
+        ...baseOptions,
+        cutout: isMobile ? '50%' : '60%',
+        scales: {
+          x: { display: false }, 
+          y: { display: false }
+        }
+      };
+    }
+
+    if (chartType === 'pie') {
+      return {
+        ...baseOptions,
+        scales: {
+          x: { display: false }, 
+          y: { display: false }
+        }
+      };
+    }
+
+    if (chartType === 'polarArea') {
+      return {
+        ...baseOptions,
+        scales: {
+          r: {
+            beginAtZero: true,
+            grid: { color: '#E2E8F0' },
+            ticks: { 
+              font: { 
+                family: "'Mona Sans'",
+                size: isMobile ? 9 : 11
+              }, 
+              color: '#64748b' 
             }
-        };
+          }
+        }
+      };
     }
 
     return baseOptions;
@@ -1076,102 +1189,216 @@ const ReportsPage = React.memo(() => {
           </ReportsHeaderContent>
         </ReportsHeaderSection>
 
-        <ReportsStatsGrid>
-          <ReportsStatCard variant="primary">
-            <ReportsStatHeader>
-              <Box>
-                <ReportsStatValue variant="primary">
-                  {formatCurrency(stats.totalRevenue)}
-                </ReportsStatValue>
-                <ReportsStatLabel variant="primary">
-                  Ingresos Totales (COP)
-                </ReportsStatLabel>
-              </Box>
-              <ReportsStatIconContainer variant="primary">
-                <TrendUp size={24} weight="duotone" />
-              </ReportsStatIconContainer>
-            </ReportsStatHeader>
-            <ReportsStatChange variant="primary" trend="up">
-              <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText variant="primary" trend="up">
-                +12% este mes
-              </ReportsStatTrendText>
-            </ReportsStatChange>
-          </ReportsStatCard>
+        {/* Grid de estadísticas principales - Responsive con MUI Grid */}
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: 4 }}>
+          {/* Ingresos Totales */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="primary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="primary">
+                    {formatCurrency(stats.totalRevenue)}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="primary">
+                    Ingresos Totales
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="primary">
+                  <TrendUp size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="primary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="primary" trend="up">
+                  +12% este mes
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
 
-          <ReportsStatCard variant="secondary">
-            <ReportsStatHeader>
-              <Box>
-                <ReportsStatValue variant="secondary">
-                  {stats.totalOrders}
-                </ReportsStatValue>
-                <ReportsStatLabel variant="secondary">
-                  Total de Órdenes
-                </ReportsStatLabel>
-              </Box>
-              <ReportsStatIconContainer variant="secondary">
-                <ChartBar size={24} weight="duotone" />
-              </ReportsStatIconContainer>
-            </ReportsStatHeader>
-            <ReportsStatChange variant="secondary" trend="up">
-              <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText variant="secondary" trend="up">
-                +8% este mes
-              </ReportsStatTrendText>
-            </ReportsStatChange>
-          </ReportsStatCard>
+          {/* Total de Órdenes */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.totalOrders}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Total de Órdenes
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <ChartBar size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  +8% este mes
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
 
-          <ReportsStatCard variant="secondary">
-            <ReportsStatHeader>
-              <Box>
-                <ReportsStatValue variant="secondary">
-                  {formatCurrency(stats.averageOrderValue)}
-                </ReportsStatValue>
-                <ReportsStatLabel variant="secondary">
-                  Ticket Promedio
-                </ReportsStatLabel>
-              </Box>
-              <ReportsStatIconContainer variant="secondary">
-                <Users size={24} weight="duotone" />
-              </ReportsStatIconContainer>
-            </ReportsStatHeader>
-            <ReportsStatChange variant="secondary" trend="up">
-              <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText variant="secondary" trend="up">
-                +5% este mes
-              </ReportsStatTrendText>
-            </ReportsStatChange>
-          </ReportsStatCard>
+          {/* Ticket Promedio */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {formatCurrency(stats.averageOrderValue)}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Ticket Promedio
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <Users size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  +5% este mes
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
 
-          <ReportsStatCard variant="secondary">
-            <ReportsStatHeader>
-              <Box>
-                <ReportsStatValue variant="secondary">
-                  {stats.totalUniqueCustomers}
-                </ReportsStatValue>
-                <ReportsStatLabel variant="secondary">
-                  Clientes Únicos
-                </ReportsStatLabel>
-              </Box>
-              <ReportsStatIconContainer variant="secondary">
-                <Package size={24} weight="duotone" />
-              </ReportsStatIconContainer>
-            </ReportsStatHeader>
-            <ReportsStatChange variant="secondary" trend="up">
-              <TrendUp size={14} weight="bold" />
-              <ReportsStatTrendText variant="secondary" trend="up">
-                +20 nuevos
-              </ReportsStatTrendText>
-            </ReportsStatChange>
-          </ReportsStatCard>
-        </ReportsStatsGrid>
+          {/* Clientes Únicos */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.totalUniqueCustomers}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Clientes Únicos
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <Package size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  +20 nuevos
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
 
-        <Grid container spacing={4} sx={{ mb: 4 }}>
+          {/* Productos Activos */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.activeProducts}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Productos Activos
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <Package size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  {stats.totalProducts} total
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
+
+          {/* Usuarios Activos */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.activeUsers}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Usuarios Activos
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <Users size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  {stats.totalUsers} total
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
+
+          {/* Empleados Activos */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.activeEmployees}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Empleados Activos
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <User size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="up">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="up">
+                  {stats.totalEmployees} total
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
+
+          {/* Diseños Pendientes */}
+          <Grid item xs={12} sm={6} md={3}>
+            <ReportsStatCard variant="secondary">
+              <ReportsStatHeader>
+                <Box>
+                  <ReportsStatValue variant="secondary">
+                    {stats.pendingDesigns}
+                  </ReportsStatValue>
+                  <ReportsStatLabel variant="secondary">
+                    Diseños Pendientes
+                  </ReportsStatLabel>
+                </Box>
+                <ReportsStatIconContainer variant="secondary">
+                  <ChartLine size={24} weight="duotone" />
+                </ReportsStatIconContainer>
+              </ReportsStatHeader>
+              <ReportsStatChange variant="secondary" trend="down">
+                <TrendUp size={14} weight="bold" />
+                <ReportsStatTrendText variant="secondary" trend="down">
+                  {stats.totalDesigns} total
+                </ReportsStatTrendText>
+              </ReportsStatChange>
+            </ReportsStatCard>
+          </Grid>
+        </Grid>
+
+        {/* Sección de gráficas principales */}
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: 4 }}>
           {/* Gráfico de Tendencia de Ingresos */}
           <Grid item xs={12}>
             <ChartCard>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Tendencia de Ingresos</Typography>
-              <Box sx={{ height: 350 }}>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
                 {reportData?.salesOverTime && reportData.salesOverTime.length > 0 ? (
                   <ChartErrorBoundary>
                     <Line
@@ -1191,10 +1418,10 @@ const ReportsPage = React.memo(() => {
           </Grid>
 
           {/* Gráfico de Desglose de Órdenes por Estado */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6} md={4}>
             <ChartCard>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Desglose de Órdenes por Estado</Typography>
-              <Box sx={{ height: 350 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Órdenes por Estado</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
                 {reportData?.statusBreakdown ? (
                   <ChartErrorBoundary>
                     <Doughnut
@@ -1203,7 +1430,7 @@ const ReportsPage = React.memo(() => {
                         reportData.statusBreakdown.map(item => item.count),
                         'doughnut'
                       )}
-                      options={getChartOptions()}
+                      options={getChartOptions('doughnut')}
                     />
                   </ChartErrorBoundary>
                 ) : (
@@ -1213,11 +1440,11 @@ const ReportsPage = React.memo(() => {
             </ChartCard>
           </Grid>
 
-          {/* Gráfico de Ventas por Categoría de Producto */}
-          <Grid item xs={12} md={6}>
+          {/* Gráfico de Ventas por Categoría */}
+          <Grid item xs={12} sm={6} md={4}>
             <ChartCard>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Ventas por Categoría de Producto</Typography>
-              <Box sx={{ height: 350 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Ventas por Categoría</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
                 {reportData?.salesByCategory ? (
                   <ChartErrorBoundary>
                     <Bar
@@ -1226,12 +1453,88 @@ const ReportsPage = React.memo(() => {
                         reportData.salesByCategory.map(item => item.totalRevenue),
                         'bar'
                       )}
-                      options={getChartOptions()}
+                      options={getChartOptions('bar')}
                     />
                   </ChartErrorBoundary>
                 ) : (
                   <Typography>No hay datos de ventas por categoría.</Typography>
                 )}
+              </Box>
+            </ChartCard>
+          </Grid>
+
+          {/* Gráfico de Distribución de Usuarios */}
+          <Grid item xs={12} sm={6} md={4}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Distribución de Usuarios</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
+                <ChartErrorBoundary>
+                  <Pie
+                    data={getValidChartData(
+                      ['Activos', 'Inactivos', 'Admins', 'Premium', 'Clientes'],
+                      [stats.activeUsers, stats.inactiveUsers, stats.adminUsers, stats.premiumUsers, stats.customerUsers],
+                      'pie'
+                    )}
+                    options={getChartOptions('pie')}
+                  />
+                </ChartErrorBoundary>
+              </Box>
+            </ChartCard>
+          </Grid>
+
+          {/* Gráfico de Distribución de Empleados */}
+          <Grid item xs={12} sm={6} md={4}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Distribución de Empleados</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
+                <ChartErrorBoundary>
+                  <PolarArea
+                    data={getValidChartData(
+                      ['Admins', 'Gerentes', 'Empleados', 'Delivery'],
+                      [stats.adminEmployees, stats.managerEmployees, stats.regularEmployees, stats.deliveryEmployees],
+                      'polarArea'
+                    )}
+                    options={getChartOptions('polarArea')}
+                  />
+                </ChartErrorBoundary>
+              </Box>
+            </ChartCard>
+          </Grid>
+
+          {/* Gráfico de Estado de Diseños */}
+          <Grid item xs={12} sm={6} md={4}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Estado de Diseños</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
+                <ChartErrorBoundary>
+                  <Bar
+                    data={getValidChartData(
+                      ['Pendientes', 'Cotizados', 'Aprobados', 'Rechazados', 'Completados', 'Borradores'],
+                      [stats.pendingDesigns, stats.quotedDesigns, stats.approvedDesigns, stats.rejectedDesigns, stats.completedDesigns, stats.draftDesigns],
+                      'bar'
+                    )}
+                    options={getChartOptions('bar')}
+                  />
+                </ChartErrorBoundary>
+              </Box>
+            </ChartCard>
+          </Grid>
+
+          {/* Gráfico de Estado de Productos */}
+          <Grid item xs={12} sm={6} md={4}>
+            <ChartCard>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>Estado de Productos</Typography>
+              <Box sx={{ height: { xs: 300, sm: 350, md: 400 } }}>
+                <ChartErrorBoundary>
+                  <Doughnut
+                    data={getValidChartData(
+                      ['Activos', 'Inactivos'],
+                      [stats.activeProducts, stats.inactiveProducts],
+                      'doughnut'
+                    )}
+                    options={getChartOptions('doughnut')}
+                  />
+                </ChartErrorBoundary>
               </Box>
             </ChartCard>
           </Grid>

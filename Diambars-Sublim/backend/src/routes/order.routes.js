@@ -47,10 +47,10 @@ router.get('/me',
 
 // ==================== RUTAS DE PEDIDOS ====================
 
-// ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación) - Solo admin
+// ✅ NUEVO: Obtener todas las órdenes (con filtros y paginación) - Admin, Manager y Delivery
 router.get('/',
   authRequired,
-  roleRequired(['admin', 'manager']), // Solo admins pueden ver todas las órdenes
+  roleRequired(['admin', 'manager', 'delivery']), // Agregado delivery
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isString(),

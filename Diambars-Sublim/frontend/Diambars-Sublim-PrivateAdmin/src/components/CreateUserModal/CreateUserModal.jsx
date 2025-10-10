@@ -252,34 +252,56 @@ fontSize: '0.9rem',
 }));
 
 const ModernModalCloseButton = styled(IconButton)(({ theme }) => ({
-position: 'absolute',
-right: '24px',
-top: '24px',
-width: '40px',
-height: '40px',
-background: 'linear-gradient(135deg,rgb(239, 242, 255) 0%,rgb(239, 242, 255) 100%)',
-color: 'white',
-borderRadius: '12px',
-transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
-boxShadow: '0 1px 4px rgba(31, 100, 191, 0.1)',
-zIndex: 10,
-'&:hover': {
-background: 'linear-gradient(135deg,rgb(180, 179, 247) 0%,rgb(188, 179, 247) 100%)',
-transform: 'translateY(-1px) scale(1.05)',
-boxShadow: '0 2px 8px rgba(31, 100, 191, 0.2)',
-},
-[theme.breakpoints.down('md')]: {
-right: '20px',
-top: '20px',
-width: '36px',
-height: '36px',
-},
-[theme.breakpoints.down('sm')]: {
-right: '16px',
-top: '16px',
-width: '32px',
-height: '32px',
-}
+  position: 'absolute',
+  right: '24px',
+  top: '24px',
+  width: '40px',
+  height: '40px',
+  background: 'linear-gradient(135deg,rgb(239, 242, 255) 0%,rgb(239, 242, 255) 100%)',
+  color: 'white',
+  borderRadius: '12px',
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 1px 4px rgba(31, 100, 191, 0.1)',
+  zIndex: 10,
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+    transition: 'left 0.6s ease',
+    zIndex: 1,
+  },
+  '& > *': {
+    position: 'relative',
+    zIndex: 2,
+  },
+  '&:hover': {
+    background: 'linear-gradient(135deg,rgb(180, 179, 247) 0%,rgb(188, 179, 247) 100%)',
+    transform: 'translateY(-1px) scale(1.05)',
+    boxShadow: '0 2px 8px rgba(31, 100, 191, 0.2)',
+    '&::before': {
+      left: '100%',
+    },
+  },
+  '&:active': {
+    transform: 'scale(0.95) translateY(-1px)',
+  },
+  [theme.breakpoints.down('md')]: {
+    right: '20px',
+    top: '20px',
+    width: '36px',
+    height: '36px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    right: '16px',
+    top: '16px',
+    width: '32px',
+    height: '32px',
+  }
 }));
 
 const ModernModalContent = styled(Box)(({ theme }) => ({
@@ -810,27 +832,20 @@ const [errors, setErrors] = useState({});
 const [isSubmitting, setIsSubmitting] = useState(false);
 
 const roleOptions = [
-{ 
-value: 'customer', 
-label: 'Cliente', 
-icon: <User size={16} weight="duotone" />, 
-description: 'Acceso básico para compras y gestión de pedidos',
-permissions: ['catalog', 'orders', 'profile']
-},
-{ 
-value: 'premium', 
-label: 'Premium', 
-icon: <Crown size={16} weight="duotone" />, 
-description: 'Acceso premium con descuentos y soporte prioritario',
-permissions: ['catalog', 'orders', 'profile', 'discounts', 'priority_support']
-},
-{ 
-value: 'admin', 
-label: 'Administrador', 
-icon: <Shield size={16} weight="duotone" />, 
-description: 'Control total del sistema y gestión completa',
-permissions: ['users', 'orders', 'catalog', 'reports', 'settings', 'analytics']
-}
+  { 
+    value: 'customer', 
+    label: 'Cliente', 
+    icon: <User size={16} weight="duotone" />, 
+    description: 'Acceso básico para compras y gestión de pedidos',
+    permissions: ['catalog', 'orders', 'profile']
+  },
+  { 
+    value: 'premium', 
+    label: 'Premium', 
+    icon: <Crown size={16} weight="duotone" />, 
+    description: 'Acceso premium con descuentos y soporte prioritario',
+    permissions: ['catalog', 'orders', 'profile', 'discounts', 'priority_support']
+  }
 ];
 
 const handleInputChange = (field, value) => {

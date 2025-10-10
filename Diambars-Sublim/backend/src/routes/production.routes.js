@@ -77,11 +77,11 @@ router.post('/orders/:orderId/photos',
 /**
  * @route   GET /api/production/orders/:orderId/photos
  * @desc    Obtener fotos de producción de una orden
- * @access  Private (Admin/Manager only)
+ * @access  Private (Admin/Manager/Employee/Delivery)
  */
 router.get('/orders/:orderId/photos',
   authRequired,
-  roleRequired(['admin', 'manager']),
+  roleRequired(['admin', 'manager', 'employee', 'delivery']), // Agregado delivery
   productionValidations.getPhotos,
   validateRequest,
   productionController.getProductionPhotos

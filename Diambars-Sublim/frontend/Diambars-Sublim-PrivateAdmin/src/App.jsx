@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login/Login';
-import Dashboard from './pages/Dashboard/Dashboard';
+import WelcomeDashboard from './pages/Dashboard/WelcomeDashboard';
+import AnalyticsDashboard from './pages/Analytics/AnalyticsDashboard';
 import CatalogManagement from './pages/CatalogManagement/CatalogManagement';
 import DesignManagement from './pages/DesignManagement/DesignManagement';
 import SplashScreen from './components/SplashScreen/SplashScreen';
@@ -137,7 +138,19 @@ const AppContent = () => {
         element={
           isAuthenticated ? (
             <AuthenticatedLayout>
-              <Dashboard/>
+              <WelcomeDashboard/>
+            </AuthenticatedLayout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/analytics" 
+        element={
+          isAuthenticated ? (
+            <AuthenticatedLayout>
+              <AnalyticsDashboard/>
             </AuthenticatedLayout>
           ) : (
             <Navigate to="/login" replace />

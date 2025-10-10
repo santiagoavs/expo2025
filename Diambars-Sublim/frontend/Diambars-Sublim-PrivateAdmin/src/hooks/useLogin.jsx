@@ -27,8 +27,8 @@ export const useLogin = () => {
       const user = await login(data);
 
       // Validar roles
-      const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
-      const allowedRoles = ['admin', 'manager', 'employee', 'warehouse'];
+      const allowedTypes = ['employee', 'manager', 'delivery', 'admin'];
+      const allowedRoles = ['admin', 'manager', 'employee', 'delivery'];
       const userType = user.type?.toLowerCase();
       const userRole = user.role?.toLowerCase();
 

@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/", 
   verifyToken, 
   checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
-  checkRole("Admin", "admin", "Manager", "manager"), 
+  checkRole("Admin", "admin", "Manager", "manager"), // Quitar employee 
   employeesController.getEmployees
 );
 
@@ -16,7 +16,7 @@ router.get("/",
 router.get("/:id", 
   verifyToken, 
   checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
-  checkRole("Admin", "admin", "Manager", "manager"), 
+  checkRole("Admin", "admin", "Manager", "manager"), // Quitar employee 
   employeesController.getEmployeeById
 );
 
@@ -24,7 +24,7 @@ router.get("/:id",
 router.put("/:id", 
   verifyToken, 
   checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
-  checkRole("Admin", "admin", "Manager", "manager"), 
+  checkRole("Admin", "admin", "Manager", "manager"), // Quitar employee 
   employeesController.updateEmployee
 );
 
@@ -52,7 +52,7 @@ router.patch("/:id/password",
 router.delete("/:id", 
   verifyToken, 
   checkUserType("employee", "admin"), // ← CORREGIDO: Permitir admin
-  checkRole("Admin", "admin", "Manager", "manager"), 
+  checkRole("Admin", "admin", "Manager", "manager"), // Quitar employee 
   employeesController.inactivateEmployee
 );
 
