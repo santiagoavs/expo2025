@@ -48,16 +48,49 @@ if (typeof document !== 'undefined') {
 }
 
 // ================ STYLED COMPONENTS ================ 
+const DashboardPageContainer = styled(Box)({
+  minHeight: '100vh',
+  fontFamily: "'Mona Sans'",
+  background: 'white',
+  width: '100%',
+});
+
+const DashboardContentWrapper = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '1600px',
+  margin: '0 auto',
+  padding: '80px 12px 20px',
+  fontFamily: "'Mona Sans'",
+  boxSizing: 'border-box',
+  
+  [theme.breakpoints.up('sm')]: {
+    padding: '100px 16px 24px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    padding: '110px 20px 32px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    padding: '120px 24px 40px',
+  }
+}));
+
 const ModernCard = styled(Paper)(({ theme }) => ({
   background: 'white',
-  borderRadius: '16px',
+  borderRadius: '12px',
   border: `1px solid ${alpha('#1F64BF', 0.08)}`,
-  boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
+  boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
   transition: 'all 0.3s ease',
   fontFamily: "'Mona Sans'",
   '&:hover': {
-    boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)',
+    boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)',
     transform: 'translateY(-1px)',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    borderRadius: '16px',
+    boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)',
   }
 }));
 
@@ -113,9 +146,9 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
   const isColoredVariant = ['primary', 'success', 'warning', 'danger'].includes(variant);
 
   return {
-    padding: '20px',
+    padding: '16px',
     width: '100%',
-    minHeight: '140px',
+    minHeight: '100px',
     maxHeight: 'auto',
     display: 'flex',
     flexDirection: 'column',
@@ -125,7 +158,6 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
     boxSizing: 'border-box',
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.23, 1, 0.320, 1)',
-    boxShadow: '0 2px 12px rgba(1, 3, 38, 0.04)',
     ...selectedVariant,
     
     '&::before': {
@@ -177,7 +209,7 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
 
     '&:hover': {
       transform: 'translateY(-2px) scale(1.01)',
-      boxShadow: '0 8px 28px rgba(1, 3, 38, 0.1)',
+      boxShadow: '0 8px 24px rgba(1, 3, 38, 0.1)',
       '&::before': {
         opacity: 1,
       },
@@ -196,34 +228,30 @@ const DashboardStatCard = styled(ModernCard)(({ theme, variant }) => {
       zIndex: 2,
     },
 
-    [theme.breakpoints.down('lg')]: {
+    [theme.breakpoints.up('sm')]: {
       padding: '18px',
-      minHeight: '130px',
-    },
-    [theme.breakpoints.down('md')]: {
-      padding: '16px',
       minHeight: '120px',
     },
-    [theme.breakpoints.down('sm')]: {
-      padding: '14px',
-      minHeight: '110px',
+    [theme.breakpoints.up('md')]: {
+      padding: '20px',
+      minHeight: '140px',
     }
   };
 });
 
 const DashboardStatHeader = styled(Box)({
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'space-between',
-  marginBottom: '16px',
+  marginBottom: '12px',
   width: '100%',
-  gap: '12px',
+  gap: '8px',
 });
 
 const DashboardStatIconContainer = styled(Box)(({ variant, theme }) => ({
-  width: '44px',
-  height: '44px',
-  borderRadius: '12px',
+  width: '36px',
+  height: '36px',
+  borderRadius: '10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -236,58 +264,50 @@ const DashboardStatIconContainer = styled(Box)(({ variant, theme }) => ({
   transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   position: 'relative',
   zIndex: 2,
-  [theme.breakpoints.down('lg')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     width: '40px',
     height: '40px',
-    borderRadius: '10px',
   },
-  [theme.breakpoints.down('md')]: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '8px',
+  [theme.breakpoints.up('md')]: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '12px',
   }
 }));
 
 const DashboardStatValue = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '1.9rem',
+  fontSize: '1.5rem',
   fontWeight: 700,
   lineHeight: 1,
-  marginBottom: '8px',
+  marginBottom: '4px',
   letterSpacing: '0.5px',
   color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#010326',
   fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('lg')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     fontSize: '1.7rem',
   },
-  [theme.breakpoints.down('md')]: {
-    fontSize: '1.5rem',
-  },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '1.4rem',
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1.9rem',
+    marginBottom: '8px',
   }
 }));
 
 const DashboardStatLabel = styled(Typography)(({ variant, theme }) => ({
-  fontSize: '0.85rem',
+  fontSize: '0.75rem',
   fontWeight: 500,
   opacity: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 0.9 : 0.7,
   color: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'white' : '#032CA6',
   lineHeight: 1.3,
   letterSpacing: '0.3px',
   fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('lg')]: {
+  
+  [theme.breakpoints.up('sm')]: {
     fontSize: '0.8rem',
   },
-  [theme.breakpoints.down('md')]: {
-    fontSize: '0.75rem',
-  },
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.7rem',
+  [theme.breakpoints.up('md')]: {
+    fontSize: '0.85rem',
   }
 }));
 
@@ -295,15 +315,15 @@ const DashboardStatChange = styled(Box)(({ variant, trend }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '4px',
-  marginTop: '8px',
-  padding: '4px 8px',
+  marginTop: '6px',
+  padding: '3px 6px',
   borderRadius: '6px',
   background: ['primary', 'success', 'warning', 'danger'].includes(variant) ? 'rgba(255, 255, 255, 0.15)' : trend === 'up' ? alpha('#10B981', 0.1) : alpha('#EF4444', 0.1),
   width: 'fit-content',
 }));
 
 const DashboardStatTrendText = styled(Typography)(({ variant, trend, theme }) => ({
-  fontSize: '0.75rem',
+  fontSize: '0.7rem',
   fontWeight: 600,
   color: ['primary', 'success', 'warning', 'danger'].includes(variant)
     ? 'white' 
@@ -311,16 +331,239 @@ const DashboardStatTrendText = styled(Typography)(({ variant, trend, theme }) =>
       ? '#10B981' 
       : '#EF4444',
   fontFamily: "'Mona Sans'",
-  [theme.breakpoints.down('sm')]: {
-    fontSize: '0.7rem',
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.75rem',
+  }
+}));
+
+const DashboardHeaderSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  marginBottom: '20px',
+  
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '20px',
+    marginBottom: '24px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    gap: '24px',
+    marginBottom: '32px',
+  }
+}));
+
+const DashboardTitleSection = styled(Box)({
+  flex: 1,
+});
+
+const DashboardMainTitle = styled(Typography)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '1.4rem',
+  fontWeight: '700',
+  color: '#010326',
+  margin: '0 0 6px 0',
+  background: 'linear-gradient(135deg, #040DBF, #1F64BF)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  lineHeight: 1.2,
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '1.75rem',
+    gap: '12px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '2.5rem',
+    gap: '16px',
+    marginBottom: '8px',
+  }
+}));
+
+const DashboardSubtitle = styled(Typography)(({ theme }) => ({
+  fontSize: '0.8rem',
+  color: '#64748b',
+  margin: '0 0 8px 0',
+  fontWeight: '500',
+  lineHeight: 1.4,
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.9rem',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1rem',
+    marginBottom: '12px',
+  }
+}));
+
+const DashboardActions = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  gap: '8px',
+  alignItems: 'center',
+  justifyContent: 'flex-start',
+  flexShrink: 0,
+  
+  [theme.breakpoints.up('sm')]: {
+    justifyContent: 'flex-end',
+    gap: '12px',
+  }
+}));
+
+const DashboardButton = styled(Button)(({ theme, variant = 'primary' }) => {
+  const variants = {
+    primary: {
+      background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)',
+      color: '#FFFFFF',
+      border: `2px solid ${alpha('#1F64BF', 0.25)}`,
+    },
+    secondary: {
+      background: 'white',
+      color: '#032CA6',
+      border: `2px solid ${alpha('#032CA6', 0.2)}`,
+    }
+  };
+
+  const selectedVariant = variants[variant] || variants.primary;
+
+  return {
+    background: selectedVariant.background,
+    color: selectedVariant.color,
+    border: selectedVariant.border,
+    borderRadius: '10px',
+    padding: '8px 12px',
+    textTransform: 'none',
+    fontWeight: 600,
+    fontSize: '0.8rem',
+    position: 'relative',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    minWidth: 'auto',
+    width: '100%',
+    minHeight: '40px',
+    
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(4, 13, 191, 0.15)',
+    },
+
+    [theme.breakpoints.up('sm')]: {
+      padding: '10px 16px',
+      fontSize: '0.875rem',
+      width: 'auto',
+      minHeight: '44px',
+    },
+    
+    [theme.breakpoints.up('md')]: {
+      padding: '12px 20px',
+      fontSize: '0.9rem',
+      borderRadius: '12px',
+      minHeight: '48px',
+    }
+  };
+});
+
+const DashboardStatsGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: '12px',
+  marginBottom: '20px',
+  
+  [theme.breakpoints.up('sm')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '16px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '20px',
+    marginBottom: '32px',
+  }
+}));
+
+const DashboardContentGrid = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+  marginBottom: '20px',
+  
+  [theme.breakpoints.up('md')]: {
+    flexDirection: 'row',
+    gap: '24px',
+    marginBottom: '32px',
+  }
+}));
+
+const ChartsGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '1fr',
+  gap: '16px',
+  width: '100%',
+  
+  [theme.breakpoints.up('sm')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '20px',
+  },
+  
+  [theme.breakpoints.up('lg')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)',
+  },
+  
+  [theme.breakpoints.up('xl')]: {
+    gridTemplateColumns: 'repeat(4, 1fr)',
+  }
+}));
+
+const ChartContainer = styled(ModernCard)(({ theme }) => ({
+  padding: '16px',
+  height: '300px',
+  display: 'flex',
+  flexDirection: 'column',
+  minWidth: '0',
+  
+  [theme.breakpoints.up('sm')]: {
+    height: '320px',
+    padding: '18px',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    height: '350px',
+    padding: '20px',
+  }
+}));
+
+const TimeDisplay = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  opacity: 0.7,
+  color: '#64748b',
+  fontSize: '0.8rem',
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.875rem',
+    gap: '8px',
   }
 }));
 
 const Dashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [visibleCharts, setVisibleCharts] = useState({ products_overview: true, user_stats: true, employee_distribution: true, design_status: false });
+  const [visibleCharts, setVisibleCharts] = useState({ 
+    products_overview: true, 
+    user_stats: true, 
+    employee_distribution: true, 
+    design_status: false 
+  });
   const [chartSettingsOpen, setChartSettingsOpen] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -332,7 +575,24 @@ const Dashboard = () => {
 
   const colors = { primary: '#1F64BF', secondary: '#032CA6', accent: '#040DBF', dark: '#010326', gray: '#64748b' };
 
-  const getChartOptions = () => ({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: isMobile ? 8 : 15, font: { size: isMobile ? 9 : 11, weight: '600' } } } } });
+  const getChartOptions = () => ({ 
+    responsive: true, 
+    maintainAspectRatio: false, 
+    plugins: { 
+      legend: { 
+        display: true, 
+        position: 'top', 
+        labels: { 
+          usePointStyle: true, 
+          padding: isMobile ? 6 : 12, 
+          font: { 
+            size: isMobile ? 8 : 10, 
+            weight: '600' 
+          } 
+        } 
+      } 
+    } 
+  });
 
   const getDashboardStats = () => [
     { id: 'products', title: 'Total Productos', value: mockData.products.total.toString(), change: `${Math.round((mockData.products.active/mockData.products.total)*100)}% activos`, icon: Package, variant: 'primary', trend: 'up' },
@@ -342,136 +602,551 @@ const Dashboard = () => {
   ];
 
   const formatTime = (date) => date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  const getGreeting = () => { const hour = currentTime.getHours(); if (hour < 12) return 'Buenos días'; if (hour < 18) return 'Buenas tardes'; return 'Buenas noches'; };
+  const getGreeting = () => { 
+    const hour = currentTime.getHours(); 
+    if (hour < 12) return 'Buenos días'; 
+    if (hour < 18) return 'Buenas tardes'; 
+    return 'Buenas noches'; 
+  };
+  
   const visibleChartsCount = Object.values(visibleCharts).filter(Boolean).length;
 
   return (
-    <Box sx={{ minHeight: '100vh', paddingTop: '120px', paddingBottom: '40px', paddingX: { xs: 2, sm: 3, md: 4 }, backgroundColor: '#ffffff' }}>
-      <Box sx={{ maxWidth: '1600px', margin: '0 auto' }}>
+    <DashboardPageContainer>
+      <DashboardContentWrapper>
         
         {/* Header */}
-        <Paper sx={{ padding: { xs: 3, md: 5 }, marginBottom: 4, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 24px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ width: 56, height: 56, borderRadius: '16px', background: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1F64BF' }}><Target size={24} weight="duotone" /></Box>
-              <Box>
-                <Typography variant="h3" sx={{ fontWeight: 700, marginBottom: 1, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: '#010326' }}>{getGreeting()} Administrador</Typography>
-                <Typography variant="h6" sx={{ color: '#032CA6', fontWeight: 500 }}>Panel de control - {visibleChartsCount} gráfica{visibleChartsCount !== 1 ? 's' : ''} activa{visibleChartsCount !== 1 ? 's' : ''}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.7, mt: 1, color: '#64748b' }}><Clock size={14} /><Typography variant="body2" sx={{ fontSize: '0.75rem' }}>{formatTime(currentTime)}</Typography></Box>
-              </Box>
-            </Box>
-            
-            <Button variant="outlined" startIcon={<Gear size={18} />} onClick={() => setChartSettingsOpen(true)}
-              sx={{ background: 'linear-gradient(135deg, #1F64BF 0%, #032CA6 100%)', color: '#FFFFFF', border: `2px solid ${alpha('#1F64BF', 0.25)}`, borderRadius: '16px', padding: '12px 24px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { background: alpha('#1F64BF', 0.05), borderColor: '#1F64BF', '&::before': { left: '100%' } } }}>
+        <DashboardHeaderSection>
+          <DashboardTitleSection>
+            <DashboardMainTitle>
+              <Target size={isMobile ? 24 : 28} weight="duotone" />
+              {getGreeting()} Administrador
+            </DashboardMainTitle>
+            <DashboardSubtitle>
+              Panel de control - {visibleChartsCount} gráfica{visibleChartsCount !== 1 ? 's' : ''} activa{visibleChartsCount !== 1 ? 's' : ''}
+            </DashboardSubtitle>
+            <TimeDisplay>
+              <Clock size={isMobile ? 14 : 16} />
+              <Typography variant="body2" sx={{ fontSize: 'inherit' }}>{formatTime(currentTime)}</Typography>
+            </TimeDisplay>
+          </DashboardTitleSection>
+
+          <DashboardActions>
+            <DashboardButton 
+              variant="primary"
+              startIcon={<Gear size={isMobile ? 16 : 18} />} 
+              onClick={() => setChartSettingsOpen(true)}
+            >
               {isMobile ? 'Configurar' : 'Configurar Gráficas'}
-            </Button>
-          </Box>
-        </Paper>
+            </DashboardButton>
+          </DashboardActions>
+        </DashboardHeaderSection>
 
         {/* Cards de estadísticas */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, marginBottom: 4 }}>
+        <DashboardStatsGrid>
           {getDashboardStats().map((stat) => (
             <DashboardStatCard key={stat.id} variant={stat.variant}>
               <DashboardStatHeader>
-                <Box sx={{ flex: 1 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                   <DashboardStatValue variant={stat.variant}>{stat.value}</DashboardStatValue>
                   <DashboardStatLabel variant={stat.variant}>{stat.title}</DashboardStatLabel>
                 </Box>
                 <DashboardStatIconContainer variant={stat.variant}>
-                  <stat.icon size={20} weight="duotone" />
+                  <stat.icon size={isMobile ? 18 : 20} weight="duotone" />
                 </DashboardStatIconContainer>
               </DashboardStatHeader>
               <DashboardStatChange variant={stat.variant} trend={stat.trend}>
-                <TrendUp size={11} weight="bold" />
-                <DashboardStatTrendText variant={stat.variant} trend={stat.trend}>{stat.change}</DashboardStatTrendText>
+                <TrendUp size={isMobile ? 10 : 12} weight="bold" />
+                <DashboardStatTrendText variant={stat.variant} trend={stat.trend}>
+                  {stat.change}
+                </DashboardStatTrendText>
               </DashboardStatChange>
             </DashboardStatCard>
           ))}
-        </Box>
+        </DashboardStatsGrid>
 
-        {/* Cards con hover sutil */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3, marginBottom: 4 }}>
-          <Paper sx={{ padding: 3, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
-              <Box sx={{ width: 48, height: 48, borderRadius: '12px', background: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1F64BF' }}><Target size={20} weight="duotone" /></Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>Estado del Sistema</Typography>
+        {/* Contenido principal */}
+        <DashboardContentGrid>
+          {/* Estado del Sistema */}
+          <ModernCard sx={{ padding: isMobile ? 2 : 3, flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1.5 : 2, marginBottom: isMobile ? 2 : 3 }}>
+              <Box sx={{ 
+                width: isMobile ? 40 : 48, 
+                height: isMobile ? 40 : 48, 
+                borderRadius: isMobile ? '10px' : '12px', 
+                background: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#1F64BF' 
+              }}>
+                <Target size={isMobile ? 20 : 24} weight="duotone" />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                Estado del Sistema
+              </Typography>
             </Box>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}><Typography variant="body2" sx={{ fontWeight: 600 }}>Servicios Operativos</Typography><Typography variant="body2" sx={{ color: colors.accent, fontWeight: 600 }}>4/4</Typography></Box>
-              <LinearProgress variant="determinate" value={100} sx={{ height: 6, borderRadius: 3, backgroundColor: alpha(colors.accent, 0.1), '& .MuiLinearProgress-bar': { backgroundColor: colors.accent, borderRadius: 3 } }} />
+            
+            <Box sx={{ mb: isMobile ? 1.5 : 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>Servicios Operativos</Typography>
+                <Typography variant="body2" sx={{ color: colors.accent, fontWeight: 600, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>4/4</Typography>
+              </Box>
+              <LinearProgress 
+                variant="determinate" 
+                value={100} 
+                sx={{ 
+                  height: 6, 
+                  borderRadius: 3, 
+                  backgroundColor: alpha(colors.accent, 0.1), 
+                  '& .MuiLinearProgress-bar': { 
+                    backgroundColor: colors.accent, 
+                    borderRadius: 3 
+                  } 
+                }} 
+              />
             </Box>
-            <Divider sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '8px', background: alpha(colors.accent, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.accent }}><Lightning size={18} weight="duotone" /></Box>
-              <Box sx={{ flex: 1 }}><Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark }}>Productos más Populares</Typography><Typography variant="body2" sx={{ color: colors.gray, fontSize: '0.75rem' }}>Camiseta Básica</Typography></Box>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ width: 40, height: 40, borderRadius: '8px', background: alpha(colors.primary, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.primary }}><Coffee size={18} weight="duotone" /></Box>
-              <Box sx={{ flex: 1 }}><Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark }}>Última Actualización</Typography><Typography variant="body2" sx={{ color: colors.gray, fontSize: '0.75rem' }}>{formatTime(currentTime)}</Typography></Box>
-            </Box>
-          </Paper>
-
-          <Paper sx={{ padding: 3, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
-              <Box sx={{ width: 48, height: 48, borderRadius: '12px', background: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1F64BF' }}><ChartLine size={20} weight="duotone" /></Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326' }}>Control de Gráficas</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Button variant="outlined" startIcon={<Gear size={16} />} onClick={() => setChartSettingsOpen(true)} fullWidth sx={{ borderColor: colors.primary, color: colors.primary, borderRadius: '12px', padding: '12px 16px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(31, 100, 191, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { borderColor: colors.secondary, backgroundColor: alpha(colors.primary, 0.05), '&::before': { left: '100%' } } }}>Configurar Gráficas</Button>
-              <Button variant="outlined" startIcon={<ArrowRight size={16} />} fullWidth sx={{ borderColor: colors.secondary, color: colors.secondary, borderRadius: '12px', padding: '12px 16px', textTransform: 'none', fontWeight: 600, position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(3, 44, 166, 0.15), transparent)', transition: 'left 0.5s ease' }, '&:hover': { borderColor: colors.accent, backgroundColor: alpha(colors.secondary, 0.05), '&::before': { left: '100%' } } }}>Actualizar Datos</Button>
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.8rem' }}>Gráficas Activas</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {Object.entries(CHART_TYPES).filter(([id]) => visibleCharts[id]).map(([id, chart]) => (<Chip key={id} icon={<chart.icon size={14} />} label={chart.name} size="small" sx={{ background: alpha(colors.primary, 0.1), color: colors.primary, fontWeight: 600, fontSize: '0.7rem', height: '24px' }} />))}
-                </Box>
+            
+            <Divider sx={{ mb: isMobile ? 1.5 : 2 }} />
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1 : 2, mb: isMobile ? 1.5 : 2 }}>
+              <Box sx={{ 
+                width: isMobile ? 32 : 40, 
+                height: isMobile ? 32 : 40, 
+                borderRadius: '8px', 
+                background: alpha(colors.accent, 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: colors.accent 
+              }}>
+                <Lightning size={isMobile ? 16 : 18} weight="duotone" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>Productos más Populares</Typography>
+                <Typography variant="body2" sx={{ color: colors.gray, fontSize: isMobile ? '0.7rem' : '0.75rem' }}>Camiseta Básica</Typography>
               </Box>
             </Box>
-          </Paper>
-        </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1 : 2 }}>
+              <Box sx={{ 
+                width: isMobile ? 32 : 40, 
+                height: isMobile ? 32 : 40, 
+                borderRadius: '8px', 
+                background: alpha(colors.primary, 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: colors.primary 
+              }}>
+                <Coffee size={isMobile ? 16 : 18} weight="duotone" />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>Última Actualización</Typography>
+                <Typography variant="body2" sx={{ color: colors.gray, fontSize: isMobile ? '0.7rem' : '0.75rem' }}>{formatTime(currentTime)}</Typography>
+              </Box>
+            </Box>
+          </ModernCard>
+
+          {/* Control de Gráficas */}
+          <ModernCard sx={{ 
+            padding: isMobile ? 2 : 3, 
+            width: '100%', 
+            [theme.breakpoints.up('md')]: {
+              width: '300px',
+              flexShrink: 0,
+            }
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1.5 : 2, marginBottom: isMobile ? 2 : 3 }}>
+              <Box sx={{ 
+                width: isMobile ? 40 : 48, 
+                height: isMobile ? 40 : 48, 
+                borderRadius: isMobile ? '10px' : '12px', 
+                background: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: '#1F64BF' 
+              }}>
+                <ChartLine size={isMobile ? 20 : 24} weight="duotone" />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                Control de Gráficas
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: isMobile ? 2 : 3 }}>
+              <DashboardButton 
+                variant="secondary"
+                startIcon={<Gear size={isMobile ? 14 : 16} />} 
+                onClick={() => setChartSettingsOpen(true)} 
+                fullWidth
+              >
+                Configurar Gráficas
+              </DashboardButton>
+              <DashboardButton 
+                variant="secondary"
+                startIcon={<ArrowRight size={isMobile ? 14 : 16} />} 
+                fullWidth
+              >
+                Actualizar Datos
+              </DashboardButton>
+            </Box>
+            
+            <Box>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, fontSize: isMobile ? '0.75rem' : '0.8rem' }}>
+                Gráficas Activas
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {Object.entries(CHART_TYPES).filter(([id]) => visibleCharts[id]).map(([id, chart]) => (
+                  <Chip 
+                    key={id} 
+                    icon={<chart.icon size={isMobile ? 12 : 14} />} 
+                    label={isMobile ? chart.name.substring(0, 3) : chart.name} 
+                    size="small" 
+                    sx={{ 
+                      background: alpha(colors.primary, 0.1), 
+                      color: colors.primary, 
+                      fontWeight: 600, 
+                      fontSize: isMobile ? '0.65rem' : '0.7rem', 
+                      height: '24px',
+                      '& .MuiChip-icon': {
+                        marginLeft: '4px',
+                        marginRight: '2px'
+                      }
+                    }} 
+                  />
+                ))}
+              </Box>
+            </Box>
+          </ModernCard>
+        </DashboardContentGrid>
 
         {/* Sección de gráficas */}
-        <Paper sx={{ padding: { xs: 2, sm: 3, md: 4 }, marginBottom: 4, borderRadius: '16px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 16px rgba(1, 3, 38, 0.06)', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2, marginBottom: 3, padding: 2, background: '#f8fafc', borderRadius: '12px', border: `1px solid ${alpha('#1F64BF', 0.1)}` }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ padding: 1, borderRadius: '8px', backgroundColor: alpha('#1F64BF', 0.1), color: '#1F64BF' }}><ChartLine size={20} weight="duotone" /></Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: { xs: '1rem', md: '1.1rem' } }}>{isMobile ? 'Analíticas' : 'Analíticas Dinámicas'}</Typography>
-              <Chip label={`${visibleChartsCount} activa${visibleChartsCount !== 1 ? 's' : ''}`} size="small" sx={{ background: colors.accent, color: '#fff', fontWeight: 600, fontSize: '0.7rem', height: '24px' }} />
+        <ModernCard sx={{ padding: isMobile ? 2 : 3 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 1, 
+            marginBottom: isMobile ? 2 : 3, 
+            padding: isMobile ? 1.5 : 2, 
+            background: '#f8fafc', 
+            borderRadius: '10px', 
+            border: `1px solid ${alpha('#1F64BF', 0.1)}` 
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ 
+                  padding: 1, 
+                  borderRadius: '8px', 
+                  backgroundColor: alpha('#1F64BF', 0.1), 
+                  color: '#1F64BF' 
+                }}>
+                  <ChartLine size={isMobile ? 18 : 20} weight="duotone" />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#010326', fontSize: isMobile ? '0.9rem' : '1.1rem' }}>
+                  Analíticas Dinámicas
+                </Typography>
+                <Chip 
+                  label={`${visibleChartsCount}`} 
+                  size="small" 
+                  sx={{ 
+                    background: colors.accent, 
+                    color: '#fff', 
+                    fontWeight: 600, 
+                    fontSize: '0.7rem', 
+                    height: '20px',
+                    minWidth: '20px'
+                  }} 
+                />
+              </Box>
+              
+              <Tooltip title="Configurar gráficas">
+                <IconButton 
+                  onClick={() => setChartSettingsOpen(true)} 
+                  size="small" 
+                  sx={{ 
+                    color: colors.primary, 
+                    '&:hover': { 
+                      backgroundColor: alpha(colors.primary, 0.1) 
+                    } 
+                  }}
+                >
+                  <Gear size={isMobile ? 16 : 18} />
+                </IconButton>
+              </Tooltip>
             </Box>
-            <Tooltip title="Configurar gráficas"><IconButton onClick={() => setChartSettingsOpen(true)} size="small" sx={{ color: colors.primary, '&:hover': { backgroundColor: alpha(colors.primary, 0.1) } }}><Gear size={18} /></IconButton></Tooltip>
           </Box>
 
           {visibleChartsCount === 0 ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', py: 8 }}>
-              <Box sx={{ width: 80, height: 80, borderRadius: '50%', backgroundColor: alpha('#1F64BF', 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem', color: '#1F64BF' }}><EyeSlash size={32} weight="duotone" /></Box>
-              <Typography variant="h6" sx={{ color: colors.dark, mb: 1 }}>No hay gráficas seleccionadas</Typography>
-              <Typography variant="body2" sx={{ color: colors.gray, mb: 2 }}>Selecciona al menos una gráfica para visualizar los datos</Typography>
-              <Button variant="contained" startIcon={<Gear size={16} />} onClick={() => setChartSettingsOpen(true)} sx={{ backgroundColor: colors.primary, borderRadius: '12px', textTransform: 'none', position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)', transition: 'left 0.5s ease' }, '&:hover': { backgroundColor: colors.secondary, '&::before': { left: '100%' } } }}>Configurar Gráficas</Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', py: 6 }}>
+              <Box sx={{ 
+                width: 60, 
+                height: 60, 
+                borderRadius: '50%', 
+                backgroundColor: alpha('#1F64BF', 0.1), 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                margin: '0 auto 1.5rem', 
+                color: '#1F64BF' 
+              }}>
+                <EyeSlash size={isMobile ? 24 : 32} weight="duotone" />
+              </Box>
+              <Typography variant="h6" sx={{ color: colors.dark, mb: 1, fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                No hay gráficas seleccionadas
+              </Typography>
+              <Typography variant="body2" sx={{ color: colors.gray, mb: 2, fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
+                Selecciona al menos una gráfica para visualizar los datos
+              </Typography>
+              <DashboardButton 
+                variant="primary"
+                startIcon={<Gear size={isMobile ? 14 : 16} />} 
+                onClick={() => setChartSettingsOpen(true)}
+              >
+                Configurar Gráficas
+              </DashboardButton>
             </Box>
           ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }, gap: 3 }}>
-              {visibleCharts.products_overview && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><Package size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Productos</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><Doughnut data={{ labels: ['Activos', 'Inactivos'], datasets: [{ data: [mockData.products.active, mockData.products.inactive], backgroundColor: [colors.primary, colors.gray], borderWidth: 0 }] }} options={getChartOptions()} /></Box></Paper>)}
+            <ChartsGrid>
+              {visibleCharts.products_overview && (
+                <ChartContainer>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Package size={isMobile ? 14 : 16} />
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
+                      Productos
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: isMobile ? '220px' : '250px', position: 'relative', flex: 1 }}>
+                    <Doughnut 
+                      data={{ 
+                        labels: ['Activos', 'Inactivos'], 
+                        datasets: [{ 
+                          data: [mockData.products.active, mockData.products.inactive], 
+                          backgroundColor: [colors.primary, colors.gray], 
+                          borderWidth: 0 
+                        }] 
+                      }} 
+                      options={getChartOptions()} 
+                    />
+                  </Box>
+                </ChartContainer>
+              )}
               
-              {visibleCharts.user_stats && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><Users size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Usuarios</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><Bar data={{ labels: ['Activos', 'Inactivos', 'Admins', 'Premium', 'Clientes'], datasets: [{ label: 'Usuarios', data: [mockData.users.active, mockData.users.inactive, mockData.users.admins, mockData.users.premium, mockData.users.customers], backgroundColor: [colors.primary, colors.gray, colors.accent, colors.secondary, alpha(colors.primary, 0.6)], borderRadius: 6 }] }} options={getChartOptions()} /></Box></Paper>)}
+              {visibleCharts.user_stats && (
+                <ChartContainer>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Users size={isMobile ? 14 : 16} />
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
+                      Usuarios
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: isMobile ? '220px' : '250px', position: 'relative', flex: 1 }}>
+                    <Bar 
+                      data={{ 
+                        labels: ['Activos', 'Inactivos', 'Admins', 'Premium', 'Clientes'], 
+                        datasets: [{ 
+                          label: 'Usuarios', 
+                          data: [mockData.users.active, mockData.users.inactive, mockData.users.admins, mockData.users.premium, mockData.users.customers], 
+                          backgroundColor: [colors.primary, colors.gray, colors.accent, colors.secondary, alpha(colors.primary, 0.6)], 
+                          borderRadius: 6 
+                        }] 
+                      }} 
+                      options={getChartOptions()} 
+                    />
+                  </Box>
+                </ChartContainer>
+              )}
               
-              {visibleCharts.employee_distribution && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><User size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Empleados</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><Pie data={{ labels: ['Admins', 'Gerentes', 'Empleados', 'Delivery', 'Producción'], datasets: [{ data: [mockData.employees.roles.admins, mockData.employees.roles.managers, mockData.employees.roles.employees, mockData.employees.roles.delivery, mockData.employees.roles.production], backgroundColor: [colors.primary, colors.secondary, colors.accent, colors.dark, alpha(colors.primary, 0.6)] }] }} options={getChartOptions()} /></Box></Paper>)}
+              {visibleCharts.employee_distribution && (
+                <ChartContainer>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <User size={isMobile ? 14 : 16} />
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
+                      Empleados
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: isMobile ? '220px' : '250px', position: 'relative', flex: 1 }}>
+                    <Pie 
+                      data={{ 
+                        labels: ['Admins', 'Gerentes', 'Empleados', 'Delivery', 'Producción'], 
+                        datasets: [{ 
+                          data: [
+                            mockData.employees.roles.admins, 
+                            mockData.employees.roles.managers, 
+                            mockData.employees.roles.employees, 
+                            mockData.employees.roles.delivery, 
+                            mockData.employees.roles.production
+                          ], 
+                          backgroundColor: [colors.primary, colors.secondary, colors.accent, colors.dark, alpha(colors.primary, 0.6)] 
+                        }] 
+                      }} 
+                      options={getChartOptions()} 
+                    />
+                  </Box>
+                </ChartContainer>
+              )}
               
-              {visibleCharts.design_status && (<Paper sx={{ padding: 3, borderRadius: '12px', background: 'white', border: `1px solid ${alpha('#1F64BF', 0.08)}`, boxShadow: '0 2px 12px rgba(1, 3, 38, 0.06)', height: { xs: '350px', sm: '380px', md: '420px' }, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 4px 20px rgba(1, 3, 38, 0.08)', transform: 'translateY(-1px)' } }}><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}><ChartPie size={18} /><Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: '0.9rem' }}>Diseños</Typography></Box><Box sx={{ height: '280px', position: 'relative', flex: 1 }}><PolarArea data={{ labels: ['Pendientes', 'Cotizados', 'Aprobados', 'Rechazados', 'Completados', 'Borradores'], datasets: [{ data: [mockData.designs.pending, mockData.designs.quoted, mockData.designs.approved, mockData.designs.rejected, mockData.designs.completed, mockData.designs.drafts], backgroundColor: [colors.primary, colors.secondary, colors.accent, colors.gray, colors.dark, alpha(colors.primary, 0.4)] }] }} options={getChartOptions()} /></Box></Paper>)}
-            </Box>
+              {visibleCharts.design_status && (
+                <ChartContainer>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <ChartPie size={isMobile ? 14 : 16} />
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: colors.dark, fontSize: isMobile ? '0.8rem' : '0.9rem' }}>
+                      Diseños
+                    </Typography>
+                  </Box>
+                  <Box sx={{ height: isMobile ? '220px' : '250px', position: 'relative', flex: 1 }}>
+                    <PolarArea 
+                      data={{ 
+                        labels: ['Pendientes', 'Cotizados', 'Aprobados', 'Rechazados', 'Completados', 'Borradores'], 
+                        datasets: [{ 
+                          data: [
+                            mockData.designs.pending, 
+                            mockData.designs.quoted, 
+                            mockData.designs.approved, 
+                            mockData.designs.rejected, 
+                            mockData.designs.completed, 
+                            mockData.designs.drafts
+                          ], 
+                          backgroundColor: [colors.primary, colors.secondary, colors.accent, colors.gray, colors.dark, alpha(colors.primary, 0.4)] 
+                        }] 
+                      }} 
+                      options={getChartOptions()} 
+                    />
+                  </Box>
+                </ChartContainer>
+              )}
+            </ChartsGrid>
           )}
-        </Paper>
+        </ModernCard>
 
-        {/* Modal */}
-        <Dialog open={chartSettingsOpen} onClose={() => setChartSettingsOpen(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
-          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Gear size={24} />Configuración de Gráficas<Box sx={{ flex: 1 }} /><IconButton onClick={() => setChartSettingsOpen(false)}><X size={20} /></IconButton></DialogTitle>
-          <DialogContent>
-            <Box sx={{ mb: 3 }}><Typography variant="h6" sx={{ mb: 2 }}>Gráficas Visibles</Typography>{Object.values(CHART_TYPES).map((chart) => (<FormControlLabel key={chart.id} control={<Switch checked={visibleCharts[chart.id]} onChange={(e) => setVisibleCharts(prev => ({ ...prev, [chart.id]: e.target.checked }))} color="primary" />} label={<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><chart.icon size={20} /><Box><Typography variant="body1">{chart.name}</Typography><Typography variant="caption" color="text.secondary">{chart.description}</Typography></Box></Box>} sx={{ width: '100%', mb: 1 }} />))}</Box>
+        {/* Modal de configuración */}
+        <Dialog 
+          open={chartSettingsOpen} 
+          onClose={() => setChartSettingsOpen(false)} 
+          maxWidth="sm" 
+          fullWidth 
+          fullScreen={isMobile}
+          sx={{
+            '& .MuiDialog-paper': {
+              margin: isMobile ? 0 : '32px',
+              width: '100%',
+              maxHeight: isMobile ? '100%' : 'calc(100% - 64px)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            padding: isMobile ? 2 : 3,
+            borderBottom: `1px solid ${alpha('#1F64BF', 0.1)}`
+          }}>
+            <Gear size={isMobile ? 20 : 24} />
+            <Typography variant="h6" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
+              Configuración de Gráficas
+            </Typography>
+            <Box sx={{ flex: 1 }} />
+            <IconButton 
+              onClick={() => setChartSettingsOpen(false)} 
+              size={isMobile ? "small" : "medium"}
+              sx={{ 
+                color: colors.gray,
+                '&:hover': {
+                  backgroundColor: alpha(colors.gray, 0.1)
+                }
+              }}
+            >
+              <X size={isMobile ? 18 : 20} />
+            </IconButton>
+          </DialogTitle>
+          
+          <DialogContent sx={{ padding: isMobile ? 2 : 3 }}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: isMobile ? '1rem' : '1.1rem' }}>
+                Gráficas Visibles
+              </Typography>
+              {Object.values(CHART_TYPES).map((chart) => (
+                <FormControlLabel 
+                  key={chart.id}
+                  control={
+                    <Switch 
+                      checked={visibleCharts[chart.id]} 
+                      onChange={(e) => setVisibleCharts(prev => ({ ...prev, [chart.id]: e.target.checked }))} 
+                      color="primary" 
+                      size={isMobile ? "small" : "medium"}
+                    />
+                  } 
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <chart.icon size={isMobile ? 18 : 20} />
+                      <Box>
+                        <Typography variant="body1" sx={{ fontSize: isMobile ? '0.9rem' : '1rem' }}>{chart.name}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.8rem' }}>{chart.description}</Typography>
+                      </Box>
+                    </Box>
+                  } 
+                  sx={{ width: '100%', mb: 1 }} 
+                />
+              ))}
+            </Box>
+            
             <Divider sx={{ mb: 3 }} />
-            <Box sx={{ mb: 3 }}><FormControlLabel control={<Switch checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} color="primary" />} label="Actualización Automática" sx={{ mb: 2 }} />{autoRefresh && (<FormControl size="small" sx={{ minWidth: 120, width: '100%' }}><InputLabel>Intervalo</InputLabel><Select value={refreshInterval} label="Intervalo" onChange={(e) => setRefreshInterval(e.target.value)}><MenuItem value={15}>15 segundos</MenuItem><MenuItem value={30}>30 segundos</MenuItem><MenuItem value={60}>1 minuto</MenuItem><MenuItem value={300}>5 minutos</MenuItem></Select></FormControl>)}</Box>
+            
+            <Box sx={{ mb: 3 }}>
+              <FormControlLabel 
+                control={
+                  <Switch 
+                    checked={autoRefresh} 
+                    onChange={(e) => setAutoRefresh(e.target.checked)} 
+                    color="primary" 
+                    size={isMobile ? "small" : "medium"}
+                  />
+                } 
+                label={
+                  <Typography sx={{ fontSize: isMobile ? '0.9rem' : '1rem' }}>
+                    Actualización Automática
+                  </Typography>
+                } 
+                sx={{ mb: 2 }} 
+              />
+              {autoRefresh && (
+                <FormControl size="small" sx={{ minWidth: 120, width: '100%' }}>
+                  <InputLabel sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>Intervalo</InputLabel>
+                  <Select 
+                    value={refreshInterval} 
+                    label="Intervalo" 
+                    onChange={(e) => setRefreshInterval(e.target.value)}
+                    sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                  >
+                    <MenuItem value={15} sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>15 segundos</MenuItem>
+                    <MenuItem value={30} sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>30 segundos</MenuItem>
+                    <MenuItem value={60} sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>1 minuto</MenuItem>
+                    <MenuItem value={300} sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>5 minutos</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            </Box>
           </DialogContent>
-          <DialogActions><Button onClick={() => setChartSettingsOpen(false)}>Cerrar</Button></DialogActions>
+          
+          <DialogActions sx={{ padding: isMobile ? 2 : 3, borderTop: `1px solid ${alpha('#1F64BF', 0.1)}` }}>
+            <Button 
+              onClick={() => setChartSettingsOpen(false)} 
+              size={isMobile ? "small" : "medium"}
+              sx={{ 
+                fontSize: isMobile ? '0.8rem' : '0.875rem',
+                minWidth: 'auto',
+                padding: isMobile ? '6px 12px' : '8px 16px'
+              }}
+            >
+              Cerrar
+            </Button>
+          </DialogActions>
         </Dialog>
-      </Box>
-    </Box>
+      </DashboardContentWrapper>
+    </DashboardPageContainer>
   );
 };
 
