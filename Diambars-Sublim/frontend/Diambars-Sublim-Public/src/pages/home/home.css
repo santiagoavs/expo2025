@@ -1268,13 +1268,13 @@
   transform: translateX(2px);
 }
 
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  margin: 0 auto;
-  display: inline-block;
-  border-top: 2px solid rgba(255, 255, 255, 0.9);
+.loading-spinner-home {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(63, 39, 36, .2);
+  margin: 0;
+  display: block;
+  border-top: 3px solid #fef7e9f2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

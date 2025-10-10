@@ -151,7 +151,7 @@ export class ElementFactory {
    */
   toBackendFormat(element) {
     // ✅ DEBUGGING: Solo logs importantes para formas complejas
-    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path', 'triangle', 'custom', 'line'].includes(element.type)) {
+    if (['star', 'heart', 'diamond', 'hexagon', 'octagon', 'pentagon', 'polygon', 'shape', 'path', 'triangle', 'custom', 'line'].includes(element.type) || (element.type === 'shape' && element.shapeType === 'custom')) {
       console.log('🔍 [ElementFactory] Convirtiendo forma compleja:', {
         type: element.type,
         hasPoints: !!element.points,
