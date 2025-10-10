@@ -261,7 +261,7 @@ const AdvancedDesignEditor = ({
     // ✅ MATCH PRIVATE ADMIN: Create custom shape directly
     const customShapeElement = {
       id: `shape-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type: 'custom', // ✅ CRITICAL: Use 'custom' as type (like private admin)
+      type: 'shape', // ✅ CRITICAL FIX: Use 'shape' as type (matches backend enum and private admin)
       shapeType: 'custom',
       points: relativePoints,
       x: minX,
@@ -595,7 +595,7 @@ const AdvancedDesignEditor = ({
     
     // ✅ SPECIFIC DEBUG: Log ALL shape coordinates
     const allShapes = designData.elements.filter(el => 
-      ['triangle', 'pentagon', 'hexagon', 'octagon', 'star', 'heart', 'diamond', 'polygon', 'custom', 'line', 'shape'].includes(el.type)
+      ['triangle', 'pentagon', 'hexagon', 'octagon', 'star', 'heart', 'diamond', 'polygon', 'custom', 'line', 'shape'].includes(el.type) || (el.type === 'shape' && el.shapeType === 'custom')
     );
     if (allShapes.length > 0) {
       console.log('🔶 [SAVE DEBUG] ALL shape coordinates being saved:');
@@ -795,7 +795,7 @@ const AdvancedDesignEditor = ({
                         {...commonProps}
                       />
                     );
-                  } else if (['triangle', 'pentagon', 'hexagon', 'octagon', 'star', 'heart', 'diamond', 'polygon', 'custom', 'line', 'shape', 'customShape', 'path'].includes(element.type)) {
+                  } else if (['triangle', 'pentagon', 'hexagon', 'octagon', 'star', 'heart', 'diamond', 'polygon', 'custom', 'line', 'shape', 'customShape', 'path'].includes(element.type) || (element.type === 'shape' && element.shapeType === 'custom')) {
                     // ✅ MATCH PRIVATE ADMIN: Direct shape rendering
                     console.log(`🎨 [AdvancedDesignEditor] Rendering shape:`, {
                       type: element.type,

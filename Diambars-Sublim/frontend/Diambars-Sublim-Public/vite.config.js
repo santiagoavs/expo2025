@@ -12,7 +12,7 @@ export default defineConfig(({ command, mode }) => {
     }
   });
 
-  // Determine proxy target based on backend mode
+  // Determine proxy target based on backend mode (default to Render)
   const backendMode = env.VITE_BACKEND_MODE || 'render';
   const proxyTarget = backendMode === 'local' 
     ? 'http://localhost:4000'

@@ -61,18 +61,12 @@ registerUsersController.registerUser = async (req, res) => {
       });
     }
 
-    // Verificar que solo se pueda registrar un administrador
+    // Prohibir registro de usuarios con rol admin
     if (role === "admin") {
-      const existingAdmin = await userModel.findOne({ 
-        role: { $regex: new RegExp('^admin$', 'i') } 
+      console.log('[registerUser] Intento de registrar usuario admin rechazado');
+      return res.status(403).json({ 
+        message: "No se pueden registrar usuarios con rol de administrador desde este flujo." 
       });
-
-      if (existingAdmin) {
-        console.log('[registerUser] Ya existe un admin');
-        return res.status(403).json({ 
-          message: "Ya existe un administrador. No se pueden crear más." 
-        });
-      }
     }
 
     // Generar token de verificación con fecha de expiración (24h)

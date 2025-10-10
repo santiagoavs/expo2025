@@ -71,6 +71,7 @@ import {
 } from "@phosphor-icons/react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { usePermissions } from "../../utils/permissions";
 
 // ============================================================
 // BREAKPOINTS Y KEYFRAMES
@@ -986,42 +987,47 @@ const SidebarButton = styled(Button)(({ theme, variant }) => ({
 // ============================================================
 
 const MAIN_NAVIGATION = [
-  { to: "/dashboard", label: "Inicio", icon: <House size={18} weight="duotone" />, description: "Panel principal" },
+  { to: "/Dashboard", label: "Inicio", icon: <House size={18} weight="duotone" />, description: "Panel principal" },
 ];
 
 const DROPDOWN_MENUS = {
   personal: {
     label: "Personal",
     icon: <Users size={18} weight="duotone" />,
+    permission: "canViewEmployees", // Requiere al menos ver empleados
     items: [
-      { to: "/employees", label: "Empleados", icon: <UserList size={18} weight="duotone" />, description: "Gestión de personal" },
-      { to: "/users", label: "Usuarios", icon: <Users size={18} weight="duotone" />, description: "Administración de usuarios" },
+      { to: "/employees", label: "Empleados", icon: <UserList size={18} weight="duotone" />, description: "Gestión de personal", permission: "canViewEmployees" },
+      { to: "/users", label: "Usuarios", icon: <Users size={18} weight="duotone" />, description: "Administración de usuarios", permission: "canViewUsers" },
     ]
   },
   gestion: {
     label: "Gestión",
     icon: <Folders size={18} weight="duotone" />,
+    permission: "canViewProducts", // Requiere al menos ver productos
     items: [
-      { to: "/catalog-management", label: "Productos", icon: <ChartBar size={18} weight="duotone" />, description: "Gestión de productos" },
-      { to: "/category-management", label: "Categorías", icon: <Folders size={18} weight="duotone" />, description: "Organización" },
-      { to: "/address-management", label: "Direcciones", icon: <MapPin size={18} weight="duotone" />, description: "Direcciones de envío" },
-      { to: "/ReviewsManagement", label: "Reseñas", icon: <Star size={18} weight="duotone" />, description: "Opiniones" },
+      { to: "/catalog-management", label: "Productos", icon: <ChartBar size={18} weight="duotone" />, description: "Gestión de productos", permission: "canViewProducts" },
+      { to: "/category-management", label: "Categorías", icon: <Folders size={18} weight="duotone" />, description: "Organización", permission: "canViewCategories" },
+      { to: "/address-management", label: "Direcciones", icon: <MapPin size={18} weight="duotone" />, description: "Direcciones de envío", permission: "canViewAddresses" },
+      { to: "/ReviewsManagement", label: "Reseñas", icon: <Star size={18} weight="duotone" />, description: "Opiniones", permission: "canViewReviews" },
     ]
   },
   herramientas: {
     label: "Herramientas",
     icon: <PaintBrush size={18} weight="duotone" />,
+    permission: "canViewDesigns", // Requiere al menos ver diseños
     items: [
-      { to: "/design-management", label: "Editor de Diseños", icon: <PaintBrush size={18} weight="duotone" />, description: "Herramientas de diseño" },
-      { to: "/orders", label: "Pedidos", icon: <ShoppingCart size={18} weight="duotone" />, description: "Control de pedidos" },
+      { to: "/design-management", label: "Editor de Diseños", icon: <PaintBrush size={18} weight="duotone" />, description: "Herramientas de diseño", permission: "canViewDesigns" },
+      { to: "/orders", label: "Pedidos", icon: <ShoppingCart size={18} weight="duotone" />, description: "Control de pedidos", permission: "canViewOrders" },
     ]
   },
   analisis: {
     label: "Análisis",
     icon: <ChartBar size={18} weight="duotone" />,
+    permission: "canViewReports", // Requiere ver reportes
     items: [
-      { to: "/reports", label: "Reportes", icon: <FileText size={18} weight="duotone" />, description: "Informes detallados" },
-      { to: "/payment-methods", label: "Métodos de Pago", icon: <CreditCard size={18} weight="duotone" />, description: "Gestión de pagos" },
+      { to: "/analytics", label: "Analytics", icon: <ChartBar size={18} weight="duotone" />, description: "Estadísticas y métricas", permission: "canViewReports" },
+      { to: "/reports", label: "Reportes", icon: <FileText size={18} weight="duotone" />, description: "Informes detallados", permission: "canViewReports" },
+      { to: "/payment-methods", label: "Métodos de Pago", icon: <CreditCard size={18} weight="duotone" />, description: "Gestión de pagos", permission: "canViewPayments" },
     ]
   }
 };
@@ -1046,6 +1052,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
+  const { hasPermission } = usePermissions();
   const theme = useTheme();
   
   // MEDIA QUERIES MEJORADAS
@@ -1131,7 +1138,13 @@ const Navbar = () => {
   const handleNavbarLogoutCancel = () => setShowNavbarLogoutConfirm(false);
 
   const isActiveRoute = (path) => location.pathname === path;
-  const hasActiveItems = (dropdownKey) => DROPDOWN_MENUS[dropdownKey].items.some(item => isActiveRoute(item.to));
+  const hasActiveItems = (dropdownKey) => {
+    const dropdown = DROPDOWN_MENUS[dropdownKey];
+    return dropdown.items.some(item => {
+      const hasAccess = item.permission ? hasPermission(item.permission) : true;
+      return hasAccess && isActiveRoute(item.to);
+    });
+  };
 
   return (
     <>
@@ -1164,22 +1177,30 @@ const Navbar = () => {
                   </GlassButton>
                 ))}
                 
-                {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-                  <GlassButton
-                    key={key}
-                    onClick={(e) => handleDropdownClick(key, e)}
-                    open={dropdownStates[key].open}
-                    hasActiveItems={hasActiveItems(key)}
-                    startIcon={dropdown.icon}
-                    endIcon={
-                      <span className="dropdown-caret">
-                        {dropdownStates[key].open ? <CaretUp size={14} /> : <CaretDown size={14} />}
-                      </span>
-                    }
-                  >
-                    <span className="dropdown-label">{dropdown.label}</span>
-                  </GlassButton>
-                ))}
+                {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => {
+                  const hasAccess = dropdown.permission ? hasPermission(dropdown.permission) : true;
+                  return (
+                    <GlassButton
+                      key={key}
+                      onClick={(e) => hasAccess ? handleDropdownClick(key, e) : null}
+                      open={dropdownStates[key].open}
+                      hasActiveItems={hasActiveItems(key)}
+                      startIcon={dropdown.icon}
+                      endIcon={
+                        <span className="dropdown-caret">
+                          {dropdownStates[key].open ? <CaretUp size={14} /> : <CaretDown size={14} />}
+                        </span>
+                      }
+                      style={{
+                        opacity: hasAccess ? 1 : 0.5,
+                        pointerEvents: hasAccess ? 'auto' : 'none',
+                        cursor: hasAccess ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      <span className="dropdown-label">{dropdown.label}</span>
+                    </GlassButton>
+                  );
+                })}
               </NavContainer>
             )}
 
@@ -1300,36 +1321,61 @@ const Navbar = () => {
           </Box>
 
           {/* Dropdown Sections */}
-          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown], sectionIndex) => (
-            <Box key={key}>
-              <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={1} sx={{ mb: 2, px: 1 }}>
-                {dropdown.label}
-              </Typography>
-              <List sx={{ p: 0 }}>
-                {dropdown.items.map((item, itemIndex) => (
-                  <ListItem key={item.to} disablePadding sx={{ mb: 1 }}>
-                    <MenuItemStyled
-                      component={Link}
-                      to={item.to}
-                      active={isActiveRoute(item.to)}
-                      onClick={toggleSidebar}
-                      sx={{ width: "100%", py: 2, animationDelay: `${(sectionIndex + 1) * 0.2 + itemIndex * 0.1}s`, animation: `${slideInFromTop} 0.4s ease-out` }}
-                    >
-                      <ListItemIcon sx={{ color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569", minWidth: 40 }}>
-                        {item.icon}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={item.label}
-                        secondary={item.description}
-                        primaryTypographyProps={{ fontWeight: 700, fontSize: 16, color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326" }}
-                        secondaryTypographyProps={{ fontSize: 13, color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b" }}
-                      />
-                    </MenuItemStyled>
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-          ))}
+          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown], sectionIndex) => {
+            const hasAccess = dropdown.permission ? hasPermission(dropdown.permission) : true;
+            return (
+              <Box key={key}>
+                <Typography 
+                  variant="subtitle2" 
+                  fontWeight={700} 
+                  color="#010326" 
+                  textTransform="uppercase" 
+                  letterSpacing={1} 
+                  sx={{ 
+                    mb: 2, 
+                    px: 1,
+                    opacity: hasAccess ? 1 : 0.5
+                  }}
+                >
+                  {dropdown.label}
+                </Typography>
+                <List sx={{ p: 0 }}>
+                  {dropdown.items.map((item, itemIndex) => {
+                    const itemHasAccess = item.permission ? hasPermission(item.permission) : true;
+                    return (
+                      <ListItem key={item.to} disablePadding sx={{ mb: 1 }}>
+                        <MenuItemStyled
+                          component={itemHasAccess ? Link : 'div'}
+                          to={itemHasAccess ? item.to : undefined}
+                          active={isActiveRoute(item.to)}
+                          onClick={itemHasAccess ? toggleSidebar : null}
+                          sx={{ 
+                            width: "100%", 
+                            py: 2, 
+                            animationDelay: `${(sectionIndex + 1) * 0.2 + itemIndex * 0.1}s`, 
+                            animation: `${slideInFromTop} 0.4s ease-out`,
+                            opacity: itemHasAccess ? 1 : 0.5,
+                            pointerEvents: itemHasAccess ? 'auto' : 'none',
+                            cursor: itemHasAccess ? 'pointer' : 'not-allowed'
+                          }}
+                        >
+                          <ListItemIcon sx={{ color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569", minWidth: 40 }}>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.label}
+                            secondary={item.description}
+                            primaryTypographyProps={{ fontWeight: 700, fontSize: 16, color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326" }}
+                            secondaryTypographyProps={{ fontSize: 13, color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b" }}
+                          />
+                        </MenuItemStyled>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </Box>
+            );
+          })}
 
           {/* Bottom Actions */}
           <Box sx={{ mt: "auto", pt: 3, borderTop: "1px solid rgba(226, 232, 240, 0.8)" }}>
@@ -1415,42 +1461,53 @@ const Navbar = () => {
           </StyledPopper>
 
           {/* Navigation Dropdowns */}
-          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => (
-            <StyledPopper key={key} open={dropdownStates[key].open} anchorEl={dropdownStates[key].anchor} placement="bottom-end">
-              {dropdownStates[key].open && (
-                <Paper>
-                  <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
-                    <Box sx={{ p: 1 }}>
-                      <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
-                        {dropdown.label}
-                      </Typography>
-                      <List dense sx={{ p: 0 }}>
-                        {dropdown.items.map((item) => (
-                          <MenuItemStyled
-                            key={item.to}
-                            component={Link}
-                            to={item.to}
-                            active={isActiveRoute(item.to)}
-                            onClick={() => handleDropdownClose(key)}
-                          >
-                            <ListItemIcon sx={{ color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569", minWidth: 32 }}>
-                              {item.icon}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={item.label}
-                              secondary={item.description}
-                              primaryTypographyProps={{ fontWeight: 600, fontSize: 14, color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326" }}
-                              secondaryTypographyProps={{ fontSize: 12, color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b" }}
-                            />
-                          </MenuItemStyled>
-                        ))}
-                      </List>
-                    </Box>
-                  </ClickAwayListener>
-                </Paper>
-              )}
-            </StyledPopper>
-          ))}
+          {Object.entries(DROPDOWN_MENUS).map(([key, dropdown]) => {
+            const hasAccess = dropdown.permission ? hasPermission(dropdown.permission) : true;
+            return (
+              <StyledPopper key={key} open={dropdownStates[key].open} anchorEl={dropdownStates[key].anchor} placement="bottom-end">
+                {dropdownStates[key].open && hasAccess && (
+                  <Paper>
+                    <ClickAwayListener onClickAway={() => handleDropdownClose(key)}>
+                      <Box sx={{ p: 1 }}>
+                        <Typography variant="subtitle2" fontWeight={700} color="#010326" textTransform="uppercase" letterSpacing={0.5} fontSize={11} sx={{ mb: 1.5, px: 1 }}>
+                          {dropdown.label}
+                        </Typography>
+                        <List dense sx={{ p: 0 }}>
+                          {dropdown.items.map((item) => {
+                            const itemHasAccess = item.permission ? hasPermission(item.permission) : true;
+                            return (
+                              <MenuItemStyled
+                                key={item.to}
+                                component={itemHasAccess ? Link : 'div'}
+                                to={itemHasAccess ? item.to : undefined}
+                                active={isActiveRoute(item.to)}
+                                onClick={itemHasAccess ? () => handleDropdownClose(key) : null}
+                                sx={{
+                                  opacity: itemHasAccess ? 1 : 0.5,
+                                  pointerEvents: itemHasAccess ? 'auto' : 'none',
+                                  cursor: itemHasAccess ? 'pointer' : 'not-allowed'
+                                }}
+                              >
+                                <ListItemIcon sx={{ color: isActiveRoute(item.to) ? "#FFFFFF" : "#475569", minWidth: 32 }}>
+                                  {item.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={item.label}
+                                  secondary={item.description}
+                                  primaryTypographyProps={{ fontWeight: 600, fontSize: 14, color: isActiveRoute(item.to) ? "#FFFFFF" : "#010326" }}
+                                  secondaryTypographyProps={{ fontSize: 12, color: isActiveRoute(item.to) ? "rgba(255, 255, 255, 0.8)" : "#64748b" }}
+                                />
+                              </MenuItemStyled>
+                            );
+                          })}
+                        </List>
+                      </Box>
+                    </ClickAwayListener>
+                  </Paper>
+                )}
+              </StyledPopper>
+            );
+          })}
         </>
       )}
     </>

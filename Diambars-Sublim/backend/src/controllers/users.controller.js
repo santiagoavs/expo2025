@@ -66,13 +66,10 @@ usersController.createUser = async (req, res) => {
       return res.status(400).json({ message: "El email ya está registrado" });
     }
 
-    // Validación para rol de administrador único
+    // Prohibir creación de usuarios con rol admin
     if (role === 'admin') {
-      const existingAdmin = await userModel.findOne({ role: 'admin' });
-      if (existingAdmin) {
-        console.log("[createUser] Ya existe un admin");
-        return res.status(403).json({ message: "Ya existe un administrador. No se pueden crear más." });
-      }
+      console.log("[createUser] Intento de crear usuario admin rechazado");
+      return res.status(403).json({ message: "No se pueden crear usuarios con rol de administrador desde este flujo." });
     }
 
     // Encriptar contraseña

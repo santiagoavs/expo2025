@@ -149,17 +149,22 @@ export const authRequired = async (req, res, next) => {
       }
 
       // Verificar que el tipo de usuario coincida con el contexto
-      // Configurar rutas públicas de usuarios
+      // Configurar rutas públicas de usuarios (accesibles para usuarios regulares)
       const isPublicUserRoute = req.originalUrl.includes('/orders/me') || 
                                req.originalUrl.includes('/orders/user/') ||
-                               req.originalUrl.includes('/user/orders');
+                               req.originalUrl.includes('/user/orders') ||
+                               req.originalUrl.includes('/designs/my-designs') ||
+                               (req.originalUrl.includes('/designs/') && 
+                                !req.originalUrl.includes('/admin') && 
+                                !req.originalUrl.includes('/stats') &&
+                                !req.originalUrl.includes('/konva-config') &&
+                                !req.originalUrl.includes('/regenerate'));
       
       // Solo las rutas específicas de empleados requieren verificación de empleado
       const isEmployeeRoute = !isPublicUserRoute && (
                              req.originalUrl.includes('/employees') || 
                              req.originalUrl.includes('/admin') ||
-                             req.originalUrl.includes('/dashboard') ||
-                             isAdminPanel);
+                             req.originalUrl.includes('/dashboard'));
       
       
       const isEmployee = userType === 'employee' || 
@@ -472,11 +477,22 @@ export const checkAdminUniqueness = async (req, res, next) => {
                        (roles && roles.some(r => r.toLowerCase() === 'admin'));
 
   if (hasAdminRole) {
+    // Verificar si es una ruta de usuarios (no empleados)
+    const isUserRoute = req.originalUrl.includes('/users');
+    
+    if (isUserRoute) {
+      return res.status(403).json({
+        success: false,
+        message: "No se pueden crear usuarios con rol de administrador desde este flujo.",
+        error: 'ADMIN_NOT_ALLOWED_FOR_USERS'
+      });
+    }
+
+    // Para empleados, mantener la lógica de unicidad
     try {
       const Employee = (await import("../models/employees.js")).default;
-      const User = (await import("../models/users.js")).default;
 
-      // Excluir usuario actual si está editando
+      // Excluir empleado actual si está editando
       const excludeId = req.params?.id;
       const filter = excludeId ? { _id: { $ne: excludeId } } : {};
 
@@ -488,15 +504,7 @@ export const checkAdminUniqueness = async (req, res, next) => {
         ]
       });
 
-      const existingUserAdmin = await User.findOne({
-        ...filter,
-        $or: [
-          { role: { $regex: /^admin$/i } },
-          { roles: 'admin' }
-        ]
-      });
-
-      if ((existingEmployeeAdmin || existingUserAdmin) && !excludeId) {
+      if (existingEmployeeAdmin && !excludeId) {
         return res.status(403).json({
           success: false,
           message: "Ya existe un administrador. No se pueden crear más.",

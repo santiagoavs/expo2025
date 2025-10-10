@@ -563,7 +563,7 @@ export default function Home() {
               >
                 {isSubmittingSublimation ? (
                   <>
-                    <div className="loading-spinner"></div>
+                    <div className="loading-spinner-home"></div>
                     Enviando...
                   </>
                 ) : (

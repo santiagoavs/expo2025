@@ -49,8 +49,8 @@ export const clearAdminAuth = () => {
   export const isEmployeeUser = (user) => {
     if (!user) return false;
     
-    const allowedTypes = ['employee', 'manager', 'warehouse', 'admin'];
-    const allowedRoles = ['admin', 'manager', 'employee', 'warehouse'];
+    const allowedTypes = ['employee', 'manager', 'delivery', 'admin'];
+    const allowedRoles = ['admin', 'manager', 'employee', 'delivery'];
     
     const userType = user.type?.toLowerCase();
     const userRole = user.role?.toLowerCase();
