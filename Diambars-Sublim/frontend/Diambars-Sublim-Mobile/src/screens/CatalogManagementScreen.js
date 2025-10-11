@@ -1,5 +1,5 @@
 // src/screens/CatalogManagementScreen.js
-// Pantalla principal del panel administrativo con navegación a Orders
+// Pantalla principal del panel administrativo con navegación a Orders, Users y Design Management
 
 import React from 'react';
 import {
@@ -50,10 +50,10 @@ const CatalogManagementScreen = () => {
         navigation.navigate('Orders'); // Navegación directa a Orders
         break;
       case 'Usuarios':
-        Alert.alert('Funcionalidad', 'Gestión de Usuarios será implementado próximamente');
+        navigation.navigate('Users'); // Navegación directa a UsersScreen
         break;
-      case 'Reportes':
-        Alert.alert('Funcionalidad', 'Reportes será implementado próximamente');
+      case 'Editor de Diseño':
+        navigation.navigate('DesignManagement'); // Navegación a DesignManagementScreen
         break;
       default:
         Alert.alert('Funcionalidad', `${actionName} será implementado próximamente`);
@@ -78,7 +78,7 @@ const CatalogManagementScreen = () => {
                 <Text style={styles.welcomeTitle}>¡Bienvenido, Administrador!</Text>
                 <Text style={styles.welcomeSubtitle}>Rol: Administrador</Text>
                 <Text style={styles.welcomeDescription}>
-                  Gestiona tu catálogo y configuraciones desde aquí
+                  Gestiona tu catálogo, usuarios, diseños y configuraciones desde aquí
                 </Text>
               </View>
             </View>
@@ -123,13 +123,13 @@ const CatalogManagementScreen = () => {
 
               <TouchableOpacity 
                 style={styles.actionCard}
-                onPress={() => handleActionPress('Reportes')}
+                onPress={() => handleActionPress('Editor de Diseño')}
               >
                 <View style={styles.actionIcon}>
-                  <Ionicons name="analytics-outline" size={24} color="#040DBF" />
+                  <Ionicons name="brush-outline" size={24} color="#040DBF" />
                 </View>
-                <Text style={styles.actionTitle}>Reportes</Text>
-                <Text style={styles.actionSubtitle}>Ver estadísticas</Text>
+                <Text style={styles.actionTitle}>Editor de Diseño</Text>
+                <Text style={styles.actionSubtitle}>Gestionar diseños</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -166,7 +166,7 @@ const CatalogManagementScreen = () => {
             </View>
             <Text style={styles.infoText}>
               Esta es la aplicación móvil del panel administrativo de DIAMBARS. 
-              Desde aquí puedes gestionar productos, usuarios, pedidos y más.
+              Desde aquí puedes gestionar productos, usuarios, pedidos, diseños y más.
             </Text>
           </View>
 
@@ -185,18 +185,18 @@ const CatalogManagementScreen = () => {
             <View style={styles.actionButtonsRow}>
               <TouchableOpacity 
                 style={styles.secondaryButton}
-                onPress={() => navigation.navigate('Orders')}
+                onPress={() => navigation.navigate('DesignManagement')}
               >
-                <Ionicons name="cart" size={16} color="#040DBF" />
-                <Text style={styles.secondaryButtonText}>Ir a Pedidos</Text>
+                <Ionicons name="brush" size={16} color="#040DBF" />
+                <Text style={styles.secondaryButtonText}>Ir a Diseños</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => navigation.navigate('Login')}
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Users')}
               >
-                <Ionicons name="arrow-back" size={16} color="#ffffff" />
-                <Text style={styles.backButtonText}>Volver al Login</Text>
+                <Ionicons name="people" size={16} color="#ffffff" />
+                <Text style={styles.primaryButtonText}>Gestionar Usuarios</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -225,11 +225,11 @@ const CatalogManagementScreen = () => {
               
               <View style={styles.statCard}>
                 <View style={styles.statHeader}>
-                  <Ionicons name="cube" size={20} color="#f59e0b" />
-                  <Text style={styles.statTitle}>En Producción</Text>
+                  <Ionicons name="brush" size={20} color="#f59e0b" />
+                  <Text style={styles.statTitle}>Diseños Activos</Text>
                 </View>
-                <Text style={styles.statValue}>8</Text>
-                <Text style={styles.statTrend}>3 listos hoy</Text>
+                <Text style={styles.statValue}>28</Text>
+                <Text style={styles.statTrend}>+3 este mes</Text>
               </View>
               
               <View style={styles.statCard}>
@@ -336,7 +336,8 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: '600', 
     color: '#010326', 
-    marginBottom: 4 
+    marginBottom: 4,
+    textAlign: 'center'
   },
   actionSubtitle: { 
     fontSize: 12, 
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 6
   },
-  backButton: {
+  primaryButton: {
     flex: 1,
     backgroundColor: '#040DBF',
     borderRadius: 8,
@@ -459,7 +460,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  backButtonText: {
+  primaryButtonText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',

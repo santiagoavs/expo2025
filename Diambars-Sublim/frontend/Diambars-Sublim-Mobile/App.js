@@ -1,4 +1,4 @@
-// App.js - CON SPLASH Y LOADING SCREENS + ORDERS CORREGIDO
+// App.js - CON SPLASH Y LOADING SCREENS + ORDERS CORREGIDO + DESIGN MANAGEMENT
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -45,6 +45,9 @@ import PaymentStatsScreen from './src/screens/PaymentStatsScreen';
 
 // Importar pantalla de ÓRDENES (RUTA CORREGIDA)
 import OrderScreen from './src/screens/OrderScreen';
+
+// Importar pantalla de GESTIÓN DE DISEÑOS (NUEVA) - IMPORTACIÓN AGREGADA
+import DesignManagementScreen from './src/screens/DesignManagementScreen';
 
 const Stack = createStackNavigator();
 
@@ -171,6 +174,30 @@ export default function App() {
           component={OrderScreen}
           options={{
             title: 'Gestión de Órdenes',
+            headerShown: false,
+            cardStyleInterpolator: ({ current, layouts }) => {
+              return {
+                cardStyle: {
+                  transform: [
+                    {
+                      translateX: current.progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [layouts.screen.width, 0],
+                      }),
+                    },
+                  ],
+                },
+              };
+            },
+          }}
+        />
+
+        {/* 🎨 PANTALLA DE GESTIÓN DE DISEÑOS (NUEVA) */}
+        <Stack.Screen 
+          name="DesignManagement" 
+          component={DesignManagementScreen}
+          options={{
+            title: 'Gestión de Diseños',
             headerShown: false,
             cardStyleInterpolator: ({ current, layouts }) => {
               return {

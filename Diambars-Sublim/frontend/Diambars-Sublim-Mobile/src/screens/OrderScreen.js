@@ -1,4 +1,4 @@
-// src/screens/OrderScreen.js - VERSIÓN COMPLETA CON COMPONENTES
+// src/screens/OrderScreen.js - CON NAVBAR
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -17,7 +17,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-// Importar los componentes que acabamos de crear
+// Importar el wrapper con navbar
+import AuthenticatedWrapper from '../components/AuthenticatedWrapper';
+
+// Importar los componentes de órdenes
 import ManualOrderForm from '../components/Orders/ManualOrderForm';
 import OrderDetailsModal from '../components/Orders/OrderDetailsModal';
 import PaymentStatusPanel from '../components/Orders/PaymentStatusPanel';
@@ -33,7 +36,7 @@ const OrderScreen = () => {
   const [showPaymentStatusModal, setShowPaymentStatusModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Datos de ejemplo mejorados
+  // Datos de ejemplo (los mismos que tenías)
   const mockOrders = [
     {
       id: '1',
@@ -206,7 +209,6 @@ const OrderScreen = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      // Simular carga de datos
       await new Promise(resolve => setTimeout(resolve, 1000));
       setOrders(mockOrders);
     } catch (error) {
@@ -234,7 +236,6 @@ const OrderScreen = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // Simular cambio de estado
       setOrders(prev => prev.map(order => 
         order.id === orderId 
           ? { 
@@ -253,7 +254,6 @@ const OrderScreen = () => {
 
   const handleOrderCreated = (newOrder) => {
     Alert.alert('¡Éxito!', 'Pedido manual creado correctamente');
-    // Recargar órdenes para mostrar la nueva
     loadOrders();
   };
 
@@ -418,53 +418,18 @@ const OrderScreen = () => {
     );
   };
 
-  if (loading && orders.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar backgroundColor="#1F64BF" barStyle="light-content" />
+  // Contenido principal de la pantalla
+  const renderContent = () => {
+    if (loading && orders.length === 0) {
+      return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#1F64BF" />
           <Text style={styles.loadingText}>Cargando órdenes...</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
+      );
+    }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#1F64BF" barStyle="light-content" />
-      
-      {/* Header Principal */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.mainTitle}>Gestión de Órdenes</Text>
-            <Text style={styles.mainDescription}>
-              Administra todos los pedidos y controla el flujo de producción
-            </Text>
-          </View>
-          
-          <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={styles.primaryButton}
-              onPress={() => setShowManualOrderModal(true)}
-              disabled={loading}
-            >
-              <Ionicons name="add" size={18} color="#fff" />
-              <Text style={styles.primaryButtonText}>Pedido Manual</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              onPress={loadOrders}
-              disabled={loading}
-            >
-              <Ionicons name="refresh" size={20} color="#1F64BF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+    return (
       <ScrollView 
         style={styles.scrollView}
         refreshControl={
@@ -533,6 +498,21 @@ const OrderScreen = () => {
           )}
         </View>
       </ScrollView>
+    );
+  };
+
+  return (
+    <AuthenticatedWrapper 
+      title="Gestión de Órdenes" 
+      subtitle="Administra todos los pedidos y controla el flujo de producción"
+    >
+      {/* StatusBar */}
+      <StatusBar backgroundColor="#1F64BF" barStyle="light-content" />
+      
+      {/* Contenido principal */}
+      <View style={styles.container}>
+        {renderContent()}
+      </View>
 
       {/* Modal de Pedido Manual */}
       <ManualOrderForm
@@ -591,11 +571,11 @@ const OrderScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </AuthenticatedWrapper>
   );
 };
 
-// ================ ESTILOS ACTUALIZADOS ================
+// ================ ESTILOS (sin cambios) ================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -611,65 +591,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#010326',
-  },
-  header: {
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(31, 100, 191, 0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  mainTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#010326',
-    marginBottom: 4,
-  },
-  mainDescription: {
-    fontSize: 14,
-    color: '#032CA6',
-    fontWeight: '600',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#1F64BF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 140,
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(31, 100, 191, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
